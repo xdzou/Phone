@@ -823,6 +823,7 @@ public class PhoneApp extends Application {
         //
         boolean isRinging = (state == Phone.State.RINGING);
         boolean showingDisconnectedConnection =
+                //PhoneUtils.hasDisconnectedConnections(phone) && isShowingCallScreen;
                 PhoneUtils.hasDisconnectedConnections(phone) && isShowingCallScreen;
         boolean keepScreenOn = isRinging || showingDisconnectedConnection;
         if (DBG) Log.d(LOG_TAG, "updateWakeState: keepScreenOn = " + keepScreenOn

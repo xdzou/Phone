@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +37,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -97,6 +99,8 @@ public class NetworkSetting extends PreferenceActivity
                         displayNetworkSelectionFailed(ar.exception);
                     } else {
                         if (DBG) log("manual network selection: succeeded!");
+                        Settings.System.putString(getContentResolver(),
+                                Settings.System.NETWORK_SELECTION_MODE, "Manual");
                         displayNetworkSelectionSucceeded();
                     }
                     break;
@@ -111,6 +115,8 @@ public class NetworkSetting extends PreferenceActivity
                         displayNetworkSelectionFailed(ar.exception);
                     } else {
                         if (DBG) log("automatic network selection: succeeded!");
+                        Settings.System.putString(getContentResolver(),
+                                Settings.System.NETWORK_SELECTION_MODE, "Automatic");
                         displayNetworkSelectionSucceeded();
                     }
                     break;
