@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1252,7 +1253,14 @@ public class PhoneUtils {
         // manage the wake locks *and* arrange for the screen to come on at
         // the exact moment that the InCallScreen is ready to be displayed.
         // (See bug 1648751.)
-        app.preventScreenOn(true);
+
+        // If the phone is in suspend, calling preventScreenOn() during the
+        // "incoming call" sequence prevents the InCallScreen intent from
+        // being fired (Hence the phone will not display the InCallScreen)
+        // and the device freezes. By commenting out the call to preventScreenOn(),
+        // the InCallScreen intent is fired and phone continues the "incoming
+        // call" sequence.
+        //app.preventScreenOn(true);
         app.requestWakeState(PhoneApp.WakeState.FULL);
 
         // Fire off the InCallScreen intent.
@@ -1289,6 +1297,7 @@ public class PhoneUtils {
 
         // change the mode if needed.
         if (isSpeakerOn(context) != sIsSpeakerEnabled) {
+	    sIsSpeakerEnabled = isSpeakerOn(context);
             turnOnSpeaker(context, sIsSpeakerEnabled);
         }
     }
@@ -1324,7 +1333,8 @@ public class PhoneUtils {
      */
     static void setMuteInternal(Phone phone, boolean muted) {
         if (DBG) log("setMute: " + muted);
-        phone.setMute(muted);
+         AudioManager audioManager = (AudioManager)phone.getContext().getSystemService(Context.AUDIO_SERVICE);
+         audioManager.setMicrophoneMute(muted);
         if (muted) {
             NotificationMgr.getDefault().notifyMute();
         } else {
@@ -1333,8 +1343,9 @@ public class PhoneUtils {
     }
 
     static boolean getMute(Phone phone) {
-        return phone.getMute();
-    }
+         AudioManager audioManager = (AudioManager)phone.getContext().getSystemService(Context.AUDIO_SERVICE);
+         return audioManager.isMicrophoneMute();
+}
 
     /**
      * A really simple wrapper around AudioManager.setMode(),

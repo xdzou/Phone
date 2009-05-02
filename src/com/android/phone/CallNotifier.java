@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,6 +184,21 @@ public class CallNotifier extends Handler
         }
     };
 
+    private class mPhoneAutoAnswerNotifier implements Runnable {
+        public void run() {
+            Call mForegroundCall = mPhone.getForegroundCall();
+            Call mBackgroundCall = mPhone.getBackgroundCall();
+            Call mRingingCall = mPhone.getRingingCall();
+            boolean hasRingingCall = !mRingingCall.isIdle();
+            boolean hasActiveCall = !mForegroundCall.isIdle();
+            boolean hasHoldingCall = !mBackgroundCall.isIdle();
+
+            if (hasRingingCall && !hasActiveCall && !hasHoldingCall) {
+                PhoneUtils.answerCall(mPhone);
+            }
+        }
+    };
+
     private void onNewRingingConnection(AsyncResult r) {
         Connection c = (Connection) r.result;
         if (DBG) log("onNewRingingConnection(): " + c);
@@ -230,7 +246,21 @@ public class CallNotifier extends Handler
             // - do this before showing the incoming call panel
             if (state == Call.State.INCOMING) {
                 PhoneUtils.setAudioControlState(PhoneUtils.AUDIO_RINGING);
+                int auto_answer = Settings.System.getInt(mPhone.getContext().getContentResolver(),
+                       Settings.System.AUTO_ANSWER_TIMEOUT, -1);
+
                 startIncomingCallQuery(c);
+
+                // If Auto Answer feature has been enabled, set a timeout task based
+                // on the timeout value selected by the user to automatically answer
+                // the call if no reponse from the user.
+                if (auto_answer != -1) {
+                    Handler mHandler = new Handler();
+                    mPhoneAutoAnswerNotifier mTimeoutTask = new mPhoneAutoAnswerNotifier();
+                    long timeout = SystemClock.uptimeMillis() + auto_answer;
+
+                    mHandler.postAtTime(mTimeoutTask, timeout);
+                }
             } else {
                 if (VDBG) log("- starting call waiting tone...");
                 new InCallTonePlayer(InCallTonePlayer.TONE_CALL_WAITING).start();

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,23 +147,29 @@ public class SimContacts extends ADNList {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_IMPORT_ALL:
-                CharSequence title = getString(R.string.importAllSimEntries);
-                CharSequence message = getString(R.string.importingSimContacts); 
+                if (mCursor != null && !mCursor.isClosed() ) {
+                    CharSequence title = getString(R.string.importAllSimEntries);
+                    CharSequence message = getString(R.string.importingSimContacts);
 
-                ImportAllThread thread = new ImportAllThread();
+                    ImportAllThread thread = new ImportAllThread();
 
-                mProgressDialog = new ProgressDialog(this);
-                mProgressDialog.setTitle(title);
-                mProgressDialog.setMessage(message);
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                mProgressDialog.setButton(getString(R.string.cancel), thread);
-                mProgressDialog.setProgress(0);
-                mProgressDialog.setMax(mCursor.getCount());
-                mProgressDialog.show();
+                    mProgressDialog = new ProgressDialog(this);
+                    mProgressDialog.setTitle(title);
+                    mProgressDialog.setMessage(message);
+                    mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                    mProgressDialog.setButton(getString(R.string.cancel), thread);
+                    mProgressDialog.setProgress(0);
+                    mProgressDialog.setMax(mCursor.getCount());
+                    mProgressDialog.show();
                 
-                thread.start();
+                    thread.start();
                 
-                return true;
+                    return true;
+                } else {
+                    Log.e (TAG,"mCursor is either null or closed");
+                    return false;
+                }
+
         }
         return super.onOptionsItemSelected(item);
     }
