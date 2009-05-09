@@ -203,33 +203,42 @@ public class SimContacts extends ADNList {
     }
 
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        importOne(position);
-    }
+       public void onListItemClick(ListView l, View v, int position, long id) {
+          importOne(position);
+       }
 
     private void importOne(int position) {
-        if (mCursor.moveToPosition(position)) {
-            String name = mCursor.getString(NAME_COLUMN);
-            String number = mCursor.getString(NUMBER_COLUMN);
-            Object[] parsed = new Object[2];
-            Uri personUrl = parseName(name, parsed);
+       if (mCursor.moveToPosition(position)) {
+          ContentResolver cr = getContentResolver();
+          ContentValues map = new ContentValues();
+          String name = mCursor.getString(NAME_COLUMN);
+          String number = mCursor.getString(NUMBER_COLUMN);
+          Object[] parsed = new Object[2];
+          Uri personUrl = parseName(name, parsed);
 
-            Intent intent;
-            if (personUrl == null) {
-                // Add a new contact
-                intent = new Intent(Contacts.Intents.Insert.ACTION,
-                        Contacts.People.CONTENT_URI);
-                intent.putExtra(Contacts.Intents.Insert.NAME, (String)parsed[0]);
-                intent.putExtra(Contacts.Intents.Insert.PHONE, number);
-                intent.putExtra(Contacts.Intents.Insert.PHONE_TYPE, ((Integer)parsed[1]).intValue());
-            } else {
-                // Add the number to an existing contact
-                intent = new Intent(Intent.ACTION_EDIT, personUrl);
-                intent.putExtra(Contacts.Intents.Insert.PHONE, number);
-                intent.putExtra(Contacts.Intents.Insert.PHONE_TYPE, ((Integer)parsed[1]).intValue());
-            }
-            startActivity(intent);
-        }
+          Intent intent;
+          if (personUrl == null) {
+             // Making the copy of sim contact in the People Uri
+             map.clear();
+             map.put(Contacts.People.NAME, (String) parsed[0]);
+             personUrl = People.createPersonInMyContactsGroup(cr, map);
+             if (personUrl == null) {
+                Log.e(TAG, "Error inserting person " + map);
+                return;
+             }
+             map.clear();
+             map.put(Contacts.People.Phones.NUMBER, number);
+             map.put(Contacts.People.Phones.TYPE, (Integer) parsed[1]);
+             Uri numberUrl = cr.insert(
+                   Uri.withAppendedPath(personUrl, Contacts.People.Phones.CONTENT_DIRECTORY),
+                   map);
+          }
+          // Add the number to an existing contact
+          intent = new Intent(Intent.ACTION_EDIT, personUrl);
+          intent.putExtra(Contacts.Intents.Insert.PHONE, number);
+          intent.putExtra(Contacts.Intents.Insert.PHONE_TYPE, ((Integer)parsed[1]).intValue());
+          startActivity(intent);
+       }
     }
 
     /**
