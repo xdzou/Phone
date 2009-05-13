@@ -276,7 +276,7 @@
     <!-- Toast in Call settings dialog while settings are being saved -->
     <string name="updating_settings">Updating settings\u2026</string>
     <!-- Status message displayed in the "Call settings error" dialog -->
-    <string name="response_error">Unexpected response from network,</string>
+    <string name="response_error">Unexpected response from network.</string>
     <!-- Status message displayed in the "Call settings error" dialog -->
     <string name="exception_error">Network or SIM card error.</string>
     <!-- Status message displayed in the "Call settings error" dialog -->
@@ -354,13 +354,23 @@
     <string name="preferred_network_mode_dialogtitle">Preferred network mode</string>
     <string-array name="preferred_network_mode_choices">
         <item>Global</item>
-        <item>CDMA only</item>
-        <item>GSM/UMTS only</item>
+        <item>EvDo only</item>
+        <item>CDMA w/o EvDo</item>
+        <item>CDMA / EvDo auto</item>
+        <item>GSM / WCDMA auto</item>
+        <item>WCDMA only</item>
+        <item>GSM only</item>
+        <item>GSM / WCDMA preferred</item>
     </string-array>
     <string-array name="preferred_network_mode_values">
         <item>"7"</item>
+        <item>"6"</item>
+        <item>"5"</item>
         <item>"4"</item>
         <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
     </string-array>
     <!-- Mobile network settings screen, setting check box name -->
     <string name="roaming">Data roaming</string>
@@ -817,7 +827,7 @@
     <!-- Text displayed on the in-call screen's "touch lock" overlay,
          instructing the user that they need to double-tap to unlock the
          screen. -->
-    <string name="touchLockText">Double-tap\nto unlock</string>
+    <string name="touchLockText">Tap twice\nto unlock</string>
 
     <!-- Menu item label in SIM Contacts: Import a single contact entry from the SIM card -->
     <string name="importSimEntry">Import</string>
