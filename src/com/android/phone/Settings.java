@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +16,10 @@
  */
 
 package com.android.phone;
+import com.android.internal.telephony.gsm.GSMPhone;
+
+import android.os.SystemProperties;
+import android.util.Log;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -38,6 +43,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     //String keys for preference lookup
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_PREFER_2G_KEY = "button_prefer_2g_key";
+    private static final String CSP_TAG = "CSP Settings";
     
     //UI objects
     private CheckBoxPreference mButtonDataRoam;
@@ -128,6 +134,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     @Override
     protected void onResume() {
         super.onResume();
+        int plmnStatus;
         // upon resumption from the sub-activity, make sure we re-enable the
         // preferences.
         getPreferenceScreen().setEnabled(true);
@@ -139,6 +146,31 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         // Get the state for 'prefer 2g' setting
         mPhone.getPreferredNetworkType(mHandler.obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
+        try {
+           if (Integer.valueOf(SystemProperties.get("use_csp_plmn")) == 1) {
+               Log.i(CSP_TAG,"use_csp_plmn is 1");
+               if(mPhone != null) {
+                   plmnStatus = ((GSMPhone)mPhone).getCspPlmnStatus();
+                   if(plmnStatus == 1) {
+                     //This means that in elementary file EF_CSP,
+                     //in value added serice group, in the service byte,bit 8, i.e
+                     //Restriction of menu options for manual PLMN selection bit
+                     //is set
+                      Log.i(CSP_TAG,
+                            "CSP PLMN bit is set,Enabling Network Operators menu");
+                      findPreference("button_carrier_sel_key").setEnabled(true);
+                   } else if(plmnStatus == 0) {
+                      Log.i(CSP_TAG,
+                            "CSP PLMN bit is not set,Disabling Network Operators menu");
+                      findPreference("button_carrier_sel_key").setEnabled(false);
+                   } else {
+                      Log.e(CSP_TAG,"Undefined Csp PLMN Status");
+                   }
+               }
+           }
+        } catch(Exception e) {
+            Log.e(CSP_TAG,"Exception in reading use_csp_plmn " + e);
+        }
     }
     
     private class MyHandler extends Handler {
