@@ -313,9 +313,14 @@ public class InCallScreen extends Activity
                     // finish, this includes any MMI state that is not
                     // PENDING.
                     MmiCode mmiCode = (MmiCode) ((AsyncResult) msg.obj).result;
-                    if (mmiCode.getState() != MmiCode.State.PENDING) {
-                        if (DBG) log("Got MMI_COMPLETE, finishing...");
-                        finish();
+                    // if phone is a CDMA phone display feature code completed message
+                    if (mPhone.getPhoneName().equals("CDMA")) {
+                        PhoneUtils.displayMMIComplete(mPhone, PhoneApp.getInstance(), mmiCode, null, null);
+                    } else {
+                        if (mmiCode.getState() != MmiCode.State.PENDING) {
+                            if (DBG) log("Got MMI_COMPLETE, finishing...");
+                            finish();
+                        }
                     }
                     break;
 
@@ -1032,50 +1037,66 @@ public class InCallScreen extends Activity
         final boolean hasActiveCall = !mForegroundCall.isIdle();
         final boolean hasHoldingCall = !mBackgroundCall.isIdle();
 
-        if (hasRingingCall) {
-            // If an incoming call is ringing, the CALL button is actually
-            // handled by the PhoneWindowManager.  (We do this to make
-            // sure that we'll respond to the key even if the InCallScreen
-            // hasn't come to the foreground yet.)
-            //
-            // We'd only ever get here in the extremely rare case that the
-            // incoming call started ringing *after*
-            // PhoneWindowManager.interceptKeyTq() but before the event
-            // got here, or else if the PhoneWindowManager had some
-            // problem connecting to the ITelephony service.
-            Log.w(LOG_TAG, "handleCallKey: incoming call is ringing!"
-                  + " (PhoneWindowManager should have handled this key.)");
-            // But go ahead and handle the key as normal, since the
-            // PhoneWindowManager presumably did NOT handle it:
+        if (mPhone.getPhoneName().equals("CDMA")) {
+            // WINK:TODO Teleca is this enough?
 
-            // There's an incoming ringing call: CALL means "Answer".
-            if (hasActiveCall && hasHoldingCall) {
-                if (DBG) log("handleCallKey: ringing (both lines in use) ==> answer!");
-                internalAnswerCallBothLinesInUse();
-            } else {
-                if (DBG) log("handleCallKey: ringing ==> answer!");
+            // The green CALL button means either "Answer", "Swap calls/On Hold", or
+            // "Add to 3WC", depending on the current state of the Phone.
+
+            if (hasRingingCall) {
+                if (VDBG) log("handleCallKey: ringing ==> answer!");
                 internalAnswerCall();  // Automatically holds the current active call,
                                        // if there is one
+            } else {
+                // send an empty CDMA flash string
+                PhoneUtils.switchHoldingAndActive(mPhone);
             }
-        } else if (hasActiveCall && hasHoldingCall) {
-            // Two lines are in use: CALL means "Swap calls".
-            if (DBG) log("handleCallKey: both lines in use ==> swap calls.");
-            internalSwapCalls();
-        } else if (hasHoldingCall) {
-            // There's only one line in use, AND it's on hold.
-            // In this case CALL is a shortcut for "unhold".
-            if (DBG) log("handleCallKey: call on hold ==> unhold.");
-            PhoneUtils.switchHoldingAndActive(mPhone);  // Really means "unhold" in this state
         } else {
-            // The most common case: there's only one line in use, and
-            // it's an active call (i.e. it's not on hold.)
-            // In this case CALL is a no-op.
-            // (This used to be a shortcut for "add call", but that was a
-            // bad idea because "Add call" is so infrequently-used, and
-            // because the user experience is pretty confusing if you
-            // inadvertently trigger it.)
-            if (VDBG) log("handleCallKey: call in foregound ==> ignoring.");
-            // But note we still consume this key event; see below.
+            if (hasRingingCall) {
+                // If an incoming call is ringing, the CALL button is actually
+                // handled by the PhoneWindowManager.  (We do this to make
+                // sure that we'll respond to the key even if the InCallScreen
+                // hasn't come to the foreground yet.)
+                //
+                // We'd only ever get here in the extremely rare case that the
+                // incoming call started ringing *after*
+                // PhoneWindowManager.interceptKeyTq() but before the event
+                // got here, or else if the PhoneWindowManager had some
+                // problem connecting to the ITelephony service.
+                Log.w(LOG_TAG, "handleCallKey: incoming call is ringing!"
+                      + " (PhoneWindowManager should have handled this key.)");
+                // But go ahead and handle the key as normal, since the
+                // PhoneWindowManager presumably did NOT handle it:
+
+                // There's an incoming ringing call: CALL means "Answer".
+                if (hasActiveCall && hasHoldingCall) {
+                    if (DBG) log("handleCallKey: ringing (both lines in use) ==> answer!");
+                    internalAnswerCallBothLinesInUse();
+                } else {
+                    if (DBG) log("handleCallKey: ringing ==> answer!");
+                    internalAnswerCall();  // Automatically holds the current active call,
+                                           // if there is one
+                }
+            } else if (hasActiveCall && hasHoldingCall) {
+                // Two lines are in use: CALL means "Swap calls".
+                if (DBG) log("handleCallKey: both lines in use ==> swap calls.");
+                internalSwapCalls();
+            } else if (hasHoldingCall) {
+                // There's only one line in use, AND it's on hold.
+                // In this case CALL is a shortcut for "unhold".
+                if (DBG) log("handleCallKey: call on hold ==> unhold.");
+                PhoneUtils.switchHoldingAndActive(mPhone);  // Really means "unhold" in this state
+            } else {
+                // The most common case: there's only one line in use, and
+                // it's an active call (i.e. it's not on hold.)
+                // In this case CALL is a no-op.
+                // (This used to be a shortcut for "add call", but that was a
+                // bad idea because "Add call" is so infrequently-used, and
+                // because the user experience is pretty confusing if you
+                // inadvertently trigger it.)
+                if (VDBG) log("handleCallKey: call in foregound ==> ignoring.");
+                // But note we still consume this key event; see below.
+            }
         }
 
         // We *always* consume the CALL key, since the system-wide default
@@ -1839,7 +1860,7 @@ public class InCallScreen extends Activity
 
         // Need to treat running MMI codes as a connection as well.
         if (!mForegroundCall.isIdle() || !mBackgroundCall.isIdle() || !mRingingCall.isIdle()
-            || !mPhone.getPendingMmiCodes().isEmpty()) {
+            || mPhone.getPhoneName().equals("CDMA") || !mPhone.getPendingMmiCodes().isEmpty()) {
             if (VDBG) log("syncWithPhoneState: it's ok to be here; update the screen...");
             updateScreen();
             return InCallInitStatus.SUCCESS;
@@ -3250,7 +3271,7 @@ public class InCallScreen extends Activity
          */
         static void initConfiguration(Configuration config) {
             if (VDBG) Log.d(LOG_TAG, "[InCallScreen.ConfigurationHelper] "
-                            + "initConfiguration(" + config + ")...");
+                           + "initConfiguration(" + config + ")...");
             sOrientation = config.orientation;
         }
 
