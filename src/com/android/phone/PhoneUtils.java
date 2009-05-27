@@ -270,6 +270,33 @@ public class PhoneUtils {
         return hungup;
     }
 
+    static boolean hangupActiveMenu(Phone phone) {
+        boolean hungup = false;
+        Call ringing = phone.getRingingCall();
+        Call fg = phone.getForegroundCall();
+        Call bg = phone.getBackgroundCall();
+
+        if (!ringing.isIdle()) {
+            if (DBG) log("HANGUP ringing call");
+            hungup = hangup(ringing);
+        } else if (!fg.isIdle()) {
+            if (DBG) log("HANGUP foreground call");
+            try {
+                 fg.hangupActiveMenu();
+                 hungup = true;
+            } catch (CallStateException ex) {
+                 hungup = false;
+            }
+        } else if (!bg.isIdle()) {
+            if (DBG) log("HANGUP1 background call");
+            hungup = hangup(bg);
+        }
+
+        if (DBG) log("hungup=" + hungup);
+
+        return hungup;
+    }
+
     static boolean hangupRingingCall(Phone phone) {
         if (DBG) log("hangup ringing call");
         return hangup(phone.getRingingCall());
