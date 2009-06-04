@@ -700,12 +700,19 @@ public class CallFeaturesSetting extends PreferenceActivity
             if (DBG) log("handleGetCFMessage: Error getting CF enable state.");
             return MSG_EXCEPTION;
         } else if (ar.userObj instanceof Throwable) {
-            // TODO: I don't think it makes sense to throw the error up to
-            // the user, but this may be reconsidered.  For now, just log
-            // the specific error and throw up a generic error.
-            if (DBG) log("handleGetCFMessage: Error during set call, reason: " + reason +
-                    " exception: " + ((Throwable) ar.userObj).toString());
-            return MSG_UNEXPECTED_RESPONSE;
+           // TODO: I don't think it makes sense to throw the error up to
+           // the user, but this may be reconsidered.  For now, just log
+           // the specific error and throw up a generic error.
+           if (DBG) log("handleGetCFMessage: Error during set call, reason: " + reason +
+                 " exception: " + ((Throwable) ar.userObj).toString());
+
+           //Should query the network status so that the UI is in sync with
+           //the network state.
+           mPhone.getCallForwardingOption(reason,
+                 Message.obtain(mGetOptionComplete, EVENT_CF_EXECUTED,
+                    reason, 0));
+
+           return MSG_UNEXPECTED_RESPONSE;
         } else {
             CallForwardInfo cfInfoArray[] = (CallForwardInfo[]) ar.result;
             if (cfInfoArray.length == 0) {
