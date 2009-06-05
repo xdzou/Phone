@@ -25,6 +25,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
@@ -51,6 +52,7 @@ public class SimContacts extends ADNList {
     private static final int MENU_IMPORT_ONE = 1;
     private static final int MENU_IMPORT_ALL = 2;
     private ProgressDialog mProgressDialog;
+    private ImportAllThread mThread;
 
     
     @Override
@@ -59,8 +61,17 @@ public class SimContacts extends ADNList {
         registerForContextMenu(getListView());
     }
 
-    private class ImportAllThread extends Thread implements OnCancelListener, OnClickListener {
-        boolean mCanceled = false;
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mThread != null) {
+            mThread.mCanceled = false;
+            mProgressDialog.dismiss();
+        }
+    }
+
+    private class ImportAllThread extends Thread implements OnCancelListener, OnClickListener, OnDismissListener {
+        public boolean mCanceled = false;
         
         public ImportAllThread() {
             super("ImportAllThread");
@@ -103,7 +114,6 @@ public class SimContacts extends ADNList {
                     continue;
                 }
             }
-            
             mProgressDialog.dismiss();
 
             finish();
@@ -111,12 +121,19 @@ public class SimContacts extends ADNList {
 
         public void onCancel(DialogInterface dialog) {
             mCanceled = true;
+            mProgressDialog.dismiss();
         }
 
         public void onClick(DialogInterface dialog, int which) {
             mCanceled = true;
             mProgressDialog.dismiss();
         }
+
+        public void onDismiss(DialogInterface dialog) {
+            mCanceled = true;
+            mProgressDialog.dismiss();
+        }
+
     }
 
     @Override
@@ -151,19 +168,21 @@ public class SimContacts extends ADNList {
                     CharSequence title = getString(R.string.importAllSimEntries);
                     CharSequence message = getString(R.string.importingSimContacts);
 
-                    ImportAllThread thread = new ImportAllThread();
+                    mThread = new ImportAllThread();
 
                     mProgressDialog = new ProgressDialog(this);
                     mProgressDialog.setTitle(title);
                     mProgressDialog.setMessage(message);
                     mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                    mProgressDialog.setButton(getString(R.string.cancel), thread);
+                    mProgressDialog.setButton(getString(R.string.cancel), mThread);
                     mProgressDialog.setProgress(0);
                     mProgressDialog.setMax(mCursor.getCount());
+                    mProgressDialog.setOnCancelListener(mThread);
+                    mProgressDialog.setOnDismissListener(mThread);
                     mProgressDialog.show();
-                
-                    thread.start();
-                
+
+                    mThread.start();
+
                     return true;
                 } else {
                     Log.e (TAG,"mCursor is either null or closed");
