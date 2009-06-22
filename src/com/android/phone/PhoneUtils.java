@@ -1333,7 +1333,8 @@ public class PhoneUtils {
      */
     static void setMuteInternal(Phone phone, boolean muted) {
         if (DBG) log("setMute: " + muted);
-        phone.setMute(muted);
+        AudioManager audioManager = (AudioManager)phone.getContext().getSystemService(Context.AUDIO_SERVICE);
+        audioManager.setMicrophoneMute(muted);
         if (muted) {
             NotificationMgr.getDefault().notifyMute();
         } else {
@@ -1342,7 +1343,8 @@ public class PhoneUtils {
     }
 
     static boolean getMute(Phone phone) {
-        return phone.getMute();
+        AudioManager audioManager = (AudioManager)phone.getContext().getSystemService(Context.AUDIO_SERVICE);
+        return audioManager.isMicrophoneMute();
     }
 
     /**
