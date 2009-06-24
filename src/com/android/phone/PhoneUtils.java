@@ -323,6 +323,17 @@ public class PhoneUtils {
         return false;
     }
 
+    static boolean hangupActiveCall(Call call) {
+        try {
+            call.hangupActiveMenu();
+            return true;
+        } catch (CallStateException ex) {
+            Log.e(LOG_TAG, "Call hangup: caught " + ex, ex);
+        }
+
+        return false;
+    }
+
     static void hangup(Connection c) {
         try {
             if (c != null) {

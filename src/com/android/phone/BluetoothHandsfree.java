@@ -1076,7 +1076,7 @@ public class BluetoothHandsfree {
             @Override
             public AtCommandResult handleActionCommand() {
                 if (!mForegroundCall.isIdle()) {
-                    PhoneUtils.hangup(mForegroundCall);
+                    PhoneUtils.hangupActiveCall(mForegroundCall);
                 } else if (!mRingingCall.isIdle()) {
                     PhoneUtils.hangup(mRingingCall);
                 } else if (!mBackgroundCall.isIdle()) {
