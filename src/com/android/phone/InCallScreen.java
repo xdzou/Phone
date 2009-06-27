@@ -2315,7 +2315,7 @@ public class InCallScreen extends Activity
 
             case R.id.menuEndCall:
                 if (VDBG) log("onClick: EndCall...");
-                PhoneUtils.hangup(mPhone);
+                PhoneUtils.hangupActiveMenu(mPhone);
                 break;
 
             default:
