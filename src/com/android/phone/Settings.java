@@ -173,7 +173,12 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                 MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
 
         try {
-           if (Integer.valueOf(SystemProperties.get("use_csp_plmn")) == 1) {
+           //persist.cust.tel.adapt is super flag, if this is set then EF_CSP
+           //will be used irrespective of the value of
+           //persist.cust.tel.efcsp.plmn.Otherwise EF_CSP will be used if
+           //persist.cust.tel.efcsp.plmn is set.
+           if (SystemProperties.getBoolean("persist.cust.tel.adapt",false) ||
+               SystemProperties.getBoolean("persist.cust.tel.efcsp.plmn",false)) {
                Log.i(CSP_TAG,"use_csp_plmn is 1");
                if(mPhone != null) {
                    plmnStatus = ((GSMPhone)mPhone).getCspPlmnStatus();
