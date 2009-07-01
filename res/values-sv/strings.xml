@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2009 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="contactsIconLabel">"Kontakter"</string>
+    <string name="contactsFavoritesLabel">"Favoriter"</string>
+    <string name="dialerIconLabel">"Samtal"</string>
+    <string name="emergencyDialerIconLabel">"Nödsamtal"</string>
+    <string name="phoneIconLabel">"Telefon"</string>
+    <string name="recentCallsIconLabel">"Samtalshistorik"</string>
+    <string name="fdnListLabel">"FDN-lista"</string>
+    <string name="unknown">"Okänd"</string>
+    <string name="private_num">"Privat nummer"</string>
+    <string name="payphone">"Telefonautomat"</string>
+    <string name="onHold">"Parkerat"</string>
+    <string name="ongoing">"Pågående samtal"</string>
+    <string name="callFailed_userBusy">"Linjen är upptagen"</string>
+    <string name="callFailed_congestion">"Nätverket är upptaget"</string>
+    <string name="callFailed_noSignal">"Ingen signal"</string>
+    <string name="callFailed_limitExceeded">"ACM-gränsen har överskridits"</string>
+    <string name="callFailed_powerOff">"Radio av"</string>
+    <string name="callFailed_simError">"Inget SIM-kort eller SIM-kortsfel"</string>
+    <string name="callFailed_outOfService">"Fungerar inte i detta område"</string>
+    <string name="callFailed_fdn_only">"Utgående samtal begränsas av FDN."</string>
+    <string name="callFailed_cb_enabled">"Du kan inte ringa utgående samtal när samtalsspärren är aktiverad."</string>
+    <string name="callFailed_dsac_restricted">"Alla samtal begränsas av åtkomstkontroll."</string>
+    <string name="callFailed_dsac_restricted_emergency">"Nödsamtal begränsas av åtkomstkontroll."</string>
+    <string name="callFailed_dsac_restricted_normal">"Vanliga samtal begränsas av åtkomstkontroll."</string>
+    <string name="confCall">"Konferenssamtal"</string>
+    <string name="mmiStarted">"MMI-kod körs"</string>
+    <string name="ussdRunning">"USSD-kod körs…"</string>
+    <string name="mmiCancelled">"MMI-koden har annullerats"</string>
+    <string name="cancel">"Avbryt"</string>
+    <string name="menu_speaker">"Högtalare"</string>
+    <string name="menu_bluetooth">"Bluetooth"</string>
+    <string name="menu_mute">"Ljud av"</string>
+    <string name="menu_hold">"Parkera"</string>
+    <string name="menu_endCall">"Avsluta samtal"</string>
+    <string name="menu_swapCalls">"Byt samtal"</string>
+    <string name="menu_mergeCalls">"Koppla ihop samtal"</string>
+    <string name="menu_addCall">"Lägg till samtal"</string>
+    <string name="menu_manageConference">"Hantera konferenssamtal"</string>
+    <string name="menu_showDialpad">"Visa knappsats"</string>
+    <string name="menu_hideDialpad">"Dölj knappsatsen"</string>
+    <string name="menu_answerAndHold">"Parkera pågående samtal "\n" och svara"</string>
+    <string name="menu_answerAndEnd">"Avsluta pågående samtal"\n" och svara"</string>
+    <string name="ok">"OK"</string>
+    <string name="menuButtonHint">"Tryck på Meny om du vill visa samtalsalternativ."</string>
+    <string name="menuButtonKeyboardDialHint">"Tryck på Meny om du vill visa samtalsalternativ  •   Använd tangentbordet om du vill ringa"</string>
+    <string name="wait_prompt_str">"Skicka följande toner?"\n</string>
+    <string name="send_button">"Skicka"</string>
+    <string name="wild_prompt_str">"Ersätt jokertecknet med"</string>
+    <string name="bluetooth_headset_connected">"Bluetooth-hörlurarna är inkopplade."</string>
+    <string name="bluetooth_headset_disconnected">"Bluetooth-hörlurarna är inte inkopplade."</string>
+    <string name="no_vm_number">"Nummer till röstbrevlåda saknas"</string>
+    <string name="no_vm_number_msg">"Det finns inget nummer till röstbrevlådan sparat på SIM-kortet."</string>
+    <string name="add_vm_number_str">"Lägg till nummer"</string>
+    <string name="dialer_emptyListWorking">"Läser in…"</string>
+    <string name="enterPin">"Ange PIN-kod för att låsa upp SIM-kortet."</string>
+    <string name="pinUnlocked">"SIM-kortet är upplåst"</string>
+    <string name="enterNewPin">"Ny PIN-kod för SIM-kort"</string>
+    <string name="verifyNewPin">"Bekräfta genom att ange SIM-kortets nya PIN-kod igen"</string>
+    <string name="verifyFailed">"PIN-koderna som du angav för SIM-kortet matchar inte. Försök igen."</string>
+    <string name="enterPuk">"Ange PUK-kod för att låsa upp SIM-kortet"</string>
+    <string name="badPuk">"Felaktig PUK-kod!"</string>
+    <string name="buttonTxtContinue">"Fortsätt"</string>
+    <string name="puk_unlocked">"SIM-kortets spärr har tagits bort. Låser upp telefonen…"</string>
+    <string name="label_ndp">"PIN-kod för upplåsning av SIM-nätverk"</string>
+    <string name="sim_ndp_unlock_text">"Lås upp"</string>
+    <string name="sim_ndp_dismiss_text">"Ta bort permanent"</string>
+    <string name="requesting_unlock">"Försöker låsa upp nätverket…"</string>
+    <string name="unlock_failed">"Det gick inte att låsa upp nätverket."</string>
+    <string name="unlock_success">"Nätverket upplåst"</string>
+    <string name="imei">"IMEI-kod"</string>
+    <string name="labelMore">"Övriga samtalsinställningar"</string>
+    <string name="apn_settings">"Namn på åtkomstpunkter"</string>
+    <string name="settings_label">"Nätverksinställningar"</string>
+    <string name="voicemail">"Röstbrevlåda"</string>
+    <string name="voicemail_abbreviated">"RB:"</string>
+    <string name="networks">"Nätverksoperatörer"</string>
+    <string name="call_settings">"Samtalsinställningar"</string>
+    <string name="additional_call_settings">"Övriga samtalsinställningar"</string>
+    <string name="labelNwService">"Inställningar för nätverkstjänst"</string>
+    <string name="labelCallerId">"Nummerpresentatör"</string>
+    <string name="sum_hide_caller_id">"Dolt nummer i utgående samtal"</string>
+    <string name="sum_show_caller_id">"Nummer som visas för utgående samtal"</string>
+    <string name="sum_default_caller_id">"Använd operatörens standardinställningar när mitt nummer visas för utgående samtal"</string>
+    <string name="labelCW">"Samtal väntar"</string>
+    <string name="sum_cw_enabled">"Meddela mig om inkommande samtal under samtal"</string>
+    <string name="sum_cw_disabled">"Meddela mig om inkommande samtal under samtal"</string>
+    <string name="call_forwarding_settings">"Inställningar för Vidarebefordra samtal"</string>
+    <string name="labelCF">"Vidarebefordra samtal"</string>
+    <string name="labelCFU">"Vidarebefordra alltid"</string>
+    <string name="messageCFU">"Använd alltid detta nummer"</string>
+    <string name="sum_cfu_enabled_indicator">"Vidarebefordra alla samtal"</string>
+    <string name="sum_cfu_enabled">"Vidarebefordrar alla samtal till \\\\{0\\\\}"</string>
+    <string name="sum_cfu_disabled">"Inaktiverat"</string>
+    <string name="labelCFB">"Vidarebefordra vid upptaget"</string>
+    <string name="messageCFB">"Nummer vid upptagen"</string>
+    <string name="sum_cfb_enabled">"Vidarebefordrar till \\\\{0\\\\}"</string>
+    <string name="sum_cfb_disabled">"Inaktiverat"</string>
+    <string name="labelCFNRy">"Vidarebefordra vid ej svar"</string>
+    <string name="messageCFNRy">"Nummer vid ej svar"</string>
+    <string name="sum_cfnry_enabled">"Vidarebefordrar till \\\\{0\\\\}"</string>
+    <string name="sum_cfnry_disabled">"Inaktiverat"</string>
+    <string name="labelCFNRc">"Vidarebefordra när du inte är tillgänglig"</string>
+    <string name="messageCFNRc">"Nummer när du inte är tillgänglig"</string>
+    <string name="sum_cfnrc_enabled">"Vidarebefordrar till \\\\{0\\\\}"</string>
+    <string name="sum_cfnrc_disabled">"Inaktiverat"</string>
+    <string name="updating_title">"Samtalsinställningar"</string>
+    <string name="error_updating_title">"Felaktiga samtalsinställningar"</string>
+    <string name="reading_settings">"Läser inställningar…"</string>
+    <string name="updating_settings">"Uppdaterar inställningar…"</string>
+    <string name="response_error">"Oväntat svar från nätverket,"</string>
+    <string name="exception_error">"Nätverks- eller SIM-kortsfel."</string>
+    <string name="radio_off_error">"Sätt på radion innan du visar inställningarna."</string>
+    <string name="close_dialog">"OK"</string>
+    <string name="enable">"Aktivera"</string>
+    <string name="disable">"Inaktivera"</string>
+    <string name="change_num">"Uppdatera"</string>
+  <string-array name="clir_display_values">
+    <item>"Standardinställning för nätverk"</item>
+    <item>"Dölj nummer"</item>
+    <item>"Visa nummer"</item>
+  </string-array>
+    <string name="vm_save_number">"Spara nummer till röstbrevlåda"</string>
+    <string name="vm_changed">"Numret till röstbrevlåda har ändrats."</string>
+    <string name="vm_change_failed">"Det gick inte att ändra numret till röstbrevlådan."</string>
+    <string name="no_change">"Du har inte gjort några ändringar."</string>
+    <string name="sum_voicemail">"Ange nummer till röstbrevlåda"</string>
+    <string name="mobile_networks">"Mobila nätverksinställningar"</string>
+    <string name="label_available">"Tillgängliga nätverk"</string>
+    <string name="load_networks_progress">"Söker…"</string>
+    <string name="empty_networks_list">"Hittade inga nätverk."</string>
+    <string name="search_networks">"Sök efter nätverk"</string>
+    <string name="network_query_error">"Ett fel uppstod när vi sökte efter nätverk."</string>
+    <string name="register_on_network">"Registrerar på <xliff:g id="NETWORK">%s</xliff:g>…"</string>
+    <string name="not_allowed">"Ditt SIM-kort tillåter inte anslutning till detta nätverk."</string>
+    <string name="registration_done">"Registrerad på nätverk."</string>
+    <string name="sum_carrier_select">"Välj en nätverksoperatör"</string>
+    <string name="sum_search_networks">"Sök efter alla tillgängliga nätverk"</string>
+    <string name="select_automatically">"Välj automatiskt"</string>
+    <string name="sum_select_automatically">"Välj önskat nätverk automatiskt"</string>
+    <string name="register_automatically">"Registrerar automatiskt…"</string>
+    <string name="roaming">"Roaming"</string>
+    <string name="roaming_enable">"Anslut till datatjänster vid roaming"</string>
+    <string name="roaming_disable">"Anslut till datatjänster vid roaming"</string>
+    <string name="roaming_reenable_message">"Du förlorade dataanslutningen eftersom du lämnade ditt hemnätverk utan att aktivera roaming."</string>
+    <string name="roaming_warning">"Tillåta roaming? Observera att detta kan leda till höga kostnader!"</string>
+    <string name="prefer_2g">"Använd endast 2G-nätverk"</string>
+    <string name="prefer_2g_summary">"Sparar batteri"</string>
+    <string name="fdn">"Fasta nummer"</string>
+    <string name="manage_fdn_list">"FDN-lista"</string>
+    <string name="fdn_activation">"FDN-aktivering"</string>
+    <string name="fdn_enabled">"Fasta nummer är aktiverade"</string>
+    <string name="fdn_disabled">"Fasta nummer är inaktiverade"</string>
+    <string name="enable_fdn">"Aktivera FDN"</string>
+    <string name="disable_fdn">"Inaktivera FDN"</string>
+    <string name="change_pin2">"Ändra PIN2-kod"</string>
+    <string name="enable_fdn_ok">"Inaktivera FDN"</string>
+    <string name="disable_fdn_ok">"Aktivera FDN"</string>
+    <string name="sum_fdn">"Hantera Fasta nummer"</string>
+    <string name="sum_fdn_change_pin">"Ändra PIN-kod för FDN-åtkomst"</string>
+    <string name="sum_fdn_manage_list">"Hantera nummerlistan"</string>
+    <string name="menu_add">"Lägg till kontakt"</string>
+    <string name="menu_edit">"Redigera kontakt"</string>
+    <string name="menu_delete">"Ta bort kontakt"</string>
+    <string name="get_pin2">"Ange PIN2"</string>
+    <string name="name">"Namn"</string>
+    <string name="number">"Nummer"</string>
+    <string name="save">"Spara"</string>
+    <string name="add_fdn_contact">"Lägg till kontakt med fast nummer"</string>
+    <string name="adding_fdn_contact">"Lägger till kontakt med fast nummer…"</string>
+    <string name="fdn_contact_added">"Kontakt med fast nummer har lagts till."</string>
+    <string name="edit_fdn_contact">"Redigera fast nummer för kontakt"</string>
+    <string name="updating_fdn_contact">"Uppdaterar kontakt med fast nummer…"</string>
+    <string name="fdn_contact_updated">"Kontakt med fast nummer uppdaterad."</string>
+    <string name="delete_fdn_contact">"Ta bort kontakt med fast nummer"</string>
+    <string name="deleting_fdn_contact">"Tar bort kontakt med fast nummer…"</string>
+    <string name="fdn_contact_deleted">"Kontakt med fast nummer har tagits bort."</string>
+    <string name="pin2_invalid">"PIN2 är ogiltig!"</string>
+    <string name="fdn_invalid_number">"Numret får inte vara längre än 20 siffror."</string>
+    <string name="simContacts_emptyLoading">"Läser från SIM-kort…"</string>
+    <string name="simContacts_empty">"Inga kontakter på SIM-kortet."</string>
+    <string name="simContacts_title">"Välj vilka kontakter som ska importeras"</string>
+    <string name="enable_pin">"Aktivera/inaktivera SIM-kortets PIN-kod"</string>
+    <string name="change_pin">"Ändra SIM-kortets PIN-kod"</string>
+    <string name="enter_pin_text">"SIM-kortets PIN-kod:"</string>
+    <string name="oldPinLabel">"Gammal PIN-kod"</string>
+    <string name="newPinLabel">"Ny PIN-kod"</string>
+    <string name="confirmPinLabel">"Bekräfta ny PIN-kod"</string>
+    <string name="badPin">"Den gamla PIN-koden är felaktig. Försök igen."</string>
+    <string name="mismatchPin">"PIN-koderna som du angav matchar inte. Försök igen."</string>
+    <string name="invalidPin">"Ange en PIN-kod med 4 till 8 siffror."</string>
+    <string name="disable_sim_pin">"Inaktivera SIM-kortets PIN-kod"</string>
+    <string name="enable_sim_pin">"Aktivera PIN-kod"</string>
+    <string name="enable_in_progress">"Vänta…"</string>
+    <string name="enable_pin_ok">"SIM-kortets PIN-kod är aktiverad"</string>
+    <string name="disable_pin_ok">"SIM-kortets PIN-kod är inaktiverad"</string>
+    <string name="pin_failed">"PIN-koden du angav är felaktig"</string>
+    <string name="pin_changed">"SIM-kortets PIN-kod har ändrats"</string>
+    <string name="puk_requested">"Lösenordet är felaktigt och SIM-kortet har spärrats! PUK2 krävs."</string>
+    <string name="enter_pin2_text">"PIN2"</string>
+    <string name="oldPin2Label">"Gammal PIN2"</string>
+    <string name="newPin2Label">"Ny PIN2"</string>
+    <string name="confirmPin2Label">"Bekräfta ny PIN2-kod"</string>
+    <string name="badPuk2">"PUK2-koden du angav är felaktig. Försök igen."</string>
+    <string name="badPin2">"Den gamla PIN2-koden du angav är felaktig. Försök igen."</string>
+    <string name="mismatchPin2">"PIN2-koderna som du angav matchar inte. Försök igen."</string>
+    <string name="invalidPin2">"Ange en PIN2-kod med 4 till 8 siffror."</string>
+    <string name="invalidPuk2">"Ange en PUK2-kod med 8 siffror."</string>
+    <string name="pin2_changed">"PIN2 har ändrats"</string>
+    <string name="label_puk2_code">"Ange PUK2-kod"</string>
+    <string name="fdn_enable_puk2_requested">"Lösenordet är felaktigt. Ange en annan PIN2-kod och försök igen!"</string>
+    <string name="puk2_requested">"Lösenordet är felaktigt och SIM-kortet har spärrats! PUK2 krävs."</string>
+    <string name="doneButton">"Färdig"</string>
+    <string name="caller_manage_header">"Konferenssamtal <xliff:g id="CONF_CALL_TIME">%s</xliff:g>"</string>
+    <string name="caller_manage_manage_done_text">"Återgå till samtal"</string>
+    <string name="sim_missing_continueView_text">"Fortsätt utan SIM-kort"</string>
+    <string name="sim_missing_msg_text">"Inget SIM-kort hittades. Sätt i ett SIM-kort i telefonen."</string>
+    <string name="sim_unlock_dismiss_text">"Ta bort permanent"</string>
+    <string name="sim_unlock_unlock_text">"Lås upp"</string>
+    <string name="sim_unlock_status_text">"Verifierar PIN-kod…"</string>
+    <string name="voicemail_settings_number_label">"Nummer till röstbrevlåda"</string>
+    <string name="card_title_dialing">"Ringer"</string>
+    <string name="card_title_in_progress">"Pågående samtal"</string>
+    <string name="card_title_conf_call">"Konferenssamtal"</string>
+    <string name="card_title_incoming_call">"Inkommande samtal"</string>
+    <string name="card_title_call_ended">"Samtal avslutat"</string>
+    <string name="card_title_on_hold">"Parkerat"</string>
+    <string name="card_title_hanging_up">"Lägger på"</string>
+    <string name="notification_missedCallTitle">"Missat samtal"</string>
+    <string name="notification_missedCallsTitle">"Missade samtal"</string>
+    <string name="notification_missedCallsMsg">"<xliff:g id="NUM_MISSED_CALLS">%s</xliff:g> missade samtal"</string>
+    <string name="notification_missedCallTicker">"Missat samtal från <xliff:g id="MISSED_CALL_FROM">%s</xliff:g>"</string>
+    <string name="notification_ongoing_call_format">"Pågående samtal (<xliff:g id="DURATION">%s</xliff:g>)"</string>
+    <string name="notification_on_hold">"Parkerat"</string>
+    <string name="notification_voicemail_title">"Ny röstbrevlåda"</string>
+    <string name="notification_voicemail_text_format">"Ring <xliff:g id="VOICEMAIL_NUMBER">%s</xliff:g>"</string>
+    <string name="notification_voicemail_no_vm_number">"Nummer till röstbrevlåda okänt"</string>
+    <string name="incall_error_power_off">"Om du vill ringa ett samtal måste du först inaktivera flygplansläge."</string>
+    <string name="incall_error_emergency_only">"Inte registrerat på nätverk."</string>
+    <string name="incall_error_no_phone_number_supplied">"Samtalet har inte skickats. Du måste ange ett giltigt nummer."</string>
+    <string name="incall_error_call_failed">"Samtalet har inte skickats."</string>
+    <string name="incall_status_dialed_mmi">"Startar sekvens för MMI-kod…"</string>
+    <string name="incall_error_supp_service_unknown">"Inget stöd för tjänsten."</string>
+    <string name="incall_error_supp_service_switch">"Det gick inte att växla mellan samtal."</string>
+    <string name="incall_error_supp_service_separate">"Det gick inte att koppla isär samtalen."</string>
+    <string name="incall_error_supp_service_transfer">"Det gick inte överföra samtal."</string>
+    <string name="incall_error_supp_service_conference">"Det gick inte att ringa konferenssamtal."</string>
+    <string name="incall_error_supp_service_reject">"Det gick inte att avvisa samtal."</string>
+    <string name="incall_error_supp_service_hangup">"Det gick inte att släppa samtal."</string>
+    <string name="emergency_enable_radio_dialog_title">"Nödsamtal"</string>
+    <string name="emergency_enable_radio_dialog_message">"Sätter på radion…"</string>
+    <string name="emergency_enable_radio_dialog_retry">"Fungerar inte i detta område. Försöker igen…"</string>
+    <string name="dial_emergency_error">"Samtalet har inte skickats. <xliff:g id="NON_EMERGENCY_NUMBER">%s</xliff:g> är inte ett nödsamtalsnummer!"</string>
+    <string name="dial_emergency_empty_error">"Samtalet har inte skickats. Ring ett nödsamtalsnummer!"</string>
+    <string name="dialerKeyboardHintText">"Använd tangentbordet om du vill ringa"</string>
+    <string name="dtmfDialpadHintText">"Knappsats för tonval"</string>
+    <string name="dtmfDialpadHandleLabel">"Knappsats"</string>
+    <string name="touchLockText">"Dubbelklicka"\n"för att låsa upp"</string>
+    <string name="importSimEntry">"Importera"</string>
+    <string name="importAllSimEntries">"Importera alla"</string>
+    <string name="importingSimContacts">"Importera SIM-kontakter"</string>
+    <string name="importToFDNfromContacts">"Importera från Kontakter"</string>
+</resources>

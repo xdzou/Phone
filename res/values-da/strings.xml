@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2009 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="contactsIconLabel">"Kontaktpersoner"</string>
+    <string name="contactsFavoritesLabel">"Favoritter"</string>
+    <string name="dialerIconLabel">"Opkald"</string>
+    <string name="emergencyDialerIconLabel">"Nødopkald"</string>
+    <string name="phoneIconLabel">"Telefon"</string>
+    <string name="recentCallsIconLabel">"Opkaldsliste"</string>
+    <string name="fdnListLabel">"FDN-liste"</string>
+    <string name="unknown">"Ukendt"</string>
+    <string name="private_num">"Privat nummer"</string>
+    <string name="payphone">"Betalingstelefon"</string>
+    <string name="onHold">"Ventende"</string>
+    <string name="ongoing">"Aktuelt opkald"</string>
+    <string name="callFailed_userBusy">"Linjen er optaget"</string>
+    <string name="callFailed_congestion">"Netværket er optaget"</string>
+    <string name="callFailed_noSignal">"Der er intet signal"</string>
+    <string name="callFailed_limitExceeded">"ACM-grænsen er overskredet"</string>
+    <string name="callFailed_powerOff">"Slå radio fra"</string>
+    <string name="callFailed_simError">"Der er intet SIM-kort, eller der er SIM-kortfejl"</string>
+    <string name="callFailed_outOfService">"Området er ude af drift"</string>
+    <string name="callFailed_fdn_only">"Udgående opkald er begrænset af FDN."</string>
+    <string name="callFailed_cb_enabled">"Du kan ikke foretage udgående opkald, mens opkaldsspærring er slået til."</string>
+    <string name="callFailed_dsac_restricted">"Alle opkald er begrænset af adgangskontrol."</string>
+    <string name="callFailed_dsac_restricted_emergency">"Nødopkald er begrænset af adgangskontrol."</string>
+    <string name="callFailed_dsac_restricted_normal">"Normale opkald er begrænset af adgangskontrol."</string>
+    <string name="confCall">"Telefonmøde"</string>
+    <string name="mmiStarted">"MMI-nummer er startet"</string>
+    <string name="ussdRunning">"USSD-kode kører ..."</string>
+    <string name="mmiCancelled">"MMI-nummer annulleret"</string>
+    <string name="cancel">"Annuller"</string>
+    <string name="menu_speaker">"Højttaler"</string>
+    <string name="menu_bluetooth">"Bluetooth"</string>
+    <string name="menu_mute">"Slå lyd fra"</string>
+    <string name="menu_hold">"Hold"</string>
+    <string name="menu_endCall">"Afslut opkald"</string>
+    <string name="menu_swapCalls">"Byt opkald"</string>
+    <string name="menu_mergeCalls">"Slå opkald sammen"</string>
+    <string name="menu_addCall">"Tilføj opkald"</string>
+    <string name="menu_manageConference">"Administrer telefonmøder"</string>
+    <string name="menu_showDialpad">"Vis nummerblok"</string>
+    <string name="menu_hideDialpad">"Skjul nummerblok"</string>
+    <string name="menu_answerAndHold">"Hold aktuelt opkald"\n", og besvar"</string>
+    <string name="menu_answerAndEnd">"Afslut aktuelt opkald,"\n"og besvar"</string>
+    <string name="ok">"OK"</string>
+    <string name="menuButtonHint">"Tryk på Menu for at få opkaldsvalgmuligheder."</string>
+    <string name="menuButtonKeyboardDialHint">"Tryk på menu for opkaldsvalgmuligheder  •  Brug tastatur til at ringe op"</string>
+    <string name="wait_prompt_str">"Send følgende toner?"\n</string>
+    <string name="send_button">"Send"</string>
+    <string name="wild_prompt_str">"Erstat jokertegnet med"</string>
+    <string name="bluetooth_headset_connected">"Der er forbundet et Bluetooth-headset."</string>
+    <string name="bluetooth_headset_disconnected">"Bluetooth-headset er ikke forbundet."</string>
+    <string name="no_vm_number">"Manglende voicemailnummer"</string>
+    <string name="no_vm_number_msg">"Der er ikke gemt noget voicemailnummer på SIM-kortet."</string>
+    <string name="add_vm_number_str">"Tilføj nummer"</string>
+    <string name="dialer_emptyListWorking">"Indlæser ..."</string>
+    <string name="enterPin">"Indtast PIN-kode for at låse SIM-kortet op."</string>
+    <string name="pinUnlocked">"SIM-kortet er låst op"</string>
+    <string name="enterNewPin">"Ny PIN-kode til SIM-kortet"</string>
+    <string name="verifyNewPin">"Indtast ny PIN-kode igen for at bekræfte"</string>
+    <string name="verifyFailed">"De PIN-koder til SIM-kortet, du indtastede, stemmer ikke overens. Prøv igen."</string>
+    <string name="enterPuk">"Indtast PUK-kode for at låse SIM-kortet op."</string>
+    <string name="badPuk">"Forkert PUK-kode."</string>
+    <string name="buttonTxtContinue">"Fortsæt"</string>
+    <string name="puk_unlocked">"Blokeringen af dit SIM-kort er blevet ophævet. Din telefon låser op ..."</string>
+    <string name="label_ndp">"PIN-kode til oplåsning af SIM-netværket"</string>
+    <string name="sim_ndp_unlock_text">"Lås op"</string>
+    <string name="sim_ndp_dismiss_text">"Annuller"</string>
+    <string name="requesting_unlock">"Anmoder om oplåsning af netværk ..."</string>
+    <string name="unlock_failed">"Anmodningen om oplåsning af netværk mislykkedes."</string>
+    <string name="unlock_success">"Netværket blev låst op."</string>
+    <string name="imei">"IMEI-nummer"</string>
+    <string name="labelMore">"Yderligere opkaldsindstillinger"</string>
+    <string name="apn_settings">"Navne på adgangspunkter"</string>
+    <string name="settings_label">"Netværksindstillinger"</string>
+    <string name="voicemail">"Voicemail"</string>
+    <string name="voicemail_abbreviated">"VM:"</string>
+    <string name="networks">"Netværksudbydere"</string>
+    <string name="call_settings">"Opkaldsindstillinger"</string>
+    <string name="additional_call_settings">"Yderligere opkaldsindstillinger"</string>
+    <string name="labelNwService">"Indstillinger for netværkstjeneste"</string>
+    <string name="labelCallerId">"Opkalds-id"</string>
+    <string name="sum_hide_caller_id">"Nummer skjules i udgående opkald"</string>
+    <string name="sum_show_caller_id">"Nummer vises i udgående opkald"</string>
+    <string name="sum_default_caller_id">"Brug standardindstillinger fra udbyder til at vise mine numre i udgående opkald"</string>
+    <string name="labelCW">"Ventende opkald"</string>
+    <string name="sum_cw_enabled">"Underret mig om indgående opkald under et opkald"</string>
+    <string name="sum_cw_disabled">"Underret mig om indgående opkald under et opkald"</string>
+    <string name="call_forwarding_settings">"Indstillinger for viderestilling af opkald"</string>
+    <string name="labelCF">"Viderestilling af opkald"</string>
+    <string name="labelCFU">"Videresend altid"</string>
+    <string name="messageCFU">"Brug altid dette nummer"</string>
+    <string name="sum_cfu_enabled_indicator">"Videresender alle opkald"</string>
+    <string name="sum_cfu_enabled">"Videresender alle opkald til \\\\{0\\\\}"</string>
+    <string name="sum_cfu_disabled">"Deaktiveret"</string>
+    <string name="labelCFB">"Videresend ved optaget"</string>
+    <string name="messageCFB">"Nummer ved optaget"</string>
+    <string name="sum_cfb_enabled">"Videresender til \\\\{0\\\\}"</string>
+    <string name="sum_cfb_disabled">"Deaktiveret"</string>
+    <string name="labelCFNRy">"Videresend ved ubesvaret"</string>
+    <string name="messageCFNRy">"Nummer ved ubesvaret"</string>
+    <string name="sum_cfnry_enabled">"Videresender til \\\\{0\\\\}"</string>
+    <string name="sum_cfnry_disabled">"Deaktiveret"</string>
+    <string name="labelCFNRc">"Videresend ved utilgængelig"</string>
+    <string name="messageCFNRc">"Nummer ved utilgængelig"</string>
+    <string name="sum_cfnrc_enabled">"Videresender til \\\\{0\\\\}"</string>
+    <string name="sum_cfnrc_disabled">"Deaktiveret"</string>
+    <string name="updating_title">"Opkaldsindstillinger"</string>
+    <string name="error_updating_title">"Fejl med opkaldsindstillinger"</string>
+    <string name="reading_settings">"Læser indstillinger ..."</string>
+    <string name="updating_settings">"Opdaterer indstillinger ..."</string>
+    <string name="response_error">"Uventet svar fra netværk."</string>
+    <string name="exception_error">"Netværks- eller SIM-kortfejl"</string>
+    <string name="radio_off_error">"Slå radioen til, inden du viser disse indstillinger."</string>
+    <string name="close_dialog">"OK"</string>
+    <string name="enable">"Aktiver"</string>
+    <string name="disable">"Deaktiver"</string>
+    <string name="change_num">"Opdater"</string>
+  <string-array name="clir_display_values">
+    <item>"Netværksstandard"</item>
+    <item>"Skjul nummer"</item>
+    <item>"Vis nummer"</item>
+  </string-array>
+    <string name="vm_save_number">"Gem voicemailnummer"</string>
+    <string name="vm_changed">"Voicemailnummeret blev ændret."</string>
+    <string name="vm_change_failed">"Ændring af voicemailnummer mislykkedes."</string>
+    <string name="no_change">"Der blev ikke foretaget nogen ændringer."</string>
+    <string name="sum_voicemail">"Indstil voicemailnummer"</string>
+    <string name="mobile_networks">"Indstillinger for mobilt netværk"</string>
+    <string name="label_available">"Tilgængelige netværk"</string>
+    <string name="load_networks_progress">"Søger ..."</string>
+    <string name="empty_networks_list">"Der blev ikke fundet nogen netværk."</string>
+    <string name="search_networks">"Søg efter netværk"</string>
+    <string name="network_query_error">"Der opstod en fejl, mens der blev søgt efter netværk."</string>
+    <string name="register_on_network">"Registrerer på <xliff:g id="NETWORK">%s</xliff:g> ..."</string>
+    <string name="not_allowed">"Dit SIM-kort tillader ikke en forbindelse til dette netværk."</string>
+    <string name="registration_done">"Registreret på netværk."</string>
+    <string name="sum_carrier_select">"Vælg en netværksudbyder"</string>
+    <string name="sum_search_networks">"Søg efter alle tilgængelige netværk"</string>
+    <string name="select_automatically">"Vælg automatisk"</string>
+    <string name="sum_select_automatically">"Vælg automatisk det foretrukne netværk"</string>
+    <string name="register_automatically">"Registrerer automatisk ..."</string>
+    <string name="roaming">"Dataroaming"</string>
+    <string name="roaming_enable">"Opret forbindelse til datatjenester under roaming"</string>
+    <string name="roaming_disable">"Opret forbindelse til datatjenester under roaming"</string>
+    <string name="roaming_reenable_message">"Du har mistet dataforbindelsen, fordi du har forladt dit hjemmenetværk med dataroaming slået fra."</string>
+    <string name="roaming_warning">"Tillad dataroaming? Du kan komme ud for væsentlige gebyrer for roaming."</string>
+    <string name="prefer_2g">"Brug kun 2G-netværk"</string>
+    <string name="prefer_2g_summary">"Sparer på batteriet"</string>
+    <string name="fdn">"Faste opkaldsnumre"</string>
+    <string name="manage_fdn_list">"FDN-liste"</string>
+    <string name="fdn_activation">"FDN-aktivering"</string>
+    <string name="fdn_enabled">"Numre til fast opkald er aktiveret"</string>
+    <string name="fdn_disabled">"Numre til fast opkald er deaktiveret"</string>
+    <string name="enable_fdn">"Aktiver FDN"</string>
+    <string name="disable_fdn">"Deaktiver FDN"</string>
+    <string name="change_pin2">"Skift PIN2-kode"</string>
+    <string name="enable_fdn_ok">"Deaktiver FDN"</string>
+    <string name="disable_fdn_ok">"Aktiver FDN"</string>
+    <string name="sum_fdn">"Administrer numre til fast opkald"</string>
+    <string name="sum_fdn_change_pin">"Skift PIN-kode for at få FDN-adgang"</string>
+    <string name="sum_fdn_manage_list">"Administrer telefonnummerliste"</string>
+    <string name="menu_add">"Tilføj kontaktperson"</string>
+    <string name="menu_edit">"Rediger kontaktperson"</string>
+    <string name="menu_delete">"Slet kontaktperson"</string>
+    <string name="get_pin2">"Indtast PIN2-kode"</string>
+    <string name="name">"Navn"</string>
+    <string name="number">"Nummer"</string>
+    <string name="save">"Gem"</string>
+    <string name="add_fdn_contact">"Tilføj kontaktperson til fast opkald"</string>
+    <string name="adding_fdn_contact">"Tilføjer kontaktperson til fast opkald ..."</string>
+    <string name="fdn_contact_added">"Kontaktperson til fast opkald blev tilføjet."</string>
+    <string name="edit_fdn_contact">"Rediger kontaktperson til fast opkald"</string>
+    <string name="updating_fdn_contact">"Opdaterer kontaktperson til fast opkald ..."</string>
+    <string name="fdn_contact_updated">"Kontaktperson til fast opkald blev opdateret."</string>
+    <string name="delete_fdn_contact">"Slet kontaktperson til fast opkald"</string>
+    <string name="deleting_fdn_contact">"Sletter kontaktperson til fast opkald ..."</string>
+    <string name="fdn_contact_deleted">"Kontaktperson til fast opkald blev slettet."</string>
+    <string name="pin2_invalid">"Ugyldig PIN2-kode"</string>
+    <string name="fdn_invalid_number">"Nummeret må ikke overstige 20 cifre."</string>
+    <string name="simContacts_emptyLoading">"Læser fra SIM-kort ..."</string>
+    <string name="simContacts_empty">"Der er ingen kontaktpersoner på dit SIM-kort."</string>
+    <string name="simContacts_title">"Vælg kontaktpersoner, der skal importeres"</string>
+    <string name="enable_pin">"Aktiver/deaktiver PIN-kode til SIM-kort"</string>
+    <string name="change_pin">"Skift PIN-kode til SIM-kort"</string>
+    <string name="enter_pin_text">"PIN-kode til SIM-kort:"</string>
+    <string name="oldPinLabel">"Gammel PIN-kode"</string>
+    <string name="newPinLabel">"Ny PIN-kode"</string>
+    <string name="confirmPinLabel">"Bekræft ny PIN-kode"</string>
+    <string name="badPin">"Den gamle PIN-kode, du indtastede, er forkert. Prøv igen."</string>
+    <string name="mismatchPin">"De PIN-koder, du indtastede, stemmer ikke overens. Prøv igen."</string>
+    <string name="invalidPin">"Indtast en PIN-kode på mellem 4 og 8 tal."</string>
+    <string name="disable_sim_pin">"Deaktiver PIN-kode til SIM-kort"</string>
+    <string name="enable_sim_pin">"Aktiver PIN-kode til SIM-kort"</string>
+    <string name="enable_in_progress">"Vent ..."</string>
+    <string name="enable_pin_ok">"PIN-kode til SIM-kortet blev aktiveret"</string>
+    <string name="disable_pin_ok">"PIN-kode til SIM-kortet er deaktiveret"</string>
+    <string name="pin_failed">"Den indtastede PIN-kode er forkert"</string>
+    <string name="pin_changed">"PIN-kode til SIM-kort blev ændret."</string>
+    <string name="puk_requested">"Adgangskoden er forkert. SIM-kortet er låst. PUK2-kode er påkrævet."</string>
+    <string name="enter_pin2_text">"PIN2-kode"</string>
+    <string name="oldPin2Label">"Gammel PIN2-kode"</string>
+    <string name="newPin2Label">"Ny PIN2-kode"</string>
+    <string name="confirmPin2Label">"Bekræft ny PIN2-kode"</string>
+    <string name="badPuk2">"Den indtastede PUK2-kode er forkert. Prøv igen."</string>
+    <string name="badPin2">"Den gamle PIN2-kode, du indtastede, er forkert. Prøv igen."</string>
+    <string name="mismatchPin2">"De PIN2-koder, du indtastede, stemmer ikke overens. Prøv igen."</string>
+    <string name="invalidPin2">"Indtast en PIN2-kode på mellem 4 og 8 tal."</string>
+    <string name="invalidPuk2">"Indtast en PUK2-kode på 8 tal."</string>
+    <string name="pin2_changed">"PIN2-koden blev ændret"</string>
+    <string name="label_puk2_code">"Indtast PUK2-kode"</string>
+    <string name="fdn_enable_puk2_requested">"Forkert adgangskode. Skift PIN2-kode, og prøv igen."</string>
+    <string name="puk2_requested">"Adgangskoden er forkert. SIM-kortet er låst. PUK2 er påkrævet."</string>
+    <string name="doneButton">"Færdig"</string>
+    <string name="caller_manage_header">"Telefonmøde <xliff:g id="CONF_CALL_TIME">%s</xliff:g>"</string>
+    <string name="caller_manage_manage_done_text">"Tilbage til opkald"</string>
+    <string name="sim_missing_continueView_text">"Fortsæt uden SIM-kort"</string>
+    <string name="sim_missing_msg_text">"Der blev ikke fundet noget SIM-kort. Indsæt et SIM-kort i telefonen."</string>
+    <string name="sim_unlock_dismiss_text">"Annuller"</string>
+    <string name="sim_unlock_unlock_text">"Lås op"</string>
+    <string name="sim_unlock_status_text">"Autentificerer PIN-kode ..."</string>
+    <string name="voicemail_settings_number_label">"Voicemailnummer"</string>
+    <string name="card_title_dialing">"Ringer op"</string>
+    <string name="card_title_in_progress">"Aktuelt opkald"</string>
+    <string name="card_title_conf_call">"Telefonmøde"</string>
+    <string name="card_title_incoming_call">"Indgående opkald"</string>
+    <string name="card_title_call_ended">"Opkald afsluttet"</string>
+    <string name="card_title_on_hold">"Ventende"</string>
+    <string name="card_title_hanging_up">"Lægger på"</string>
+    <string name="notification_missedCallTitle">"Ubesvarede opkald"</string>
+    <string name="notification_missedCallsTitle">"Ubesvarede opkald"</string>
+    <string name="notification_missedCallsMsg">"<xliff:g id="NUM_MISSED_CALLS">%s</xliff:g> ubesvarede opkald"</string>
+    <string name="notification_missedCallTicker">"Ubesvarede opkald fra <xliff:g id="MISSED_CALL_FROM">%s</xliff:g>"</string>
+    <string name="notification_ongoing_call_format">"Aktuelt opkald (<xliff:g id="DURATION">%s</xliff:g>)"</string>
+    <string name="notification_on_hold">"Ventende"</string>
+    <string name="notification_voicemail_title">"Ny voicemail"</string>
+    <string name="notification_voicemail_text_format">"Ring til <xliff:g id="VOICEMAIL_NUMBER">%s</xliff:g>"</string>
+    <string name="notification_voicemail_no_vm_number">"Voicemailnummer ukendt"</string>
+    <string name="incall_error_power_off">"Slå Flytilstand fra først for at foretage et opkald."</string>
+    <string name="incall_error_emergency_only">"Ikke registreret på netværk."</string>
+    <string name="incall_error_no_phone_number_supplied">"Opkaldet blev ikke sendt. Der blev ikke indtastet et gyldigt nummer."</string>
+    <string name="incall_error_call_failed">"Opkaldet blev ikke sendt."</string>
+    <string name="incall_status_dialed_mmi">"Starter MMI-sekvens ..."</string>
+    <string name="incall_error_supp_service_unknown">"Tjenesten er ikke understøttet."</string>
+    <string name="incall_error_supp_service_switch">"Der kunne ikke skiftes opkald."</string>
+    <string name="incall_error_supp_service_separate">"Opkald kunne ikke separeres."</string>
+    <string name="incall_error_supp_service_transfer">"Opkaldet kunne ikke overføres."</string>
+    <string name="incall_error_supp_service_conference">"Der kunne ikke oprettes mødeopkald."</string>
+    <string name="incall_error_supp_service_reject">"Opkaldet kunne ikke afvises."</string>
+    <string name="incall_error_supp_service_hangup">"Der kunne ikke foretages opkald."</string>
+    <string name="emergency_enable_radio_dialog_title">"Nødopkald"</string>
+    <string name="emergency_enable_radio_dialog_message">"Tænder for radio ..."</string>
+    <string name="emergency_enable_radio_dialog_retry">"Området er ude af drift. Prøver igen ..."</string>
+    <string name="dial_emergency_error">"Opkaldet blev ikke sendt. <xliff:g id="NON_EMERGENCY_NUMBER">%s</xliff:g> er ikke et nødnummer."</string>
+    <string name="dial_emergency_empty_error">"Opkaldet blev ikke sendt. Indtast et nødnummer."</string>
+    <string name="dialerKeyboardHintText">"Brug tastatur til at ringe op"</string>
+    <string name="dtmfDialpadHintText">"Touch-tone-tastatur"</string>
+    <string name="dtmfDialpadHandleLabel">"Nummerblok"</string>
+    <string name="touchLockText">"Tryk to gange"\n"for at låse op"</string>
+    <string name="importSimEntry">"Importer"</string>
+    <string name="importAllSimEntries">"Importer alle"</string>
+    <string name="importingSimContacts">"Importerer SIM-kontaktpersoner"</string>
+    <string name="importToFDNfromContacts">"Importer fra kontaktpersoner"</string>
+</resources>
