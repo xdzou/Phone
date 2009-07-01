@@ -55,6 +55,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int CMD_ANSWER_RINGING_CALL = 4;
     private static final int CMD_END_CALL = 5;  // not used yet
     private static final int CMD_SILENCE_RINGER = 6;
+    private static final int CMD_INVOKE_OEM_RIL_REQUEST = 7;
+    private static final int EVENT_INVOKE_OEM_RIL_REQUEST = 8;
 
     PhoneApp mApp;
     Phone mPhone;
@@ -133,6 +135,27 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
                 case CMD_SILENCE_RINGER:
                     silenceRingerInternal();
+                    break;
+
+                case CMD_INVOKE_OEM_RIL_REQUEST:
+                    request = (MainThreadRequest)msg.obj;
+                    onCompleted = obtainMessage(EVENT_INVOKE_OEM_RIL_REQUEST, request);
+                    mPhone.invokeOemRilRequestRaw((byte[])request.argument, onCompleted);
+                    break;
+
+                case EVENT_INVOKE_OEM_RIL_REQUEST:
+                    ar = (AsyncResult)msg.obj;
+                    request = (MainThreadRequest)ar.userObj;
+                    if (ar.exception == null && ar.result != null) {
+                        request.result = ar.result;
+                    } else {
+                        // Set result to null indicating failure
+                        request.result = null;
+                    }
+                    // Wake up the requesting thread
+                    synchronized (request) {
+                        request.notifyAll();
+                    }
                     break;
 
                 default:
@@ -623,6 +646,19 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         } else {
             return GSM_PHONE;
         }
+    }
+
+    public byte[] sendOemRilRequestRaw(byte[] requestBytes) {
+        byte[] response = null;
+        // TODO: Check Permissions of the application
+
+        try {
+            response = (byte[])sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, requestBytes);
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "sendOemRilRequestRaw: Runtime Exception");
+        }
+
+        return response;
     }
 }
 
