@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +21,9 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.gsm.CallForwardInfo;
 import com.android.internal.telephony.gsm.CommandsInterface;
+import com.android.internal.telephony.gsm.GSMPhone;
 
+import android.os.SystemProperties;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -56,6 +59,7 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     // debug data
     private static final String LOG_TAG = "call features settings";
+    private static final String CSP_TAG = "CSP Call FS";
     private static final boolean DBG = false;
 
     // string contants
@@ -1275,6 +1279,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        int plmnStatus;
 
         addPreferencesFromResource(R.xml.call_feature_setting);
 
@@ -1350,6 +1355,37 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         mPhone = PhoneFactory.getDefaultPhone();
         mAppState = AppState.INPUT_READY;
+
+        try {
+           //persist.cust.tel.adapt is super flag, if this is set then EF_CSP
+           //will be used irrespective of the value of
+           //persist.cust.tel.efcsp.plmn.Otherwise EF_CSP will be used if
+           //persist.cust.tel.efcsp.plmn is set.
+           if (SystemProperties.getBoolean("persist.cust.tel.adapt",false) ||
+               SystemProperties.getBoolean("persist.cust.tel.efcsp.plmn",false)) {
+               Log.i(CSP_TAG,"use_csp_plmn is 1");
+               if(mPhone != null) {
+                   plmnStatus = ((GSMPhone)mPhone).getCspPlmnStatus();
+                   if(plmnStatus == 1) {
+                     //This means that in elementary file EF_CSP,
+                     //in value added serice group, in the service byte,bit 8, i.e
+                     //Restriction of menu options for manual PLMN selection bit
+                     //is set
+                      Log.i(CSP_TAG,
+                            "CSP PLMN bit is set,Enabling Network Operators menu");
+                      findPreference("button_carrier_sel_key").setEnabled(true);
+                   } else if(plmnStatus == 0) {
+                      Log.i(CSP_TAG,
+                            "CSP PLMN bit is not set,Disabling Network Operators menu");
+                      findPreference("button_carrier_sel_key").setEnabled(false);
+                   } else {
+                      Log.e(CSP_TAG,"Undefined Csp PLMN Status");
+                   }
+               }
+           }
+        } catch(Exception e) {
+            Log.e(CSP_TAG,"Exception in reading use_csp_plmn " + e);
+        }
 
         if (icicle != null) {
             // retrieve number state
