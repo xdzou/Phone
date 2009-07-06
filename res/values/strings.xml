@@ -67,6 +67,10 @@
     <string name="callFailed_dsac_restricted_emergency">Emergency calls are restricted by access control.</string>
     <!-- In-call screen: call failure reason (Normal call denied because domain specific access control is on)-->
     <string name="callFailed_dsac_restricted_normal">Normal calls are restricted by access control.</string>
+    <!-- In-call screen: call failure reason (The given IMSI is not known at the VLR)-->
+    <string name="callFailed_imsi_unknown_vlr">Call Failed MM #4</string>
+    <!-- In-call screen: call failure reason (Network does not accept emergency call establishment using an IMEI)-->
+    <string name="callFailed_imei_not_accepted">Call Failed MM #5</string>
     <!-- In-call screen: status label for a conference call -->
     <string name="confCall">Conference call</string>
 
