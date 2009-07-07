@@ -20,6 +20,8 @@ package com.android.phone;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.gsm.NetworkInfo;
 
+import android.os.SystemProperties;
+
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
@@ -374,7 +376,16 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (NetworkInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    carrier.setTitle(ni.getOperatorAlphaLong());
+                    //If EONS algorithm is enabled, then display MCC+MNC
+                    //values in available networks list, otherwise display
+                    //operator long name.
+                    if (SystemProperties.getBoolean("persist.cust.tel.adapt",false) ||
+                        SystemProperties.getBoolean("persist.cust.tel.eons",false)) {
+                        carrier.setTitle(ni.getOperatorNumeric());
+                    }
+                    else {
+                        carrier.setTitle(ni.getOperatorAlphaLong());
+                    }
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
