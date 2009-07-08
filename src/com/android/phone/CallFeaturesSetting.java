@@ -786,6 +786,11 @@ public class CallFeaturesSetting extends PreferenceActivity
             case 2: // Unknown (network error, etc)
             default:
                 value = CommandsInterface.CLIR_DEFAULT;
+                //When network is not provisoned or network error
+                //Set the local value in RIL to default value
+                if (clirArgs[0] == 1 || clirArgs[0] == 2) {
+                   mPhone.setOutgoingCallerIdDisplay(value,null);
+                }
                 break;
         }
         setButtonCLIRValue(value);
