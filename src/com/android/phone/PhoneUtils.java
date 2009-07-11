@@ -1112,6 +1112,25 @@ public class PhoneUtils {
             // query is running, just tack on this listener to the queue.
             cit = (CallerInfoToken) userDataObject;
 
+            String number = c.getAddress();
+
+            if (TextUtils.isEmpty(cit.currentInfo.phoneNumber) && !TextUtils.isEmpty(number)) {
+                // Update Number in CallerInfoToken currentInfo
+                cit.currentInfo.phoneNumber = number;
+                // Store CNAP information retrieved from the Connection
+                cit.currentInfo.cnapName = c.getCnapName();
+                cit.currentInfo.name = cit.currentInfo.cnapName; // This can get overwritten
+                                                                 // by ContactInfo later
+                cit.currentInfo.numberPresentation = c.getNumberPresentation();
+                cit.currentInfo.namePresentation = c.getCnapNamePresentation();
+                if (DBG)
+                    log("startGetCallerInfo: CNAP Info from FW: name=" + cit.currentInfo.cnapName
+                            + ", Name/Number Pres=" + cit.currentInfo.numberPresentation);
+                cit.asyncQuery = CallerInfoAsyncQuery.startQuery(QUERY_TOKEN, context, number,
+                        sCallerInfoQueryListener, c);
+                cit.isFinal = false; // please see note on isFinal, above.
+            }
+            
             // handling case where number is null (caller id hidden) as well.
             if (cit.asyncQuery != null) {
                 cit.asyncQuery.addQueryListener(QUERY_TOKEN, listener, cookie);
@@ -1126,6 +1145,13 @@ public class PhoneUtils {
                 cit.isFinal = true; // please see note on isFinal, above.
             }
         } else {
+            String number = c.getAddress();
+
+            if (TextUtils.isEmpty(((CallerInfo)userDataObject).phoneNumber)
+                    && !TextUtils.isEmpty(number)) {
+                ((CallerInfo)userDataObject).phoneNumber = number;
+            }
+         
             cit = new CallerInfoToken();
             cit.currentInfo = (CallerInfo) userDataObject;
             cit.asyncQuery = null;
