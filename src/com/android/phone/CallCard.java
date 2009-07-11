@@ -498,6 +498,19 @@ public class CallCard extends FrameLayout
                 if (o instanceof PhoneUtils.CallerInfoToken) {
                     runQuery = mPhotoTracker.isDifferentImageRequest(
                             ((PhoneUtils.CallerInfoToken) o).currentInfo);
+                    if (TextUtils.isEmpty(((PhoneUtils.CallerInfoToken)o).currentInfo.phoneNumber)
+                            && !TextUtils.isEmpty(conn.getAddress())) {
+                        // Received Caller ID. Rerun Query
+                        runQuery = true;
+                    }
+                } else if (o instanceof CallerInfo) {
+                    if (TextUtils.isEmpty(((CallerInfo)o).phoneNumber)
+                            && !TextUtils.isEmpty(conn.getAddress())) {
+                        // Received Caller ID. Rerun Query
+                        runQuery = true;
+                    } else {
+                        runQuery = mPhotoTracker.isDifferentImageRequest(conn);
+                    }
                 } else {
                     runQuery = mPhotoTracker.isDifferentImageRequest(conn);
                 }
