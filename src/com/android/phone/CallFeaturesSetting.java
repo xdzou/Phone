@@ -42,6 +42,7 @@ import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.WindowManager;
+import com.android.internal.telephony.CommandException;
 
 import com.android.internal.telephony.CallForwardInfo;
 import com.android.internal.telephony.CommandsInterface;
@@ -131,6 +132,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final int RESPONSE_ERROR = 300;
     private static final int VM_NOCHANGE_ERROR = 400;
     private static final int VM_RESPONSE_ERROR = 500;
+    private static final int FDN_BLOCKED_ERROR = 1000;
 
     /** used to track errors with the radio off. */
     private static final int RADIO_OFF_ERROR = 800;
@@ -153,6 +155,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final int MSG_VM_OK = 600;
     private static final int MSG_VM_NOCHANGE = 700;
     private static final int MSG_RADIO_OFF = 800;
+    private static final int MSG_FDN_BLOCKED = 900;
 
     // application states including network error state.
     // this includes seperate state for the inital query, which is cancelable.
@@ -654,7 +657,14 @@ public class CallFeaturesSetting extends PreferenceActivity
         // done with query, display the new settings.
         if (ar.exception != null) {
             if (DBG) log("handleGetCLIRMessage: Error getting CLIR enable state.");
-            return MSG_EXCEPTION;
+            if (((CommandException)ar.exception).getCommandError()
+                  ==  CommandException.Error.FDN_FAILURE) {
+               if (DBG) log("handleGetCLIRMessage: Error FDN blocked");
+               return MSG_FDN_BLOCKED;
+           }
+           else {
+              return MSG_EXCEPTION;
+           }
         } else {
             int clirArray[] = (int[]) ar.result;
             if (clirArray.length != 2) {
@@ -671,8 +681,15 @@ public class CallFeaturesSetting extends PreferenceActivity
     // CW Object
     private int handleGetCWMessage(AsyncResult ar) {
         if (ar.exception != null) {
-            if (DBG) log("handleGetCWMessage: Error getting CW enable state.");
-            return MSG_EXCEPTION;
+           if (DBG) log("handleGetCWMessage: Error getting CW enable state.");
+           if (((CommandException)ar.exception).getCommandError()
+                 ==  CommandException.Error.FDN_FAILURE) {
+              if (DBG) log("handleGetCWMessage: Error FDN blocked");
+              return MSG_FDN_BLOCKED;
+           }
+           else {
+              return MSG_EXCEPTION;
+           }
         } else {
             if (DBG) log("handleGetCWMessage: CW enable state successfully queried.");
             syncCWState((int[]) ar.result);
@@ -696,10 +713,17 @@ public class CallFeaturesSetting extends PreferenceActivity
     // CF Object
     private int handleGetCFMessage(AsyncResult ar, int reason) {
         // done with query, display the new settings.
-        if (ar.exception != null) {
-            if (DBG) log("handleGetCFMessage: Error getting CF enable state.");
-            return MSG_EXCEPTION;
-        } else if (ar.userObj instanceof Throwable) {
+       if (ar.exception != null) {
+          if (DBG) log("handleGetCFMessage: Error getting CF enable state.");
+          if (((CommandException)ar.exception).getCommandError()
+                ==  CommandException.Error.FDN_FAILURE) {
+             if (DBG) log("handleGetCFMessage: Error FDN blocked");
+             return MSG_FDN_BLOCKED;
+          }
+          else {
+             return MSG_EXCEPTION;
+          }
+       } else if (ar.userObj instanceof Throwable) {
            // TODO: I don't think it makes sense to throw the error up to
            // the user, but this may be reconsidered.  For now, just log
            // the specific error and throw up a generic error.
@@ -1096,7 +1120,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         // Handle error dialog codes
         } else if ((id == RESPONSE_ERROR) || (id == EXCEPTION_ERROR) ||
                 (id == VM_RESPONSE_ERROR) || (id == VM_NOCHANGE_ERROR) ||
-                (id == VOICEMAIL_DIALOG_CONFIRM) || (id == RADIO_OFF_ERROR)){
+                (id == VOICEMAIL_DIALOG_CONFIRM) || (id == RADIO_OFF_ERROR) || (id == FDN_BLOCKED_ERROR)){
 
             AlertDialog.Builder b = new AlertDialog.Builder(this);
 
@@ -1132,6 +1156,10 @@ public class CallFeaturesSetting extends PreferenceActivity
                     msgId = R.string.radio_off_error;
                     // Set Button 3
                     b.setNeutralButton(R.string.close_dialog, this);
+                    break;
+                case FDN_BLOCKED_ERROR:
+                    msgId = R.string.fdn_blocked_error;
+                    b.setNegativeButton(R.string.close_dialog, this);
                     break;
                 case EXCEPTION_ERROR:
                 default:
@@ -1238,6 +1266,14 @@ public class CallFeaturesSetting extends PreferenceActivity
                     break;
                 case MSG_RADIO_OFF:
                     showDialog (RADIO_OFF_ERROR);
+                    break;
+                case MSG_FDN_BLOCKED:
+                    if (mAppState == AppState.INITIAL_QUERY) {
+                        dismissDialog(INITIAL_BUSY_DIALOG);
+                    } else {
+                        dismissBusyDialog();
+                    }
+                    showDialog (FDN_BLOCKED_ERROR);
                     break;
                 case MSG_UNEXPECTED_RESPONSE:
                     if (mAppState == AppState.INITIAL_QUERY) {
