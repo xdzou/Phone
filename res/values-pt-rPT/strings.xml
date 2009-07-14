@@ -82,7 +82,7 @@
     <string name="sim_ndp_unlock_text">"Desbloquear"</string>
     <string name="sim_ndp_dismiss_text">"Ignorar"</string>
     <string name="requesting_unlock">"A pedir desbloqueio de rede..."</string>
-    <string name="unlock_failed">"O·pedido·de·desbloqueio·de·rede·falhou."</string>
+    <string name="unlock_failed">"O pedido de desbloqueio de rede falhou."</string>
     <string name="unlock_success">"Desbloqueio de rede bem sucedido."</string>
     <string name="imei">"IMEI"</string>
     <string name="labelMore">"Definições de chamadas adicionais"</string>
@@ -138,7 +138,7 @@
   </string-array>
     <string name="vm_save_number">"Guardar o número do correio de voz"</string>
     <string name="vm_changed">"O número do correio de voz foi alterado."</string>
-    <string name="vm_change_failed">"A·alteração·do·número·do·correio·de·voz·falhou."</string>
+    <string name="vm_change_failed">"A alteração do número do correio de voz falhou."</string>
     <string name="no_change">"Não foram efectuadas alterações."</string>
     <string name="sum_voicemail">"Definir o número do correio de voz"</string>
     <string name="mobile_networks">"Definições da rede móvel"</string>
@@ -161,7 +161,7 @@
     <string name="roaming_reenable_message">"A ligação de dados foi perdida porque saiu do alcance da sua rede e o roaming de dados estava desactivado."</string>
     <string name="roaming_warning">"Permitir roaming de dados? Os encargos de roaming podem ser significativos!"</string>
     <string name="prefer_2g">"Utilizar apenas redes 2G"</string>
-    <string name="prefer_2g_summary">"Poupa bateria"</string>
+    <string name="prefer_2g_summary">"Economiza bateria"</string>
     <string name="fdn">"Números de marcação fixa (FDN)"</string>
     <string name="manage_fdn_list">"Lista de números de marcação fixa (FDN)"</string>
     <string name="fdn_activation">"Activação de FDN"</string>
