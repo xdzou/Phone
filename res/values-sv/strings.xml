@@ -48,7 +48,7 @@
     <string name="menu_bluetooth">"Bluetooth"</string>
     <string name="menu_mute">"Ljud av"</string>
     <string name="menu_hold">"Parkera"</string>
-    <string name="menu_endCall">"Avsluta samtal"</string>
+    <string name="menu_endCall">"Avsl. samt."</string>
     <string name="menu_swapCalls">"Byt samtal"</string>
     <string name="menu_mergeCalls">"Koppla ihop samtal"</string>
     <string name="menu_addCall">"Lägg till samtal"</string>
@@ -85,8 +85,8 @@
     <string name="unlock_failed">"Det gick inte att låsa upp nätverket."</string>
     <string name="unlock_success">"Nätverket upplåst"</string>
     <string name="imei">"IMEI-kod"</string>
-    <string name="labelMore">"Övriga samtalsinställningar"</string>
-    <string name="apn_settings">"Namn på åtkomstpunkter"</string>
+    <string name="labelMore">"Övriga samtalsinställn."</string>
+    <string name="apn_settings">"Åtkomstpunktsnamn"</string>
     <string name="settings_label">"Nätverksinställningar"</string>
     <string name="voicemail">"Röstbrevlåda"</string>
     <string name="voicemail_abbreviated">"RB:"</string>
@@ -160,7 +160,7 @@
     <string name="roaming_disable">"Anslut till datatjänster vid roaming"</string>
     <string name="roaming_reenable_message">"Du förlorade dataanslutningen eftersom du lämnade ditt hemnätverk utan att aktivera roaming."</string>
     <string name="roaming_warning">"Tillåta roaming? Observera att detta kan leda till höga kostnader!"</string>
-    <string name="prefer_2g">"Använd endast 2G-nätverk"</string>
+    <string name="prefer_2g">"Använd endast 2G-nätv."</string>
     <string name="prefer_2g_summary">"Sparar batteri"</string>
     <string name="fdn">"Fasta nummer"</string>
     <string name="manage_fdn_list">"FDN-lista"</string>

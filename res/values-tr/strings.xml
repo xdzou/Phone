@@ -102,7 +102,7 @@
     <string name="sum_cw_enabled">"Bir çağrı sırasında, gelen çağrıları bana bildir"</string>
     <string name="sum_cw_disabled">"Bir çağrı sırasında, gelen çağrıları bana bildir"</string>
     <string name="call_forwarding_settings">"Çağrı yönlendirme ayarları"</string>
-    <string name="labelCF">"Çağrı yönlendiriliyor"</string>
+    <string name="labelCF">"Çağrı yönlendirme"</string>
     <string name="labelCFU">"Her zaman yönlendir"</string>
     <string name="messageCFU">"Daima bu numarayı kullan"</string>
     <string name="sum_cfu_enabled_indicator">"Tüm çağrılar yönlendiriliyor"</string>
@@ -142,7 +142,7 @@
     <string name="no_change">"Hiçbir değişiklik yapılmadı."</string>
     <string name="sum_voicemail">"Sesli mesaj numarasını ayarla"</string>
     <string name="mobile_networks">"Mobil ağ ayarları"</string>
-    <string name="label_available">"Kullanılabilen ağlar"</string>
+    <string name="label_available">"Kullanılabilir ağlar"</string>
     <string name="load_networks_progress">"Aranıyor..."</string>
     <string name="empty_networks_list">"Hiçbir ağ bulunamadı."</string>
     <string name="search_networks">"Ağları ara"</string>
@@ -154,7 +154,7 @@
     <string name="sum_search_networks">"Kullanılabilen tüm ağları ara"</string>
     <string name="select_automatically">"Otomatik olarak seç"</string>
     <string name="sum_select_automatically">"Tercih edilen ağı otomatik olarak seç"</string>
-    <string name="register_automatically">"Otomatik olarak kaydediliyor..."</string>
+    <string name="register_automatically">"Otomatik olarak kayıt yapılıyor..."</string>
     <string name="roaming">"Veri dolaşımı"</string>
     <string name="roaming_enable">"Dolaşırken veri hizmetlerine bağlan"</string>
     <string name="roaming_disable">"Dolaşırken veri hizmetlerine bağlan"</string>

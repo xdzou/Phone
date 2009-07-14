@@ -86,7 +86,7 @@
     <string name="unlock_success">"Разблокировка сети успешно завершена."</string>
     <string name="imei">"IMEI"</string>
     <string name="labelMore">"Дополнительные настройки вызовов"</string>
-    <string name="apn_settings">"Названия точек доступа"</string>
+    <string name="apn_settings">"Точки доступа"</string>
     <string name="settings_label">"Настройки сети"</string>
     <string name="voicemail">"Голосовая почта"</string>
     <string name="voicemail_abbreviated">"ГП:"</string>
@@ -160,9 +160,9 @@
     <string name="roaming_disable">"Подключаться к службам передачи данных в роуминге"</string>
     <string name="roaming_reenable_message">"Передача данных прекращена, потому что телефон находится за пределами домашней сети, а интернет-роуминг выключен."</string>
     <string name="roaming_warning">"Разрешить интернет-роуминг? Возможны высокие расходы за использование роуминга."</string>
-    <string name="prefer_2g">"Использовать только сети 2G"</string>
+    <string name="prefer_2g">"Только сети 2G"</string>
     <string name="prefer_2g_summary">"Экономия заряда аккумулятора"</string>
-    <string name="fdn">"Номера ограниченного набора"</string>
+    <string name="fdn">"Ограниченный набор"</string>
     <string name="manage_fdn_list">"Список номеров ограниченного набора"</string>
     <string name="fdn_activation">"Активация ограниченного набора"</string>
     <string name="fdn_enabled">"Ограниченный набор включен"</string>

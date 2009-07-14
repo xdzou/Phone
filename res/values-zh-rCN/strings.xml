@@ -44,7 +44,7 @@
     <string name="ussdRunning">"正在运行 USSD 代码..."</string>
     <string name="mmiCancelled">"MMI 码已取消"</string>
     <string name="cancel">"取消"</string>
-    <string name="menu_speaker">"扬声器"</string>
+    <string name="menu_speaker">"免提"</string>
     <string name="menu_bluetooth">"蓝牙"</string>
     <string name="menu_mute">"静音"</string>
     <string name="menu_hold">"保持"</string>
@@ -58,8 +58,8 @@
     <string name="menu_answerAndHold">"保持当前通话"\n"并接听"</string>
     <string name="menu_answerAndEnd">"结束当前通话"\n"并接听"</string>
     <string name="ok">"确定"</string>
-    <string name="menuButtonHint">"按下“菜单”以选择通话选项。"</string>
-    <string name="menuButtonKeyboardDialHint">"按下“菜单”以选择通话选项  •  使用键盘拨号"</string>
+    <string name="menuButtonHint">"按 MENU 可以选择通话选项。"</string>
+    <string name="menuButtonKeyboardDialHint">"按 MENU 可以选择通话选项 • 使用键盘拨号"</string>
     <string name="wait_prompt_str">"发送以下音频？"\n</string>
     <string name="send_button">"发送"</string>
     <string name="wild_prompt_str">"将通配符替换为"</string>
