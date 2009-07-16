@@ -456,10 +456,13 @@ public class CallCard extends FrameLayout
                 // with the current implementation of getCallerInfo and
                 // updateDisplayForPerson.
                 CallerInfo info = PhoneUtils.getCallerInfo(getContext(), null /* conn */);
-                updateDisplayForPerson(info, Connection.PRESENTATION_ALLOWED, false, call);
+                updateDisplayForPerson(info, Connection.PRESENTATION_ALLOWED, false, call,
+                      Connection.PRESENTATION_UNKNOWN,null);
             } else {
                 if (DBG) log("  - CONN: " + conn + ", state = " + conn.getState());
                 int presentation = conn.getNumberPresentation();
+                int namePresentation = conn.getNamePresentation();
+                String otaName = conn.getOtaName();
 
                 // make sure that we only make a new query when the current
                 // callerinfo differs from what we've been requested to display.
@@ -476,7 +479,8 @@ public class CallCard extends FrameLayout
                     if (DBG) log("- displayMainCallStatus: starting CallerInfo query...");
                     PhoneUtils.CallerInfoToken info =
                             PhoneUtils.startGetCallerInfo(getContext(), conn, this, call);
-                    updateDisplayForPerson(info.currentInfo, presentation, !info.isFinal, call);
+                    updateDisplayForPerson(info.currentInfo, presentation, !info.isFinal, call,
+                          namePresentation,otaName);
                 } else {
                     // No need to fire off a new query.  We do still need
                     // to update the display, though (since we might have
@@ -485,11 +489,13 @@ public class CallCard extends FrameLayout
                     if (o instanceof CallerInfo) {
                         CallerInfo ci = (CallerInfo) o;
                         if (DBG) log("   ==> Got CallerInfo; updating display: ci = " + ci);
-                        updateDisplayForPerson(ci, presentation, false, call);
+                        updateDisplayForPerson(ci, presentation, false, call,
+                              namePresentation,otaName);
                     } else if (o instanceof PhoneUtils.CallerInfoToken){
                         CallerInfo ci = ((PhoneUtils.CallerInfoToken) o).currentInfo;
                         if (DBG) log("   ==> Got CallerInfoToken; updating display: ci = " + ci);
-                        updateDisplayForPerson(ci, presentation, true, call);
+                        updateDisplayForPerson(ci, presentation, true, call,
+                              namePresentation,otaName);
                     } else {
                         Log.w(LOG_TAG, "displayMainCallStatus: runQuery was false, "
                               + "but we didn't have a cached CallerInfo object!  o = " + o);
@@ -525,7 +531,8 @@ public class CallCard extends FrameLayout
             // If the object is a textview instead, we update it as we need to.
             if (DBG) log("callerinfo query complete, updating ui from displayMainCallStatus()");
             Call call = (Call) cookie;
-            updateDisplayForPerson(ci, Connection.PRESENTATION_ALLOWED, false, call);
+            updateDisplayForPerson(ci, Connection.PRESENTATION_ALLOWED, false, call,
+                  Connection.PRESENTATION_UNKNOWN,null);
             updatePhotoForCallState(call);
 
         } else if (cookie instanceof TextView){
@@ -889,7 +896,9 @@ public class CallCard extends FrameLayout
     private void updateDisplayForPerson(CallerInfo info,
                                         int presentation,
                                         boolean isTemporary,
-                                        Call call) {
+                                        Call call,
+                                        int namePresentation,
+                                        String otaName) {
         if (DBG) log("updateDisplayForPerson(" + info + ")...");
 
         // inform the state machine that we are displaying a photo.
@@ -916,10 +925,22 @@ public class CallCard extends FrameLayout
             // an unknown contact.
 
             if (TextUtils.isEmpty(info.name)) {
-                if (TextUtils.isEmpty(info.phoneNumber)) {
-                    name =  getPresentationString(presentation);
-                } else {
-                    name = info.phoneNumber;
+                if (namePresentation == Connection.PRESENTATION_ALLOWED &&
+                    !TextUtils.isEmpty(otaName)) {
+                    //Name Present and Allowed,and there is no name in
+                    //database.Display network name.
+                    name = otaName;
+                    if (!TextUtils.isEmpty(info.phoneNumber)) {
+                        //Display the phone number if it is present.
+                        displayNumber = info.phoneNumber;
+                    }
+                }
+                else {
+                    if (TextUtils.isEmpty(info.phoneNumber)) {
+                        name =  getPresentationString(presentation);
+                    } else {
+                        name = info.phoneNumber;
+                    }
                 }
             } else {
                 name = info.name;
