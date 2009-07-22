@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +38,8 @@ import com.android.internal.telephony.Phone;
 
 import static com.android.internal.telephony.RILConstants.GSM_PHONE;
 import static com.android.internal.telephony.RILConstants.CDMA_PHONE;
+import static com.android.internal.telephony.RILConstants.SUCCESS;
+import com.android.internal.telephony.CommandException;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -146,12 +149,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case EVENT_INVOKE_OEM_RIL_REQUEST:
                     ar = (AsyncResult)msg.obj;
                     request = (MainThreadRequest)ar.userObj;
-                    if (ar.exception == null && ar.result != null) {
-                        request.result = ar.result;
-                    } else {
-                        // Set result to null indicating failure
-                        request.result = null;
-                    }
+                    request.result = ar;
+
                     // Wake up the requesting thread
                     synchronized (request) {
                         request.notifyAll();
@@ -648,17 +647,37 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         }
     }
 
-    public byte[] sendOemRilRequestRaw(byte[] requestBytes) {
-        byte[] response = null;
+    public int sendOemRilRequestRaw(byte[] request, byte[] response) {
+        int returnValue = SUCCESS;
         // TODO: Check Permissions of the application
 
         try {
-            response = (byte[])sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, requestBytes);
+            AsyncResult result = (AsyncResult)sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, request);
+            if(result.exception == null) {
+                returnValue = SUCCESS;
+                if (result.result != null) {
+                    byte[] responseData = (byte[])(result.result);
+                    if(responseData.length > response.length) {
+                        Log.w(LOG_TAG, "Buffer to copy response too small: Response length is " +
+                                responseData.length +  "bytes. Buffer Size is " +
+                                response.length + "bytes.");
+                    }
+                    System.arraycopy(responseData, 0, response, 0, responseData.length);
+                    returnValue = responseData.length;
+                }
+
+            } else {
+                CommandException ex = (CommandException) result.exception;
+                returnValue = ex.getCommandError().ordinal();
+                if(returnValue > 0) returnValue *= -1;
+            }
         } catch (RuntimeException e) {
             Log.w(LOG_TAG, "sendOemRilRequestRaw: Runtime Exception");
+            returnValue = (CommandException.Error.GENERIC_FAILURE.ordinal());
+            if(returnValue > 0) returnValue *= -1;
         }
 
-        return response;
+        return returnValue;
     }
 }
 
