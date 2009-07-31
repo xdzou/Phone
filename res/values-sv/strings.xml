@@ -20,7 +20,7 @@
     <string name="dialerIconLabel">"Samtal"</string>
     <string name="emergencyDialerIconLabel">"Nödsamtal"</string>
     <string name="phoneIconLabel">"Telefon"</string>
-    <string name="recentCallsIconLabel">"Samtalshistorik"</string>
+    <string name="recentCallsIconLabel">"Logg"</string>
     <string name="fdnListLabel">"FDN-lista"</string>
     <string name="unknown">"Okänd"</string>
     <string name="private_num">"Privat nummer"</string>
@@ -51,7 +51,7 @@
     <string name="menu_endCall">"Avsl. samt."</string>
     <string name="menu_swapCalls">"Byt samtal"</string>
     <string name="menu_mergeCalls">"Koppla ihop samtal"</string>
-    <string name="menu_addCall">"Lägg till samtal"</string>
+    <string name="menu_addCall">"Lägg till"</string>
     <string name="menu_manageConference">"Hantera konferenssamtal"</string>
     <string name="menu_showDialpad">"Visa knappsats"</string>
     <string name="menu_hideDialpad">"Dölj knappsatsen"</string>
@@ -172,7 +172,7 @@
     <string name="change_pin2">"Ändra PIN2-kod"</string>
     <string name="enable_fdn_ok">"Inaktivera FDN"</string>
     <string name="disable_fdn_ok">"Aktivera FDN"</string>
-    <string name="sum_fdn">"Hantera Fasta nummer"</string>
+    <string name="sum_fdn">"Hantera fasta nummer"</string>
     <string name="sum_fdn_change_pin">"Ändra PIN-kod för FDN-åtkomst"</string>
     <string name="sum_fdn_manage_list">"Hantera nummerlistan"</string>
     <string name="menu_add">"Lägg till kontakt"</string>

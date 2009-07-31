@@ -21,7 +21,7 @@
     <string name="emergencyDialerIconLabel">"Номера экстренных вызовов"</string>
     <string name="phoneIconLabel">"Телефон"</string>
     <string name="recentCallsIconLabel">"Список вызовов"</string>
-    <string name="fdnListLabel">"Список номеров ограниченного набора"</string>
+    <string name="fdnListLabel">"Номера ограниченного набора"</string>
     <string name="unknown">"Неизвестный абонент"</string>
     <string name="private_num">"Скрытый номер"</string>
     <string name="payphone">"Телефон-автомат"</string>
@@ -46,7 +46,7 @@
     <string name="cancel">"Отмена"</string>
     <string name="menu_speaker">"Динамик"</string>
     <string name="menu_bluetooth">"Bluetooth"</string>
-    <string name="menu_mute">"Отключить звук"</string>
+    <string name="menu_mute">"Микрофон выкл."</string>
     <string name="menu_hold">"Удерживать"</string>
     <string name="menu_endCall">"Завершить вызов"</string>
     <string name="menu_swapCalls">"Переключиться на другой вызов"</string>
@@ -86,7 +86,7 @@
     <string name="unlock_success">"Разблокировка сети успешно завершена."</string>
     <string name="imei">"IMEI"</string>
     <string name="labelMore">"Дополнительные настройки вызовов"</string>
-    <string name="apn_settings">"Точки доступа"</string>
+    <string name="apn_settings">"Точки доступа (APN)"</string>
     <string name="settings_label">"Настройки сети"</string>
     <string name="voicemail">"Голосовая почта"</string>
     <string name="voicemail_abbreviated">"ГП:"</string>
@@ -163,7 +163,7 @@
     <string name="prefer_2g">"Только сети 2G"</string>
     <string name="prefer_2g_summary">"Экономия заряда аккумулятора"</string>
     <string name="fdn">"Ограниченный набор"</string>
-    <string name="manage_fdn_list">"Список номеров ограниченного набора"</string>
+    <string name="manage_fdn_list">"Номера ограниченного набора"</string>
     <string name="fdn_activation">"Активация ограниченного набора"</string>
     <string name="fdn_enabled">"Ограниченный набор включен"</string>
     <string name="fdn_disabled">"Ограниченный набор отключен"</string>

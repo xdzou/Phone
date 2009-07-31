@@ -156,8 +156,8 @@
     <string name="sum_select_automatically">"Selecionar automaticamente a rede preferida"</string>
     <string name="register_automatically">"Registrando automaticamente…"</string>
     <string name="roaming">"Roaming de dados"</string>
-    <string name="roaming_enable">"Conectar aos serviços de dados quando estiver em trânsito"</string>
-    <string name="roaming_disable">"Conectar aos serviços de dados quando estiver em trânsito"</string>
+    <string name="roaming_enable">"Conectar aos serviços de dados quando estiver em roaming"</string>
+    <string name="roaming_disable">"Conectar aos serviços de dados quando estiver em roaming"</string>
     <string name="roaming_reenable_message">"Você perdeu a conectividade de dados porque deixou o roaming de dados da sua rede doméstica desativado."</string>
     <string name="roaming_warning">"Permitir roaming de dados? Isso pode causar cobranças significativas de roaming!"</string>
     <string name="prefer_2g">"Use apenas redes de 2 G"</string>
