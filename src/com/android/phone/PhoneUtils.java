@@ -85,6 +85,7 @@ public class PhoneUtils {
 
     /** Speaker state, persisting between wired headset connection events */
     private static boolean sIsSpeakerEnabled = false;
+    private static boolean sIsDualMicEnabled = false;
 
     /** Hash table to store mute (Boolean) values based upon the connection.*/
     private static Hashtable<Connection, Boolean> sConnectionMuteTable =
@@ -1352,9 +1353,14 @@ public class PhoneUtils {
         if (DBG) log("turnOnSpeaker: " + flag);
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
-        audioManager.setSpeakerphoneOn(flag);
         // record the speaker-enable value
         sIsSpeakerEnabled = flag;
+        if (sIsDualMicEnabled) {
+            PhoneUtils.turnOnDualMic(context, true);
+        } else {
+            audioManager.setSpeakerphoneOn(flag);
+        }
+
         if (flag) {
             NotificationMgr.getDefault().notifySpeakerphone();
         } else {
@@ -1378,14 +1384,27 @@ public class PhoneUtils {
 
         // change the mode if needed.
         if (isSpeakerOn(context) != sIsSpeakerEnabled) {
-	    sIsSpeakerEnabled = isSpeakerOn(context);
             turnOnSpeaker(context, sIsSpeakerEnabled);
+        } else if (isDualMicOn(context) != sIsDualMicEnabled) {
+            turnOnDualMic(context, sIsDualMicEnabled);
         }
     }
 
     static boolean isSpeakerOn(Context context) {
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         return audioManager.isSpeakerphoneOn();
+    }
+
+    static void turnOnDualMic(Context context, boolean flag) {
+        if (DBG) log("turnOnDualMic: " + flag);
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        sIsDualMicEnabled = flag;
+        audioManager.setDualMicrophoneOn(flag, sIsSpeakerEnabled);
+    }
+
+    static boolean isDualMicOn(Context context) {
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        return audioManager.isDualMicrophoneOn();
     }
 
     /**

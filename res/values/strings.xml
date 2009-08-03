@@ -113,6 +113,7 @@
     <!-- Regular in-call menu items: -->
     <!-- In-call menu: Label for "speakerphone" menu item -->
     <string name="menu_speaker">Speaker</string>
+    <string name="menu_dualmic">Dual Mic</string>
     <!-- In-call menu: Label for "bluetooth" menu item -->
     <string name="menu_bluetooth">Bluetooth</string>
     <!-- In-call menu: Label for "mute" menu item -->
