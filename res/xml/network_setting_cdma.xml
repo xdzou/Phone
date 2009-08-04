@@ -26,7 +26,6 @@
         android:summaryOn="@string/roaming_enable"
         android:summaryOff="@string/roaming_disable"/>
 
-    <!--
     <ListPreference
         android:key="preferred_network_mode_key"
         android:title="@string/preferred_network_mode_title"
@@ -34,7 +33,6 @@
         android:entries="@array/preferred_network_mode_choices"
         android:entryValues="@array/preferred_network_mode_values"
         android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
-    -->
 
     <ListPreference
         android:key="cdma_system_select_key"
