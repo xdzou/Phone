@@ -1421,7 +1421,8 @@ public class CallFeaturesSetting extends PreferenceActivity
             mPhone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
             // TODO(Moto): Re-launch DTMF settings if necessary onResume
         } else {
-            mButtonTTY.setEnabled(false);
+            mButtonTTY.setEnabled(true);
+            mPhone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
             mButtonVoicePrivacy.setChecked(false);
             mButtonVoicePrivacy.setEnabled(false);
         }
