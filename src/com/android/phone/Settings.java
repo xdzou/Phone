@@ -183,22 +183,21 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                     android.provider.Settings.Secure.CDMA_ROAMING_MODE,
                     PREFERRED_CDMA_ROAMING_MODE);
             mButtonCdmaRoam.setValue(Integer.toString(settingsCdmaRoamingMode));
-        } else {
-            mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
-                BUTTON_PREFERED_NETWORK_MODE);
-
-            // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
-            // change Preferred Network Mode.
-            mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
-
-            //Get the networkMode from Settings.System and displays it
-            int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
-                 getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                 preferredNetworkMode);
-            mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
-            // The intent code that resided here in the past has been moved into the
-            // more conventional location in network_setting.xml
         }
+        mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+            BUTTON_PREFERED_NETWORK_MODE);
+
+        // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
+        // change Preferred Network Mode.
+        mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+
+        //Get the networkMode from Settings.System and displays it
+        int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
+             getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
+             preferredNetworkMode);
+        mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
+        // The intent code that resided here in the past has been moved into the
+        // more conventional location in network_setting.xml
     }
 
     @Override
