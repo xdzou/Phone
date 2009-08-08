@@ -24,6 +24,7 @@
     <item type="id" name="menuMergeCalls" />
     <item type="id" name="menuBluetooth" />
     <item type="id" name="menuSpeaker" />
+    <item type="id" name="menuDualMic" />
     <item type="id" name="menuMute" />
     <item type="id" name="menuHold" />
     <item type="id" name="menuAnswerAndHold" />

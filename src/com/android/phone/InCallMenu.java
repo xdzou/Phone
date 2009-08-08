@@ -62,6 +62,7 @@ class InCallMenu {
     InCallMenuItemView mMergeCalls;
     InCallMenuItemView mBluetooth;
     InCallMenuItemView mSpeaker;
+    InCallMenuItemView mDualMic;
     InCallMenuItemView mMute;
     InCallMenuItemView mHold;
     InCallMenuItemView mAnswerAndHold;
@@ -165,6 +166,12 @@ class InCallMenu {
         mSpeaker.setText(R.string.menu_speaker);
         mSpeaker.setIndicatorVisible(true);
 
+        mDualMic = new InCallMenuItemView(wrappedContext);
+        mDualMic.setId(R.id.menuDualMic);
+        mDualMic.setOnClickListener(mInCallScreen);
+        mDualMic.setText(R.string.menu_dualmic);
+        mDualMic.setIndicatorVisible(true);
+
         mMute = new InCallMenuItemView(wrappedContext);
         mMute.setId(R.id.menuMute);
         mMute.setOnClickListener(mInCallScreen);
@@ -240,6 +247,7 @@ class InCallMenu {
         }
         mInCallMenuView.addItemView(mMute, 2);
         mInCallMenuView.addItemView(mSpeaker, 2);
+        mInCallMenuView.addItemView(mDualMic, 2);
         mInCallMenuView.addItemView(mBluetooth, 2);
 
         mInCallMenuView.dumpState();
@@ -309,6 +317,7 @@ class InCallMenu {
                 mMergeCalls.setVisible(false);
                 mBluetooth.setVisible(false);
                 mSpeaker.setVisible(false);
+                mDualMic.setVisible(false);
                 mMute.setVisible(false);
                 mHold.setVisible(false);
 
@@ -379,15 +388,21 @@ class InCallMenu {
         // plugged in, otherwise enabled (and indicates the current
         // speaker state.)
         mSpeaker.setVisible(true);
+        mDualMic.setVisible(true);
         if (PhoneApp.getInstance().isHeadsetPlugged()) {
             // Wired headset is present; Speaker button is meaningless.
             mSpeaker.setEnabled(false);
             mSpeaker.setIndicatorState(false);
+            mDualMic.setEnabled(false);
+            mDualMic.setIndicatorState(false);
         } else {
             // No wired headset; Speaker button is enabled and behaves normally.
             mSpeaker.setEnabled(true);
             boolean speakerOn = PhoneUtils.isSpeakerOn(mInCallScreen.getApplicationContext());
             mSpeaker.setIndicatorState(speakerOn);
+            mDualMic.setEnabled(true);
+            boolean dualMicOn = PhoneUtils.isDualMicOn(mInCallScreen.getApplicationContext());
+            mDualMic.setIndicatorState(dualMicOn);
         }
 
         // "Mute": only enabled when the foreground call is ACTIVE.
