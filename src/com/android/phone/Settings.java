@@ -16,7 +16,6 @@
  */
 
 package com.android.phone;
-import com.android.internal.telephony.gsm.GSMPhone;
 
 import android.os.SystemProperties;
 import android.util.Log;
@@ -50,7 +49,6 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     //String keys for preference lookup
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
-    private static final String CSP_TAG = "CSP Settings";
     
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
 
@@ -218,36 +216,6 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
         mPhone.getPreferredNetworkType(mHandler.obtainMessage(
                 MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
 
-        try {
-           //persist.cust.tel.adapt is super flag, if this is set then EF_CSP
-           //will be used irrespective of the value of
-           //persist.cust.tel.efcsp.plmn.Otherwise EF_CSP will be used if
-           //persist.cust.tel.efcsp.plmn is set.
-           if (SystemProperties.getBoolean("persist.cust.tel.adapt",false) ||
-               SystemProperties.getBoolean("persist.cust.tel.efcsp.plmn",false)) {
-               Log.i(CSP_TAG,"use_csp_plmn is 1");
-               if(mPhone != null) {
-                   plmnStatus = ((GSMPhone)mPhone).getCspPlmnStatus();
-                   if(plmnStatus == 1) {
-                     //This means that in elementary file EF_CSP,
-                     //in value added serice group, in the service byte,bit 8, i.e
-                     //Restriction of menu options for manual PLMN selection bit
-                     //is set
-                      Log.i(CSP_TAG,
-                            "CSP PLMN bit is set,Enabling Network Operators menu");
-                      findPreference("button_carrier_sel_key").setEnabled(true);
-                   } else if(plmnStatus == 0) {
-                      Log.i(CSP_TAG,
-                            "CSP PLMN bit is not set,Disabling Network Operators menu");
-                      findPreference("button_carrier_sel_key").setEnabled(false);
-                   } else {
-                      Log.e(CSP_TAG,"Undefined Csp PLMN Status");
-                   }
-               }
-           }
-        } catch(Exception e) {
-            Log.e(CSP_TAG,"Exception in reading use_csp_plmn " + e);
-	}
         if (mPhone.getPhoneName().equals("CDMA")) {
             mPhone.queryCdmaRoamingPreference(
                     mHandler.obtainMessage(MyHandler.MESSAGE_QUERY_ROAMING_PREFERENCE));
