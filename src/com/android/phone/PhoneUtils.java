@@ -17,6 +17,7 @@
 
 package com.android.phone;
 
+import android.app.ActivityManagerNative;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.KeyguardManager;
@@ -480,8 +481,16 @@ public class PhoneUtils {
         if (c != null) {
 
             // retrieve the mute value.
-            Boolean shouldMute = sConnectionMuteTable.get(
-                    phone.getForegroundCall().getEarliestConnection());
+            Boolean shouldMute;
+            if (phone.getPhoneName().equals("CDMA") &&
+                    PhoneApp.getInstance().cdmaPhoneCallState.getCurrentCallState() ==
+                    CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) {
+                shouldMute = sConnectionMuteTable.get(
+                        phone.getForegroundCall().getLatestConnection());
+            } else {
+                shouldMute = sConnectionMuteTable.get(
+                        phone.getForegroundCall().getEarliestConnection());
+            }
             if (shouldMute == null) {
                 if (DBG) log("problem retrieving mute value for this connection.");
                 shouldMute = Boolean.FALSE;
@@ -1119,11 +1128,33 @@ public class PhoneUtils {
                 if (DBG) log("startGetCallerInfo: query already running, adding listener: " +
                         listener.getClass().toString());
             } else {
-                if (DBG) log("startGetCallerInfo: No query to attach to, send trivial reply.");
-                if (cit.currentInfo == null) {
-                    cit.currentInfo = new CallerInfo();
+                // handling case where number/name gets updated later on by the network
+                String updatedNumber = c.getAddress();
+                if (DBG) log("startGetCallerInfo: updatedNumber = " + updatedNumber);
+                if (!TextUtils.isEmpty(updatedNumber)) {
+                    cit.currentInfo.phoneNumber = updatedNumber;
+
+                    // Store CNAP information retrieved from the Connection
+                    cit.currentInfo.cnapName =  c.getCnapName();
+                    // This can still get overwritten by ContactInfo
+                    cit.currentInfo.name = cit.currentInfo.cnapName;
+                    cit.currentInfo.numberPresentation = c.getNumberPresentation();
+                    cit.currentInfo.namePresentation = c.getCnapNamePresentation();
+
+                    if (DBG) log("startGetCallerInfo: CNAP Info from FW: name="
+                            + cit.currentInfo.cnapName
+                            + ", Name/Number Pres=" + cit.currentInfo.numberPresentation);
+                    cit.asyncQuery = CallerInfoAsyncQuery.startQuery(QUERY_TOKEN, context,
+                            updatedNumber, sCallerInfoQueryListener, c);
+                    cit.asyncQuery.addQueryListener(QUERY_TOKEN, listener, cookie);
+                    cit.isFinal = false;
+                } else {
+                    if (DBG) log("startGetCallerInfo: No query to attach to, send trivial reply.");
+                    if (cit.currentInfo == null) {
+                        cit.currentInfo = new CallerInfo();
+                    }
+                    cit.isFinal = true; // please see note on isFinal, above.
                 }
-                cit.isFinal = true; // please see note on isFinal, above.
             }
         } else {
             cit = new CallerInfoToken();
@@ -1308,7 +1339,10 @@ public class PhoneUtils {
 
         // Before bringing up the "incoming call" UI, force any system
         // dialogs (like "recent tasks" or the power dialog) to close first.
-        app.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+        try {
+            ActivityManagerNative.getDefault().closeSystemDialogs("call");
+        } catch (RemoteException e) {
+        }
 
         // Go directly to the in-call screen.
         // (No need to do anything special if we're already on the in-call
