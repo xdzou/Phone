@@ -1415,15 +1415,9 @@ public class CallFeaturesSetting extends PreferenceActivity
             // app to change this setting's backend, and re-launch this settings app
             // and the UI state would be inconsistent with actual state
             handleSetVPMessage();
-            mPhone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
             // TODO(Moto): Re-launch DTMF settings if necessary onResume
-        } else {
-            mButtonTTY.setEnabled(true);
-            mPhone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
-            mButtonVoicePrivacy.setChecked(false);
-            mButtonVoicePrivacy.setEnabled(false);
         }
-
+        mPhone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
     }
 
     /*
@@ -1452,17 +1446,6 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         if (mPhone.getPhoneName().equals("CDMA")) {
             mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
-
-            mButtonTTY = (ListPreference) prefSet.findPreference(BUTTON_TTY_KEY);
-            mButtonTTY.setOnPreferenceChangeListener(this);
-
-            // Get the ttyMode from Settings.System and displays it
-            int settingsTtyMode = android.provider.Settings.Secure.getInt(
-                    mPhone.getContext().getContentResolver(),
-                    android.provider.Settings.Secure.PREFERRED_TTY_MODE,
-                    preferredTtyMode);
-            mButtonTTY.setValue(Integer.toString(settingsTtyMode));
-            UpdatePreferredTtyModeSummary(settingsTtyMode);
 
             mButtonDS = (ListPreference) findPreference(BUTTON_DS_KEY);
             int index = Settings.System.getInt(getContentResolver(),
@@ -1531,6 +1514,16 @@ public class CallFeaturesSetting extends PreferenceActivity
                 mSubMenuFDNSettings.setIntent (mFDNSettingIntent);
             }
         }
+        mButtonTTY = (ListPreference) prefSet.findPreference(BUTTON_TTY_KEY);
+        mButtonTTY.setOnPreferenceChangeListener(this);
+
+        // Get the ttyMode from Settings.System and displays it
+        int settingsTtyMode = android.provider.Settings.Secure.getInt(
+                    mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_TTY_MODE,
+                    preferredTtyMode);
+        mButtonTTY.setValue(Integer.toString(settingsTtyMode));
+        UpdatePreferredTtyModeSummary(settingsTtyMode);
 
         if (mSubMenuVoicemailSettings != null) {
             mSubMenuVoicemailSettings.setParentActivity(this, VOICEMAIL_PREF_ID, this);
