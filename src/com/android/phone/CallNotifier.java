@@ -518,6 +518,7 @@ public class CallNotifier extends Handler
 
         if (state == Phone.State.OFFHOOK) {
             PhoneUtils.setAudioControlState(PhoneUtils.AUDIO_OFFHOOK);
+            PhoneUtils.setAudioMode(mPhone.getContext(), AudioManager.MODE_IN_CALL);
             if (VDBG) log("onPhoneStateChanged: OFF HOOK");
 
             // if the call screen is showing, let it handle the event,
