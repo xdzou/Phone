@@ -44,6 +44,8 @@ import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import com.android.internal.telephony.cdma.TtyIntent;
 import android.provider.Settings.System;
 import android.telephony.ServiceState;
 import android.util.Config;
@@ -94,6 +96,7 @@ public class PhoneApp extends Application {
     private static final int EVENT_DATA_ROAMING_DISCONNECTED = 10;
     private static final int EVENT_DATA_ROAMING_OK = 11;
     private static final int EVENT_UNSOL_CDMA_INFO_RECORD = 12;
+    private static final int EVENT_TTY_EXECUTED          = 700;
 
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
@@ -370,6 +373,7 @@ public class PhoneApp extends Application {
             intentFilter.addAction(BluetoothIntent.HEADSET_AUDIO_STATE_CHANGED_ACTION);
             intentFilter.addAction(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED);
             intentFilter.addAction(Intent.ACTION_HEADSET_PLUG);
+            intentFilter.addAction(Intent.ACTION_BOOT_COMPLETED);
             intentFilter.addAction(Intent.ACTION_BATTERY_LOW);
             intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
@@ -431,7 +435,67 @@ public class PhoneApp extends Application {
             cdmaPhoneCallState = new CdmaPhoneCallState();
             cdmaPhoneCallState.CdmaPhoneCallStateInit();
         }
-   }
+    }
+
+    /*
+    *Initialize the TTY status bar icon.
+    */
+    public void initTTYStatus () {
+        phone.queryTTYMode(Message.obtain(mQueryTTYComplete, EVENT_TTY_EXECUTED));
+    }
+
+    /*
+     * Callback to handle TTY query completions
+     */
+    private Handler mQueryTTYComplete = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case EVENT_TTY_EXECUTED:
+                    handleQueryTTYModeMessage((AsyncResult) msg.obj);
+                    break;
+                default:
+                    Log.e(LOG_TAG, "queryTTYMode returned unknown message");
+            }
+        }
+    };
+
+    /*
+     *Handle query response
+     */
+    private void handleQueryTTYModeMessage(AsyncResult ar) {
+        int preferredTTYMode = 0;
+        if (ar.exception != null) {
+            if (DBG) Log.d(LOG_TAG, "handleQueryTTYModeMessage: Error getting TTY enable state.");
+        } else {
+            if (DBG) Log.d(LOG_TAG, "handleQueryTTYModeMessage: TTY enable state successfully queried.");
+            int TTYArray[] = ((int[]) ar.result);
+            int presentTTYvalue = android.provider.Settings.Secure.getInt(phone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_TTY_MODE, preferredTTYMode );
+            if (presentTTYvalue != TTYArray[0]) {
+                switch(TTYArray[0]) {
+                     case Phone.TTY_MODE_FULL:
+                     case Phone.TTY_MODE_HCO:
+                     case Phone.TTY_MODE_VCO:
+                          presentTTYvalue = TTYArray[0];
+                          break;
+                     case Phone.TTY_MODE_OFF:
+                     default:
+                          presentTTYvalue = Phone.TTY_MODE_OFF;
+                          break;
+                }
+                android.provider.Settings.Secure.putInt(phone.getContext().getContentResolver(),
+                        android.provider.Settings.Secure.PREFERRED_TTY_MODE, presentTTYvalue );
+            }
+            Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
+            if(presentTTYvalue != Phone.TTY_MODE_OFF)
+                ttyModeChanged.putExtra("ttyEnabled", true);
+            else
+                ttyModeChanged.putExtra("ttyEnabled", false);
+
+            phone.getContext().sendBroadcast(ttyModeChanged);
+        }
+    }
 
     /**
      * Returns the singleton instance of the PhoneApp.
@@ -1107,6 +1171,9 @@ public class PhoneApp extends Application {
             } else if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_BATTERY_LOW");
                 notifier.sendBatteryLow();  // Play a warning tone if in-call
+            } else if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
+                if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_BOOT_COMPLETED: Initializing TTY status");
+                sMe.initTTYStatus();
             } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) &&
                     (mPUKEntryActivity != null)) {
                 // if an attempt to un-PUK-lock the device was made, while we're
