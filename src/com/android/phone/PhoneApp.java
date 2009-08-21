@@ -465,13 +465,13 @@ public class PhoneApp extends Application {
      */
     private void handleQueryTTYModeMessage(AsyncResult ar) {
         int preferredTTYMode = 0;
+        int presentTTYvalue = android.provider.Settings.Secure.getInt(phone.getContext().getContentResolver(),
+                                    android.provider.Settings.Secure.PREFERRED_TTY_MODE, preferredTTYMode );
         if (ar.exception != null) {
             if (DBG) Log.d(LOG_TAG, "handleQueryTTYModeMessage: Error getting TTY enable state.");
         } else {
             if (DBG) Log.d(LOG_TAG, "handleQueryTTYModeMessage: TTY enable state successfully queried.");
             int TTYArray[] = ((int[]) ar.result);
-            int presentTTYvalue = android.provider.Settings.Secure.getInt(phone.getContext().getContentResolver(),
-                    android.provider.Settings.Secure.PREFERRED_TTY_MODE, preferredTTYMode );
             if (presentTTYvalue != TTYArray[0]) {
                 switch(TTYArray[0]) {
                      case Phone.TTY_MODE_FULL:
@@ -487,14 +487,14 @@ public class PhoneApp extends Application {
                 android.provider.Settings.Secure.putInt(phone.getContext().getContentResolver(),
                         android.provider.Settings.Secure.PREFERRED_TTY_MODE, presentTTYvalue );
             }
-            Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
-            if(presentTTYvalue != Phone.TTY_MODE_OFF)
-                ttyModeChanged.putExtra("ttyEnabled", true);
-            else
-                ttyModeChanged.putExtra("ttyEnabled", false);
-
-            phone.getContext().sendBroadcast(ttyModeChanged);
         }
+        Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
+        if(presentTTYvalue != Phone.TTY_MODE_OFF)
+            ttyModeChanged.putExtra("ttyEnabled", true);
+        else
+            ttyModeChanged.putExtra("ttyEnabled", false);
+
+        phone.getContext().sendBroadcast(ttyModeChanged);
     }
 
     /**
