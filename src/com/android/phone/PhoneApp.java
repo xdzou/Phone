@@ -143,6 +143,7 @@ public class PhoneApp extends Application {
     int mBluetoothHeadsetState = BluetoothHeadset.STATE_ERROR;
     int mBluetoothHeadsetAudioState = BluetoothHeadset.STATE_ERROR;
     boolean mShowBluetoothIndication = false;
+    AudioManager mAudioManager;
 
     // Internal PhoneApp Call state tracker
     CdmaPhoneCallState cdmaPhoneCallState;
@@ -331,7 +332,8 @@ public class PhoneApp extends Application {
                 mBtHandsfree = null;
             }
 
-            ringer = new Ringer(phone);
+	    mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+	    ringer = new Ringer(phone);
 
             // before registering for phone state changes
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -486,6 +488,11 @@ public class PhoneApp extends Application {
                 }
                 android.provider.Settings.Secure.putInt(phone.getContext().getContentResolver(),
                         android.provider.Settings.Secure.PREFERRED_TTY_MODE, presentTTYvalue );
+		if (isHeadsetPlugged()) {
+		    if (DBG) Log.d(LOG_TAG, "handleQueryTTYModeMessage: updating the Audio routing");
+		    mAudioManager.setWiredHeadsetOn(false);
+		    mAudioManager.setWiredHeadsetOn(true);
+		}
             }
         }
         Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
