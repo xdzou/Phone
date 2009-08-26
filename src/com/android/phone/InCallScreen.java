@@ -2426,30 +2426,6 @@ public class InCallScreen extends Activity
                 dismissMenuImmediate = false;
                 break;
 
-            case R.id.menuDualMic:
-                if (VDBG) log("onClick: Dual Mic...");
-                boolean newDualMicState = !PhoneUtils.isDualMicOn(context);
-                if (newDualMicState && isBluetoothAvailable() && isBluetoothAudioConnected()) {
-                    disconnectBluetoothAudio();
-                }
-                PhoneUtils.turnOnDualMic(context, newDualMicState);
-
-                if (newDualMicState || PhoneUtils.isSpeakerOn(context)) {
-                    // The "touch lock" overlay is NEVER used when the dual mic is on.
-                    enableTouchLock(false);
-                } else {
-                    // User just turned the dual mic *off*.  If the dialpad
-                    // is open, we need to start the timer that will
-                    // eventually bring up the "touch lock" overlay.
-                    if (mDialer.isOpened() && !isTouchLocked()) {
-                        resetTouchLockTimer();
-                    }
-                }
-
-                // This is a "toggle" button; let the user see the new state for a moment.
-                dismissMenuImmediate = false;
-                break;
-
             case R.id.menuBluetooth:
                 if (VDBG) log("onClick: Bluetooth...");
                 onBluetoothClick(context);
