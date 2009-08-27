@@ -121,15 +121,6 @@
             android:entryValues="@array/clir_values"
             android:dialogTitle="@string/labelCallerId" />
 
-        <!-- GSM TTY Options -->
-        <ListPreference
-            android:key="button_tty_mode_key"
-            android:title="@string/tty_mode_option_title"
-            android:summary="@string/tty_mode_option_summary"
-            android:persistent="false"
-            android:entries="@array/tty_mode_entries"
-            android:entryValues="@array/tty_mode_values" />
-
         <CheckBoxPreference 
             android:key="button_cw_key" 
             android:title="@string/labelCW"
@@ -138,5 +129,15 @@
             android:summaryOff="@string/sum_cw_disabled"/>
            
     </PreferenceScreen>
+
+    <!-- GSM TTY Options -->
+        <ListPreference
+            android:key="button_tty_mode_key"
+            android:title="@string/tty_mode_option_title"
+            android:summary="@string/tty_mode_option_summary"
+            android:persistent="false"
+            android:entries="@array/tty_mode_entries"
+            android:entryValues="@array/tty_mode_values" />
+
 
 </PreferenceScreen>
