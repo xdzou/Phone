@@ -521,6 +521,18 @@ public class CallNotifier extends Handler
             PhoneUtils.setAudioMode(mPhone.getContext(), AudioManager.MODE_IN_CALL);
             if (VDBG) log("onPhoneStateChanged: OFF HOOK");
 
+            //Workaround for DSP hardware unable to accept commands by the
+            //time MODE_IN_CALL is set from phoneapp.
+            //As soon as phone state gets changed to ACTIVE, we mute and unmute mic
+            //so that mic is unmuted.
+            if(Call.State.ACTIVE == mPhone.getForegroundCall().getState()) {
+                if(PhoneUtils.getMute(mPhone) == false ) {
+                    AudioManager audioManager = (AudioManager)mPhone.getContext().
+                         getSystemService(Context.AUDIO_SERVICE);
+                    audioManager.setMicrophoneMute(true);
+                    audioManager.setMicrophoneMute(false);
+                }
+            }
             // if the call screen is showing, let it handle the event,
             // otherwise handle it here.
             if (!mApplication.isShowingCallScreen()) {
