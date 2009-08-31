@@ -2142,6 +2142,12 @@ public class InCallScreen extends Activity
                 // (and we'll bring up the "MMI Started" dialog), or else
                 // an MMI_COMPLETE will come in (which will take us to a
                 // different Activity; see PhoneUtils.displayMMIComplete()).
+
+                // handles MMI codes as per 3GPP TS 22.030 version 7.0.1
+                if (!mForegroundCall.isIdle() && !mRingingCall.isIdle()) {
+                   if (DBG) log("placeCall: Active MO call,Incoming call, dialed MMI");
+                   return InCallInitStatus.SUCCESS;
+                }
                 return InCallInitStatus.DIALED_MMI;
             case PhoneUtils.CALL_STATUS_FAILED:
                 Log.w(LOG_TAG, "placeCall: PhoneUtils.placeCall() FAILED for number '"
