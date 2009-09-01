@@ -674,7 +674,7 @@ public class CallNotifier extends Handler
         // earpiece) after a call disconnects.
         int toneToPlay = InCallTonePlayer.TONE_NONE;
 
-        // The "Busy" or "Congestion" tone is the highest priority:
+        // The "Busy" or "Congestion" or "REODER" tone is the highest priority:
         if (c != null) {
             Connection.DisconnectCause cause = c.getDisconnectCause();
             if (cause == Connection.DisconnectCause.BUSY) {
@@ -683,6 +683,9 @@ public class CallNotifier extends Handler
             } else if (cause == Connection.DisconnectCause.CONGESTION) {
                 if (DBG) log("- need to play CONGESTION tone!");
                 toneToPlay = InCallTonePlayer.TONE_CONGESTION;
+            } else if (cause == Connection.DisconnectCause.CDMA_REORDER) {
+                if (DBG) log("- need to play REORDER tone!");
+                toneToPlay = InCallTonePlayer.TONE_REORDER;
             }
         }
 
@@ -921,6 +924,7 @@ public class CallNotifier extends Handler
         public static final int TONE_CONGESTION = 3;
         public static final int TONE_BATTERY_LOW = 4;
         public static final int TONE_CALL_ENDED = 5;
+        public static final int  TONE_REORDER = 6;
 
         // The tone volume relative to other sounds in the stream
         private static final int TONE_RELATIVE_VOLUME_HIPRI = 80;
@@ -968,6 +972,12 @@ public class CallNotifier extends Handler
                     toneVolume = TONE_RELATIVE_VOLUME_LOPRI;
                     toneLengthMillis = 2000;
                     break;
+                case TONE_REORDER:
+                    toneType = ToneGenerator.TONE_CDMA_REORDER;
+                    toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
+                    toneLengthMillis = 4000;
+                    break;
+
                 default:
                     throw new IllegalArgumentException("Bad toneId: " + mToneId);
             }
