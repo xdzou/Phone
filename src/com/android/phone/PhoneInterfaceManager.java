@@ -35,6 +35,7 @@ import com.android.internal.telephony.DefaultPhoneNotifier;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.TelephonyIntents;
 
 import static com.android.internal.telephony.RILConstants.GSM_PHONE;
 import static com.android.internal.telephony.RILConstants.CDMA_PHONE;
@@ -60,6 +61,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int CMD_SILENCE_RINGER = 6;
     private static final int CMD_INVOKE_OEM_RIL_REQUEST = 7;
     private static final int EVENT_INVOKE_OEM_RIL_REQUEST = 8;
+    private static final int EVENT_UNSOL_OEM_HOOK_RAW = 9;
 
     PhoneApp mApp;
     Phone mPhone;
@@ -157,6 +159,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     }
                     break;
 
+                case EVENT_UNSOL_OEM_HOOK_RAW:
+                    ar = (AsyncResult)msg.obj;
+                    broadcastUnsolOemHookIntent((byte[])(ar.result));
+                    break;
+
                 default:
                     Log.w(LOG_TAG, "MainThreadHandler: unexpected message code: " + msg.what);
                     break;
@@ -191,6 +198,13 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return request.result;
     }
 
+    public void broadcastUnsolOemHookIntent(byte[] payload) {
+        Intent intent = new Intent(TelephonyIntents.ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW);
+        intent.putExtra("payload", payload);
+        Log.d(LOG_TAG,"Broadcasting intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW");
+        mApp.sendBroadcast(intent);
+    }
+
     /**
      * Asynchronous ("fire and forget") version of sendRequest():
      * Posts the specified command to be executed on the main thread, and
@@ -205,6 +219,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         mApp = app;
         mPhone = phone;
         mMainThreadHandler = new MainThreadHandler();
+        Log.d(LOG_TAG, " Registering for UNSOL OEM HOOK Response");
+        mPhone.setOnUnsolOemHookRaw(mMainThreadHandler, EVENT_UNSOL_OEM_HOOK_RAW, null);
         publish();
     }
 
