@@ -1008,8 +1008,22 @@ public class DTMFTwelveKeyDialer implements
                 if (mToneGenerator == null) {
                     if (DBG) log("startDtmfTone: mToneGenerator == null, tone: " + tone);
                 } else {
-                    if (DBG) log("starting local tone " + tone);
-                    mToneGenerator.startTone(mToneMap.get(tone));
+                    if (PhoneApp.getInstance().isHeadsetPlugged()) {
+                        int TTYmode = Settings.Secure.getInt(mPhone.getContext().getContentResolver(),
+                                               Settings.Secure.PREFERRED_TTY_MODE, Phone.TTY_MODE_OFF);
+                        if ((TTYmode != Phone.TTY_MODE_FULL) &&
+                               (TTYmode != Phone.TTY_MODE_VCO)) {
+                            if (DBG) log("starting local tone " + tone);
+                            mToneGenerator.startTone(mToneMap.get(tone));
+                        }
+                        else {
+                            if (DBG) log("Not starting local tone. Phone connected to TTY in FULL or VCO mode");
+                        }
+                    }
+                    else {
+                        if (DBG) log("starting local tone " + tone);
+                        mToneGenerator.startTone(mToneMap.get(tone));
+                    }
                 }
             }
         }
@@ -1037,8 +1051,22 @@ public class DTMFTwelveKeyDialer implements
                 if (mToneGenerator == null) {
                     if (DBG) log("stopDtmfTone: mToneGenerator == null");
                 } else {
-                    if (DBG) log("stopping local tone.");
-                    mToneGenerator.stopTone();
+                    if (PhoneApp.getInstance().isHeadsetPlugged()) {
+                        int TTYmode = Settings.Secure.getInt(mPhone.getContext().getContentResolver(),
+                                               Settings.Secure.PREFERRED_TTY_MODE, Phone.TTY_MODE_OFF);
+                        if ((TTYmode != Phone.TTY_MODE_FULL) &&
+                               (TTYmode != Phone.TTY_MODE_VCO)) {
+                            if (DBG) log("stopping local tone.");
+                            mToneGenerator.stopTone();
+                        }
+                        else {
+                            if (DBG) log("Not stopping local tone. Phone connected to TTY in FULL or VCO mode");
+                        }
+                    }
+                    else {
+                        if (DBG) log("stopping local tone.");
+                        mToneGenerator.stopTone();
+                    }
                 }
             }
         }
