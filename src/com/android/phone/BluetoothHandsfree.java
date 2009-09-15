@@ -1451,7 +1451,8 @@ public class BluetoothHandsfree {
                             return new AtCommandResult(AtCommandResult.OK);
                         } else {
                             // Hangup active call, answer held call
-                            if (PhoneUtils.answerAndEndActive(mPhone)) {
+                            if (PhoneUtils.hangupActiveMenu(mPhone)) {
+                                Log.i(TAG, "Sending AT+CHLD=1");
                                 return new AtCommandResult(AtCommandResult.OK);
                             } else {
                                 return new AtCommandResult(AtCommandResult.ERROR);
