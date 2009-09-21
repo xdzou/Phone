@@ -53,6 +53,7 @@
             android:targetClass="com.android.phone.GsmUmtsOptions" />
 
     </PreferenceScreen>
+    -->
 
     <PreferenceScreen
         android:key="cdma_options_key"
@@ -64,5 +65,4 @@
             android:targetClass="com.android.phone.CdmaOptions" />
 
     </PreferenceScreen>
-    -->
 </PreferenceScreen>

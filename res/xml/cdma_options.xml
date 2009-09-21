@@ -19,7 +19,7 @@
         
     <PreferenceCategory 
         android:title="@string/cdma_options" />
-            
+<!--
     <ListPreference 
         android:key="cdma_roaming_mode_key"
         android:title="@string/cdma_roaming_mode_title"
@@ -27,7 +27,7 @@
         android:entries="@array/cdma_roaming_mode_choices"
         android:entryValues="@array/cdma_roaming_mode_values"
         android:dialogTitle="@string/cdma_roaming_mode_dialogtitle" />
-        
+-->
     <ListPreference 
         android:key="subscription_key"
         android:title="@string/subscription_title"
@@ -35,7 +35,8 @@
         android:entries="@array/subscription_choices"
         android:entryValues="@array/subscription_values"
         android:dialogTitle="@string/subscription_dialogtitle" />
-       
+
+<!--
     <PreferenceScreen 
         android:key="cdma_cell_broadcast_sms_key" 
         android:title="@string/cdma_cell_broadcast_sms"
@@ -45,5 +46,5 @@
             android:targetPackage="com.android.phone"
             android:targetClass="com.android.phone.CellBroadcastSms" />
     </PreferenceScreen>
-
+-->
 </PreferenceScreen>   
