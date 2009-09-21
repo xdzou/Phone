@@ -463,8 +463,6 @@ public class InCallScreen extends Activity
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         // Inflate everything in incall_screen.xml and add it to the screen.
-        // Switch the orientation from landscape to portrait mode
-        setRequestedOrientation(Configuration.ORIENTATION_PORTRAIT);
         setContentView(R.layout.incall_screen);
         mDialerDrawer = (SlidingDrawer) findViewById(R.id.dialer_container);
 
