@@ -376,16 +376,7 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (NetworkInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    //If EONS algorithm is enabled, then display MCC+MNC
-                    //values in available networks list, otherwise display
-                    //operator long name.
-                    if (SystemProperties.getBoolean("persist.cust.tel.adapt",false) ||
-                        SystemProperties.getBoolean("persist.cust.tel.eons",false)) {
-                        carrier.setTitle(ni.getOperatorNumeric());
-                    }
-                    else {
-                        carrier.setTitle(ni.getOperatorAlphaLong());
-                    }
+                    carrier.setTitle(ni.getOperatorAlphaLong());
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
