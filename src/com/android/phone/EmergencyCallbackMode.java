@@ -22,6 +22,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,6 +31,7 @@ import android.widget.ImageButton;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.TelephonyProperties;
 
 /**
  * Phone app Emergency Callback screen.
@@ -40,6 +42,7 @@ public class EmergencyCallbackMode extends Activity {
     private static final int EVENT_EXIT_ECBM    = 100;
 
     private Phone mPhone;
+    private Uri mEmergencyNumber;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,22 +61,13 @@ public class EmergencyCallbackMode extends Activity {
         Button okButton = (Button)findViewById(R.id.button_ok);
         okButton.setOnClickListener(mOkListener);
 
-        //cancel ECBM notification
-        NotificationMgr.getDefault().cancelEcbmNotification();
     }
 
     private OnClickListener mDialListener = new OnClickListener()
     {
         public void onClick(View v)
         {
-            Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY,  Uri.parse("tel:911"));
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            //create Notification
-            NotificationMgr.getDefault().notifyECBM();
-            // finish Application
-            finish();
-
+            reDialEmergencyNumber();
         }
     };
 
@@ -81,39 +75,16 @@ public class EmergencyCallbackMode extends Activity {
     {
         public void onClick(View v) {
             // Send ECBM exit
-
-            // TODO(Moto): There is a change, no parameter looks like an intent is sent?
-            //mPhone.exitEmergencyCallbackMode(Message.obtain(mExitEmergencyCallbackMode,
-            //        EVENT_EXIT_ECBM));
+            mPhone.exitEmergencyCallbackMode();
         }
     };
 
 
-    // **Callback on Exit Emergency callback mode
-    private Handler mExitEmergencyCallbackMode = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            // query to make sure we're looking at the same data as that in the network.
-            switch (msg.what) {
-                case EVENT_EXIT_ECBM:
-                    handleExitEmergencyCallbackModeResponse(msg);
-                    break;
-                default:
-                    // TODO: should never reach this, may want to throw exception
-            }
-        }
-    };
-
-    /*
-     * Handle the respone of the ExitEmergencyCallbackMode request
-     */
-    private void handleExitEmergencyCallbackModeResponse(Message msg) {
-        AsyncResult ar = (AsyncResult) msg.obj;
-
-        if (ar.exception == null) {
-            // Finish Emergency Callback Mode Application
-            finish();
-        }
+    private void retreat() {
+        //cancel ECBM notification
+        NotificationMgr.getDefault().cancelEcbmNotification();
+        // Finish Emergency Callback Mode Application
+        finish();
     }
 
 
@@ -131,16 +102,54 @@ public class EmergencyCallbackMode extends Activity {
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        boolean ret = true;
         // suppress all key presses except of call key
         switch (keyCode) {
             case KeyEvent.KEYCODE_CALL: {
-                Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY,  Uri.parse("tel:911"));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+                reDialEmergencyNumber();
+            }
+            case KeyEvent.KEYCODE_ENDCALL: {
+                mPhone.exitEmergencyCallbackMode();
+                retreat();
+            }
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+            case KeyEvent.KEYCODE_DPAD_LEFT:
+            case KeyEvent.KEYCODE_DPAD_RIGHT:
+            case KeyEvent.KEYCODE_DPAD_UP: {
+                ret = false;
             }
         }
-        return true;
+        return ret;
+    }
+
+    private void reDialEmergencyNumber()
+    {
+        Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY,  mEmergencyNumber);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //cancel ECBM notification
+        NotificationMgr.getDefault().cancelEcbmNotification();
+
+        boolean inECBM = SystemProperties.getBoolean(TelephonyProperties.PROPERTY_INECM_MODE, false);
+        if(!inECBM) {
+            // Phone will call us whenever emergency callback mode changes
+            // If we are no longer in ECBM, just quit.
+            finish();
+        }
+        Intent intent = getIntent();
+
+        if(mEmergencyNumber == null)
+            mEmergencyNumber = intent.getData();
+        if(mEmergencyNumber == null) {
+            mEmergencyNumber = Uri.parse("tel:911");
+        }
     }
 
 }
