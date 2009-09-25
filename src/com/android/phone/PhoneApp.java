@@ -1198,7 +1198,7 @@ public class PhoneApp extends Application {
             } else if (action.equals(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
                 Log.d(LOG_TAG, "Emergency Callback Mode arrived in PhoneApp.");
                 // Send Intend to start ECBM application
-                Intent EcbmAlarm = new Intent(Intent.ACTION_MAIN, null);
+                Intent EcbmAlarm = new Intent(Intent.ACTION_MAIN, intent.getData());
                 EcbmAlarm.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 EcbmAlarm.setClassName("com.android.phone", EmergencyCallbackMode.class.getName());
                 startActivity(EcbmAlarm);
