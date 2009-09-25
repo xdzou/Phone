@@ -36,7 +36,6 @@
         android:entryValues="@array/subscription_values"
         android:dialogTitle="@string/subscription_dialogtitle" />
 
-<!--
     <PreferenceScreen 
         android:key="cdma_cell_broadcast_sms_key" 
         android:title="@string/cdma_cell_broadcast_sms"
@@ -46,5 +45,4 @@
             android:targetPackage="com.android.phone"
             android:targetClass="com.android.phone.CellBroadcastSms" />
     </PreferenceScreen>
--->
 </PreferenceScreen>   
