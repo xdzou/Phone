@@ -291,6 +291,10 @@
                 android:theme="@style/EmergencyCallBack"
                 android:launchMode="singleTask"
                 android:taskAffinity=":EmergencyCallbackMode">
+            <intent-filter>
+                <action android:name="android.intent.action.ECBMDialog" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- call feature setting -->
