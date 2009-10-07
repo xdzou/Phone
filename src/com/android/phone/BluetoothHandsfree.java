@@ -592,17 +592,15 @@ public class BluetoothHandsfree {
 
             if (DBG) log("updatePhoneState()");
 
-            Phone.State newState = mPhone.getState();
-            if (newState != mPhoneState) {
-                mPhoneState = newState;
-                switch (mPhoneState) {
+            mPhoneState = mPhone.getState();
+
+            switch (mPhoneState) {
                 case IDLE:
-                    mUserWantsAudio = true;  // out of call - reset state
+                    mUserWantsAudio = true; // out of call - reset state
                     audioOff();
                     break;
-                default:
+                case OFFHOOK:
                     callStarted();
-                }
             }
 
             switch(mForegroundCall.getState()) {
