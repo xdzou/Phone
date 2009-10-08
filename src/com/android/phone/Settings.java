@@ -32,6 +32,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -78,6 +79,8 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     private MyHandler mHandler;
     private boolean mOkClicked;
 
+    // Current Phone Name
+    private String oldPhoneName;
 
     //This is a method implemented for DialogInterface.OnClickListener.
     //  Used to dismiss the dialogs when they come up.
@@ -168,6 +171,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
         super.onCreate(icicle);
 
         mPhone = PhoneFactory.getDefaultPhone();
+        oldPhoneName = mPhone.getPhoneName();
 
         if (mPhone.getPhoneName().equals("CDMA")) {
             addPreferencesFromResource(R.xml.network_setting_cdma);
@@ -422,18 +426,37 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                                 android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
                                 settingsNetworkMode );
                     }
-                    if (mPhone.getPhoneName().equals("CDMA")) {
-                        updatePreferredNetworkModeSummary(modemNetworkMode);
-                        // changes the mButtonPreferredNetworkMode accordingly to modemNetworkMode
-                        mButtonPreferredNetworkMode.setValue(Integer.toString(modemNetworkMode));
-                    } else if (mButtonPrefer2g != null) {
+
+                    // changes the mButtonPreferredNetworkMode accordingly to
+                    // modemNetworkMode
+                    mButtonPreferredNetworkMode.setValue(Integer.toString(modemNetworkMode));
+                    updatePreferredNetworkModeSummary(modemNetworkMode);
+                    if (mButtonPrefer2g != null) {
                         mButtonPrefer2g.setChecked(modemNetworkMode == Phone.NT_MODE_GSM_ONLY);
                     }
                 } else {
-                    if (DBG) log("handleGetPreferredNetworkTypeResponse: else: reset to default");
+                    if (DBG)
+                        log("handleGetPreferredNetworkTypeResponse: else: reset to default");
                     resetNetworkModeToDefault();
                 }
             }
+        }
+
+        private boolean checkPhoneTypeChanged(int networkMode) {
+
+            String newPhoneName = mPhone.getPhoneName();
+            if (oldPhoneName.equals(newPhoneName)) {
+                if (DBG)
+                    log("checkPhoneTypeChanged: No Change in Phone Name");
+                return false;
+            } else {
+                if (DBG)
+                    log("checkPhoneTypeChanged: Change in Phone Name (Phone Type : " + newPhoneName
+                            + ")");
+                oldPhoneName = newPhoneName;
+            }
+
+            return true;
         }
 
         private void handleSetPreferredNetworkTypeResponse(Message msg) {
@@ -456,13 +479,25 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                 android.provider.Settings.Secure.putInt(mPhone.getContext().getContentResolver(),
                         android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
                         networkMode);
-                // Inorder to update the corresponding GSM/CDMA related UI option in network setting activity
-                // Need to forcefully close the network setting activity and move back to Wireless
-                // control activity so that whenever mobile networks option is selected.
-                // It will create the network setting acitivity based on the phone type
-                // with the corresponding network option
-                finish ();
+
+                updatePreferredNetworkModeSummary(networkMode);
+                if (checkPhoneTypeChanged(networkMode)) {
+                    Toast.makeText(Settings.this, "Radio Technology Changed", Toast.LENGTH_SHORT)
+                            .show();
+                    /*
+                     * Inorder to update the corresponding GSM/CDMA related UI
+                     * option in network setting activity.Need to forcefully
+                     * close the network setting activity and move back to
+                     * Wireless control activity so that whenever mobile
+                     * networks option is selected.Mobile network activity will
+                     * create the network setting activity based on the phone
+                     * type with the corresponding network option
+                     */
+                    finish();
+                }
             } else {
+                Toast.makeText(Settings.this, "Error while changing radio technology",
+                        Toast.LENGTH_SHORT).show();
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
         }
@@ -550,7 +585,6 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     }
 
     private void updatePreferredNetworkModeSummary(int NetworkMode) {
-        if (!mPhone.getPhoneName().equals("CDMA")) return;
         mButtonPreferredNetworkMode.setSummary(mButtonPreferredNetworkMode.getEntry());
     }
 
