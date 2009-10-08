@@ -1130,6 +1130,11 @@ public class PhoneApp extends Application {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
+            final int NETWORK = 1;
+            final int NETWORK_SUBSET = 2;
+            final int SERVICE_PROVIDER = 3;
+            final int CORPORATE = 4;
+            final int SIM = 5;
             if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
                 boolean enabled = System.getInt(getContentResolver(),
                         System.AIRPLANE_MODE_ON, 0) == 0;
@@ -1181,14 +1186,48 @@ public class PhoneApp extends Application {
             } else if (action.equals(Intent.ACTION_BOOT_COMPLETED)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_BOOT_COMPLETED: Initializing TTY status");
                 sMe.initTTYStatus();
-            } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) &&
-                    (mPUKEntryActivity != null)) {
-                // if an attempt to un-PUK-lock the device was made, while we're
-                // receiving this state change notification, notify the handler.
-                // NOTE: This is ONLY triggered if an attempt to un-PUK-lock has
-                // been attempted.
-                mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,
-                        intent.getStringExtra(IccCard.INTENT_KEY_ICC_STATE)));
+            } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED))) {
+                String icc_state = intent.getStringExtra(IccCard.INTENT_KEY_ICC_STATE);
+                String reason = intent.getStringExtra(IccCard.INTENT_KEY_LOCKED_REASON);
+                Log.e(LOG_TAG,"icc_state = " + icc_state+",reason = " + reason);
+                if (mPUKEntryActivity != null) {
+                   // if an attempt to un-PUK-lock the device was made, while we're
+                   // receiving this state change notification, notify the handler.
+                   // NOTE: This is ONLY triggered if an attempt to un-PUK-lock has
+                   // been attempted.
+                   mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,icc_state));
+                } else if ((reason != null) && (IccCard.INTENT_VALUE_ICC_LOCKED.equals(icc_state))) {
+                       int subtype = NETWORK;
+                       if(IccCard.INTENT_VALUE_LOCKED_NETWORK.equals(reason)) {
+                          //TODO: Network Depersonalization is presently handled
+                          //using specific Notification. Handle Network
+                          //Depersonalization similar to other
+                          //Depersonalizations.
+                       }  else if(IccCard.INTENT_VALUE_LOCKED_NETWORK_SUBSET.equals(reason)) {
+                          Log.e(LOG_TAG,"NETWORK SUBSET Depersonalization: reason = "+reason);
+                          subtype = NETWORK_SUBSET;
+                       } else if(IccCard.INTENT_VALUE_LOCKED_CORPORATE.equals(reason)) {
+                          //TODO: The order of service provider and corporate
+                          //are reverse in RIL and QCRIL. This should be
+                          //corrected.
+                          Log.e(LOG_TAG,"CORPORATE Depersonalization: reason = "+reason);
+                          subtype = CORPORATE;
+                       } else if(IccCard.INTENT_VALUE_LOCKED_SERVICE_PROVIDER.equals(reason)) {
+                          Log.e(LOG_TAG,"SERVICE PROVIDER Depersonalization: reason = "+reason);
+                          subtype = SERVICE_PROVIDER;
+                       } else if(IccCard.INTENT_VALUE_LOCKED_SIM.equals(reason)) {
+                          Log.e(LOG_TAG,"SIM Depersonalization: reason = "+reason);
+                          subtype = SIM;
+                       } else {
+                          Log.e(LOG_TAG,"Unsupported Depersonalization: reason = "+reason);
+                       }
+
+                       if (subtype != NETWORK) {
+                           IccNetworkDepersonalizationPanel ndpPanel =
+                                new IccNetworkDepersonalizationPanel(PhoneApp.getInstance(),subtype);
+                           ndpPanel.show();
+                       }
+                }
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(Phone.PHONE_NAME_KEY);
                 Log.d(LOG_TAG, "Radio technology switched. Now " + newPhone + " is active.");
