@@ -37,6 +37,9 @@ import android.widget.TextView;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 /**
  * "SIM network unlock" PIN entry screen.
  *
@@ -52,14 +55,31 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
 
     //events
     private static final int EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT = 100;
+    private static final int EVENT_ICC_DEPERSONALIZATION_RESULT = 101;
+
+    //Constants
+    private final static int INT_SIZE = 4;
+    private final String mOemIdentifier = "QUALCOMM";
+    private final int mHeaderSize = mOemIdentifier.length() + 2 * INT_SIZE;
+    private final static int NETWORK = 1;
+    private final static int NETWORK_SUBSET = 2;
+    private final static int SERVICE_PROVIDER = 3;
+    private final static int CORPORATE = 4;
+    private final static int SIM = 5;
 
     private Phone mPhone;
+    private int mPersoSubtype;
+    /** Starting number for OEMHOOK request and response IDs */
+    int OEMHOOK_BASE = 0x80000;
+    /** De-activate SIM personalization */
+    int OEMHOOK_ME_DEPERSONALIZATION = OEMHOOK_BASE + 4;
 
     //UI elements
     private EditText     mPinEntry;
     private LinearLayout mEntryPanel;
     private LinearLayout mStatusPanel;
     private TextView     mStatusText;
+    private TextView     mPersoSubtypeText;
 
     private Button       mUnlockButton;
     private Button       mDismissButton;
@@ -83,10 +103,13 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
     //handler for unlock function results
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
-            if (msg.what == EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT) {
+            String[] mPersoSubtypeNames = {"Network","Network SubType",
+                                            "Service Provider","Corporate","SIM"};
+            if (msg.what == EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT ||
+                msg.what == EVENT_ICC_DEPERSONALIZATION_RESULT) {
                 AsyncResult res = (AsyncResult) msg.obj;
                 if (res.exception != null) {
-                    if (DBG) log("network depersonalization request failure.");
+                    Log.i(TAG,mPersoSubtypeNames[mPersoSubtype - 1] + " Depersonalization failed.");
                     indicateError();
                     postDelayed(new Runnable() {
                                     public void run() {
@@ -96,7 +119,7 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
                                     }
                                 }, 3000);
                 } else {
-                    if (DBG) log("network depersonalization success.");
+                    Log.i(TAG,mPersoSubtypeNames[mPersoSubtype - 1] + " Depersonalization success.");
                     indicateSuccess();
                     postDelayed(new Runnable() {
                                     public void run() {
@@ -111,6 +134,13 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
     //constructor
     public IccNetworkDepersonalizationPanel(Context context) {
         super(context);
+        mPersoSubtype = NETWORK;
+    }
+
+    //constructor
+    public IccNetworkDepersonalizationPanel(Context context,int subtype) {
+        super(context);
+        mPersoSubtype = subtype;
     }
 
     @Override
@@ -129,6 +159,8 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
         span.setSpan(mPinEntryWatcher, 0, text.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
 
         mEntryPanel = (LinearLayout) findViewById(R.id.entry_panel);
+        mPersoSubtypeText = (TextView) findViewById(R.id.perso_subtype_text);
+        setPersoPanelTitle();
 
         mUnlockButton = (Button) findViewById(R.id.ndp_unlock);
         mUnlockButton.setOnClickListener(mUnlockListener);
@@ -174,27 +206,41 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
                 return;
             }
 
-            if (DBG) log("requesting network depersonalization with code " + pin);
-            mPhone.getIccCard().supplyNetworkDepersonalization(pin,
-                    Message.obtain(mHandler, EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT));
+            if (mPersoSubtype == NETWORK) {
+                  Log.e(TAG,"requesting network depersonalization");
+                  mPhone.getIccCard().supplyNetworkDepersonalization(pin,
+                        Message.obtain(mHandler, EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT));
+            } else {
+                  Log.e(TAG,"requesting depersonalization with subtype " + mPersoSubtype);
+                  sendDepersoOemRilRequestRaw(pin);
+            }
             indicateBusy();
         }
     };
 
     private void indicateBusy() {
-        mStatusText.setText(R.string.requesting_unlock);
+        int[] busyLabels = {R.string.requesting_unlock,R.string.requesting_nw_subset_unlock,
+                            R.string.requesting_sp_unlock,R.string.requesting_corporate_unlock,
+                            R.string.requesting_sim_unlock};
+        mStatusText.setText(busyLabels[mPersoSubtype - 1]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
 
     private void indicateError() {
-        mStatusText.setText(R.string.unlock_failed);
+        int[] errorLabels = {R.string.unlock_failed,R.string.nw_subset_unlock_failed,
+                             R.string.sp_unlock_failed,R.string.corporate_unlock_failed,
+                             R.string.sim_unlock_failed};
+        mStatusText.setText(errorLabels[mPersoSubtype - 1]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
 
     private void indicateSuccess() {
-        mStatusText.setText(R.string.unlock_success);
+        int[] successLabels = {R.string.unlock_success,R.string.nw_subset_unlock_success,
+                               R.string.sp_unlock_success,R.string.corporate_unlock_success,
+                               R.string.sim_unlock_success};
+        mStatusText.setText(successLabels[mPersoSubtype - 1]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
@@ -210,6 +256,44 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
                 dismiss();
             }
         };
+
+    //Sets appropriate title for the Depersonalization Panel.
+    private void setPersoPanelTitle() {
+        int[] panelTitles = {R.string.label_ndp,R.string.label_nsdp,
+                             R.string.label_spdp,R.string.label_cdp,
+                             R.string.label_sdp};
+        mPersoSubtypeText.setText(panelTitles[mPersoSubtype - 1]);
+    }
+
+    //Sends RIL_REQUEST_OEM_HOOK_RAW with Depersonalization information.
+    void sendDepersoOemRilRequestRaw(String pin) {
+        int requestSize = INT_SIZE + pin.length();
+        byte[] request = new byte[mHeaderSize + requestSize + 1];
+        byte termChar = '\0';
+        ByteBuffer reqBuffer = ByteBuffer.wrap(request);
+        reqBuffer.order(ByteOrder.nativeOrder());
+
+        try {
+           // Add OEM identifier String
+           reqBuffer.put(mOemIdentifier.getBytes());
+
+           // Add Request ID
+           reqBuffer.putInt(OEMHOOK_ME_DEPERSONALIZATION);
+
+           // Add Request payload length
+           reqBuffer.putInt(requestSize);
+
+           reqBuffer.putInt(mPersoSubtype); // Depersonalization Subtype
+           reqBuffer.put(pin.getBytes()); // Depersonalization PIN
+           reqBuffer.put(termChar); // Null character indicating end of string
+        } catch (Exception e) {
+           Log.e(TAG,"Skipping Depersonalization because of exception " + e);
+           dismiss();
+        }
+
+        mPhone.invokeOemRilRequestRaw(request,
+              Message.obtain(mHandler, EVENT_ICC_DEPERSONALIZATION_RESULT));
+    }
 
     private void log(String msg) {
         Log.v(TAG, "[IccNetworkDepersonalizationPanel] " + msg);
