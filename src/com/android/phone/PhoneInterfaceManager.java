@@ -61,7 +61,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int CMD_SILENCE_RINGER = 6;
     private static final int CMD_INVOKE_OEM_RIL_REQUEST = 7;
     private static final int EVENT_INVOKE_OEM_RIL_REQUEST = 8;
-    private static final int EVENT_UNSOL_OEM_HOOK_RAW = 9;
+    private static final int EVENT_UNSOL_OEM_HOOK_EXT_APP = 9;
 
     PhoneApp mApp;
     Phone mPhone;
@@ -159,7 +159,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     }
                     break;
 
-                case EVENT_UNSOL_OEM_HOOK_RAW:
+                case EVENT_UNSOL_OEM_HOOK_EXT_APP:
                     ar = (AsyncResult)msg.obj;
                     broadcastUnsolOemHookIntent((byte[])(ar.result));
                     break;
@@ -219,8 +219,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         mApp = app;
         mPhone = phone;
         mMainThreadHandler = new MainThreadHandler();
-        Log.d(LOG_TAG, " Registering for UNSOL OEM HOOK Response");
-        mPhone.setOnUnsolOemHookRaw(mMainThreadHandler, EVENT_UNSOL_OEM_HOOK_RAW, null);
+        Log.d(LOG_TAG, " Registering for UNSOL OEM HOOK Responses to deliver external apps");
+        mPhone.setOnUnsolOemHookExtApp(mMainThreadHandler, EVENT_UNSOL_OEM_HOOK_EXT_APP, null);
         publish();
     }
 
