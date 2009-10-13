@@ -260,6 +260,12 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
      */
     public boolean onPreferenceChange(Preference preference, Object objValue) {
         if (preference == mButtonPreferredNetworkMode) {
+            if ( mPhone.getState() != Phone.State.IDLE )  {
+                 Toast.makeText(Settings.this, "Error while changing radio technology", Toast.LENGTH_SHORT)
+                            .show();
+                 finish();
+                 return false;
+            }
             //NOTE onPreferenceChange seems to be called even if there is no change
             //Check if the button value is changed from the System.Setting
             mButtonPreferredNetworkMode.setValue((String) objValue);
