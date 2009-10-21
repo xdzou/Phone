@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- *
+ * Copyright (C) 2009, Code Aurora Forum. All rights reserved
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -255,6 +256,7 @@ public class InCallScreen extends Activity
     // current "activity lifecycle" state, we can remove these flags.
     private boolean mIsDestroyed = false;
     private boolean mIsForegroundActivity = false;
+    private SuppServiceNotification suppSvcNotification;
 
     // Flag indicating whether or not we should bring up the Call Log when
     // exiting the in-call UI due to the Phone becoming idle.  (This is
@@ -1492,7 +1494,20 @@ public class InCallScreen extends Activity
         // Under certain call disconnected states, we want to alert the user
         // with a dialog instead of going through the normal disconnect
         // routine.
-        if (cause == Connection.DisconnectCause.CALL_BARRED) {
+        if ( cause == Connection.DisconnectCause.INCOMING_MISSED) {
+           // If the network sends SVC Notification then this dialog will be displayed
+           // in case of B when the incoming call at B is not answered and gets forwarded
+           // to C
+           suppSvcNotification = CallNotifier.getSuppSvcNotification();
+           if (suppSvcNotification != null) {
+              if (suppSvcNotification.notificationType == 1 && suppSvcNotification.code
+                    == SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
+                 showGenericErrorDialog(R.string.callUnanswered_forwarded, false);
+                 CallNotifier.setSuppSvcNotification(null);
+              }
+           }
+           return;
+        } else if (cause == Connection.DisconnectCause.CALL_BARRED) {
             showGenericErrorDialog(R.string.callFailed_cb_enabled, false);
             return;
         } else if (cause == Connection.DisconnectCause.FDN_BLOCKED) {

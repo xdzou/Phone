@@ -27,6 +27,7 @@ import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaSignalInfo
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.gsm.GSMPhone;
+import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -107,6 +108,10 @@ public class CallNotifier extends Handler
     private static final int CALLWAITING_ADDCALL_DISABLE_TIMEOUT = 12;
     private static final int DISPLAYINFO_NOTIFICATION_DONE = 13;
 
+    //This event is valid for GSM/WCDMA. Going forward
+    //may support for CDMA
+    private static final int SUPP_SERVICE_NOTIFY = 14;
+
     private PhoneApp mApplication;
     private Phone mPhone;
     private Ringer mRinger;
@@ -115,6 +120,8 @@ public class CallNotifier extends Handler
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
+
+    private static SuppServiceNotification suppSvcNotification;
 
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_LOPRI_SIGNALINFO = 50;
@@ -129,6 +136,7 @@ public class CallNotifier extends Handler
         mPhone.registerForDisconnect(this, PHONE_DISCONNECT, null);
         mPhone.registerForUnknownConnection(this, PHONE_UNKNOWN_CONNECTION_APPEARED, null);
         mPhone.registerForIncomingRing(this, PHONE_INCOMING_RING, null);
+        mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
 
         if (mPhone.getPhoneName().equals("CDMA")) {
             if (DBG) log("Registering for Call Waiting, Signal and Display Info.");
@@ -248,9 +256,24 @@ public class CallNotifier extends Handler
                 CdmaDisplayInfo.dismissDisplayInfoRecord();
                 break;
 
+            case SUPP_SERVICE_NOTIFY:
+                    if (DBG) log("Received Supplementary Notification");
+                    if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
+                       suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
+                    }
+                    break;
+
             default:
                 // super.handleMessage(msg);
         }
+    }
+
+    public static SuppServiceNotification getSuppSvcNotification() {
+       return suppSvcNotification;
+    }
+
+    public static void setSuppSvcNotification(SuppServiceNotification suppSvcNot) {
+      suppSvcNotification = suppSvcNot;
     }
 
     PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
@@ -565,6 +588,7 @@ public class CallNotifier extends Handler
         mPhone.unregisterForCallWaiting(this);
         mPhone.unregisterForDisplayInfo(this);
         mPhone.unregisterForSignalInfo(this);
+        mPhone.unregisterForSuppServiceNotification(this);
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -577,6 +601,7 @@ public class CallNotifier extends Handler
         mPhone.registerForDisconnect(this, PHONE_DISCONNECT, null);
         mPhone.registerForUnknownConnection(this, PHONE_UNKNOWN_CONNECTION_APPEARED, null);
         mPhone.registerForIncomingRing(this, PHONE_INCOMING_RING, null);
+        mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
         if (mPhone.getPhoneName().equals("CDMA")) {
             if (DBG) log("Registering for Call Waiting, Signal and Display Info.");
             mPhone.registerForCallWaiting(this, PHONE_CDMA_CALL_WAITING, null);

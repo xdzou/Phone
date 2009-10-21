@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- *
+ * Copyright (C) 2009, Code Aurora Forum. All rights reserved
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.content.ContentUris;
 import android.content.Context;
@@ -100,6 +101,8 @@ public class CallCard extends FrameLayout
 
     // Track the state for the photo.
     private ContactsAsyncHelper.ImageTracker mPhotoTracker;
+
+    private SuppServiceNotification suppSvcNotification;
 
     // A few hardwired constants used in our screen layout.
     // TODO: These should all really come from resources, but that's
@@ -699,11 +702,63 @@ public class CallCard extends FrameLayout
 
         // Normal "foreground" call card:
         String cardTitle = getTitleForCallCard(call);
+        suppSvcNotification = CallNotifier.getSuppSvcNotification();
 
         if (DBG) log("updateCardTitleWidgets: " + cardTitle);
+        // Network sends supplementary service notifications when an outgoing call is made
+        // from A and call gets forwarded to C instead of B whose number is dialed.
+        // Check for the type of supplementary notification and accordingly
+        // display the message on the InCallScreen
+        String callForwardTxt = "";
+        if (suppSvcNotification != null) {
+           switch (suppSvcNotification.notificationType) {
+              // The Notification is for MO call
+              case 0:
+                 switch (suppSvcNotification.code) {
+                    case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
+                       // This message is displayed when an outgoing call is made
+                       // and unconditional forwarding is enabled.
+                       callForwardTxt = getContext().getString(R.string.card_title_unconditionalCF);
+                       break;
 
-        // We display *either* the "upper title" or the "lower title", but
-        // never both.
+                    case SuppServiceNotification.MO_CODE_SOME_CF_ACTIVE:
+                       // This message is displayed when an outgoing call is made
+                       // and conditional forwarding is enabled.
+                       callForwardTxt = getContext().getString(R.string.card_title_conditionalCF);
+                       break;
+
+                    case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
+                       //This message is displayed on A when the outgoing call actually gets forwarded to C
+                       callForwardTxt = getContext().getString(R.string.card_title_MOcall_forwarding);
+                       break;
+
+                    default:
+                       break;
+                 }
+                 break;
+
+              // The Notification is for MT call
+              case 1:
+                 switch (suppSvcNotification.code) {
+                    case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
+                       //This message is displayed on C when the incoming call is forwarded from B
+                       callForwardTxt = getContext().getString(R.string.card_title_forwarded_MTcall);
+                       break;
+
+                    case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
+                       // This message is displayed on B when it is busy and the incoming call gets forwarded to C
+                       callForwardTxt = getContext().getString(R.string.card_title_MTcall_forwarding);
+                       break;
+
+                    default :
+                       break;
+                 }
+                 break;
+
+              default:
+                 break;
+           }
+        }
 
         if (state == Call.State.ACTIVE) {
             final boolean bluetoothActive = mApplication.showBluetoothIndication();
@@ -734,7 +789,7 @@ public class CallCard extends FrameLayout
                 mLowerTitle.setText(cardTitle);
                 mLowerTitle.setTextColor(textColor);
                 mElapsedTime.setTextColor(textColor);
-                setUpperTitle("");
+                setUpperTitle(callForwardTxt);
             }
         } else if (state == Call.State.DISCONNECTED) {
             // Use the "lower title" (in red).
@@ -751,9 +806,14 @@ public class CallCard extends FrameLayout
             mElapsedTime.setTextColor(mTextColorEnded);
             setUpperTitle("");
         } else {
-            // All other states (DIALING, INCOMING, etc.) use the "upper title":
-            setUpperTitle(cardTitle, state);
-            mLowerTitleViewGroup.setVisibility(View.INVISIBLE);
+           // All other states (DIALING, INCOMING, etc.) use the "upper title":
+           setUpperTitle(cardTitle, state);
+           if (suppSvcNotification == null) {
+              mLowerTitleViewGroup.setVisibility(View.INVISIBLE);
+           } else {
+              mLowerTitleViewGroup.setVisibility(View.VISIBLE);
+              mLowerTitle.setText(callForwardTxt);
+           }
         }
 
         // Draw the onscreen "elapsed time" indication EXCEPT if we're in
@@ -767,6 +827,10 @@ public class CallCard extends FrameLayout
             updateElapsedTimeWidget(duration / 1000);
             // Also see onTickForCallTimeElapsed(), which updates this
             // widget once per second while the call is active.
+        }
+
+        if (suppSvcNotification != null) {
+           CallNotifier.setSuppSvcNotification(null);
         }
     }
 
