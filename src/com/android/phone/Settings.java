@@ -470,16 +470,10 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
             if (ar.exception == null) {
                 int networkMode;
-                if (mPhone.getPhoneName().equals("CDMA")) {
-                    networkMode =
-                        Integer.valueOf(mButtonPreferredNetworkMode.getValue()).intValue();
-                } else {
-                    if (mButtonPrefer2g == null) {
-                        networkMode = Integer.valueOf(mButtonPreferredNetworkMode.getValue())
-                                .intValue();
-                    } else {
-                        networkMode = mButtonPrefer2g.isChecked() ? Phone.NT_MODE_GSM_ONLY
-                                : Phone.NT_MODE_WCDMA_PREF;
+                networkMode = Integer.valueOf(mButtonPreferredNetworkMode.getValue()).intValue();
+                if (mButtonPrefer2g != null) {
+                    if (mButtonPrefer2g.isChecked()) {
+                        networkMode =  Phone.NT_MODE_GSM_ONLY;
                     }
                 }
                 android.provider.Settings.Secure.putInt(mPhone.getContext().getContentResolver(),
