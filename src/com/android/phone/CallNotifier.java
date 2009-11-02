@@ -107,16 +107,26 @@ public class CallNotifier extends Handler
     private static final int CALLWAITING_CALLERINFO_DISPLAY_DONE = 11;
     private static final int CALLWAITING_ADDCALL_DISABLE_TIMEOUT = 12;
     private static final int DISPLAYINFO_NOTIFICATION_DONE = 13;
+    private static final int SUPP_SERVICE_NOTIFY = 14;
 
     //This event is valid for GSM/WCDMA. Going forward
     //may support for CDMA
-    private static final int SUPP_SERVICE_NOTIFY = 14;
+    private static final int PHONE_LOCAL_RINGBACK = 15;
 
     private PhoneApp mApplication;
     private Phone mPhone;
     private Ringer mRinger;
     private BluetoothHandsfree mBluetoothHandsfree;
     private boolean mSilentRingerRequested;
+
+    // isLocalrbtStarted keeps track of local ringback tone
+    // being played
+
+    private boolean isLocalrbtStarted = false;
+    // isRingInSilentMode keeps track of whether the local
+    // ringbacktone was played in silent mode.
+    private boolean isRingInSilentMode = false;
+    private AudioManager audioManager;
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
@@ -137,6 +147,7 @@ public class CallNotifier extends Handler
         mPhone.registerForUnknownConnection(this, PHONE_UNKNOWN_CONNECTION_APPEARED, null);
         mPhone.registerForIncomingRing(this, PHONE_INCOMING_RING, null);
         mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
+        mPhone.registerForLocalRingbackTone(this, PHONE_LOCAL_RINGBACK, null);
 
         if (mPhone.getPhoneName().equals("CDMA")) {
             if (DBG) log("Registering for Call Waiting, Signal and Display Info.");
@@ -163,6 +174,8 @@ public class CallNotifier extends Handler
 
         TelephonyManager telephonyManager = (TelephonyManager)app.getSystemService(
                 Context.TELEPHONY_SERVICE);
+        audioManager = (AudioManager)mPhone.getContext().
+                         getSystemService(Context.AUDIO_SERVICE);
         telephonyManager.listen(mPhoneStateListener,
                 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
                 | PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR);
@@ -257,11 +270,15 @@ public class CallNotifier extends Handler
                 break;
 
             case SUPP_SERVICE_NOTIFY:
-                    if (DBG) log("Received Supplementary Notification");
-                    if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
-                       suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
-                    }
-                    break;
+                if (DBG) log("Received Supplementary Notification");
+                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
+                   suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
+                }
+                break;
+
+            case PHONE_LOCAL_RINGBACK:
+                playLocalRingBackTone((AsyncResult) msg.obj);
+                break;
 
             default:
                 // super.handleMessage(msg);
@@ -550,8 +567,6 @@ public class CallNotifier extends Handler
             //so that mic is unmuted.
             if(Call.State.ACTIVE == mPhone.getForegroundCall().getState()) {
                 if(PhoneUtils.getMute(mPhone) == false ) {
-                    AudioManager audioManager = (AudioManager)mPhone.getContext().
-                         getSystemService(Context.AUDIO_SERVICE);
                     audioManager.setMicrophoneMute(true);
                     audioManager.setMicrophoneMute(false);
                 }
@@ -571,10 +586,57 @@ public class CallNotifier extends Handler
             // remove it!
             if (DBG) log("stopRing()... (OFFHOOK state)");
             mRinger.stopRing();
-
+            if (isLocalrbtStarted){
+               if (isRingInSilentMode) {
+                  audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                  isRingInSilentMode = false;
+               }
+               isLocalrbtStarted = false;
+            }
             // put a icon in the status bar
             NotificationMgr.getDefault().updateInCallNotification();
         }
+    }
+
+    private void playLocalRingBackTone(AsyncResult r) {
+       // Play local Ringback Tone
+       Call foregroundCall = mPhone.getForegroundCall();
+       if (r.result != null) {
+          Boolean playTone = (Boolean) r.result;
+          if (VDBG) log("option to Play Local RingBack tone is" + r.result);
+          if (playTone.booleanValue() == true) {
+             // Received LOCAL_RINGBACK_START from network
+             // Checking for isLocalrbtStarted here because it should ignore the
+             // LOCAL_RINGBACK_START request if already playing the local ringtone.
+             if (foregroundCall.getState() == Call.State.ALERTING) {
+                if (!isLocalrbtStarted ) {
+                   mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
+                   if (VDBG) log("State Alerting Play RingBackTone");
+                   // Play the ringtone in silent mode.
+                   if (audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
+                      audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                      isRingInSilentMode = true;
+                   }
+                   mRinger.ring();
+                   isLocalrbtStarted = true;
+                }
+                else {
+                   if (VDBG) log("Received LOCAL_RINGBACK_TONE start when already playing");
+                }
+             }
+          }
+          else {
+             // Received LOCAL_RINGBACK_STOP from network
+             mRinger.stopRing();
+             if(isLocalrbtStarted)
+                isLocalrbtStarted = false;
+             // Restore the silent mode
+             if (isRingInSilentMode) {
+                audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                isRingInSilentMode = false;
+             }
+          }
+       }
     }
 
     void updateCallNotifierRegistrationsAfterRadioTechnologyChange() {
@@ -589,6 +651,7 @@ public class CallNotifier extends Handler
         mPhone.unregisterForDisplayInfo(this);
         mPhone.unregisterForSignalInfo(this);
         mPhone.unregisterForSuppServiceNotification(this);
+        mPhone.unregisterForLocalRingbackTone(this);
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -602,6 +665,7 @@ public class CallNotifier extends Handler
         mPhone.registerForUnknownConnection(this, PHONE_UNKNOWN_CONNECTION_APPEARED, null);
         mPhone.registerForIncomingRing(this, PHONE_INCOMING_RING, null);
         mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
+        mPhone.registerForLocalRingbackTone(this, PHONE_LOCAL_RINGBACK, null);
         if (mPhone.getPhoneName().equals("CDMA")) {
             if (DBG) log("Registering for Call Waiting, Signal and Display Info.");
             mPhone.registerForCallWaiting(this, PHONE_CDMA_CALL_WAITING, null);
@@ -694,6 +758,13 @@ public class CallNotifier extends Handler
         // It's safest to just unconditionally stop the ringer here.
         if (DBG) log("stopRing()... (onDisconnect)");
         mRinger.stopRing();
+         if (isLocalrbtStarted)
+           isLocalrbtStarted = false;
+         if (isRingInSilentMode) {
+                  audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                  isRingInSilentMode = false;
+         }
+
 
         // Check for the various tones we might need to play (thru the
         // earpiece) after a call disconnects.
