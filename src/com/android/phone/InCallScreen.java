@@ -1504,9 +1504,9 @@ public class InCallScreen extends Activity
                     == SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
                  showGenericErrorDialog(R.string.callUnanswered_forwarded, false);
                  CallNotifier.setSuppSvcNotification(null);
+                 return;
               }
            }
-           return;
         } else if (cause == Connection.DisconnectCause.CALL_BARRED) {
             showGenericErrorDialog(R.string.callFailed_cb_enabled, false);
             return;
