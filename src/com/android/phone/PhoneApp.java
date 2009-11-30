@@ -1217,6 +1217,9 @@ public class PhoneApp extends Application {
             if (cdmaOtaScreenState == null) {
                 cdmaOtaScreenState = new OtaUtils.CdmaOtaScreenState();
             }
+            if (cdmaOtaInCallScreenUiState == null) {
+                cdmaOtaInCallScreenUiState = new OtaUtils.CdmaOtaInCallScreenUiState();
+            }
         }
 
         ringer.updateRingerContextAfterRadioTechnologyChange(this.phone);
