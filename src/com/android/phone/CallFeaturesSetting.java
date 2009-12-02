@@ -1372,11 +1372,11 @@ public class CallFeaturesSetting extends PreferenceActivity
                 int ttymode = ((int[]) ar.result)[0];
                 if (DBG) log("handleQueryTTYModeResponse:ttymode=" + ttymode);
 
+                android.provider.Settings.Secure.putInt(getContentResolver(),
+                        android.provider.Settings.Secure.PREFERRED_TTY_MODE, ttymode );
                 Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
                 ttyModeChanged.putExtra("ttyEnabled", ttymode != Phone.TTY_MODE_OFF);
                 sendBroadcast(ttyModeChanged);
-                android.provider.Settings.Secure.putInt(getContentResolver(),
-                        android.provider.Settings.Secure.PREFERRED_TTY_MODE, ttymode );
                 mButtonTTY.setValue(Integer.toString(ttymode));
                 updatePreferredTtyModeSummary(ttymode);
             }
