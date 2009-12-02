@@ -126,6 +126,7 @@ public class CallNotifier extends Handler
     private static final int PHONE_ENHANCED_VP_OFF = 10;
     private static final int PHONE_RINGBACK_TONE = 11;
     private static final int PHONE_RESEND_MUTE = 12;
+    private static final int PHONE_AUTO_ANSWER = 13;
 
     // Events generated internally:
     private static final int PHONE_MWI_CHANGED = 21;
@@ -356,6 +357,11 @@ public class CallNotifier extends Handler
                 onResendMute();
                 break;
 
+            case PHONE_AUTO_ANSWER:
+                // Called after auto answer timer expires
+                onPhoneAutoAnswer();
+                break;
+
             default:
                 // super.handleMessage(msg);
         }
@@ -372,6 +378,20 @@ public class CallNotifier extends Handler
             onCfiChanged(cfi);
         }
     };
+
+    private void onPhoneAutoAnswer() {
+        Call mForegroundCall = mPhone.getForegroundCall();
+        Call mBackgroundCall = mPhone.getBackgroundCall();
+        Call mRingingCall = mPhone.getRingingCall();
+        boolean hasRingingCall = !mRingingCall.isIdle();
+        boolean hasActiveCall = !mForegroundCall.isIdle();
+        boolean hasHoldingCall = !mBackgroundCall.isIdle();
+
+        if (hasRingingCall && !hasActiveCall && !hasHoldingCall) {
+            Log.i(LOG_TAG, "CallNotifier: Auto answer incoming call");
+            PhoneUtils.answerCall(mPhone);
+        }
+    }
 
     private void onNewRingingConnection(AsyncResult r) {
         Connection c = (Connection) r.result;
@@ -450,7 +470,19 @@ public class CallNotifier extends Handler
             // - do this before showing the incoming call panel
             if (state == Call.State.INCOMING) {
                 PhoneUtils.setAudioControlState(PhoneUtils.AUDIO_RINGING);
+                int mAutoAnswer = Settings.System.getInt(mPhone.getContext().getContentResolver(),
+                        Settings.System.AUTO_ANSWER_TIMEOUT, -1);
+
+                // Reset Auto answer timeout
+                removeMessages(PHONE_AUTO_ANSWER);
                 startIncomingCallQuery(c);
+
+                // If Auto Answer feature has been enabled, the call is automatically
+                // answered after a timeout value selected by the user.
+                if (mAutoAnswer != -1) {
+                    Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
+                    sendMessageDelayed(message, mAutoAnswer);
+                }
             } else {
                 if (VDBG) log("- starting call waiting tone...");
                 if (mCallWaitingTonePlayer == null) {
