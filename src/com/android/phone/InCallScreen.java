@@ -63,6 +63,7 @@ import android.widget.LinearLayout;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.media.ToneGenerator;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
@@ -200,6 +201,10 @@ public class InCallScreen extends Activity
     // false.
     public static final String ACTION_UNDEFINED = "com.android.phone.InCallScreen.UNDEFINED";
 
+    private static final int FOCUS_BEEP_VOLUME = 100;
+    private static final int MSG_ID_TIMEOUT = 1;
+    private final static int DIALOG_TIMEOUT =  2 * 60 * 1000;
+
     // High-level "modes" of the in-call UI.
     private enum InCallScreenMode {
         /**
@@ -313,6 +318,7 @@ public class InCallScreen extends Activity
     private AlertDialog mCallLostDialog;
     private AlertDialog mPausePromptDialog;
     // NOTE: if you add a new dialog here, be sure to add it to dismissAllDialogs() also.
+    private ToneGenerator mToneGenerator;
 
     // TODO: If the Activity class ever provides an easy way to get the
     // current "activity lifecycle" state, we can remove these flags.
@@ -1776,6 +1782,12 @@ public class InCallScreen extends Activity
             return;
         } else if (cause == Connection.DisconnectCause.CS_RESTRICTED_NORMAL) {
             showGenericErrorDialog(R.string.callFailed_dsac_restricted_normal, false);
+            return;
+        } else if (cause == Connection.DisconnectCause.IMSI_UNKNOWN_IN_VLR) {
+            showGenericErrorDialog(R.string.callFailed_imsi_unknown_vlr, false);
+            return;
+        } else if (cause == Connection.DisconnectCause.IMEI_NOT_ACCEPTED) {
+            showGenericErrorDialog(R.string.callFailed_imei_not_accepted, false);
             return;
         }
 
@@ -3345,12 +3357,41 @@ public class InCallScreen extends Activity
         }
     }
 
+    Handler mTimeoutHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_ID_TIMEOUT:
+                    bailOutAfterErrorDialog();
+                    if (mToneGenerator != null)
+                        mToneGenerator = null;
+                    break;
+            }
+        }
+    };
+
+    DialogInterface.OnKeyListener mDialogOnKeyListener = new DialogInterface.OnKeyListener() {
+        public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+            if (keyCode != KeyEvent.KEYCODE_MENU) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                    if (mToneGenerator != null)
+                        mToneGenerator = null;
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+    };
+
     /**
      * Utility function to bring up a generic "error" dialog, and then bail
      * out of the in-call UI when the user hits OK (or the BACK button.)
      */
     private void showGenericErrorDialog(int resid, boolean isStartupError) {
         CharSequence msg = getResources().getText(resid);
+        Boolean vlrImeiCause = ((resid == R.string.callFailed_imsi_unknown_vlr) || (resid == R.string.callFailed_imei_not_accepted));
         if (DBG) log("showGenericErrorDialog('" + msg + "')...");
 
         // create the clicklistener and cancel listener as needed.
@@ -3378,11 +3419,16 @@ public class InCallScreen extends Activity
 
         // TODO: Consider adding a setTitle() call here (with some generic
         // "failure" title?)
-        mGenericErrorDialog = new AlertDialog.Builder(this)
-                .setMessage(msg)
-                .setPositiveButton(R.string.ok, clickListener)
-                .setOnCancelListener(cancelListener)
-                .create();
+        AlertDialog.Builder b = new AlertDialog.Builder(this);
+        b.setMessage(msg);
+        if (vlrImeiCause) {
+            b.setCancelable(true);
+            b.setOnKeyListener(mDialogOnKeyListener);
+        } else {
+            b.setPositiveButton(R.string.ok, clickListener);
+            b.setOnCancelListener(cancelListener);
+        }
+        mGenericErrorDialog = b.create();
 
         // When the dialog is up, completely hide the in-call UI
         // underneath (which is in a partially-constructed state).
@@ -3390,6 +3436,21 @@ public class InCallScreen extends Activity
                 WindowManager.LayoutParams.FLAG_DIM_BEHIND);
 
         mGenericErrorDialog.show();
+        if (vlrImeiCause) {
+            mTimeoutHandler.sendMessageDelayed(mTimeoutHandler.obtainMessage(MSG_ID_TIMEOUT),
+                    DIALOG_TIMEOUT);
+            try {
+                mToneGenerator = new ToneGenerator(AudioManager.STREAM_SYSTEM, FOCUS_BEEP_VOLUME);
+            } catch (RuntimeException e) {
+                if (DBG)
+                    log("showGenericErrorDialog: Exception caught while creating local tone generator: "
+                            + e);
+                mToneGenerator = null;
+            }
+            if (mToneGenerator != null) {
+                mToneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2);
+            }
+        }
     }
 
     private void showCallLostDialog() {
