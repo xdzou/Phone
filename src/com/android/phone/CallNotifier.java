@@ -940,7 +940,11 @@ public class CallNotifier extends Handler
             }
             if (VDBG) log("- callLogType: " + callLogType + ", UserData: " + c.getUserData());
 
-
+            // Log emergency calls depending on the value of the property ro.cdma.log_emergency_calls
+            if(!mPhone.getPhoneName().equals("CDMA") ||
+                    !PhoneNumberUtils.isEmergencyNumber(number) ||
+                    SystemProperties.getBoolean("ro.cdma.log_emergency_calls", false))
+            // Get the CallerInfo object and then log the call with it.
             {
                 final CallerInfo ci = getCallerInfoFromConnection(c);  // May be null.
                 final String logNumber = getLogNumber(c, ci);
