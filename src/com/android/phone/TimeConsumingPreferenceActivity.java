@@ -29,6 +29,7 @@ public class TimeConsumingPreferenceActivity extends PreferenceActivity
     static final int EXCEPTION_ERROR = 300;
     static final int RESPONSE_ERROR = 400;
     static final int RADIO_OFF_ERROR = 500;
+    static final int FDN_BLOCKED_ERROR = 600;
 
     private final ArrayList<String> mBusyList=new ArrayList<String> ();
 
@@ -55,7 +56,8 @@ public class TimeConsumingPreferenceActivity extends PreferenceActivity
             return null;
         }
 
-        if (id == RESPONSE_ERROR || id == RADIO_OFF_ERROR || id == EXCEPTION_ERROR) {
+        if (id == RESPONSE_ERROR || id == RADIO_OFF_ERROR || id == EXCEPTION_ERROR ||
+                id == FDN_BLOCKED_ERROR) {
             AlertDialog.Builder b = new AlertDialog.Builder(this);
 
             int msgId;
@@ -72,6 +74,11 @@ public class TimeConsumingPreferenceActivity extends PreferenceActivity
                     msgId = R.string.radio_off_error;
                     // Set Button 3
                     b.setNeutralButton(R.string.close_dialog, this);
+                    break;
+                case FDN_BLOCKED_ERROR:
+                    msgId = R.string.fdn_blocked_error;
+                    // Set Button 2
+                    b.setNegativeButton(R.string.close_dialog, this);
                     break;
                 case EXCEPTION_ERROR:
                 default:

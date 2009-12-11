@@ -15,9 +15,11 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import com.android.internal.telephony.CommandException;
 
 import static com.android.phone.TimeConsumingPreferenceActivity.EXCEPTION_ERROR;
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
+import static com.android.phone.TimeConsumingPreferenceActivity.FDN_BLOCKED_ERROR;
 
 public class CallForwardEditPreference extends EditPhoneNumberPreference {
     private static final String LOG_TAG = "CallForwardEditPreference";
@@ -177,9 +179,19 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
             callForwardInfo = null;
             if (ar.exception != null) {
-                if (DBG) Log.d(LOG_TAG, "handleGetCFResponse: ar.exception=" + ar.exception);
-                setEnabled(false);
-                tcpListener.onError(CallForwardEditPreference.this, EXCEPTION_ERROR);
+                if (DBG)
+                    Log.d(LOG_TAG, "handleGetCFResponse: ar.exception=" + ar.exception);
+
+                /* As per 3GPP TS 22.101 when FDN is enabled, only allow Supplementary Service (SS)
+                 * Control (in Dedicated or Idle mode) if the SS control string is stored as
+                 * an FDN entry, otherwise, not
+                 */
+                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_CHECK_FAILURE) {
+                    tcpListener.onError(CallForwardEditPreference.this, FDN_BLOCKED_ERROR);
+                } else {
+                    setEnabled(false);
+                    tcpListener.onError(CallForwardEditPreference.this, EXCEPTION_ERROR);
+                }
             } else {
                 if (ar.userObj instanceof Throwable) {
                     tcpListener.onError(CallForwardEditPreference.this, RESPONSE_ERROR);
@@ -240,7 +252,7 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
             if (ar.exception != null) {
                 if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: ar.exception=" + ar.exception);
 
-                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_FAILURE) {
+                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_CHECK_FAILURE) {
                     tcpListener.onError(CallForwardEditPreference.this, FDN_BLOCKED_ERROR);
                     tcpListener.onFinished(CallForwardEditPreference.this, false);
                     return;
