@@ -2,6 +2,7 @@ package com.android.phone;
 
 import static com.android.phone.TimeConsumingPreferenceActivity.EXCEPTION_ERROR;
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
+import static com.android.phone.TimeConsumingPreferenceActivity.FDN_BLOCKED_ERROR;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -13,6 +14,7 @@ import android.os.Message;
 import android.preference.CheckBoxPreference;
 import android.util.AttributeSet;
 import android.util.Log;
+import com.android.internal.telephony.CommandException;
 
 public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
     private static final String LOG_TAG = "CallWaitingCheckBoxPreference";
@@ -84,9 +86,19 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
             }
 
             if (ar.exception != null) {
-                if (DBG) Log.d(LOG_TAG, "handleGetCallWaitingResponse: ar.exception=" + ar.exception);
-                setEnabled(false);
-                tcpListener.onError(CallWaitingCheckBoxPreference.this, EXCEPTION_ERROR);
+                if (DBG)
+                    Log.d(LOG_TAG, "handleGetCallWaitingResponse: ar.exception=" + ar.exception);
+
+                /* As per 3GPP TS 22.101 when FDN is enabled, only allow Supplementary Service (SS)
+                 * Control (in Dedicated or Idle mode) if the SS control string is stored as
+                 * an FDN entry, otherwise, not
+                 */
+                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_FAILURE) {
+                    tcpListener.onError(CallWaitingCheckBoxPreference.this, FDN_BLOCKED_ERROR);
+                } else {
+                    setEnabled(false);
+                    tcpListener.onError(CallWaitingCheckBoxPreference.this, EXCEPTION_ERROR);
+                }
             } else if (ar.userObj instanceof Throwable) {
                 tcpListener.onError(CallWaitingCheckBoxPreference.this, RESPONSE_ERROR);
             } else {

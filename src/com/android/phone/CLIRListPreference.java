@@ -2,6 +2,7 @@ package com.android.phone;
 
 import static com.android.phone.TimeConsumingPreferenceActivity.EXCEPTION_ERROR;
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
+import static com.android.phone.TimeConsumingPreferenceActivity.FDN_BLOCKED_ERROR;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
@@ -15,6 +16,7 @@ import android.os.Parcelable;
 import android.preference.ListPreference;
 import android.util.AttributeSet;
 import android.util.Log;
+import com.android.internal.telephony.CommandException;
 
 public class CLIRListPreference extends ListPreference {
     private static final String LOG_TAG = "CLIRListPreference";
@@ -132,9 +134,19 @@ public class CLIRListPreference extends ListPreference {
             }
             clirArray = null;
             if (ar.exception != null) {
-                if (DBG) Log.d(LOG_TAG, "handleGetCLIRResponse: ar.exception="+ar.exception);
-                setEnabled(false);
-                tcpListener.onError(CLIRListPreference.this, EXCEPTION_ERROR);
+                if (DBG)
+                    Log.d(LOG_TAG, "handleGetCLIRResponse: ar.exception=" + ar.exception);
+
+                /* As per 3GPP TS 22.101 when FDN is enabled, only allow Supplementary Service (SS)
+                 * Control (in Dedicated or Idle mode) if the SS control string is stored as
+                 * an FDN entry, otherwise, not
+                 */
+                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_FAILURE) {
+                    tcpListener.onError(CLIRListPreference.this, FDN_BLOCKED_ERROR);
+                } else {
+                    setEnabled(false);
+                    tcpListener.onError(CLIRListPreference.this, EXCEPTION_ERROR);
+                }
             } else if (ar.userObj instanceof Throwable) {
                 tcpListener.onError(CLIRListPreference.this, RESPONSE_ERROR);
             } else {
