@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +31,10 @@ import com.android.internal.telephony.PhoneFactory;
 public class CdmaOptions extends PreferenceActivity {
 
     private CdmaRoamingListPreference mButtonCdmaRoam;
+    private CdmaSubscriptionListPreference mButtonCdmaSubscription;
 
     private static final String BUTTON_CDMA_ROAMING_KEY = "cdma_roaming_mode_key";
-
+    private static final String BUTTON_CDMA_SUBSCRIPTION_KEY = "subscription_key";
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -42,9 +44,20 @@ public class CdmaOptions extends PreferenceActivity {
         PreferenceScreen prefSet = getPreferenceScreen();
         mButtonCdmaRoam =
                 (CdmaRoamingListPreference) prefSet.findPreference(BUTTON_CDMA_ROAMING_KEY);
+        mButtonCdmaSubscription =
+                (CdmaSubscriptionListPreference) prefSet.findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY);
+    }
+
+    @Override
+    protected void onResume() {
         if (PhoneFactory.getDefaultPhone().getPhoneType() != Phone.PHONE_TYPE_CDMA) {
             mButtonCdmaRoam.setEnabled(false);
+            mButtonCdmaSubscription.setEnabled(false);
+        } else {
+            mButtonCdmaRoam.setEnabled(true);
+            mButtonCdmaSubscription.setEnabled(true);
         }
+        super.onResume();
     }
 
     @Override
