@@ -19,11 +19,13 @@ package com.android.phone;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
+import android.os.SystemProperties;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
+import android.util.Log;
 
 /**
  * List of Network-specific settings screens.
@@ -37,6 +39,7 @@ public class GsmUmtsOptions extends PreferenceActivity {
     private static final String BUTTON_APN_EXPAND_KEY = "button_apn_key";
     private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
     private static final String BUTTON_PREFER_2G_KEY = "button_prefer_2g_key";
+    private static final String CSP_TAG = "CSP GSMUMTS";
 
 
     @Override
@@ -53,6 +56,36 @@ public class GsmUmtsOptions extends PreferenceActivity {
             mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
+        } else {
+            try {
+                // persist.cust.tel.adapt is a super flag, if this is set then
+                // EF_CSP will be used irrespective of the value of
+                // persist.cust.tel.efcsp.plmn. Otherwise EF_CSP will be used if
+                // persist.cust.tel.efcsp.plmn is set.
+
+                if (SystemProperties.getBoolean("persist.cust.tel.adapt", false)
+                        || SystemProperties.getBoolean("persist.cust.tel.efcsp.plmn", false)) {
+
+                    Log.i(CSP_TAG, "System property for ef_csp is set.");
+
+                    int plmnStatus = PhoneFactory.getDefaultPhone().getCspPlmnStatus();
+                    if (plmnStatus == 1) {
+                        // This means that in elementary file EF_CSP,
+                        // in value added service group, in the service byte,
+                        // bit 8, i.e control bit to enable/disable manual PLMN
+                        // selection is set
+                        Log.v(CSP_TAG, "CSP PLMN bit is set, Enabling Network Operators menu.");
+                        mButtonOperatorSelectionExpand.setEnabled(true);
+                    } else if (plmnStatus == 0) {
+                        Log.v(CSP_TAG, "CSP PLMN bit is not set, Disabling Network Operators menu.");
+                        mButtonOperatorSelectionExpand.setEnabled(false);
+                    } else {
+                        Log.e(CSP_TAG, "Undefined Csp PLMN Status");
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(CSP_TAG, "Exception in reading ef_csp system property" + e);
+            }
         }
     }
 
