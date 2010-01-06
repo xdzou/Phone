@@ -86,6 +86,14 @@ public class CLIRListPreference extends ListPreference {
             case 2: // Unknown (network error, etc)
             default:
                 value = CommandsInterface.CLIR_DEFAULT;
+                /* When CLIR is not provisioned or unknown (e.g. no network,
+                 * etc.)  default presentation indicator is used according to
+                 * the subscription of the CLIR service at network (default is
+                 * restricted or allowed per 3GPP 27.007 section 7.7)
+                 */
+                if (tmpClirArray[0] == 1 || tmpClirArray[0] == 2) {
+                    phone.setOutgoingCallerIdDisplay(value,null);
+                }
                 break;
         }
         setValueIndex(value);
