@@ -16,6 +16,10 @@
 
 package com.android.phone;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.HashMap;
+
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
@@ -118,6 +122,10 @@ public class CallNotifier extends Handler
     private static final int PHONE_RINGBACK_TONE = 17;
     private static final int PHONE_AUTO_ANSWER = 18;
 
+    private static final int PHONE_CDMA_FWD_BURST_DTMF = 19;
+    private static final int PHONE_CDMA_FWD_CONT_DTMF_START = 20;
+    private static final int PHONE_CDMA_FWD_CONT_DTMF_STOP = 21;
+
     // Emergency call related defines:
     private static final int EMERGENCY_TONE_OFF = 0;
     private static final int EMERGENCY_TONE_ALERT = 1;
@@ -173,6 +181,9 @@ public class CallNotifier extends Handler
             mPhone.registerForSignalInfo(this, PHONE_STATE_SIGNALINFO, null);
             mPhone.registerForInCallVoicePrivacyOn(this, PHONE_ENHANCED_VP_ON, null);
             mPhone.registerForInCallVoicePrivacyOff(this, PHONE_ENHANCED_VP_OFF, null);
+            mPhone.registerForCdmaFwdBurstDtmf(this, PHONE_CDMA_FWD_BURST_DTMF, null);
+            mPhone.registerForCdmaFwdContDtmfStart(this, PHONE_CDMA_FWD_CONT_DTMF_START, null);
+            mPhone.registerForCdmaFwdContDtmfStop(this, PHONE_CDMA_FWD_CONT_DTMF_STOP, null);
 
             // Instantiate the ToneGenerator for SignalInfo and CallWaiting
             // TODO(Moto): We probably dont need the mSignalInfoToneGenerator instance
@@ -327,6 +338,28 @@ public class CallNotifier extends Handler
             case PHONE_AUTO_ANSWER:
                 // Called after auto answer timer expires
                 onPhoneAutoAnswer();
+
+            case PHONE_CDMA_FWD_BURST_DTMF:
+                if (DBG) log("Received PHONE_CDMA_FWD_BURST_DTMF event");
+                if ((msg != null) && (msg.obj != null) && ((AsyncResult)msg.obj).result != null) {
+                    onFwdBurstDtmf((AsyncResult)msg.obj);
+                }
+                break;
+
+            case PHONE_CDMA_FWD_CONT_DTMF_START:
+                if (DBG) log("Received PHONE_CDMA_FWD_CONT_DTMF_START event");
+                if ((msg != null) && (msg.obj != null) && ((AsyncResult)msg.obj).result != null) {
+                    onFwdContDtmfStart((AsyncResult)msg.obj);
+                }
+                break;
+
+            case PHONE_CDMA_FWD_CONT_DTMF_STOP:
+                if (DBG) log("Received PHONE_CDMA_FWD_CONT_DTMF_STOP event");
+                /* To notify the CdmaFwdDtmfPlayer thread */
+                synchronized (mCdmaFwdDtmfPlayerLock) {
+                    stopAnyPendingDtmf = true;
+                    mCdmaFwdDtmfPlayerLock.notify();
+                }
                 break;
 
             default:
@@ -726,6 +759,10 @@ public class CallNotifier extends Handler
         mPhone.unregisterForSignalInfo(this);
         mPhone.unregisterForCdmaOtaStatusChange(this);
         mPhone.unregisterForRingbackTone(this);
+        mPhone.unregisterForCdmaFwdBurstDtmf(this);
+        mPhone.unregisterForCdmaFwdContDtmfStart(this);
+        mPhone.unregisterForCdmaFwdContDtmfStop(this);
+
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -750,6 +787,9 @@ public class CallNotifier extends Handler
             mPhone.registerForDisplayInfo(this, PHONE_STATE_DISPLAYINFO, null);
             mPhone.registerForSignalInfo(this, PHONE_STATE_SIGNALINFO, null);
             mPhone.registerForCdmaOtaStatusChange(this, EVENT_OTA_PROVISION_CHANGE, null);
+            mPhone.registerForCdmaFwdBurstDtmf(this, PHONE_CDMA_FWD_BURST_DTMF, null);
+            mPhone.registerForCdmaFwdContDtmfStart(this, PHONE_CDMA_FWD_CONT_DTMF_START, null);
+            mPhone.registerForCdmaFwdContDtmfStop(this, PHONE_CDMA_FWD_CONT_DTMF_STOP, null);
 
             // Instantiate the ToneGenerator for SignalInfo
             try {
@@ -841,6 +881,11 @@ public class CallNotifier extends Handler
             // Remove Call waiting timers
             removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
             removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
+
+            synchronized (mCdmaFwdDtmfPlayerLock) {
+                stopAnyPendingDtmf = true;
+                mCdmaFwdDtmfPlayerLock.notify();
+            }
         }
 
         Connection c = (Connection) r.result;
@@ -1483,6 +1528,262 @@ public class CallNotifier extends Handler
                 }
             }
         }
+    }
+
+    /** Hash Map to map a character to a tone */
+    private static final HashMap<Character, Integer> mToneMap = new HashMap<Character, Integer>();
+
+    static {
+        // Map the key characters (0-9,*,#) to tones
+        mToneMap.put('1', ToneGenerator.TONE_DTMF_1);
+        mToneMap.put('2', ToneGenerator.TONE_DTMF_2);
+        mToneMap.put('3', ToneGenerator.TONE_DTMF_3);
+        mToneMap.put('4', ToneGenerator.TONE_DTMF_4);
+        mToneMap.put('5', ToneGenerator.TONE_DTMF_5);
+        mToneMap.put('6', ToneGenerator.TONE_DTMF_6);
+        mToneMap.put('7', ToneGenerator.TONE_DTMF_7);
+        mToneMap.put('8', ToneGenerator.TONE_DTMF_8);
+        mToneMap.put('9', ToneGenerator.TONE_DTMF_9);
+        mToneMap.put('0', ToneGenerator.TONE_DTMF_0);
+        mToneMap.put('#', ToneGenerator.TONE_DTMF_P);
+        mToneMap.put('*', ToneGenerator.TONE_DTMF_S);
+    }
+
+    /* Lock to synchronize the cdmaFwdDtmfPlayer thread activities */
+    private Object mCdmaFwdDtmfPlayerLock = new Object();
+
+    boolean stopAnyPendingDtmf = false;
+
+    /**
+     * To play the DTMF tones when the FWD DTMF is received using the
+     * ToneGenerator.
+     */
+    private class cdmaFwdDtmfPlayer extends Thread {
+        private int mOnTime;
+
+        private int mOffTime;
+
+        private String mDtmfDigits;
+
+        boolean isContDtmf = false;
+
+        ToneGenerator mCdmaFwdDtmfPlayer = null;
+
+        /* For Burst */
+        cdmaFwdDtmfPlayer(int onTime, int offTime, String dtmfDigits) {
+            super();
+            mOnTime = onTime;
+            mOffTime = offTime;
+            mDtmfDigits = dtmfDigits;
+            isContDtmf = false;
+        }
+
+        /* For Continuous */
+        cdmaFwdDtmfPlayer(String dtmfDigits) {
+            super();
+            mDtmfDigits = dtmfDigits;
+            isContDtmf = true;
+        }
+
+        @Override
+        public void run() {
+            synchronized (mCdmaFwdDtmfPlayerLock) {
+                /*
+                 * Tone generator to be created only during occurrence of FWD
+                 * Burst/Cont DTMF
+                 */
+                try {
+                    mCdmaFwdDtmfPlayer = new ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80);
+                } catch (RuntimeException e) {
+                    Log.d(LOG_TAG, "mCdmaFwdDtmfPlayer: Exception creating ToneGenerator: " + e);
+                    mCdmaFwdDtmfPlayer = null;
+                    return;
+                }
+                if (mCdmaFwdDtmfPlayer != null) {
+                    if (isContDtmf) {
+                        /* This is Cont DTMF */
+                        handleContDtmfPlay();
+                    } else {
+                        /* This is Burst DTMF */
+                        handleBurstDtmfPlay();
+                    }
+                } else {
+                    Log.d(LOG_TAG, "mCdmaFwdDtmfPlayer == null");
+                }
+            }
+        }
+
+        void handleContDtmfPlay() {
+            stopAnyPendingDtmf = false;
+            char c = mDtmfDigits.charAt(0);
+            /* check if it is a valid key: (0-9, *, #) */
+            if (PhoneNumberUtils.is12Key(c)) {
+                Log.d(LOG_TAG, "handleContDtmfPlay: Cont DTMF Start = " + c);
+                mCdmaFwdDtmfPlayer.startTone(mToneMap.get(c));
+                do {
+                    try {
+                        /* Infinite wait till STOP/Disconnect notifies */
+                        mCdmaFwdDtmfPlayerLock.wait();
+                    } catch (InterruptedException e) {
+                        Log.d(LOG_TAG, "handleContDtmfPlay: Interrupted in Cont DTMF");
+                    }
+                } while (!stopAnyPendingDtmf);
+
+                Log.d(LOG_TAG, "handleContDtmfPlay: Notified to stop");
+                /* Stops any pending tones & releases tonePlayer */
+                mCdmaFwdDtmfPlayer.stopTone();
+                mCdmaFwdDtmfPlayer.release();
+            } else {
+                Log.d(LOG_TAG, "Ignoring DTMF request for '" + c + "'");
+            }
+        }
+
+        void handleBurstDtmfPlay() {
+            /* This is Burst DTMF */
+            int digitStreamLength = mDtmfDigits.length();
+            stopAnyPendingDtmf = false;
+            boolean isNotified = false;
+            for (int count = 0; count < digitStreamLength; count++) {
+                char c = mDtmfDigits.charAt(count);
+                /* check if it is a valid key: (0-9, *, #) */
+                if (PhoneNumberUtils.is12Key(c)) {
+                    /*
+                     * This log may add more delay than offTime between
+                     * start/stop stream; To be removed after testing
+                     */
+                    Log.d(LOG_TAG, "handleBurstDtmfPlay: Burst DTMF Start = " + c);
+                    mCdmaFwdDtmfPlayer.startTone(mToneMap.get(c));
+                    /* Start of ON Time duration */
+                    isNotified = waitForTimerOrNotify(mOnTime);
+                    if (isNotified) {
+                        break; /* no need to handle the remaining dtmf digits */
+                    }
+                    mCdmaFwdDtmfPlayer.stopTone();
+                    /* Start of OFF Time duration */
+                    isNotified = waitForTimerOrNotify(mOffTime);
+                    if (isNotified) {
+                        break; /* no need to handle the remaining dtmf digits */
+                    }
+                } else {
+                    Log.d(LOG_TAG, "Ignoring DTMF request for '" + c + "'");
+                }
+                /* go back to play next char */
+            }
+            /* Stops any pending tones & releases tonePlayer */
+            mCdmaFwdDtmfPlayer.stopTone();
+            mCdmaFwdDtmfPlayer.release();
+        }
+
+        /**
+         * Starts the timers and wait for timer-expire/notify. Returns true if
+         * notified or false if timer-expired
+         */
+        private boolean waitForTimerOrNotify(int timerExp) {
+            /*
+             * wait for timerExp millsecs or till notified by STOP/Disconnect
+             */
+            long remainingTime = timerExp;
+            do {
+                long beforeWait = SystemClock.uptimeMillis();
+                try {
+                    mCdmaFwdDtmfPlayerLock.wait(remainingTime);
+                } catch (InterruptedException e) {
+                    Log.d(LOG_TAG, "handleBurstDtmfPlay: Interrupted in Burst DTMF");
+                }
+                /*
+                 * To check if wait returned due to
+                 * timer-expire/known-notify/unknown-notify
+                 */
+                remainingTime = remainingTime - (SystemClock.uptimeMillis() - beforeWait);
+            } while (remainingTime > 0 && !stopAnyPendingDtmf);
+
+            /* To check if wait returned due to timer-expire/notify */
+            if (stopAnyPendingDtmf) {
+                /* wait returned because of notify */
+                Log.d(LOG_TAG, "handleBurstDtmfPlay: Notified to stop");
+                /* Stops any pending tones & releases tonePlayer */
+                mCdmaFwdDtmfPlayer.stopTone();
+                return true;
+            }
+            /* wait returned because of wait time expired */
+            return false;
+        }
+    }
+
+    private void onFwdContDtmfStart(AsyncResult r) {
+        if (r.exception != null) {
+            Log.e(LOG_TAG, "onFwdContDtmfStart Init failed " + r.exception);
+            return;
+        }
+        byte[] payload = (byte[])r.result;
+        /* FWD DTMF CONTINUOUS START payload is always 1 */
+        String dtmf_digit_str = new String(payload);
+        dtmf_digit_str = dtmf_digit_str.trim();
+        if (dtmf_digit_str.length() == 1) {
+            new cdmaFwdDtmfPlayer(dtmf_digit_str).start();
+        } else {
+            Log.d(LOG_TAG, "Invalid length of Fwd Continous DTMF string: "
+                    + dtmf_digit_str.length());
+        }
+    }
+
+    /**
+     * Play tones when the phone receives a fwd burst dtmf.
+     */
+    private void onFwdBurstDtmf(AsyncResult r) {
+        if (r.exception != null) {
+            Log.e(LOG_TAG, "onFwdBurstDtmf Init failed " + r.exception);
+            return;
+        }
+        byte[] payload = (byte[])r.result;
+        /*
+         * FWD DTMF BURST payload is always 72; on-time:4, off-time:4,
+         * digit-stream:64
+         */
+        if (payload.length != 72) {
+            Log.d(LOG_TAG, "Invalid length of Fwd Burst DTMF payload received: " + payload.length);
+            return;
+        }
+        ByteBuffer dtmfInfoParse = ByteBuffer.wrap(payload);
+        dtmfInfoParse.order(ByteOrder.nativeOrder());
+        int[] timeOnOff = getDtmfTimeInfo(dtmfInfoParse);
+
+        /* FWD Burst DTMF supports 64 digits */
+        byte[] dtmf_digits = new byte[64];
+        dtmfInfoParse.get(dtmf_digits);
+        String dtmf_digit_str = new String(dtmf_digits);
+        dtmf_digit_str = dtmf_digit_str.trim();
+        Log.d(LOG_TAG, "Setting dtmf digit stream " + dtmf_digit_str);
+        new cdmaFwdDtmfPlayer(timeOnOff[0], timeOnOff[1], dtmf_digit_str).start();
+    }
+
+    private int[] getDtmfTimeInfo(ByteBuffer dtmfInfoParse) {
+        int[] timeOnOff = new int[2];
+
+        for (int i = 0; i < 2; i++) {
+            byte[] dtmfTime = new byte[4];
+            dtmfInfoParse.get(dtmfTime);
+            String dtmfTimeStr = new String(dtmfTime);
+            dtmfTimeStr = dtmfTimeStr.trim();
+            timeOnOff[i] = Integer.parseInt(dtmfTimeStr);
+        }
+
+        /* Valid values for ON: 95, 150, 200, 250, 300, 350 */
+        /* Valid values for OFF: 60, 100, 150, 200 */
+        /* From vendor-ril specifications, Default values for ON, OFF: 150 */
+
+        if ((timeOnOff[0] != 95) && (timeOnOff[0] != 150) && (timeOnOff[0] != 200)
+                && (timeOnOff[0] != 250) && (timeOnOff[0] != 300) && (timeOnOff[0] != 350)) {
+            timeOnOff[0] = 150;
+        }
+        Log.d(LOG_TAG, "Set dtmf ON time " + timeOnOff[0]);
+
+        if ((timeOnOff[1] != 60) && (timeOnOff[1] != 100) && (timeOnOff[1] != 150)
+                && (timeOnOff[1] != 200)) {
+            timeOnOff[1] = 150;
+        }
+        Log.d(LOG_TAG, "Set dtmf OFF time " + timeOnOff[1]);
+        return timeOnOff;
     }
 
     /**
