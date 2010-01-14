@@ -172,6 +172,13 @@ public class CallNotifier extends Handler
     private int mCurrentEmergencyToneState = EMERGENCY_TONE_OFF;
     private EmergencyTonePlayerVibrator mEmergencyTonePlayerVibrator;
 
+    // To prevent accidental redial of emergency numbers, the quickest solution
+    // is to not log the emergency number. Currently some CDMA carrier enforces
+    // this requirement. So add the call info to the call log for emergency
+    // calls only when "ro.phone.log_emergency_calls" property is set.
+    private final boolean mLogEmergencyCalls =
+        SystemProperties.getBoolean("ro.phone.log_emergency_calls", true);
+
     // Ringback tone player
     private InCallTonePlayer mInCallRingbackTonePlayer;
 
@@ -1059,11 +1066,6 @@ public class CallNotifier extends Handler
             }
             if (VDBG) log("- callLogType: " + callLogType + ", UserData: " + c.getUserData());
 
-            // Log emergency calls depending on the value of the property ro.cdma.log_emergency_calls
-            if(!mPhone.getPhoneName().equals("CDMA") ||
-                    !PhoneNumberUtils.isEmergencyNumber(number) ||
-                    SystemProperties.getBoolean("ro.cdma.log_emergency_calls", false))
-            // Get the CallerInfo object and then log the call with it.
             {
                 final CallerInfo ci = getCallerInfoFromConnection(c);  // May be null.
                 final String logNumber = getLogNumber(c, ci);
@@ -1086,21 +1088,14 @@ public class CallNotifier extends Handler
                     }
                 }
 
-                // To prevent accidental redial of emergency numbers
-                // (carrier requirement) the quickest solution is to
-                // not log the emergency number. We gate on CDMA
-                // (ugly) when we actually mean carrier X.
-                // TODO: Clean this up and come up with a unified strategy.
-                final boolean shouldNotlogEmergencyNumber =
-                        (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA);
-
                 // Don't call isOtaSpNumber on GSM phones.
                 final boolean isOtaNumber = (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA)
                         && mPhone.isOtaSpNumber(number);
                 final boolean isEmergencyNumber = PhoneNumberUtils.isEmergencyNumber(number);
 
-                // Don't put OTA or CDMA Emergency calls into call log
-                if (!(isOtaNumber || isEmergencyNumber && shouldNotlogEmergencyNumber)) {
+                //Don't put OTA calls into call log. When "ro.phone.log_emergency_calls"
+                // property is set to false, do not put emergency calls into call log.
+                if (!isOtaNumber && (!isEmergencyNumber || mLogEmergencyCalls)) {
                     CallLogAsync.AddCallArgs args =
                             new CallLogAsync.AddCallArgs(
                                 mPhone.getContext(), ci, logNumber, presentation,
