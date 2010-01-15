@@ -30,7 +30,6 @@ import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaSignalInfo
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.content.Context;
 import android.media.AudioManager;
@@ -126,7 +125,6 @@ public class CallNotifier extends Handler
     private static final int PHONE_CDMA_FWD_BURST_DTMF = 19;
     private static final int PHONE_CDMA_FWD_CONT_DTMF_START = 20;
     private static final int PHONE_CDMA_FWD_CONT_DTMF_STOP = 21;
-    private static final int SUPP_SERVICE_NOTIFY = 22;
 
     // Emergency call related defines:
     private static final int EMERGENCY_TONE_OFF = 0;
@@ -145,8 +143,6 @@ public class CallNotifier extends Handler
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
-
-    private static SuppServiceNotification suppSvcNotification;
 
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
@@ -205,7 +201,6 @@ public class CallNotifier extends Handler
 
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             mPhone.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
-            mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
         }
 
         mRinger = ringer;
@@ -367,24 +362,9 @@ public class CallNotifier extends Handler
                 }
                 break;
 
-            case SUPP_SERVICE_NOTIFY:
-                if (DBG) log("Received Supplementary Notification");
-                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
-                    suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
-                }
-                break;
-
             default:
                 // super.handleMessage(msg);
         }
-    }
-
-    public static SuppServiceNotification getSuppSvcNotification() {
-        return suppSvcNotification;
-    }
-
-    public static void setSuppSvcNotification(SuppServiceNotification suppSvcNot) {
-        suppSvcNotification = suppSvcNot;
     }
 
     PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
@@ -782,7 +762,7 @@ public class CallNotifier extends Handler
         mPhone.unregisterForCdmaFwdBurstDtmf(this);
         mPhone.unregisterForCdmaFwdContDtmfStart(this);
         mPhone.unregisterForCdmaFwdContDtmfStop(this);
-        mPhone.unregisterForSuppServiceNotification(this);
+
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -827,7 +807,6 @@ public class CallNotifier extends Handler
 
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             mPhone.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
-            mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
         }
     }
 
