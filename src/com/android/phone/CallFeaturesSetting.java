@@ -794,9 +794,13 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     // set the state of the UI based on CW State
     private void syncCWState(int cwArray[]) {
+        //If cwArray[0] is = 1, then cwArray[1] must follow,
+        //with the TS 27.007 service class bit vector of services
+        //for which call waiting is enabled.
+        boolean enable = ((cwArray[0] == 1) && ((cwArray[1] & 0x01) == 0x01));
         if (DBG) log("syncCWState: Setting UI state consistent with CW enable state of " +
-                ((cwArray[0] == 1) ? "ENABLED" : "DISABLED"));
-        mButtonCW.setChecked(cwArray[0] == 1);
+                (enable ? "ENABLED" : "DISABLED"));
+        mButtonCW.setChecked(enable);
     }
 
     /**
