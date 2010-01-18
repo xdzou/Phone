@@ -236,17 +236,23 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
         // app to change this setting's backend, and re-launch this settings app
         // and the UI state would be inconsistent with actual state
         mButtonDataRoam.setChecked(mPhone.getDataRoamingEnabled());
-        // Get the state for 'prefer 2g' setting
-        mPhone.getPreferredNetworkType(mHandler.obtainMessage(
-                MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
+
+        if (SystemProperties.getBoolean("persist.cust.tel.adapt",false)) {
+            //In ADAPT compliance phone RAT menu selection should not be given
+            //to user.
+            mButtonPreferredNetworkMode.setEnabled(false);
+            if (mButtonPrefer2g != null) {
+                mButtonPrefer2g.setEnabled(false);
+            }
+        } else {
+            // Get the state for 'prefer 2g' setting
+            mPhone.getPreferredNetworkType(mHandler.obtainMessage(
+                   MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
+        }
 
         if (mPhone.getPhoneName().equals("CDMA")) {
             mPhone.queryCdmaRoamingPreference(
                     mHandler.obtainMessage(MyHandler.MESSAGE_QUERY_ROAMING_PREFERENCE));
-        } else {
-            // Get the state for 'prefer 2g' setting
-            mPhone.getPreferredNetworkType(mHandler.obtainMessage(
-                    MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
     }
 
