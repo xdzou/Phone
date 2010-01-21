@@ -500,12 +500,17 @@ public class PhoneApp extends Application {
         // AP owns (i.e. stores) the TTY setting in AP settings database and pushes the setting
         // to BP at power up (BP does not need to make the TTY setting persistent storage).
         // This way, there is a single owner (i.e AP) for the TTY setting in the phone.
-        if (phoneIsCdma) {
-            int settingsTtyMode = android.provider.Settings.Secure.getInt(
-                    phone.getContext().getContentResolver(),
-                    android.provider.Settings.Secure.PREFERRED_TTY_MODE,
-                    Phone.TTY_MODE_OFF);
-            phone.setTTYMode(settingsTtyMode, null);
+        int settingsTtyMode = android.provider.Settings.Secure.getInt(
+                phone.getContext().getContentResolver(),
+                android.provider.Settings.Secure.PREFERRED_TTY_MODE,
+                Phone.TTY_MODE_OFF);
+        phone.setTTYMode(settingsTtyMode, null);
+
+        // notify tty mode if enabled for status bar and audio service update
+        if (settingsTtyMode != Phone.TTY_MODE_OFF) {
+            Intent ttyModeChanged = new Intent(com.android.internal.telephony.cdma.TtyIntent.TTY_ENABLED_CHANGE_ACTION);
+            ttyModeChanged.putExtra("ttyEnabled", true);
+            phone.getContext().sendBroadcast(ttyModeChanged);
         }
    }
 
