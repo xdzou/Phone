@@ -1891,7 +1891,7 @@ public class InCallScreen extends Activity
             // call handler activity.
             if ((cause == Connection.DisconnectCause.OUT_OF_SERVICE)
                     && (emergencyCallRetryCount > 0)) {
-                startActivity(getIntent()
+                startActivity(((Intent)getIntent().clone())
                         .setClassName(this, EmergencyCallHandler.class.getName()));
             }
             // Exit the in-call UI!
@@ -2594,7 +2594,8 @@ public class InCallScreen extends Activity
             // it) and just return the success state.
             if (isEmergencyNumber && (okToCallStatus == InCallInitStatus.POWER_OFF)) {
                 if(DBG) log("EmergencyCall Intent: " + intent);
-                startActivity(intent.setClassName(this, EmergencyCallHandler.class.getName()));
+                startActivity(((Intent)intent.clone())
+                        .setClassName(this, EmergencyCallHandler.class.getName()));
                 if (DBG) log("placeCall: starting EmergencyCallHandler, finishing InCallScreen...");
                 endInCallScreenSession();
                 return InCallInitStatus.SUCCESS;
