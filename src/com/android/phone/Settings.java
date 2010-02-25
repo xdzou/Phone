@@ -184,17 +184,22 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
         mButtonDataUsage = prefSet.findPreference(BUTTON_DATA_USAGE_KEY);
 
         if (getResources().getBoolean(R.bool.world_phone) == true) {
-            // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
-            // change Preferred Network Mode.
-            mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+            if (SystemProperties.getBoolean("persist.cust.tel.adapt",false)) {
+                //In ADAPT compliance phone, RAT menu selection should not be given to user.
+                prefSet.removePreference(mButtonPreferredNetworkMode);
+            } else {
+                // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
+                // change Preferred Network Mode.
+                mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
 
-            //Get the networkMode from Settings.System and displays it
-            int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
-                    getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                    preferredNetworkMode);
-            mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
-            // The intent code that resided here in the past has been moved into the
-            // more conventional location in network_setting.xml
+                //Get the networkMode from Settings.System and displays it
+                int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
+                        getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
+                        preferredNetworkMode);
+                mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
+                // The intent code that resided here in the past has been moved into the
+                // more conventional location in network_setting.xml
+            }
 
         } else {
             prefSet.removePreference(mButtonPreferredNetworkMode);
