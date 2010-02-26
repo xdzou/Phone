@@ -29,9 +29,7 @@ import com.android.internal.telephony.gsm.SuppServiceNotification;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
-import android.graphics.Shader;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -56,10 +54,10 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
@@ -4983,6 +4981,13 @@ public class InCallScreen extends Activity
             // widget, since the widget itself probably wants to keep the colored
             // arrow visible for some extra time also...)
         }
+    }
+
+    @Override
+    public boolean dispatchPopulateAccessibilityEvent(AccessibilityEvent event) {
+        super.dispatchPopulateAccessibilityEvent(event);
+        mCallCard.dispatchPopulateAccessibilityEvent(event);
+        return true;
     }
 
     private void log(String msg) {
