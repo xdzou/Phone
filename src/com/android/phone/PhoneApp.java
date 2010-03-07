@@ -97,6 +97,7 @@ public class PhoneApp extends Application {
     private static final int EVENT_DATA_ROAMING_DISCONNECTED = 10;
     private static final int EVENT_DATA_ROAMING_OK = 11;
     private static final int EVENT_UNSOL_CDMA_INFO_RECORD = 12;
+    private static final int EVENT_TECHNOLOGY_CHANGED = 13;
 
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
@@ -208,6 +209,8 @@ public class PhoneApp extends Application {
     public OtaUtils.CdmaOtaScreenState cdmaOtaScreenState;
     public OtaUtils.CdmaOtaInCallScreenUiState cdmaOtaInCallScreenUiState;
 
+    private int mPhoneType;
+
     /**
      * Set the restore mute state flag. Used when we are setting the mute state
      * OUTSIDE of user interaction {@link PhoneUtils#startNewCall(Phone)}
@@ -225,9 +228,18 @@ public class PhoneApp extends Application {
         return mShouldRestoreMuteOnInCallResume;
     }
 
+    /*package*/void checkPhoneType() {
+        if (mPhoneType != phone.getPhoneType()) {
+            Log.d(LOG_TAG,"handleMessage: radio Technology has changed (" + phone.getPhoneName() + ")");
+            initForNewRadioTechnology();
+            mPhoneType = phone.getPhoneType();
+        }
+    }
+
     Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+            checkPhoneType();
             switch (msg.what) {
                 case EVENT_SIM_LOCKED:
 //                    mIsSimPinEnabled = true;
@@ -335,6 +347,9 @@ public class PhoneApp extends Application {
                 case EVENT_UNSOL_CDMA_INFO_RECORD:
                     //TODO: handle message here;
                     break;
+                case EVENT_TECHNOLOGY_CHANGED:
+                    // Nothing to do here. already handled by checkPhoneType above
+                    break;
             }
         }
     };
@@ -355,7 +370,7 @@ public class PhoneApp extends Application {
 
             // Get the default phone
             phone = PhoneFactory.getDefaultPhone();
-
+            mPhoneType = phone.getPhoneType();
             NotificationMgr.init(this);
 
             phoneMgr = new PhoneInterfaceManager(this, phone);
@@ -1420,7 +1435,7 @@ public class PhoneApp extends Application {
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(Phone.PHONE_NAME_KEY);
                 Log.d(LOG_TAG, "Radio technology switched. Now " + newPhone + " is active.");
-                initForNewRadioTechnology();
+                mHandler.sendEmptyMessage(EVENT_TECHNOLOGY_CHANGED);
             } else if (action.equals(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED)) {
                 handleServiceStateChanged(intent);
             } else if (action.equals(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
