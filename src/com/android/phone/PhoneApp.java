@@ -1229,12 +1229,9 @@ public class PhoneApp extends Application {
                 cdmaOtaInCallScreenUiState = new OtaUtils.CdmaOtaInCallScreenUiState();
             }
         } else {
-            //Clean up OTA data in GSM/UMTS.
-            cdmaOtaProvisionData = null;
-            cdmaOtaConfigData = null;
-            cdmaOtaScreenState = null;
-            cdmaOtaInCallScreenUiState = null;
+            clearOtaState();
         }
+	clearInCallScreenMode();
 
         ringer.updateRingerContextAfterRadioTechnologyChange(this.phone);
         notifier.updateCallNotifierRegistrationsAfterRadioTechnologyChange();
