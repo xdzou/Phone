@@ -493,15 +493,11 @@ public class PhoneApp extends Application {
         // TODO(Moto): Merge
         // phone.registerCdmaInformationRecord(mHandler, EVENT_UNSOL_CDMA_INFO_RECORD, null);
 
-        // Read TTY settings and store it into BP NV.
-        // AP owns (i.e. stores) the TTY setting in AP settings database and pushes the setting
-        // to BP at power up (BP does not need to make the TTY setting persistent storage).
-        // This way, there is a single owner (i.e AP) for the TTY setting in the phone.
+        // Read TTY settings.
         int settingsTtyMode = android.provider.Settings.Secure.getInt(
                 phone.getContext().getContentResolver(),
                 android.provider.Settings.Secure.PREFERRED_TTY_MODE,
                 Phone.TTY_MODE_OFF);
-        phone.setTTYMode(settingsTtyMode, null);
 
         // notify tty mode if enabled for status bar and audio service update
         if (settingsTtyMode != Phone.TTY_MODE_OFF) {
