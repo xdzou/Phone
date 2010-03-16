@@ -640,6 +640,7 @@ public class CallNotifier extends Handler
                 // tone stops, we have to stop it to prevent disturbing.
                 if (mInCallRingbackTonePlayer != null &&
                         mCurrentRingbackToneState == RINGBACK_TONE_ON) {
+                    if (DBG) log("stop RingbacktonePlayer in onPhoneStateChanged()");
                     mInCallRingbackTonePlayer.stop();
                 }
             }
@@ -931,6 +932,21 @@ public class CallNotifier extends Handler
             // Remove Call waiting timers
             removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
             removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
+        }
+        /** In cases where local ringback tone is played and phone gets disconnected
+         ** locally/at remote end in DIALING or ALERTING state, the ringtone is not stopped.
+         ** In Such cases we stop the ring back tone here.  */
+        if (mPhone.getPhoneName().equals("GSM")) {
+            Call.State callState = mPhone.getForegroundCall().getState();
+            if (!callState.isDialing()) {
+                // If call get disconnected before the ringback
+                // tone stops, we have to stop it to prevent disturbing.
+                if (mInCallRingbackTonePlayer != null &&
+                        mCurrentRingbackToneState == RINGBACK_TONE_ON) {
+                    if (DBG) log("stop RingbacktonePlayer in onDisconnect");
+                    mInCallRingbackTonePlayer.stop();
+                }
+            }
         }
     }
 
@@ -1623,11 +1639,13 @@ public class CallNotifier extends Handler
             if (mInCallRingbackTonePlayer != null
                     && mPhone.getForegroundCall().getState().isDialing()
                     && mCurrentRingbackToneState == RINGBACK_TONE_OFF) {
+                if (DBG) log("Start local ringbacktone");
                 mInCallRingbackTonePlayer.start();
             }
         } else {
             if (mInCallRingbackTonePlayer != null &&
                     mCurrentRingbackToneState == RINGBACK_TONE_ON) {
+                if (DBG) log("Stop local ringbacktone");
                 mInCallRingbackTonePlayer.stop();
             }
         }
