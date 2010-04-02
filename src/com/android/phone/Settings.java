@@ -30,6 +30,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
+import android.text.TextUtils;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -166,7 +167,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                 BUTTON_PREFERED_NETWORK_MODE);
 
         if (getResources().getBoolean(R.bool.world_phone) == true) {
-            if (SystemProperties.getBoolean("persist.cust.tel.adapt",false)) {
+            if (SystemProperties.getBoolean("persist.cust.tel.adapt",false)||(!TextUtils.isEmpty(SystemProperties.get("ro.monkey")))) {
                 //In ADAPT compliance phone, RAT menu selection should not be given to user.
                 prefSet.removePreference(mButtonPreferredNetworkMode);
             } else {
