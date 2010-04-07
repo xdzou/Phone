@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2009, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2009,2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -791,6 +791,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 return TelephonyManager.NETWORK_TYPE_EVDO_0;
             case ServiceState.RADIO_TECHNOLOGY_EVDO_A:
                 return TelephonyManager.NETWORK_TYPE_EVDO_A;
+            case ServiceState.RADIO_TECHNOLOGY_EVDO_B:
+                return TelephonyManager.NETWORK_TYPE_EVDO_B;
             default:
                 return TelephonyManager.NETWORK_TYPE_UNKNOWN;
         }
