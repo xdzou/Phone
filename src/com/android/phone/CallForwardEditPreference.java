@@ -239,6 +239,12 @@ public class CallForwardEditPreference extends EditPhoneNumberPreference {
 
             if (ar.exception != null) {
                 if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: ar.exception=" + ar.exception);
+
+                if (((CommandException) ar.exception).getCommandError() == CommandException.Error.FDN_FAILURE) {
+                    tcpListener.onError(CallForwardEditPreference.this, FDN_BLOCKED_ERROR);
+                    tcpListener.onFinished(CallForwardEditPreference.this, false);
+                    return;
+                }
                 // setEnabled(false);
             }
             if (DBG) Log.d(LOG_TAG, "handleSetCFResponse: re get");
