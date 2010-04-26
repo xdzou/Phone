@@ -653,6 +653,9 @@ public class InCallScreen extends Activity
      * inject a test Phone instance.
      */
     /* package */ void setPhone(Phone phone) {
+        if (mPhone != phone) {
+            log("Phone was updated. Current: " + phone.getPhoneName());
+        }
         mPhone = phone;
         // Hang onto the three Call objects too; they're singletons that
         // are constant (and never null) for the life of the Phone.
@@ -1083,6 +1086,10 @@ public class InCallScreen extends Activity
 
         // (Re)register for all events relevant to the new active phone
         registerForPhoneStates();
+
+        // Update mPhone and m{Foreground,Background,Ringing}Call
+        PhoneApp app = PhoneApp.getInstance();
+        setPhone(app.phone);
     }
 
     @Override
