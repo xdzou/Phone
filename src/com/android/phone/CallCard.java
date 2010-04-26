@@ -630,6 +630,7 @@ public class CallCard extends FrameLayout
                             break;
 
                         default:
+                            log("Received unsupported MO SS Notification :" + suppSvcNotification.code);
                             break;
                     }
                     break;
@@ -648,6 +649,7 @@ public class CallCard extends FrameLayout
                             break;
 
                         default :
+                            log("Received unsupported MT SS Notification :" + suppSvcNotification.code);
                             break;
                     }
                     break;
@@ -716,6 +718,11 @@ public class CallCard extends FrameLayout
                 updateElapsedTimeWidget(duration / 1000);
                 // Also see onTickForCallTimeElapsed(), which updates this
                 // widget once per second while the call is active.
+
+                //Clear Supp Service Notifictions if any.
+                if (suppSvcNotification != null) {
+                    CallNotifier.clearSuppSvcNotification();
+                }
                 break;
 
             case DISCONNECTED:
@@ -732,6 +739,11 @@ public class CallCard extends FrameLayout
                 // the call that just ended.)
                 mElapsedTime.setVisibility(View.VISIBLE);
                 mElapsedTime.setTextColor(mTextColorEnded);
+
+                //Clear Supp Service Notifictions if any.
+                if (suppSvcNotification != null) {
+                    CallNotifier.clearSuppSvcNotification();
+                }
                 break;
 
             case HOLDING:
@@ -763,12 +775,10 @@ public class CallCard extends FrameLayout
                     mElapsedTime.setVisibility(View.INVISIBLE);
                 } else {
                     mElapsedTime.setVisibility(View.VISIBLE);
+                    mElapsedTime.setTextColor(mTextColorDefaultPrimary);
                     mElapsedTime.setText(callForwardTxt);
                 }
                 break;
-        }
-        if (suppSvcNotification != null) {
-            CallNotifier.clearSuppSvcNotification();
         }
     }
 
