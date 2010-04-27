@@ -215,7 +215,6 @@ public class CallNotifier extends Handler
 
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             mPhone.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
-            mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
             mPhone.registerForCallReestablishInd(this, CALL_REESTABLISH_IND, null);
         }
 
@@ -789,6 +788,11 @@ public class CallNotifier extends Handler
                 }
             }
         }
+    }
+
+    void updateSuppSvcRegistrationsAfterRadioOn() {
+        Log.d(LOG_TAG, "updateSuppSvcRegistrationsAfterRadioOn...");
+        mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
     }
 
     void updateCallNotifierRegistrationsAfterRadioTechnologyChange() {
