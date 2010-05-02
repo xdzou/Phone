@@ -71,6 +71,8 @@
     <string name="callFailed_imsi_unknown_vlr">Call Failed MM #4</string>
     <!-- In-call screen: call failure reason (Network does not accept emergency call establishment using an IMEI)-->
     <string name="callFailed_imei_not_accepted">Call Failed MM #5</string>
+    <!-- In-call screen: call failure reason (Dialed number doesn't exist) -->
+    <string name="callFailed_unobtainable_number">Invalid Number</string>
     <!-- In-call screen: call failure reason (Phone is locked until next power cycle)-->
     <string name="callFailed_cdma_lockedUntilPowerCycle">CDMA: Phone locked until power cycle.</string>
     <!-- In-call screen: call failure reason (CDMA: call dropped)-->

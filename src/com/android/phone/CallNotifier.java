@@ -799,6 +799,9 @@ public class CallNotifier extends Handler
             } else if (cause == Connection.DisconnectCause.CDMA_REORDER) {
                 if (DBG) log("- need to play REORDER tone!");
                 toneToPlay = InCallTonePlayer.TONE_REORDER;
+            } else if (cause == Connection.DisconnectCause.UNOBTAINABLE_NUMBER) {
+                if (DBG) log("- need to play TONE_UNOBTAINABLE_NUMBER tone!");
+                toneToPlay = InCallTonePlayer.TONE_UNOBTAINABLE_NUMBER;
             }
         }
 
@@ -1053,6 +1056,7 @@ public class CallNotifier extends Handler
         public static final int TONE_BATTERY_LOW = 4;
         public static final int TONE_CALL_ENDED = 5;
         public static final int  TONE_REORDER = 6;
+        public static final int TONE_UNOBTAINABLE_NUMBER = 7;
 
         // The tone volume relative to other sounds in the stream
         private static final int TONE_RELATIVE_VOLUME_HIPRI = 80;
@@ -1105,7 +1109,11 @@ public class CallNotifier extends Handler
                     toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
                     toneLengthMillis = 4000;
                     break;
-
+                case TONE_UNOBTAINABLE_NUMBER:
+                    toneType = ToneGenerator.TONE_SUP_ERROR;
+                    toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
+                    toneLengthMillis = 4000;
+                    break;
                 default:
                     throw new IllegalArgumentException("Bad toneId: " + mToneId);
             }
