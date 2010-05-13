@@ -200,6 +200,19 @@ public class PhoneUtils {
 
     }
 
+    public static void updatePhoneUtilRegistrationsAfterRadioTechnologyChange(Phone phone) {
+        Log.d(LOG_TAG, "Radio technology Changed: Registering for phone state change again");
+        if (mConnectionHandler != null) {
+            // Unregister all events from the old obsolete phone
+            phone.unregisterForPreciseCallStateChanged(mConnectionHandler);
+        } else {
+            mConnectionHandler = new ConnectionHandler();
+        }
+
+        // Register all events new to the new active phone
+        phone.registerForPreciseCallStateChanged(mConnectionHandler, PHONE_STATE_CHANGED, phone);
+    }
+
     /** This class is never instantiated. */
     private PhoneUtils() {
     }

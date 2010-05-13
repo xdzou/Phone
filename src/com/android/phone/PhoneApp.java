@@ -1248,6 +1248,8 @@ public class PhoneApp extends Application {
             sim.registerForLocked(mHandler, EVENT_SIM_LOCKED, null);
             sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
         }
+
+        PhoneUtils.updatePhoneUtilRegistrationsAfterRadioTechnologyChange(phone);
     }
 
 
