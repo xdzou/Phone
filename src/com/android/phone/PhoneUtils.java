@@ -415,12 +415,18 @@ public class PhoneUtils {
     }
 
     static boolean hangupAllCalls(Phone phone) {
-        Call call = phone.getForegroundCall();
+        Call fg = phone.getForegroundCall();
+        Call bg = phone.getBackgroundCall();
+        Call ringing = phone.getRingingCall();
         try {
-            call.hangupAllCalls();
-            return true;
+            if ((!fg.isIdle()) || (!ringing.isIdle()) || (!bg.isIdle())) {
+                fg.hangupAllCalls();
+                return true;
+            } else {
+                if (DBG) log("hangupAllCalls: No calls to hangup!");
+            }
         } catch (CallStateException ex) {
-            Log.e(LOG_TAG, "hangup all calls: caught " + ex, ex);
+            Log.e(LOG_TAG, "hangupAllCalls: caught " + ex, ex);
         }
         return false;
     }
