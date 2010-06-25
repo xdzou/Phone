@@ -1487,6 +1487,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
                 String iccState = intent.getStringExtra(IccCard.INTENT_KEY_ICC_STATE);
                 String reason = intent.getStringExtra(IccCard.INTENT_KEY_LOCKED_REASON);
+                if (IccCard.INTENT_VALUE_ICC_READY.equals(iccState)) {
+                    if (phone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
+                        notifier.updateSuppSvcRegistrationsAfterRadioOn();
+                    }
+                }
                 if ((reason != null) && (IccCard.INTENT_VALUE_ICC_LOCKED.equals(iccState))) {
                     if (getResources().getBoolean(R.bool.ignore_perso_locked_events)) {
                         // Some products don't have the concept of a perso lock.
