@@ -145,6 +145,9 @@ public class CallNotifier extends Handler
     private static final int PHONE_CDMA_FWD_CONT_DTMF_START = 32;
     private static final int PHONE_CDMA_FWD_CONT_DTMF_STOP = 33;
 
+    /** GSM/WCDMA only */
+    private static final int CALL_REESTABLISH_IND = 35;
+
     // Emergency call related defines:
     private static final int EMERGENCY_TONE_OFF = 0;
     private static final int EMERGENCY_TONE_ALERT = 1;
@@ -225,6 +228,8 @@ public class CallNotifier extends Handler
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             mPhone.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
             mPhone.registerForResendIncallMute(this, PHONE_RESEND_MUTE, null);
+            mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
+            mPhone.registerForCallReestablishInd(this, CALL_REESTABLISH_IND, null);
         }
 
         mRinger = ringer;
@@ -392,6 +397,26 @@ public class CallNotifier extends Handler
                 synchronized (mCdmaFwdDtmfPlayerLock) {
                     stopAnyPendingDtmf = true;
                     mCdmaFwdDtmfPlayerLock.notify();
+                }
+                break;
+
+            case CALL_REESTABLISH_IND:
+                if (DBG) log("Received CALL_REESTABLISH_IND event");
+
+                /* When call re-establishment happens at lower layers,
+                   the audio device comes up muted. This is a workaround
+                   that restores the proper mute state. */
+
+                Boolean oldMuteState = PhoneUtils.getMute(mPhone);
+                Log.v(LOG_TAG, "Restoring mute states. oldMuteState = " + oldMuteState);
+                PhoneUtils.setMuteInternal(mPhone, !oldMuteState);
+                PhoneUtils.setMuteInternal(mPhone, oldMuteState);
+                break;
+
+            case SUPP_SERVICE_NOTIFY:
+                if (DBG) log("Received Supplementary Notification");
+                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
+                    suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
                 }
                 break;
 
@@ -794,6 +819,8 @@ public class CallNotifier extends Handler
         mPhone.unregisterForCdmaFwdContDtmfStart(this);
         mPhone.unregisterForCdmaFwdContDtmfStop(this);
 
+        mPhone.unregisterForSuppServiceNotification(this);
+        mPhone.unregisterForCallReestablishInd(this);
 
         // Release the ToneGenerator used for playing SignalInfo and CallWaiting
         if (mSignalInfoToneGenerator != null) {
@@ -842,6 +869,8 @@ public class CallNotifier extends Handler
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             mPhone.registerForRingbackTone(this, PHONE_RINGBACK_TONE, null);
             mPhone.registerForResendIncallMute(this, PHONE_RESEND_MUTE, null);
+            mPhone.registerForSuppServiceNotification(this, SUPP_SERVICE_NOTIFY, null);
+            mPhone.registerForCallReestablishInd(this, CALL_REESTABLISH_IND, null);
         }
     }
 
