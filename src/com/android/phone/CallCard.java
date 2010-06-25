@@ -782,15 +782,8 @@ public class CallCard extends FrameLayout
                     mElapsedTime.setText(callForwardTxt);
                 }
 
-                // If Call forwarding notification is set display the call
-                // forwarding text in elapsed time widget else don't show the
-                // elapsed time.
-                if (callForwardTxt.equals("")) {
-                    mElapsedTime.setVisibility(View.INVISIBLE);
-                } else {
-                    mElapsedTime.setVisibility(View.VISIBLE);
-                    mElapsedTime.setText(callForwardTxt);
-                }
+                // ...and we don't show the elapsed time.
+                mElapsedTime.setVisibility(View.INVISIBLE);
                 break;
         }
     }
