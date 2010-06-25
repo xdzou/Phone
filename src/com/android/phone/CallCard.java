@@ -707,8 +707,15 @@ public class CallCard extends FrameLayout
                 // All other states (DIALING, INCOMING, etc.) use the "upper title":
                 setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
 
-                // ...and we don't show the elapsed time.
-                mElapsedTime.setVisibility(View.INVISIBLE);
+                // If Call forwarding notification is set display the call
+                // forwarding text in elapsed time widget else don't show the
+                // elapsed time.
+                if (callForwardTxt.equals("")) {
+                    mElapsedTime.setVisibility(View.INVISIBLE);
+                } else {
+                    mElapsedTime.setVisibility(View.VISIBLE);
+                    mElapsedTime.setText(callForwardTxt);
+                }
                 break;
         }
     }

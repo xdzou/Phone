@@ -426,6 +426,18 @@ public class CallNotifier extends Handler
         }
     }
 
+    public static SuppServiceNotification getSuppSvcNotification() {
+        return suppSvcNotification;
+    }
+
+    public static void setSuppSvcNotification(SuppServiceNotification suppSvcNot) {
+        suppSvcNotification = suppSvcNot;
+    }
+
+    public static void clearSuppSvcNotification() {
+        suppSvcNotification = null;
+    }
+
     PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
         @Override
         public void onMessageWaitingIndicatorChanged(boolean mwi) {

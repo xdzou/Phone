@@ -1752,7 +1752,20 @@ public class InCallScreen extends Activity
         // Under certain call disconnected states, we want to alert the user
         // with a dialog instead of going through the normal disconnect
         // routine.
-        if (cause == Connection.DisconnectCause.CALL_BARRED) {
+        if ( cause == Connection.DisconnectCause.INCOMING_MISSED) {
+           // If the network sends SVC Notification then this dialog will be displayed
+           // in case of B when the incoming call at B is not answered and gets forwarded
+           // to C
+            SuppServiceNotification suppSvcNotification = CallNotifier.getSuppSvcNotification();
+            if (suppSvcNotification != null) {
+                if (suppSvcNotification.notificationType == 1 && suppSvcNotification.code
+                        == SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED) {
+                    showGenericErrorDialog(R.string.callUnanswered_forwarded, false);
+                    CallNotifier.clearSuppSvcNotification();
+                    return;
+                }
+            }
+        } else if (cause == Connection.DisconnectCause.CALL_BARRED) {
             showGenericErrorDialog(R.string.callFailed_cb_enabled, false);
             return;
         } else if (cause == Connection.DisconnectCause.FDN_BLOCKED) {
