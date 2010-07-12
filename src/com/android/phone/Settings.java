@@ -54,6 +54,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     private static final String BUTTON_DATA_ENABLED_KEY = "button_data_enabled_key";
     private static final String BUTTON_DATA_USAGE_KEY = "button_data_usage_key";
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
+    private static final String BUTTON_PREFERED_NETWORK_MODE_LTE = "preferred_network_mode_key_with_lte";
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_CDMA_ROAMING_KEY = "cdma_roaming_mode_key";
 
@@ -179,9 +180,17 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         mButtonDataEnabled = (CheckBoxPreference) prefSet.findPreference(BUTTON_DATA_ENABLED_KEY);
         mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
-        mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
-                BUTTON_PREFERED_NETWORK_MODE);
-        mButtonDataUsage = prefSet.findPreference(BUTTON_DATA_USAGE_KEY);
+        if (isLteSupported()) {
+            prefSet.removePreference(prefSet.findPreference(
+                    BUTTON_PREFERED_NETWORK_MODE));
+            mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                    BUTTON_PREFERED_NETWORK_MODE_LTE);
+        } else {
+            prefSet.removePreference(prefSet.findPreference(
+                    BUTTON_PREFERED_NETWORK_MODE_LTE));
+            mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                    BUTTON_PREFERED_NETWORK_MODE);
+        }
 
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             if (SystemProperties.getBoolean("persist.cust.tel.adapt",false)) {
@@ -239,7 +248,10 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
         // and the UI state would be inconsistent with actual state
         mButtonDataRoam.setChecked(mPhone.getDataRoamingEnabled());
 
-        if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
+        if ((isLteSupported() &&
+                getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE_LTE) != null) ||
+            (!isLteSupported() &&
+                getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null))  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
@@ -271,7 +283,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                     mPhone.getContext().getContentResolver(),
                     android.provider.Settings.Secure.PREFERRED_NETWORK_MODE, preferredNetworkMode);
             if (buttonNetworkMode != settingsNetworkMode) {
-                int modemNetworkMode;
+                int modemNetworkMode = Phone.PREFERRED_NT_MODE;
                 switch(buttonNetworkMode) {
                     case Phone.NT_MODE_GLOBAL:
                         modemNetworkMode = Phone.NT_MODE_GLOBAL;
@@ -296,6 +308,26 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                         break;
                     case Phone.NT_MODE_WCDMA_PREF:
                         modemNetworkMode = Phone.NT_MODE_WCDMA_PREF;
+                        break;
+                    case Phone.NT_MODE_CDMA_AND_LTE_EVDO:
+                        if (isLteSupported()) {
+                            modemNetworkMode = Phone.NT_MODE_CDMA_AND_LTE_EVDO;
+                        }
+                        break;
+                    case Phone.NT_MODE_GSM_WCDMA_LTE:
+                        if (isLteSupported()) {
+                            modemNetworkMode = Phone.NT_MODE_GSM_WCDMA_LTE;
+                        }
+                        break;
+                    case Phone.NT_MODE_GLOBAL_LTE:
+                        if (isLteSupported()) {
+                            modemNetworkMode = Phone.NT_MODE_GLOBAL_LTE;
+                        }
+                        break;
+                    case Phone.NT_MODE_LTE_ONLY:
+                        if (isLteSupported()) {
+                            modemNetworkMode = Phone.NT_MODE_LTE_ONLY;
+                        }
                         break;
                     default:
                         modemNetworkMode = Phone.PREFERRED_NT_MODE;
@@ -355,14 +387,19 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                 }
 
                 //check that modemNetworkMode is from an accepted value
-                if (modemNetworkMode == Phone.NT_MODE_WCDMA_PREF ||
+                if ((modemNetworkMode == Phone.NT_MODE_WCDMA_PREF ||
                         modemNetworkMode == Phone.NT_MODE_GSM_ONLY ||
                         modemNetworkMode == Phone.NT_MODE_WCDMA_ONLY ||
                         modemNetworkMode == Phone.NT_MODE_GSM_UMTS ||
                         modemNetworkMode == Phone.NT_MODE_CDMA ||
                         modemNetworkMode == Phone.NT_MODE_CDMA_NO_EVDO ||
                         modemNetworkMode == Phone.NT_MODE_EVDO_NO_CDMA ||
-                        modemNetworkMode == Phone.NT_MODE_GLOBAL ) {
+                        modemNetworkMode == Phone.NT_MODE_GLOBAL) ||
+                    (isLteSupported() && (
+                        modemNetworkMode == Phone.NT_MODE_CDMA_AND_LTE_EVDO ||
+                        modemNetworkMode == Phone.NT_MODE_GSM_WCDMA_LTE ||
+                        modemNetworkMode == Phone.NT_MODE_GLOBAL_LTE ||
+                        modemNetworkMode == Phone.NT_MODE_LTE_ONLY))) {
                     if (DBG) {
                         log("handleGetPreferredNetworkTypeResponse: if 1: modemNetworkMode = " +
                                 modemNetworkMode);
@@ -426,6 +463,8 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     }
 
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
+        String summaryDisplay = "";
+
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
                 // TODO T: Make all of these strings come from res/values/strings.xml.
@@ -449,9 +488,33 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             case Phone.NT_MODE_EVDO_NO_CDMA:
                 mButtonPreferredNetworkMode.setSummary("Preferred network mode: EvDo only");
                 break;
+            case Phone.NT_MODE_CDMA_AND_LTE_EVDO:
+                if (isLteSupported()) {
+                    summaryDisplay = "Preferred network mode:  CDMA + LTE / EvDo";
+                }
+                mButtonPreferredNetworkMode.setSummary(summaryDisplay);
+                break;
+            case Phone.NT_MODE_GSM_WCDMA_LTE:
+                if (isLteSupported()) {
+                    summaryDisplay = "Preferred network mode:  GSM / WCDMA / LTE";
+                }
+                mButtonPreferredNetworkMode.setSummary(summaryDisplay);
+                break;
+            case Phone.NT_MODE_LTE_ONLY:
+                if (isLteSupported()) {
+                    summaryDisplay = "Preferred network mode:  LTE only";
+                }
+                mButtonPreferredNetworkMode.setSummary(summaryDisplay);
+                break;
             case Phone.NT_MODE_GLOBAL:
-            default:
                 mButtonPreferredNetworkMode.setSummary("Preferred network mode: Global");
+                break;
+            case Phone.NT_MODE_GLOBAL_LTE:
+                mButtonPreferredNetworkMode.setSummary("Preferred network mode: Global + LTE");
+                break;
+            default:
+                // should never come here
+                mButtonPreferredNetworkMode.setSummary("");
         }
     }
 
@@ -476,5 +539,15 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
     private static void log(String msg) {
         Log.d(LOG_TAG, msg);
+    }
+
+    /**
+     * Returns whether or not fusion is enabled.  Fusion can be enabled by
+     * setting the system property "ro.config.fusion" to the value "true".
+     * This is normally done at boot time on builds that support fusion.
+     * @return true if fusion is enabled
+     */
+    private boolean isLteSupported() {
+        return SystemProperties.getBoolean("ro.config.lte", false);
     }
 }
