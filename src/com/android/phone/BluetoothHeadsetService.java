@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -788,18 +789,7 @@ public class BluetoothHeadsetService extends Service {
                 if (remoteHeadset == null) return false;
 
                 if (remoteHeadset.mState == BluetoothHeadset.STATE_CONNECTED) {
-                    // Send a dummy battery level message to force headset
-                    // out of sniff mode so that it will immediately notice
-                    // the disconnection. We are currently sending it for
-                    // handsfree only.
-                    // TODO: Call hci_conn_enter_active_mode() from
-                    // rfcomm_send_disc() in the kernel instead.
-                    // See http://b/1716887
                     HeadsetBase headset = remoteHeadset.mHeadset;
-                    if (remoteHeadset.mHeadsetType == BluetoothHandsfree.TYPE_HANDSFREE) {
-                        headset.sendURC("+CIEV: 7,3");
-                    }
-
                     if (headset != null) {
                         headset.disconnect();
                         headset = null;
