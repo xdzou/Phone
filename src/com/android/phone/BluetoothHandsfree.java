@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -418,11 +419,13 @@ public class BluetoothHandsfree {
         }
 
         private boolean sendUpdate() {
-            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mIndicatorsEnabled;
+            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mIndicatorsEnabled
+                   && mServiceConnectionEstablished;
         }
 
         private boolean sendClipUpdate() {
-            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mClip;
+            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mClip &&
+                   mServiceConnectionEstablished;
         }
 
         private void stopRing() {
