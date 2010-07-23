@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -53,6 +54,12 @@ public class GsmUmtsOptions extends PreferenceActivity {
             mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
+        }
+        /*
+         * APN editor should always be enabled in the case of SV-LTE with 1x voice.
+         */
+        if (SystemProperties.getBoolean("ro.config.svlte1x", false)) {
+            mButtonAPNExpand.setEnabled(true);
         }
     }
 
