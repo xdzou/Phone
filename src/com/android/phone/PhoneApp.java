@@ -1319,6 +1319,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             //Register all events new to the new active phone
             sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
         }
+
+        PhoneUtils.updatePhoneUtilRegistrationsAfterRadioTechnologyChange(phone);
     }
 
 
