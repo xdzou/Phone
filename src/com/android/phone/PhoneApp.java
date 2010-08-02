@@ -474,9 +474,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             }
 
             // register for MMI/USSD
-            if (phoneType == Phone.PHONE_TYPE_GSM) {
-                phone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
-            }
+            phone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
 
             // register connection tracking to PhoneUtils
             PhoneUtils.initializeConnectionHandler(phone);
@@ -1319,6 +1317,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             //Register all events new to the new active phone
             sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
         }
+
+        // register for MMI/USSD
+        phone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
+
+        PhoneUtils.updatePhoneUtilRegistrationsAfterRadioTechnologyChange(phone);
     }
 
 
