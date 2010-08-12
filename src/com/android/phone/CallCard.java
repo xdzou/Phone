@@ -34,6 +34,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
@@ -607,6 +608,65 @@ public class CallCard extends FrameLayout
         // need to be set.)
 
         String cardTitle;
+        SuppServiceNotification suppSvcNotification = CallNotifier.getSuppSvcNotification();
+
+        // Network sends supplementary service notifications when an outgoing call is made
+        // from A and call gets forwarded to C instead of B whose number is dialed.
+        // Check for the type of supplementary notification and accordingly
+        // display the message on the InCallScreen
+        String callForwardTxt = "";
+        if (suppSvcNotification != null) {
+            switch (suppSvcNotification.notificationType) {
+                // The Notification is for MO call
+                case 0:
+                    switch (suppSvcNotification.code) {
+                        case SuppServiceNotification.MO_CODE_UNCONDITIONAL_CF_ACTIVE :
+                            // This message is displayed when an outgoing call is made
+                            // and unconditional forwarding is enabled.
+                            callForwardTxt = getContext().getString(R.string.card_title_unconditionalCF);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_SOME_CF_ACTIVE:
+                            // This message is displayed when an outgoing call is made
+                            // and conditional forwarding is enabled.
+                            callForwardTxt = getContext().getString(R.string.card_title_conditionalCF);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_CALL_FORWARDED:
+                            //This message is displayed on A when the outgoing call actually gets forwarded to C
+                            callForwardTxt = getContext().getString(R.string.card_title_MOcall_forwarding);
+                            break;
+
+                        default:
+                            log("Received unsupported MO SS Notification :" + suppSvcNotification.code);
+                            break;
+                    }
+                    break;
+
+                // The Notification is for MT call
+                case 1:
+                    switch (suppSvcNotification.code) {
+                        case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
+                            //This message is displayed on C when the incoming call is forwarded from B
+                            callForwardTxt = getContext().getString(R.string.card_title_forwarded_MTcall);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
+                            // This message is displayed on B when it is busy and the incoming call gets forwarded to C
+                            callForwardTxt = getContext().getString(R.string.card_title_MTcall_forwarding);
+                            break;
+
+                        default :
+                            log("Received unsupported MT SS Notification :" + suppSvcNotification.code);
+                            break;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
         int phoneType = mApplication.phone.getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             if (!PhoneApp.getInstance().notifier.getIsCdmaRedialCall()) {
@@ -655,7 +715,12 @@ public class CallCard extends FrameLayout
                         setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
                     } else {  // state == Call.State.ACTIVE
                         // Normal "ongoing call" state; don't use any "title" at all.
-                        clearUpperTitle();
+                        // Display the title for call forwarding notifications.
+                        if (!(callForwardTxt.equals("")) && state == Call.State.ACTIVE) {
+                            setUpperTitle(callForwardTxt, mTextColorDefaultPrimary, state);
+                        } else {
+                            clearUpperTitle();
+                        }
                     }
                 }
 
@@ -666,6 +731,11 @@ public class CallCard extends FrameLayout
                 updateElapsedTimeWidget(duration / 1000);
                 // Also see onTickForCallTimeElapsed(), which updates this
                 // widget once per second while the call is active.
+
+                //Clear Supp Service Notifictions if any.
+                if (suppSvcNotification != null) {
+                    CallNotifier.clearSuppSvcNotification();
+                }
                 break;
 
             case DISCONNECTED:
@@ -682,6 +752,11 @@ public class CallCard extends FrameLayout
                 // the call that just ended.)
                 mElapsedTime.setVisibility(View.VISIBLE);
                 mElapsedTime.setTextColor(mTextColorEnded);
+
+                //Clear Supp Service Notifictions if any.
+                if (suppSvcNotification != null) {
+                    CallNotifier.clearSuppSvcNotification();
+                }
                 break;
 
             case HOLDING:
@@ -706,9 +781,16 @@ public class CallCard extends FrameLayout
             default:
                 // All other states (DIALING, INCOMING, etc.) use the "upper title":
                 setUpperTitle(cardTitle, mTextColorDefaultPrimary, state);
-
-                // ...and we don't show the elapsed time.
-                mElapsedTime.setVisibility(View.INVISIBLE);
+                // If Call forwarding notification is set display the call
+                // forwarding text in elapsed time widget else don't show the
+                // elapsed time.
+                if (callForwardTxt.equals("")) {
+                    mElapsedTime.setVisibility(View.INVISIBLE);
+                } else {
+                    mElapsedTime.setVisibility(View.VISIBLE);
+                    mElapsedTime.setTextColor(mTextColorDefaultPrimary);
+                    mElapsedTime.setText(callForwardTxt);
+                }
                 break;
         }
     }
