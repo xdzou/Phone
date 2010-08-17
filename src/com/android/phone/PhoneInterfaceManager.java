@@ -39,6 +39,7 @@ import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.CommandException;
+import com.android.internal.telephony.DataPhone.IPVersion;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -1066,6 +1067,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * {@hide}
      * Returns Interface name
      */
+    public String getActiveInterfaceName(String apnType, String ipv) {
+        return mPhone.getInterfaceName(apnType,Enum.valueOf(IPVersion.class, ipv));
+    }
+
+    /**
+     * {@hide}
+     * Returns Interface name
+     */
     public String getActiveInterfaceName(String apnType) {
         return getActiveInterfaceNameOnSubscription(apnType, PhoneApp.getDataSubscription(mContext));
     }
@@ -1082,6 +1091,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * {@hide}
      * Returns Ip address
      */
+    public String getActiveIpAddress(String apnType, String ipv) {
+        return mPhone.getIpAddress(apnType,Enum.valueOf(IPVersion.class, ipv));
+    }
+
+    /**
+     * {@hide}
+     * Returns Ip address
+     */
     public String getActiveIpAddress(String apnType) {
         return getActiveIpAddressOnSubscription(apnType, PhoneApp.getDataSubscription(mContext));
     }
@@ -1092,6 +1109,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getActiveIpAddressOnSubscription(String apnType, int subscription) {
         return getPhone(subscription).getIpAddress(apnType);
+    }
+
+    /**
+     * {@hide}
+     * Returns Gateway address
+     */
+    public String getActiveGateway(String apnType, String ipv) {
+        return mPhone.getGateway(apnType,Enum.valueOf(IPVersion.class, ipv));
     }
 
     /**
