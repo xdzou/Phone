@@ -181,8 +181,10 @@ public class IccDepersonalizationPanel extends IccPanel {
                 return;
             }
 
-            log("requesting De-Personalization with subtype " + mPersoSubtype);
-            mPhone.invokeDepersonalization(pin, mPersoSubtype,
+            log("requesting De-Personalization with subtype " +
+                    IccDepersonalizationConstants.DEPERSO_TYPES[mPersoSubtype]);
+            mPhone.invokeDepersonalization(pin,
+                    IccDepersonalizationConstants.DEPERSO_TYPES[mPersoSubtype],
                 Message.obtain(mHandler, EVENT_ICC_DEPERSONALIZATION_RESULT));
             indicateBusy();
         }
@@ -191,17 +193,17 @@ public class IccDepersonalizationPanel extends IccPanel {
     private void indicateBusy() {
         int[] busyLabels = { R.string.requesting_unlock,
                              R.string.requesting_nw_subset_unlock,
-                             R.string.requesting_sp_unlock,
                              R.string.requesting_corporate_unlock,
+                             R.string.requesting_sp_unlock,
                              R.string.requesting_sim_unlock,
                              R.string.requesting_rnw1_unlock,
                              R.string.requesting_rnw2_unlock,
                              R.string.requesting_rhrpd_unlock,
-                             R.string.requesting_rsp_unlock,
                              R.string.requesting_rc_unlock,
+                             R.string.requesting_rsp_unlock,
                              R.string.requesting_ruim_unlock };
 
-        mStatusText.setText(busyLabels[mPersoSubtype - 1]);
+        mStatusText.setText(busyLabels[mPersoSubtype]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
@@ -209,17 +211,17 @@ public class IccDepersonalizationPanel extends IccPanel {
     private void indicateError() {
         int[] errorLabels = { R.string.unlock_failed,
                               R.string.nw_subset_unlock_failed,
-                              R.string.sp_unlock_failed,
                               R.string.corporate_unlock_failed,
+                              R.string.sp_unlock_failed,
                               R.string.sim_unlock_failed,
                               R.string.rnw1_unlock_failed,
                               R.string.rnw2_unlock_failed,
                               R.string.rhrpd_unlock_failed,
-                              R.string.rsp_unlock_failed,
                               R.string.rc_unlock_failed,
+                              R.string.rsp_unlock_failed,
                               R.string.ruim_unlock_failed };
 
-        mStatusText.setText(errorLabels[mPersoSubtype - 1]);
+        mStatusText.setText(errorLabels[mPersoSubtype]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
@@ -227,17 +229,17 @@ public class IccDepersonalizationPanel extends IccPanel {
     private void indicateSuccess() {
         int[] successLabels = { R.string.unlock_success,
                                 R.string.nw_subset_unlock_success,
-                                R.string.sp_unlock_success,
                                 R.string.corporate_unlock_success,
+                                R.string.sp_unlock_success,
                                 R.string.sim_unlock_success,
                                 R.string.rnw1_unlock_success,
                                 R.string.rnw2_unlock_success,
                                 R.string.rhrpd_unlock_success,
-                                R.string.rsp_unlock_success,
                                 R.string.rc_unlock_success,
+                                R.string.rsp_unlock_success,
                                 R.string.ruim_unlock_success };
 
-        mStatusText.setText(successLabels[mPersoSubtype - 1]);
+        mStatusText.setText(successLabels[mPersoSubtype]);
         mEntryPanel.setVisibility(View.GONE);
         mStatusPanel.setVisibility(View.VISIBLE);
     }
@@ -258,17 +260,17 @@ public class IccDepersonalizationPanel extends IccPanel {
     private void setPersoPanelTitle() {
         int[] panelTitles = { R.string.label_ndp,
                               R.string.label_nsdp,
-                              R.string.label_spdp,
                               R.string.label_cdp,
+                              R.string.label_spdp,
                               R.string.label_sdp,
                               R.string.label_rn1dp,
                               R.string.label_rn2dp,
                               R.string.label_rhrpd,
-                              R.string.label_rspdp,
                               R.string.label_rcdp,
+                              R.string.label_rspdp,
                               R.string.label_rdp };
 
-        mPersoSubtypeText.setText(panelTitles[mPersoSubtype - 1]);
+        mPersoSubtypeText.setText(panelTitles[mPersoSubtype]);
     }
 
     private void log(String msg) {

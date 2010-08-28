@@ -89,7 +89,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     private static final boolean VDBG = (PhoneApp.DBG_LEVEL >= 2);
 
     // Message codes; see mHandler below.
-    private static final int EVENT_SIM_NETWORK_LOCKED = 3;
     private static final int EVENT_WIRED_HEADSET_PLUG = 7;
     private static final int EVENT_SIM_STATE_CHANGED = 8;
     private static final int EVENT_UPDATE_INCALL_NOTIFICATION = 9;
@@ -252,24 +251,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             Phone.State phoneState;
             checkPhoneType();
             switch (msg.what) {
-
-                // TODO: This event should be handled by the lock screen, just
-                // like the "SIM missing" and "Sim locked" cases (bug 1804111).
-                case EVENT_SIM_NETWORK_LOCKED:
-                    if (getResources().getBoolean(R.bool.ignore_sim_network_locked_events)) {
-                        // Some products don't have the concept of a "SIM network lock"
-                        Log.i(LOG_TAG, "Ignoring EVENT_SIM_NETWORK_LOCKED event; "
-                              + "not showing 'SIM network unlock' PIN entry screen");
-                    } else {
-                        // Normal case: show the "SIM network unlock" PIN entry screen.
-                        // The user won't be able to do anything else until
-                        // they enter a valid SIM network PIN.
-                        Log.i(LOG_TAG, "show sim depersonal panel");
-                        IccNetworkDepersonalizationPanel ndpPanel =
-                                new IccNetworkDepersonalizationPanel(PhoneApp.getInstance());
-                        ndpPanel.show();
-                    }
-                    break;
 
                 case EVENT_UPDATE_INCALL_NOTIFICATION:
                     // Tell the NotificationMgr to update the "ongoing
@@ -465,13 +446,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                     ServiceManager.getService("power"));
 
             notifier = new CallNotifier(this, phone, ringer, mBtHandsfree, new CallLogAsync());
-
-            // register for ICC status
-            IccCard sim = phone.getIccCard();
-            if (sim != null) {
-                if (VDBG) Log.v(LOG_TAG, "register for ICC status");
-                sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
-            }
 
             // register for MMI/USSD
             phone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
@@ -1309,15 +1283,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             mInCallScreen.updateAfterRadioTechnologyChange();
         }
 
-        // Update registration for ICC status after radio technology change
-        IccCard sim = phone.getIccCard();
-        if (sim != null) {
-            if (DBG) Log.d(LOG_TAG, "Update registration for ICC status...");
-
-            //Register all events new to the new active phone
-            sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
-        }
-
         // register for MMI/USSD
         phone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
 
@@ -1495,6 +1460,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                         notifier.updateSuppSvcRegistrationsAfterRadioOn();
                     }
                 }
+                // TODO: This event should be handled by the lock screen, just
+                // like the "SIM missing" and "Sim locked" cases (bug 1804111).
                 if ((reason != null) && (IccCard.INTENT_VALUE_ICC_LOCKED.equals(iccState))) {
                     if (getResources().getBoolean(R.bool.ignore_perso_locked_events)) {
                         // Some products don't have the concept of a perso lock.
@@ -1700,10 +1667,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         int subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK;
 
         if(IccCard.INTENT_VALUE_LOCKED_NETWORK.equals(reason)) {
-           //Network Depersonalization is presently handled
-           //using dedicated Notification.
-           Log.i(LOG_TAG,"Ignoring SIM NETWORK Depersonalization "
-                 + "since this is handled differently");
+            Log.i(LOG_TAG,"SIM NETWORK Depersonalization");
+            subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK;
         } else if(IccCard.INTENT_VALUE_LOCKED_NETWORK_SUBSET.equals(reason)) {
            Log.i(LOG_TAG,"SIM NETWORK SUBSET Depersonalization");
            subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK_SUBSET;
@@ -1738,10 +1703,15 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
            Log.e(LOG_TAG,"Unsupported Depersonalization: reason = " + reason);
         }
 
-        if (subtype != IccDepersonalizationConstants.ICC_SIM_NETWORK) {
-            IccDepersonalizationPanel dpPanel =
-                 new IccDepersonalizationPanel(PhoneApp.getInstance(),subtype);
-            dpPanel.show();
+        if (getResources().getBoolean(R.bool.ignore_sim_network_locked_events) &&
+                subtype == IccDepersonalizationConstants.ICC_SIM_NETWORK) {
+            // Some products don't have the concept of a "SIM network lock"
+            Log.i(LOG_TAG, "Ignoring SIM_NETWORK Personalization; "
+                  + "not showing 'SIM network unlock' PIN entry screen");
+            return;
         }
+        IccDepersonalizationPanel dpPanel =
+            new IccDepersonalizationPanel(PhoneApp.getInstance(),subtype);
+        dpPanel.show();
     }
 }

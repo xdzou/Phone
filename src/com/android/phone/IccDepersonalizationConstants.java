@@ -31,15 +31,30 @@ package com.android.phone;
 /* Constants used for ICC Depersonalization.*/
 public class IccDepersonalizationConstants {
     //These are supported depersonalization types.
-    public static final int ICC_SIM_NETWORK = 1;
-    public static final int ICC_SIM_NETWORK_SUBSET = 2;
+    public static final int ICC_SIM_NETWORK = 0;
+    public static final int ICC_SIM_NETWORK_SUBSET = 1;
+    public static final int ICC_SIM_CORPORATE = 2;
     public static final int ICC_SIM_SERVICE_PROVIDER = 3;
-    public static final int ICC_SIM_CORPORATE = 4;
-    public static final int ICC_SIM_SIM = 5;
-    public static final int ICC_RUIM_NETWORK1 = 6;
-    public static final int ICC_RUIM_NETWORK2 = 7;
-    public static final int ICC_RUIM_HRPD = 8;
+    public static final int ICC_SIM_SIM = 4;
+    public static final int ICC_RUIM_NETWORK1 = 5;
+    public static final int ICC_RUIM_NETWORK2 = 6;
+    public static final int ICC_RUIM_HRPD = 7;
+    public static final int ICC_RUIM_CORPORATE = 8;
     public static final int ICC_RUIM_SERVICE_PROVIDER = 9;
-    public static final int ICC_RUIM_CORPORATE = 10;
-    public static final int ICC_RUIM_RUIM = 11;
+    public static final int ICC_RUIM_RUIM = 10;
+
+    //This is how phoneApp constants relate to constants from RIL_PersoSubstate in ril.h
+    public static final int[] DEPERSO_TYPES = {
+        3,  //ICC_SIM_NETWORK
+        4,  //ICC_SIM_NETWORK_SUBSET
+        5,  //ICC_SIM_CORPORATE
+        6,  //ICC_SIM_SERVICE_PROVIDER
+        7,  //ICC_SIM_SIM
+        13, //ICC_RUIM_NETWORK1
+        14, //ICC_RUIM_NETWORK2
+        15, //ICC_RUIM_HRPD
+        16, //ICC_RUIM_CORPORATE
+        17, //ICC_RUIM_SERVICE_PROVIDER
+        18  //ICC_RUIM_RUIM
+    };
 }
