@@ -1664,7 +1664,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     }
 
     private void showDepersonalizationScreen(String reason) {
-        int subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK;
+        int subtype = IccDepersonalizationConstants.ICC_PERSO_NOT_SUPPORTED;
 
         if(IccCard.INTENT_VALUE_LOCKED_NETWORK.equals(reason)) {
             Log.i(LOG_TAG,"SIM NETWORK Depersonalization");
@@ -1701,6 +1701,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
            subtype = IccDepersonalizationConstants.ICC_RUIM_RUIM;
         } else {
            Log.e(LOG_TAG,"Unsupported Depersonalization: reason = " + reason);
+           return;
         }
 
         if (getResources().getBoolean(R.bool.ignore_sim_network_locked_events) &&

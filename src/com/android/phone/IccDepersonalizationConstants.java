@@ -31,6 +31,7 @@ package com.android.phone;
 /* Constants used for ICC Depersonalization.*/
 public class IccDepersonalizationConstants {
     //These are supported depersonalization types.
+    public static final int ICC_PERSO_NOT_SUPPORTED = -1;
     public static final int ICC_SIM_NETWORK = 0;
     public static final int ICC_SIM_NETWORK_SUBSET = 1;
     public static final int ICC_SIM_CORPORATE = 2;
