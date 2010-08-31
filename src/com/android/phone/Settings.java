@@ -34,9 +34,9 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.text.TextUtils;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 
@@ -51,11 +51,17 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     private static final boolean DBG = true;
     public static final int REQUEST_CODE_EXIT_ECM         = 17;
 
+    public static final String SUBSCRIPTION = "SUBSCRIPTION_ID";
+
     //String keys for preference lookup
     private static final String BUTTON_DATA_ENABLED_KEY = "button_data_enabled_key";
     private static final String BUTTON_DATA_USAGE_KEY = "button_data_usage_key";
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
     private static final String BUTTON_PREFERED_NETWORK_MODE_LTE = "preferred_network_mode_key_with_lte";
+    private static final String BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE = "preferred_dsds_gsm_network_mode_key";
+    private static final String BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE = "preferred_dsds_cdma_network_mode_key";
+    private static final String BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE_LTE = "preferred_dsds_gsm_network_mode_key_with_lte";
+    private static final String BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE_LTE = "preferred_dsds_cdma_network_mode_key_with_lte";
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_CDMA_ROAMING_KEY = "cdma_roaming_mode_key";
 
@@ -78,6 +84,8 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     private MyHandler mHandler;
     private boolean mOkClicked;
 
+    private int mSubscription;
+
     //GsmUmts options and Cdma options
     GsmUmtsOptions gsmumtsOptions;
     CdmaOptions cdmaOptions;
@@ -87,6 +95,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     //  Used to dismiss the dialogs when they come up.
     public void onClick(DialogInterface dialog, int which) {
         if (which == DialogInterface.BUTTON1) {
+            Log.d(LOG_TAG, "onClick setDataRoamingEnabled on sub :" + mSubscription);
             mPhone.setDataRoamingEnabled(true);
             mOkClicked = true;
         } else {
@@ -151,11 +160,15 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             }
             return true;
         } else if (preference == mButtonDataEnabled) {
-            if (DBG) log("onPreferenceTreeClick: preference == mButtonDataEnabled.");
+            if (DBG) log("onPreferenceTreeClick: preference == mButtonDataEnabled");
             ConnectivityManager cm =
                     (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 
-            cm.setMobileDataEnabled(mButtonDataEnabled.isChecked());
+            if (TelephonyManager.isDsdsEnabled()) {
+                cm.setMobileDataEnabled(mButtonDataEnabled.isChecked(), mSubscription);
+            } else {
+                cm.setMobileDataEnabled(mButtonDataEnabled.isChecked());
+            }
             return true;
         } else {
             // if the button is anything but the simple toggle preference,
@@ -173,7 +186,13 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         addPreferencesFromResource(R.xml.network_setting);
 
-        mPhone = PhoneFactory.getDefaultPhone();
+        if (TelephonyManager.isDsdsEnabled()) {
+            mSubscription = getIntent().getIntExtra(Settings.SUBSCRIPTION, 0);
+            log("Settings onCreate subscription =" + mSubscription);
+            mPhone = PhoneApp.getPhone(mSubscription);
+        } else {
+            mPhone = PhoneApp.getDefaultPhone();
+        }
         mHandler = new MyHandler();
 
         //get UI object references
@@ -181,16 +200,76 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         mButtonDataEnabled = (CheckBoxPreference) prefSet.findPreference(BUTTON_DATA_ENABLED_KEY);
         mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
+
+        // Add/Remove network mode options depending on the phone type.
         if (isLteSupported()) {
             prefSet.removePreference(prefSet.findPreference(
                     BUTTON_PREFERED_NETWORK_MODE));
-            mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
-                    BUTTON_PREFERED_NETWORK_MODE_LTE);
+            prefSet.removePreference(prefSet.findPreference(
+                    BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE));
+            prefSet.removePreference(prefSet.findPreference(
+                    BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE));
+            if (TelephonyManager.isDsdsEnabled()) {
+                prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_NETWORK_MODE_LTE));
+               // DSDS+LTE, Phone type is GSM.
+               if (mPhone.getPhoneType() ==  Phone.PHONE_TYPE_GSM) {
+                    Log.d(LOG_TAG,"onCreate lte supported mButtonDataRoam GSM Phone!!!");
+                    prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE_LTE));
+                    mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE_LTE);
+                // DSDS+LTE, Phone type is CDMA.
+                } else {
+                    Log.d(LOG_TAG,"onCreate lte supported mButtonDataRoam CDMA Phone!!!");
+                    prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE_LTE));
+                    mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE_LTE);
+                }
+            // Single standby + LTE
+            } else {
+                prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE_LTE));
+                prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE_LTE));
+                mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_NETWORK_MODE_LTE);
+            }
         } else {
             prefSet.removePreference(prefSet.findPreference(
-                    BUTTON_PREFERED_NETWORK_MODE_LTE));
-            mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
-                    BUTTON_PREFERED_NETWORK_MODE);
+                 BUTTON_PREFERED_NETWORK_MODE_LTE));
+            prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE_LTE));
+            prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE_LTE));
+            if (TelephonyManager.isDsdsEnabled()) {
+                prefSet.removePreference(prefSet.findPreference(
+                    BUTTON_PREFERED_NETWORK_MODE));
+                // DSDS, Phone type is GSM.
+                if (mPhone.getPhoneType() ==  Phone.PHONE_TYPE_GSM) {
+                    Log.d(LOG_TAG,"onCreate lte not supported mButtonDataRoam GSM Phone!!!");
+                    prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE));
+                    mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE);
+                // DSDS, Phone type is CDMA.
+                } else {
+                    Log.d(LOG_TAG,"onCreate lte not supported mButtonDataRoam CDMA Phone!!!");
+                    prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE));
+                    mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE);
+                }
+            // Single standby mode.
+            } else {
+                prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_CDMA_NETWORK_MODE));
+                prefSet.removePreference(prefSet.findPreference(
+                        BUTTON_PREFERED_DSDS_GSM_NETWORK_MODE));
+                mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
+                        BUTTON_PREFERED_NETWORK_MODE);
+            }
         }
 
         if (getResources().getBoolean(R.bool.world_phone) == true) {
@@ -201,6 +280,10 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             } else {
                 // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
                 // change Preferred Network Mode.
+                if (TelephonyManager.isDsdsEnabled()) {
+                    PreferenceScreen psGsmUmtsoptions = (PreferenceScreen) findPreference(BUTTON_GSM_UMTS_OPTIONS);
+                    psGsmUmtsoptions.getIntent().putExtra(Settings.SUBSCRIPTION, mSubscription);
+                }
                 mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
 
                 //Get the networkMode from Settings.System and displays it
@@ -243,11 +326,14 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         ConnectivityManager cm =
                 (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
-        mButtonDataEnabled.setChecked(cm.getMobileDataEnabled());
-
-        // Set UI state in onResume because a user could go home, launch some
-        // app to change this setting's backend, and re-launch this settings app
-        // and the UI state would be inconsistent with actual state
+        if (TelephonyManager.isDsdsEnabled()) {
+            mButtonDataEnabled.setChecked(cm.getMobileDataEnabled(mSubscription));
+        } else {
+            mButtonDataEnabled.setChecked(cm.getMobileDataEnabled());
+            // Set UI state in onResume because a user could go home, launch some
+            // app to change this setting's backend, and re-launch this settings app
+            // and the UI state would be inconsistent with actual state
+        }
         mButtonDataRoam.setChecked(mPhone.getDataRoamingEnabled());
 
         if ((isLteSupported() &&
@@ -552,4 +638,5 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
     private boolean isLteSupported() {
         return SystemProperties.getBoolean("ro.config.lte", false);
     }
+
 }

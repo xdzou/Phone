@@ -56,6 +56,40 @@
         android:entryValues="@array/preferred_network_mode_values_with_lte"
         android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
 
+
+    <!-- Different network mode options displayed based on the phone type. -->
+    <ListPreference
+        android:key="preferred_dsds_gsm_network_mode_key"
+        android:title="@string/preferred_network_mode_title"
+        android:summary="@string/preferred_network_mode_summary"
+        android:entries="@array/preferred_dsds_gsm_network_mode_choices"
+        android:entryValues="@array/preferred_dsds_gsm_network_mode_values"
+        android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
+
+    <ListPreference
+        android:key="preferred_dsds_cdma_network_mode_key"
+        android:title="@string/preferred_network_mode_title"
+        android:summary="@string/preferred_network_mode_summary"
+        android:entries="@array/preferred_dsds_cdma_network_mode_choices"
+        android:entryValues="@array/preferred_dsds_cdma_network_mode_values"
+        android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
+
+    <ListPreference
+        android:key="preferred_dsds_gsm_network_mode_key_with_lte"
+        android:title="@string/preferred_network_mode_title"
+        android:summary="@string/preferred_network_mode_summary"
+        android:entries="@array/preferred_dsds_gsm_network_mode_choices_with_lte"
+        android:entryValues="@array/preferred_dsds_gsm_network_mode_values_with_lte"
+        android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
+
+    <ListPreference
+        android:key="preferred_dsds_cdma_network_mode_key_with_lte"
+        android:title="@string/preferred_network_mode_title"
+        android:summary="@string/preferred_network_mode_summary"
+        android:entries="@array/preferred_dsds_cdma_network_mode_choices_with_lte"
+        android:entryValues="@array/preferred_dsds_cdma_network_mode_values_with_lte"
+        android:dialogTitle="@string/preferred_network_mode_dialogtitle" />
+
     <PreferenceScreen
         android:key="gsm_umts_options_key"
         android:title="@string/gsm_umts_options"

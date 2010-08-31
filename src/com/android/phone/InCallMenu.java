@@ -98,7 +98,7 @@ class InCallMenu {
      * *current* state and enabledness of each item is set in
      * updateItems().
      */
-    /* package */ void initMenu() {
+    /* package */ void initMenu(Phone phone) {
         if (DBG) log("initMenu()...");
 
         // Explicitly use the "icon menu" theme for the Views we create.
@@ -212,9 +212,8 @@ class InCallMenu {
         // Row 0:
         // This usually has "Show/Hide dialpad", but that gets replaced by
         // "Manage conference" if a conference call is active.
-        PhoneApp app = PhoneApp.getInstance();
         // As managing conference is only valid for GSM and not for CDMA
-        int phoneType = app.phone.getPhoneType();
+        int phoneType = phone.getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_GSM) {
             mInCallMenuView.addItemView(mManageConference, 0);
         }
@@ -295,7 +294,7 @@ class InCallMenu {
             boolean inConferenceCall =
                     PhoneUtils.isConferenceCall(phone.getForegroundCall());
             boolean showShowDialpad = !inConferenceCall;
-            boolean enableShowDialpad = showShowDialpad && mInCallScreen.okToShowDialpad();
+            boolean enableShowDialpad = showShowDialpad && mInCallScreen.okToShowDialpad(phone);
             mShowDialpad.setVisible(showShowDialpad);
             mShowDialpad.setEnabled(enableShowDialpad);
             boolean isDtmfDialerOpened = mInCallScreen.isDialerOpened();
@@ -376,7 +375,7 @@ class InCallMenu {
 
         // The InCallControlState object tells us the enabledness and/or
         // state of the various menu items:
-        InCallControlState inCallControlState = mInCallScreen.getUpdatedInCallControlState();
+        InCallControlState inCallControlState = mInCallScreen.getUpdatedInCallControlState(phone);
 
         // Manage conference: visible only if the foreground call is a
         // conference call.  Enabled unless the "Manage conference" UI is
@@ -395,7 +394,7 @@ class InCallMenu {
         // (Note this logic is totally specific to the in-call menu, so
         // this state doesn't come from the inCallControlState object.)
         boolean showShowDialpad = !inCallControlState.manageConferenceVisible;
-        boolean enableShowDialpad = showShowDialpad && mInCallScreen.okToShowDialpad();
+        boolean enableShowDialpad = showShowDialpad && mInCallScreen.okToShowDialpad(phone);
         mShowDialpad.setVisible(showShowDialpad);
         mShowDialpad.setEnabled(enableShowDialpad);
         mShowDialpad.setText(inCallControlState.dialpadVisible

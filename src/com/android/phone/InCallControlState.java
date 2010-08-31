@@ -23,7 +23,6 @@ import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 
-
 /**
  * Helper class to keep track of enabledness, visibility, and "on/off"
  * or "checked" state of the various controls available in the in-call
@@ -94,7 +93,8 @@ public class InCallControlState {
      * Updates all our public boolean flags based on the current state of
      * the Phone.
      */
-    public void update() {
+    public void update(Phone phone) {
+        mPhone = phone;
         final boolean hasRingingCall = !mPhone.getRingingCall().isIdle();
         final Call fgCall = mPhone.getForegroundCall();
         final Call.State fgCallState = fgCall.getState();
@@ -161,7 +161,7 @@ public class InCallControlState {
 
         // "Dialpad": Enabled only when it's OK to use the dialpad in the
         // first place.
-        dialpadEnabled = mInCallScreen.okToShowDialpad();
+        dialpadEnabled = mInCallScreen.okToShowDialpad(mPhone);
 
         // Also keep track of whether the dialpad is currently "opened"
         // (i.e. visible).

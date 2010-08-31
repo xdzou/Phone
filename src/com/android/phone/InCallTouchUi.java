@@ -183,7 +183,8 @@ public class InCallTouchUi extends FrameLayout
         mSwapButton = (ImageButton) mInCallControls.findViewById(R.id.swapButton);
         mSwapButton.setOnClickListener(this);
         mSwapButtonLabel = (TextView) mInCallControls.findViewById(R.id.swapButtonLabel);
-        if (PhoneApp.getInstance().phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+        Phone phone = PhoneApp.getInstance().getPhoneInCall();
+        if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
             // In CDMA we use a generalized text - "Manage call", as behavior on selecting
             // this option depends entirely on what the current call state is.
             mSwapButtonLabel.setText(R.string.onscreenManageCallsText);
@@ -351,7 +352,7 @@ public class InCallTouchUi extends FrameLayout
 
         // The InCallControlState object tells us the enabledness and/or
         // state of the various onscreen buttons:
-        InCallControlState inCallControlState = mInCallScreen.getUpdatedInCallControlState();
+        InCallControlState inCallControlState = mInCallScreen.getUpdatedInCallControlState(phone);
 
         // "Add" or "Merge":
         // These two buttons occupy the same space onscreen, so only

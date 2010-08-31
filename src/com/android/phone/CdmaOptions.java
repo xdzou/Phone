@@ -22,8 +22,8 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneFactory;
 
 /**
  * List of Phone-specific settings screens.
@@ -35,6 +35,9 @@ public class CdmaOptions extends PreferenceActivity {
 
     private static final String BUTTON_CDMA_ROAMING_KEY = "cdma_roaming_mode_key";
     private static final String BUTTON_CDMA_SUBSCRIPTION_KEY = "subscription_key";
+
+    private int mSubscription;
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -42,6 +45,11 @@ public class CdmaOptions extends PreferenceActivity {
         addPreferencesFromResource(R.xml.cdma_options);
 
         PreferenceScreen prefSet = getPreferenceScreen();
+        if (TelephonyManager.isDsdsEnabled()) {
+            // Get the subscription info passed with the intent. getIntent()
+            // fetches the intent that started this activity.
+            mSubscription = getIntent().getIntExtra(Settings.SUBSCRIPTION, 0);
+        }
         mButtonCdmaRoam =
                 (CdmaRoamingListPreference) prefSet.findPreference(BUTTON_CDMA_ROAMING_KEY);
         mButtonCdmaSubscription =
@@ -50,7 +58,13 @@ public class CdmaOptions extends PreferenceActivity {
 
     @Override
     protected void onResume() {
-        if (PhoneFactory.getDefaultPhone().getPhoneType() != Phone.PHONE_TYPE_CDMA) {
+        Phone phone;
+        if (TelephonyManager.isDsdsEnabled()) {
+            phone = PhoneApp.getPhone(mSubscription);
+        } else {
+            phone = PhoneApp.getDefaultPhone();
+        }
+        if (phone.getPhoneType() != Phone.PHONE_TYPE_CDMA) {
             mButtonCdmaRoam.setEnabled(false);
             mButtonCdmaSubscription.setEnabled(false);
         } else {

@@ -865,13 +865,14 @@ public class OtaUtils {
         // (But note that mDialer is a separate DTMFTwelveKeyDialer
         // instance, that belongs to the InCallScreen.  This is confusing;
         // see the TODO comment above.)
+        Phone phone = PhoneApp.getInstance().phone;
         mOtaCallCardDtmfDialer = new DTMFTwelveKeyDialer(mInCallScreen,
                                                          mOtaWidgetData.otaDtmfDialerView,
-                                                         null /* no SlidingDrawer used here */);
+                                                         null /* no SlidingDrawer used here */, phone);
 
         // Initialize the new DTMFTwelveKeyDialer instance.  This is
         // needed to play local DTMF tones.
-        mOtaCallCardDtmfDialer.startDialerSession();
+        mOtaCallCardDtmfDialer.startDialerSession(phone);
 
         mOtaWidgetData.otaDtmfDialerView.setDialer(mOtaCallCardDtmfDialer);
     }

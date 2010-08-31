@@ -36,8 +36,10 @@ import android.preference.PreferenceScreen;
 import android.text.TextUtils;
 import android.util.Log;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.gsm.NetworkInfo;
 
 import java.util.HashMap;
@@ -70,6 +72,7 @@ public class NetworkSetting extends PreferenceActivity
     private HashMap<Preference, NetworkInfo> mNetworkMap;
 
     Phone mPhone;
+    int mSubscription;
     protected boolean mIsForeground = false;
 
     /** message for network selection */
@@ -219,7 +222,16 @@ public class NetworkSetting extends PreferenceActivity
 
         addPreferencesFromResource(R.xml.carrier_select);
 
-        mPhone = PhoneApp.getInstance().phone;
+        Intent intent = new Intent(this, NetworkQueryService.class);
+
+        if (TelephonyManager.isDsdsEnabled()) {
+            mSubscription = getIntent().getIntExtra(Settings.SUBSCRIPTION, 0);
+            log("onCreate received sub :" + mSubscription);
+            mPhone = PhoneApp.getPhone(mSubscription);
+            intent.putExtra(Settings.SUBSCRIPTION, mSubscription);
+        } else {
+            mPhone = PhoneApp.getInstance().phone;
+        }
 
         mNetworkList = (PreferenceGroup) getPreferenceScreen().findPreference(LIST_NETWORKS_KEY);
         mNetworkMap = new HashMap<Preference, NetworkInfo>();
@@ -232,7 +244,7 @@ public class NetworkSetting extends PreferenceActivity
         // long as startService is called) until a stopservice request is made.  Since
         // we want this service to just stay in the background until it is killed, we
         // don't bother stopping it from our end.
-        startService (new Intent(this, NetworkQueryService.class));
+        startService (intent);
         bindService (new Intent(this, NetworkQueryService.class), mNetworkQueryServiceConnection,
                 Context.BIND_AUTO_CREATE);
     }

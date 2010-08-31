@@ -250,6 +250,7 @@ public class CallNotifier extends Handler
 
     @Override
     public void handleMessage(Message msg) {
+        log("handleMessage() Msg Type: " + msg.what);
         mApplication.checkPhoneType();
         switch (msg.what) {
             case PHONE_NEW_RINGING_CONNECTION:
@@ -357,7 +358,7 @@ public class CallNotifier extends Handler
                     new InCallTonePlayer(toneToPlay).start();
                     mCdmaVoicePrivacyState = true;
                     // Update the VP icon:
-                    NotificationMgr.getDefault().updateInCallNotification();
+                    NotificationMgr.getDefault().updateInCallNotification(mPhone);
                 }
                 break;
 
@@ -368,7 +369,7 @@ public class CallNotifier extends Handler
                     new InCallTonePlayer(toneToPlay).start();
                     mCdmaVoicePrivacyState = false;
                     // Update the VP icon:
-                    NotificationMgr.getDefault().updateInCallNotification();
+                    NotificationMgr.getDefault().updateInCallNotification(mPhone);
                 }
                 break;
 
@@ -552,7 +553,7 @@ public class CallNotifier extends Handler
                 }
                 // in this case, just fall through like before, and call
                 // PhoneUtils.showIncomingCallUi
-                PhoneUtils.showIncomingCallUi();
+                PhoneUtils.showIncomingCallUi(mPhone);
             }
         }
 
@@ -613,7 +614,7 @@ public class CallNotifier extends Handler
 
             // in this case, just fall through like before, and call
             // PhoneUtils.showIncomingCallUi
-            PhoneUtils.showIncomingCallUi();
+            PhoneUtils.showIncomingCallUi(mPhone);
         }
     }
 
@@ -674,7 +675,7 @@ public class CallNotifier extends Handler
         mRinger.ring();
 
         // ...and show the InCallScreen.
-        PhoneUtils.showIncomingCallUi();
+        PhoneUtils.showIncomingCallUi(mPhone);
     }
 
     private void onUnknownConnectionAppeared(AsyncResult r) {
@@ -683,7 +684,7 @@ public class CallNotifier extends Handler
         if (state == Phone.State.OFFHOOK) {
             // basically do onPhoneStateChanged + displayCallScreen
             onPhoneStateChanged(r);
-            PhoneUtils.showIncomingCallUi();
+            PhoneUtils.showIncomingCallUi(mPhone);
         }
     }
 
@@ -716,11 +717,16 @@ public class CallNotifier extends Handler
         // There's no need to force a UI update since we update the
         // in-call notification ourselves (below), and the InCallScreen
         // listens for phone state changes itself.
-        mApplication.updateBluetoothIndication(false);
+        mApplication.updateBluetoothIndication(mPhone,false);
 
         // Update the proximity sensor mode (on devices that have a
         // proximity sensor).
-        mApplication.updatePhoneState(state);
+        if (TelephonyManager.isDsdsEnabled()) {
+            mApplication.updatePhoneState(mPhone.getSubscription(), state);
+        } else {
+            // Pass default subscription for single standby.
+            mApplication.updatePhoneState(PhoneApp.getDefaultSubscription(), state);
+        }
 
         if (state == Phone.State.OFFHOOK) {
             // stop call waiting tone if needed when answering
@@ -759,7 +765,7 @@ public class CallNotifier extends Handler
             mRinger.stopRing();
 
             // put a icon in the status bar
-            NotificationMgr.getDefault().updateInCallNotification();
+            NotificationMgr.getDefault().updateInCallNotification(mPhone);
         }
 
         if (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
@@ -889,8 +895,13 @@ public class CallNotifier extends Handler
         if (cookie instanceof Long) {
             if (VDBG) log("CallerInfo query complete, posting missed call notification");
 
-            NotificationMgr.getDefault().notifyMissedCall(ci.name, ci.phoneNumber,
-                    ci.phoneLabel, ((Long) cookie).longValue());
+            if (TelephonyManager.isDsdsEnabled()) {
+                NotificationMgr.getDefault().notifyMissedCall(ci.name, ci.phoneNumber,
+                        ci.phoneLabel, ((Long) cookie).longValue(), mPhone.getSubscription());
+            } else {
+                NotificationMgr.getDefault().notifyMissedCall(ci.name, ci.phoneNumber,
+                        ci.phoneLabel, ((Long) cookie).longValue());
+            }
         } else if (cookie instanceof CallNotifier) {
             if (VDBG) log("CallerInfo query complete, updating data");
 
@@ -1072,7 +1083,7 @@ public class CallNotifier extends Handler
             // ended" state.)
             if (!mApplication.isShowingCallScreen()) {
                 if (VDBG) log("onDisconnect: force InCallScreen to finish()");
-                mApplication.dismissCallScreen();
+                mApplication.dismissCallScreen(mPhone);
             }
         }
 
@@ -1214,7 +1225,7 @@ public class CallNotifier extends Handler
 
     private void onMwiChanged(boolean visible) {
         if (VDBG) log("onMwiChanged(): " + visible);
-        NotificationMgr.getDefault().updateMwi(visible);
+        NotificationMgr.getDefault().updateMwi(visible, mPhone);
     }
 
     /**
@@ -1228,7 +1239,7 @@ public class CallNotifier extends Handler
 
     private void onCfiChanged(boolean visible) {
         if (VDBG) log("onCfiChanged(): " + visible);
-        NotificationMgr.getDefault().updateCfi(visible);
+        NotificationMgr.getDefault().updateCfi(visible, mPhone);
     }
 
     /**
@@ -1905,7 +1916,7 @@ public class CallNotifier extends Handler
 
         // Start the InCallScreen Activity if its not on foreground
         if (!mApplication.isShowingCallScreen()) {
-            PhoneUtils.showIncomingCallUi();
+            PhoneUtils.showIncomingCallUi(mPhone);
         }
 
         // Start timer for CW display
@@ -2063,8 +2074,13 @@ public class CallNotifier extends Handler
                     number = PhoneUtils.modifyForSpecialCnapCases(mPhone.getContext(),
                             ci, number, ci.numberPresentation);
                 }
-                NotificationMgr.getDefault().notifyMissedCall(name, number,
-                        ci.phoneLabel, date);
+                if (TelephonyManager.isDsdsEnabled()) {
+                    NotificationMgr.getDefault().notifyMissedCall(name, number,
+                            ci.phoneLabel, date, mPhone.getSubscription());
+                } else {
+                    NotificationMgr.getDefault().notifyMissedCall(name, number,
+                            ci.phoneLabel, date, mPhone.getSubscription());
+                }
             }
         } else {
             // getCallerInfo() can return null in rare cases, like if we weren't

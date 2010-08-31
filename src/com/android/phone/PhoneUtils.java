@@ -46,6 +46,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallStateException;
@@ -55,6 +56,7 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.IExtendedNetworkService;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.cdma.CdmaConnection;
 
@@ -251,7 +253,12 @@ public class PhoneUtils {
         if (phoneIsCdma) {
             // Stop any signalInfo tone being played when a Call waiting gets answered
             if (call.getState() == Call.State.WAITING) {
-                final CallNotifier notifier = app.notifier;
+                final CallNotifier notifier;
+                if (TelephonyManager.isDsdsEnabled()) {
+                    notifier = app.getCallNotifier(phone.getSubscription());
+                } else {
+                    notifier = app.notifier;
+                }
                 notifier.stopSignalInfoTone();
             }
         }
@@ -363,7 +370,12 @@ public class PhoneUtils {
                 return hangup(ringing);
             } else if (state == Call.State.WAITING) {
                 if (DBG) log("hangup Call waiting call");
-                final CallNotifier notifier = PhoneApp.getInstance().notifier;
+                final CallNotifier notifier;
+                if (TelephonyManager.isDsdsEnabled()) {
+                    notifier = PhoneApp.getInstance().getCallNotifier(phone.getSubscription());
+                } else {
+                    notifier = PhoneApp.getInstance().notifier;
+                }
                 notifier.sendCdmaCallWaitingReject();
                 return true;
             } else {
@@ -1260,7 +1272,7 @@ public class PhoneUtils {
             CallerInfoAsyncQuery.OnQueryCompleteListener listener, Object cookie) {
         PhoneApp app = PhoneApp.getInstance();
         Connection conn = null;
-        int phoneType = app.phone.getPhoneType();
+        int phoneType = app.getPhoneInCall().getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             conn = call.getLatestConnection();
         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
@@ -1562,7 +1574,7 @@ public class PhoneUtils {
         // state of the UI.)  So as far as the in-call UI is concerned,
         // Conference corresponds to generic display.
         PhoneApp app = PhoneApp.getInstance();
-        int phoneType = app.phone.getPhoneType();
+        int phoneType = app.getPhoneInCall().getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             CdmaPhoneCallState.PhoneCallState state = app.cdmaPhoneCallState.getCurrentCallState();
             if ((state == CdmaPhoneCallState.PhoneCallState.CONF_CALL)
@@ -1640,7 +1652,7 @@ public class PhoneUtils {
      * in-call screen, whose CallCard automatically does the right
      * thing if there's a Call that's currently ringing.
      */
-    static void showIncomingCallUi() {
+    static void showIncomingCallUi(Phone phone) {
         if (DBG) log("showIncomingCallUi()...");
         PhoneApp app = PhoneApp.getInstance();
 
@@ -1680,7 +1692,7 @@ public class PhoneUtils {
         app.requestWakeState(PhoneApp.WakeState.FULL);
 
         // Fire off the InCallScreen intent.
-        app.displayCallScreen();
+        app.displayCallScreen(phone);
     }
 
     static void turnOnSpeaker(Context context, boolean flag, boolean store) {
@@ -1703,7 +1715,8 @@ public class PhoneUtils {
         // sometimes different depending on whether or not the speaker is
         // in use.
         PhoneApp app = PhoneApp.getInstance();
-        app.updateWakeState();
+        Phone phone = app.getPhoneInCall();
+        app.updateWakeState(phone);
 
         // Update the Proximity sensor based on speaker state
         app.updateProximitySensorMode(app.phone.getState());

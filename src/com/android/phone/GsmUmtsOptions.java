@@ -24,8 +24,8 @@ import android.os.SystemProperties;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.PhoneFactory;
 import android.util.Log;
 
 /**
@@ -42,18 +42,32 @@ public class GsmUmtsOptions extends PreferenceActivity {
     private static final String BUTTON_PREFER_2G_KEY = "button_prefer_2g_key";
     private static final String CSP_TAG = "CSP GSMUMTS";
 
-
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-
         addPreferencesFromResource(R.xml.gsm_umts_options);
         PreferenceScreen prefSet = getPreferenceScreen();
+        Phone phone;
         mButtonAPNExpand = (PreferenceScreen) prefSet.findPreference(BUTTON_APN_EXPAND_KEY);
         mButtonOperatorSelectionExpand =
                 (PreferenceScreen) prefSet.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonPrefer2g = (CheckBoxPreference) prefSet.findPreference(BUTTON_PREFER_2G_KEY);
-        if (PhoneFactory.getDefaultPhone().getPhoneType() != Phone.PHONE_TYPE_GSM) {
+        if (TelephonyManager.isDsdsEnabled()) {
+            /*  Get the subscription info passed with the intent. getIntent()
+            fetches the intent that started this activity. Add subscription
+            info to the sub menus through intents. */
+            int subscription = getIntent().getIntExtra(Settings.SUBSCRIPTION, 0);
+            mButtonAPNExpand.getIntent().putExtra(Settings.SUBSCRIPTION, subscription);
+            //Update the right phone object for 2g check box preference.
+            phone = PhoneApp.getPhone(subscription);
+            Use2GOnlyCheckBoxPreference.updatePhone(phone);
+            mButtonOperatorSelectionExpand.getIntent().putExtra(Settings.SUBSCRIPTION, subscription);
+        } else {
+            phone = PhoneApp.getDefaultPhone();
+            Use2GOnlyCheckBoxPreference.updatePhone(phone);
+        }
+
+        if (phone.getPhoneType() != Phone.PHONE_TYPE_GSM) {
             mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
@@ -69,7 +83,7 @@ public class GsmUmtsOptions extends PreferenceActivity {
 
                     Log.i(CSP_TAG, "System property for ef_csp is set.");
 
-                    int plmnStatus = PhoneFactory.getDefaultPhone().getCspPlmnStatus();
+                    int plmnStatus = PhoneApp.getDefaultPhone().getCspPlmnStatus();
                     if (plmnStatus == 1) {
                         // This means that in elementary file EF_CSP,
                         // in value added service group, in the service byte,

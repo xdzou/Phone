@@ -36,11 +36,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 
 import java.util.List;
 
@@ -96,6 +98,9 @@ public class CallCard extends FrameLayout
     private TextView mSecondaryCallName;
     private TextView mSecondaryCallStatus;
     private ImageView mSecondaryCallPhoto;
+
+    //Display subscription info for incoming call.
+    private TextView mSubInfo;
 
     // Menu button hint
     private TextView mMenuButtonHint;
@@ -189,6 +194,9 @@ public class CallCard extends FrameLayout
         mSecondaryCallName = (TextView) findViewById(R.id.secondaryCallName);
         mSecondaryCallStatus = (TextView) findViewById(R.id.secondaryCallStatus);
         mSecondaryCallPhoto = (ImageView) findViewById(R.id.secondaryCallPhoto);
+        if (TelephonyManager.isDsdsEnabled()) {
+            mSubInfo = (TextView) findViewById(R.id.subInfo);
+        }
 
         // Menu Button hint
         mMenuButtonHint = (TextView) findViewById(R.id.menuButtonHint);
@@ -251,6 +259,7 @@ public class CallCard extends FrameLayout
             }
         }
     }
+
 
     /**
      * Updates the UI for the state where the phone is in use, but not ringing.
@@ -355,7 +364,6 @@ public class CallCard extends FrameLayout
                 mCallTime.setActiveCallMode(call);
                 mCallTime.reset();
                 mCallTime.periodicUpdateTimer();
-
                 break;
 
             case HOLDING:
@@ -374,14 +382,25 @@ public class CallCard extends FrameLayout
             case ALERTING:
                 // Stop getting timer ticks from a previous call
                 mCallTime.cancelTimer();
-
+                //Display subscription info only for incoming calls.
+                if (TelephonyManager.isDsdsEnabled()) {
+                    mSubInfo.setVisibility(View.GONE);
+                }
                 break;
 
             case INCOMING:
             case WAITING:
                 // Stop getting timer ticks from a previous call
                 mCallTime.cancelTimer();
-
+                if (TelephonyManager.isDsdsEnabled()) {
+                    //Get the subscription from current call object.
+                    int subscription = call.getSubscription();
+                    subscription++;
+                    String subInfo = "SUB" + subscription;
+                    Log.v(LOG_TAG, "Setting subinfo: " + subInfo);
+                    mSubInfo.setText(subInfo);
+                    mSubInfo.setVisibility(View.VISIBLE);
+                }
                 break;
 
             case IDLE:
@@ -547,7 +566,8 @@ public class CallCard extends FrameLayout
             if (DBG) log("callerinfo query complete, updating ui from displayMainCallStatus()");
             Call call = (Call) cookie;
             Connection conn = null;
-            int phoneType = mApplication.phone.getPhoneType();
+            //Use only the active phone that is on call.
+            int phoneType = mApplication.getPhoneInCall().getPhoneType();
             if (phoneType == Phone.PHONE_TYPE_CDMA) {
                 conn = call.getLatestConnection();
             } else if (phoneType == Phone.PHONE_TYPE_GSM) {
@@ -667,9 +687,9 @@ public class CallCard extends FrameLayout
             }
         }
 
-        int phoneType = mApplication.phone.getPhoneType();
+        int phoneType = phone.getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
-            if (!PhoneApp.getInstance().notifier.getIsCdmaRedialCall()) {
+            if (!PhoneApp.getInstance().getCallNotifier(phone.getSubscription()).getIsCdmaRedialCall()) {
                 cardTitle = getTitleForCallCard(call);  // Normal "foreground" call card
             } else {
                 cardTitle = getContext().getString(R.string.card_title_redialing);
@@ -829,7 +849,7 @@ public class CallCard extends FrameLayout
             case ACTIVE:
                 // Title is "Call in progress".  (Note this appears in the
                 // "lower title" area of the CallCard.)
-                int phoneType = mApplication.phone.getPhoneType();
+                int phoneType = PhoneApp.getInstance().getPhoneInCall().getPhoneType();
                 if (phoneType == Phone.PHONE_TYPE_CDMA) {
                     if (mApplication.cdmaPhoneCallState.IsThreeWayCallOrigStateDialing()) {
                         retVal = context.getString(R.string.card_title_dialing);
@@ -934,7 +954,7 @@ public class CallCard extends FrameLayout
                 // CDMA: This is because in CDMA when the user originates the second call,
                 // although the Foreground call state is still ACTIVE in reality the network
                 // put the first call on hold.
-                if (mApplication.phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
                     List<Connection> connections = call.getConnections();
                     if (connections.size() > 2) {
                         // This means that current Mobile Originated call is the not the first 3-Way
@@ -1229,7 +1249,7 @@ public class CallCard extends FrameLayout
     private void updateDisplayForConference() {
         if (DBG) log("updateDisplayForConference()...");
 
-        int phoneType = mApplication.phone.getPhoneType();
+        int phoneType = PhoneApp.getInstance().getPhoneInCall().getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             // This state corresponds to both 3-Way merged call and
             // Call Waiting accepted call.
@@ -1338,7 +1358,7 @@ public class CallCard extends FrameLayout
                 CallerInfo ci = null;
                 {
                     Connection conn = null;
-                    int phoneType = mApplication.phone.getPhoneType();
+                    int phoneType = PhoneApp.getInstance().getPhoneInCall().getPhoneType();
                     if (phoneType == Phone.PHONE_TYPE_CDMA) {
                         conn = call.getLatestConnection();
                     } else if (phoneType == Phone.PHONE_TYPE_GSM) {
@@ -1542,6 +1562,9 @@ public class CallCard extends FrameLayout
         dispatchPopulateAccessibilityEvent(event, mSecondaryCallName);
         dispatchPopulateAccessibilityEvent(event, mSecondaryCallStatus);
         dispatchPopulateAccessibilityEvent(event, mSecondaryCallPhoto);
+        if (TelephonyManager.isDsdsEnabled()) {
+            dispatchPopulateAccessibilityEvent(event, mSubInfo);
+        }
         return true;
     }
 

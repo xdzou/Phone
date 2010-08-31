@@ -42,6 +42,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallerInfo;
@@ -50,13 +51,12 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 
-
 /**
  * NotificationManager-related utility code for the Phone app.
  */
 public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteListener{
     private static final String LOG_TAG = "NotificationMgr";
-    private static final boolean DBG = (PhoneApp.DBG_LEVEL >= 2);
+    private static final boolean DBG = true; //(PhoneApp.DBG_LEVEL >= 2);
 
     private static final String[] CALL_LOG_PROJECTION = new String[] {
         Calls._ID,
@@ -78,6 +78,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
     private static NotificationMgr sMe = null;
     private Phone mPhone;
+    private Phone[] mPhones;
 
     private Context mContext;
     private NotificationManager mNotificationMgr;
@@ -102,6 +103,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     private static final int VM_NUMBER_RETRY_DELAY_MILLIS = 10000;
     private int mVmNumberRetriesRemaining = MAX_VM_NUMBER_RETRIES;
 
+    private int numPhones = 1;
+
     // Query used to look up caller-id info for the "call log" notification.
     private QueryHandler mQueryHandler = null;
     private static final int CALL_LOG_TOKEN = -1;
@@ -115,7 +118,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         mStatusBar = (StatusBarManager) context.getSystemService(Context.STATUS_BAR_SERVICE);
 
         PhoneApp app = PhoneApp.getInstance();
-        mPhone = app.phone;
+        numPhones = TelephonyManager.getPhoneCount();
+        mPhones = new Phone[numPhones];
+        for (int i=0; i < numPhones; i++) {
+            mPhones[i] = PhoneApp.getPhone(i);
+        }
     }
 
     static void init(Context context) {
@@ -226,14 +233,15 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 where.toString(), null, Calls.DEFAULT_SORT_ORDER);
 
         // synchronize the in call notification
-        if (mPhone.getState() != Phone.State.OFFHOOK) {
-            if (DBG) log("Phone is idle, canceling notification.");
-            cancelInCall();
-        } else {
-            if (DBG) log("Phone is offhook, updating notification.");
-            updateInCallNotification();
+        for (int i=0; i < numPhones; i++) {
+            if (mPhones[i].getState() != Phone.State.OFFHOOK) {
+                if (DBG) log("Phone is idle, canceling notification.");
+                cancelInCall();
+            } else {
+                if (DBG) log("Phone is offhook, updating notification.");
+                updateInCallNotification(mPhones[i]);
+            }
         }
-
         // Depend on android.app.StatusBarManager to be set to
         // disable(DISABLE_NONE) upon startup.  This will be the
         // case even if the phone app crashes.
@@ -260,6 +268,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             public String number;
             public String label;
             public long date;
+            public int subscription;
         }
 
         public QueryHandler(ContentResolver cr) {
@@ -326,7 +335,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
                         // send the notification
                         if (DBG) log("sending notification.");
-                        notifyMissedCall(n.name, n.number, n.label, n.date);
+                        if (TelephonyManager.isDsdsEnabled()) {
+                            notifyMissedCall(n.name, n.number, n.label, n.date, n.subscription);
+                        } else {
+                            notifyMissedCall(n.name, n.number, n.label, n.date);
+                        }
 
                         if (DBG) log("closing contact cursor.");
                         cursor.close();
@@ -426,6 +439,62 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         mNotificationMgr.notify(MISSED_CALL_NOTIFICATION, note);
     }
 
+    /**
+     * Displays a notification about a missed call for a particular subscription.
+     *
+     * @param nameOrNumber either the contact name, or the phone number if no contact
+     * @param label the label of the number if nameOrNumber is a name, null if it is a number
+     * @param subscription the subscription on which the call was received
+     */
+    //TODO DSDS Display subscription info.
+    void notifyMissedCall(String name, String number, String label, long date, int subscription) {
+        // title resource id
+        int titleResId;
+        // the text in the notification's line 1 and 2.
+        String expandedText, callName;
+
+        // increment number of missed calls.
+        mNumberMissedCalls++;
+
+        // get the name for the ticker text
+        // i.e. "Missed call from <caller name or number>"
+        if (name != null && TextUtils.isGraphic(name)) {
+            callName = name;
+        } else if (!TextUtils.isEmpty(number)){
+            callName = number;
+        } else {
+            // use "unknown" if the caller is unidentifiable.
+            callName = mContext.getString(R.string.unknown);
+        }
+
+        // display the first line of the notification:
+        // 1 missed call: call name
+        // more than 1 missed call: <number of calls> + "missed calls"
+        if (mNumberMissedCalls == 1) {
+            titleResId = R.string.notification_missedCallTitle;
+            expandedText = callName;
+        } else {
+            titleResId = R.string.notification_missedCallsTitle;
+            expandedText = mContext.getString(R.string.notification_missedCallsMsg,
+                    mNumberMissedCalls);
+        }
+
+        // create the target call log intent
+        final Intent intent = PhoneApp.createCallLogIntent();
+
+        // make the notification
+        Notification note = new Notification(mContext, // context
+                android.R.drawable.stat_notify_missed_call, // icon
+                mContext.getString(R.string.notification_missedCallTicker, callName), // tickerText
+                date, // when
+                mContext.getText(titleResId), // expandedTitle
+                expandedText, // expandedText
+                intent // contentIntent
+                );
+        configureLedNotification(note);
+        mNotificationMgr.notify(MISSED_CALL_NOTIFICATION, note);
+    }
+
     void cancelMissedCallNotification() {
         // reset the number of missed calls to 0.
         mNumberMissedCalls = 0;
@@ -450,10 +519,10 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      * Calls either notifySpeakerphone() or cancelSpeakerphone() based on
      * the actual current state of the speaker.
      */
-    void updateSpeakerNotification() {
+    void updateSpeakerNotification(Phone phone) {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
-        if ((mPhone.getState() == Phone.State.OFFHOOK) && audioManager.isSpeakerphoneOn()) {
+        if ((phone.getState() == Phone.State.OFFHOOK) && audioManager.isSpeakerphoneOn()) {
             if (DBG) log("updateSpeakerNotification: speaker ON");
             notifySpeakerphone();
         } else {
@@ -479,8 +548,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      * Calls either notifyMute() or cancelMute() based on
      * the actual current mute state of the Phone.
      */
-    void updateMuteNotification() {
-        if ((mPhone.getState() == Phone.State.OFFHOOK) && mPhone.getMute()) {
+    void updateMuteNotification(Phone phone) {
+        if ((phone.getState() == Phone.State.OFFHOOK) && phone.getMute()) {
             if (DBG) log("updateMuteNotification: MUTED");
             notifyMute();
         } else {
@@ -489,22 +558,27 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         }
     }
 
-    void updateInCallNotification() {
+    void updateInCallNotification(Phone phone) {
         int resId;
         if (DBG) log("updateInCallNotification()...");
 
-        if (mPhone.getState() != Phone.State.OFFHOOK) {
+        if (phone.getState() != Phone.State.OFFHOOK) {
             return;
         }
 
-        final boolean hasActiveCall = !mPhone.getForegroundCall().isIdle();
-        final boolean hasHoldingCall = !mPhone.getBackgroundCall().isIdle();
+        final boolean hasActiveCall = !phone.getForegroundCall().isIdle();
+        final boolean hasHoldingCall = !phone.getBackgroundCall().isIdle();
 
         // Display the appropriate "in-call" icon in the status bar,
         // which depends on the current phone and/or bluetooth state.
 
 
-        boolean enhancedVoicePrivacy = PhoneApp.getInstance().notifier.getCdmaVoicePrivacyState();
+        boolean enhancedVoicePrivacy;
+        if (TelephonyManager.isDsdsEnabled()) {
+            enhancedVoicePrivacy = PhoneApp.getInstance().getCallNotifier(phone.getSubscription()).getCdmaVoicePrivacyState();
+        } else {
+            enhancedVoicePrivacy = PhoneApp.getInstance().notifier.getCdmaVoicePrivacyState();
+        }
         if (DBG) log("updateInCallNotification: enhancedVoicePrivacy = " + enhancedVoicePrivacy);
 
         if (!hasActiveCall && hasHoldingCall) {
@@ -549,8 +623,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         // different calls.  So if there's only one call, use that, but if
         // both lines are in use we display the caller-id info from the
         // foreground call and totally ignore the background call.
-        Call currentCall = hasActiveCall ? mPhone.getForegroundCall()
-                : mPhone.getBackgroundCall();
+        Call currentCall = hasActiveCall ? phone.getForegroundCall()
+                : phone.getBackgroundCall();
         Connection currentConn = currentCall.getEarliestConnection();
 
         // When expanded, the "Ongoing call" notification is (visually)
@@ -650,8 +724,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         // Finally, refresh the mute and speakerphone notifications (since
         // some phone state changes can indirectly affect the mute and/or
         // speaker state).
-        updateSpeakerNotification();
-        updateMuteNotification();
+        updateSpeakerNotification(phone);
+        updateMuteNotification(phone);
     }
 
     /**
@@ -688,7 +762,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *
      * @param visible true if there are messages waiting
      */
-    /* package */ void updateMwi(boolean visible) {
+    /* package */ void updateMwi(boolean visible, Phone phone) {
         if (DBG) log("updateMwi(): " + visible);
         if (visible) {
             int resId = android.R.drawable.stat_notify_voicemail;
@@ -704,7 +778,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             // notification.
 
             String notificationTitle = mContext.getString(R.string.notification_voicemail_title);
-            String vmNumber = mPhone.getVoiceMailNumber();
+            String vmNumber = phone.getVoiceMailNumber();
             if (DBG) log("- got vm number: '" + vmNumber + "'");
 
             // Watch out: vmNumber may be null, for two possible reasons:
@@ -722,7 +796,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             // So handle case (2) by retrying the lookup after a short
             // delay.
 
-            if ((vmNumber == null) && !mPhone.getIccRecordsLoaded()) {
+            if ((vmNumber == null) && !phone.getIccRecordsLoaded()) {
                 if (DBG) log("- Null vm number: SIM records not loaded (yet)...");
 
                 // TODO: rather than retrying after an arbitrary delay, it
@@ -738,8 +812,13 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 // or missing and can *never* load successfully.)
                 if (mVmNumberRetriesRemaining-- > 0) {
                     if (DBG) log("  - Retrying in " + VM_NUMBER_RETRY_DELAY_MILLIS + " msec...");
-                    PhoneApp.getInstance().notifier.sendMwiChangedDelayed(
+                    if (TelephonyManager.isDsdsEnabled()) {
+                        PhoneApp.getInstance().getCallNotifier(phone.getSubscription()).sendMwiChangedDelayed(
                             VM_NUMBER_RETRY_DELAY_MILLIS);
+                    } else {
+                        PhoneApp.getInstance().notifier.sendMwiChangedDelayed(
+                            VM_NUMBER_RETRY_DELAY_MILLIS);
+                    }
                     return;
                 } else {
                     Log.w(LOG_TAG, "NotificationMgr.updateMwi: getVoiceMailNumber() failed after "
@@ -749,8 +828,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 }
             }
 
-            if (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-                int vmCount = mPhone.getVoiceMessageCount();
+            if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                int vmCount = phone.getVoiceMessageCount();
                 String titleFormat = mContext.getString(R.string.notification_voicemail_title_count);
                 notificationTitle = String.format(titleFormat, vmCount);
             }
@@ -796,7 +875,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *
      * @param visible true if there are messages waiting
      */
-    /* package */ void updateCfi(boolean visible) {
+    /* package */ void updateCfi(boolean visible, Phone phone) {
         if (DBG) log("updateCfi(): " + visible);
         if (visible) {
             // If Unconditional Call Forwarding (forward all calls) for VOICE
@@ -925,8 +1004,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *
      * @param serviceState Phone service state
      */
-    void updateNetworkSelection(int serviceState) {
-        if (mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
+    void updateNetworkSelection(int serviceState, Phone phone) {
+        if (phone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
             // get the shared preference of network_selection.
             // empty is auto mode, otherwise it is the operator alpha name
             // in case there is no operator name, check the operator numeric

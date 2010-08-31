@@ -90,6 +90,16 @@
         <!-- "Person info": photo / name / number -->
         <include layout="@layout/call_card_person_info" />
 
+        <!-- Subscription info that is displayed for the incoming call. -->
+        <TextView android:id="@+id/subInfo"
+              android:textAppearance="?android:attr/textAppearanceMedium"
+              android:textSize="14sp"
+              android:singleLine="true"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="-2dip"
+              />
+
     </LinearLayout>    <!-- End of (1) The main call card -->
 
     <!-- The hint about the Menu button, below all the call info.

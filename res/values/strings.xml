@@ -519,6 +519,32 @@
         <item>GSM only</item>
         <item>GSM / WCDMA preferred</item>
     </string-array>
+    <string-array name="preferred_dsds_gsm_network_mode_choices">
+        <item>GSM / WCDMA auto</item>
+        <item>WCDMA only</item>
+        <item>GSM only</item>
+        <item>GSM / WCDMA preferred</item>
+    </string-array>
+    <string-array name="preferred_dsds_cdma_network_mode_choices">
+        <item>EvDo only</item>
+        <item>CDMA w/o EvDo</item>
+        <item>CDMA / EvDo auto</item>
+    </string-array>
+    <string-array name="preferred_dsds_gsm_network_mode_choices_with_lte">
+        <item>LTE only</item>
+        <item>GSM/WCDMA/LTE auto</item>
+        <item>GSM / WCDMA auto</item>
+        <item>WCDMA only</item>
+        <item>GSM only</item>
+        <item>GSM / WCDMA preferred</item>
+    </string-array>
+    <string-array name="preferred_dsds_cdma_network_mode_choices_with_lte">
+        <item>LTE only</item>
+        <item>CDMA + LTE/EvDo auto</item>
+        <item>EvDo only</item>
+        <item>CDMA w/o EvDo</item>
+        <item>CDMA / EvDo auto</item>
+    </string-array>
     <string-array name="preferred_network_mode_values">
         <item>"7"</item>
         <item>"6"</item>
@@ -542,6 +568,32 @@
         <item>"2"</item>
         <item>"1"</item>
         <item>"0"</item>
+    </string-array>
+    <string-array name="preferred_dsds_gsm_network_mode_values">
+        <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
+    <string-array name="preferred_dsds_cdma_network_mode_values">
+        <item>"6"</item>
+        <item>"5"</item>
+        <item>"4"</item>
+    </string-array>
+    <string-array name="preferred_dsds_gsm_network_mode_values_with_lte">
+        <item>"11"</item>
+        <item>"9"</item>
+        <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
+    <string-array name="preferred_dsds_cdma_network_mode_values_with_lte">
+        <item>"11"</item>
+        <item>"8"</item>
+        <item>"6"</item>
+        <item>"5"</item>
+        <item>"4"</item>
     </string-array>
     <!-- Mobile network settings screen, data enabling checkbox name -->
     <string name="data_enabled">Data enabled</string>
@@ -1326,5 +1378,20 @@
     <string name="slide_to_answer_hint">Answer</string>
     <!-- Incoming call hint shown on tab (must be kept very short): decline incoming call -->
     <string name="slide_to_decline_hint">Decline</string>
+
+    <!-- Set Subscription screen: set subscription option name -->
+    <string name="set_subscription">Select subscriptions</string>
+    <!-- Set Subscription screen: label Card 1 -->
+    <string name="card_01">Card 1</string>
+    <!-- Set Subscription screen: label Card 2 -->
+    <string name="card_02">Card 2</string>
+    <!-- Set Subscription screen: Message shown in error dialog -->
+    <string name="set_subscription_error_max_two">Select maximum two subscriptions</string>
+    <!-- Set Subscription screen: Message shown in error dialog -->
+    <string name="set_subscription_error_atleast_one">Select atleast one subscription</string>
+    <!-- Set Subscription screen: label sub 1 -->
+    <string name="sub_0">SUB 1</string>
+    <!-- Set Subscription screen: label sub 2 -->
+    <string name="sub_1">SUB 2</string>
 
 </resources>

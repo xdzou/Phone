@@ -35,7 +35,9 @@ import android.widget.EditText;
 import android.widget.SlidingDrawer;
 import android.widget.TextView;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.Phone;
+import android.os.AsyncResult;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -377,12 +379,18 @@ public class DTMFTwelveKeyDialer implements
                 case PHONE_DISCONNECT:
                     if (DBG) log("disconnect message recieved, shutting down.");
                     // unregister since we are closing.
-                    mPhone.unregisterForDisconnect(this);
+                    // Get the phone object that was passed during registerForDisconnect.
+                    AsyncResult ar = (AsyncResult) msg.obj;
+                    Phone phone = (Phone) ar.userObj;
+                    if (phone != null) {
+                        phone.unregisterForDisconnect(this);
+                    }
                     closeDialer(false);
                     break;
                 case DTMF_SEND_CNF:
                     if (DBG) log("dtmf confirmation received from FW.");
                     // handle burst dtmf confirmation
+                    //TODO DSDS: Handle the correct phone.
                     handleBurstDtmfConfirmation();
                     break;
             }
@@ -401,11 +409,11 @@ public class DTMFTwelveKeyDialer implements
      */
     public DTMFTwelveKeyDialer(InCallScreen parent,
                                DTMFTwelveKeyDialerView dialerView,
-                               SlidingDrawer dialerDrawer) {
+                               SlidingDrawer dialerDrawer, Phone phone) {
         if (DBG) log("DTMFTwelveKeyDialer constructor... this = " + this);
 
         mInCallScreen = parent;
-        mPhone = PhoneApp.getInstance().phone;
+        mPhone = phone;
 
         // The passed-in DTMFTwelveKeyDialerView *should* always be
         // non-null, now that the in-call UI uses only portrait mode.
@@ -486,11 +494,18 @@ public class DTMFTwelveKeyDialer implements
 
         // Any time the dialer is open, listen for "disconnect" events (so
         // we can close ourself.)
-        mPhone.registerForDisconnect(mHandler, PHONE_DISCONNECT, null);
+        //mPhone.registerForDisconnect(mHandler, PHONE_DISCONNECT, null);
+        Phone phone;
+        // Register for disconnect on available phones. TelephonyManager
+        // would return 1 for single standby.
+        for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+            phone = PhoneApp.getPhone(i);
+            phone.registerForDisconnect(mHandler, PHONE_DISCONNECT, phone);
+        }
 
         // On some devices the screen timeout is set to a special value
         // while the dialpad is up.
-        PhoneApp.getInstance().updateWakeState();
+        PhoneApp.getInstance().updateWakeState(mPhone);
 
         // Give the InCallScreen a chance to do any necessary UI updates.
         mInCallScreen.onDialerOpen();
@@ -508,9 +523,10 @@ public class DTMFTwelveKeyDialer implements
      * Call {@link stopDialerSession} to release the dialer session
      * resources.
      */
-    public void startDialerSession() {
+    public void startDialerSession(Phone phone) {
         if (DBG) log("startDialerSession()... this = " + this);
 
+        mPhone = phone;
         // see if we need to play local tones.
         if (mPhone.getContext().getResources().getBoolean(R.bool.allow_local_dtmf_tones)) {
             mDTMFToneEnabled = Settings.System.getInt(mInCallScreen.getContentResolver(),
@@ -546,9 +562,14 @@ public class DTMFTwelveKeyDialer implements
 
         // reset back to a short delay for the poke lock.
         PhoneApp app = PhoneApp.getInstance();
-        app.updateWakeState();
-
-        mPhone.unregisterForDisconnect(mHandler);
+        app.updateWakeState(mPhone);
+        Phone phone;
+        // Unregister for disconnect on available phones.
+        // TelephonyManager.getPhoneCount() would return 1 for single standby.
+        for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+            phone = PhoneApp.getPhone(i);
+            phone.unregisterForDisconnect(mHandler);
+        }
 
         // Give the InCallScreen a chance to do any necessary UI updates.
         if (mInCallScreen != null) {
