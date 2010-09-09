@@ -1801,97 +1801,95 @@ public class BluetoothHandsfree {
         parser.register("+CHLD", new AtCommandHandler() {
             @Override
             public AtCommandResult handleSetCommand(Object[] args) {
-                synchronized (mBluetoothPhoneState) {
-                    int phoneType = mPhone.getPhoneType();
-                    if (args.length >= 1) {
-                        if (args[0].equals(0)) {
-                            boolean result;
+                int phoneType = mPhone.getPhoneType();
+                if (args.length >= 1) {
+                    if (args[0].equals(0)) {
+                        boolean result;
+                        if (mRingingCall.isRinging()) {
+                            result = PhoneUtils.hangupRingingCall(mPhone);
+                        } else {
+                            result = PhoneUtils.hangupHoldingCall(mPhone);
+                        }
+                        if (result) {
+                            return new AtCommandResult(AtCommandResult.OK);
+                        } else {
+                            return new AtCommandResult(AtCommandResult.ERROR);
+                        }
+                    } else if (args[0].equals(1)) {
+                        if (phoneType == Phone.PHONE_TYPE_CDMA) {
                             if (mRingingCall.isRinging()) {
-                                result = PhoneUtils.hangupRingingCall(mPhone);
+                                // If there is Call waiting then answer the call and
+                                // put the first call on hold.
+                                if (VDBG) log("CHLD:1 Callwaiting Answer call");
+                                PhoneUtils.answerCall(mPhone);
+                                PhoneUtils.setMute(mPhone, false);
+                                // Setting the second callers state flag to TRUE (i.e. active)
+                                cdmaSetSecondCallState(true);
                             } else {
-                                result = PhoneUtils.hangupHoldingCall(mPhone);
+                                // If there is no Call waiting then just hangup
+                                // the active call. In CDMA this mean that the complete
+                                // call session would be ended
+                                if (VDBG) log("CHLD:1 Hangup Call");
+                                PhoneUtils.hangup(mPhone);
                             }
-                            if (result) {
+                            return new AtCommandResult(AtCommandResult.OK);
+                        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+                            // Hangup active call, answer held call
+                            if (PhoneUtils.answerAndEndActive(mPhone)) {
                                 return new AtCommandResult(AtCommandResult.OK);
                             } else {
                                 return new AtCommandResult(AtCommandResult.ERROR);
                             }
-                        } else if (args[0].equals(1)) {
-                            if (phoneType == Phone.PHONE_TYPE_CDMA) {
-                                if (mRingingCall.isRinging()) {
-                                    // If there is Call waiting then answer the call and
-                                    // put the first call on hold.
-                                    if (VDBG) log("CHLD:1 Callwaiting Answer call");
-                                    PhoneUtils.answerCall(mPhone);
-                                    PhoneUtils.setMute(mPhone, false);
-                                    // Setting the second callers state flag to TRUE (i.e. active)
-                                    cdmaSetSecondCallState(true);
-                                } else {
-                                    // If there is no Call waiting then just hangup
-                                    // the active call. In CDMA this mean that the complete
-                                    // call session would be ended
-                                    if (VDBG) log("CHLD:1 Hangup Call");
-                                    PhoneUtils.hangup(mPhone);
-                                }
-                                return new AtCommandResult(AtCommandResult.OK);
-                            } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                                // Hangup active call, answer held call
-                                if (PhoneUtils.answerAndEndActive(mPhone)) {
-                                    return new AtCommandResult(AtCommandResult.OK);
-                                } else {
-                                    return new AtCommandResult(AtCommandResult.ERROR);
-                                }
-                            } else {
-                                throw new IllegalStateException("Unexpected phone type: " + phoneType);
-                            }
-                        } else if (args[0].equals(2)) {
-                            if (phoneType == Phone.PHONE_TYPE_CDMA) {
-                                // For CDMA, the way we switch to a new incoming call is by
-                                // calling PhoneUtils.answerCall(). switchAndHoldActive() won't
-                                // properly update the call state within telephony.
-                                // If the Phone state is already in CONF_CALL then we simply send
-                                // a flash cmd by calling switchHoldingAndActive()
-                                if (mRingingCall.isRinging()) {
-                                    if (VDBG) log("CHLD:2 Callwaiting Answer call");
-                                    PhoneUtils.answerCall(mPhone);
-                                    PhoneUtils.setMute(mPhone, false);
-                                    // Setting the second callers state flag to TRUE (i.e. active)
-                                    cdmaSetSecondCallState(true);
-                                } else if (PhoneApp.getInstance().cdmaPhoneCallState
-                                        .getCurrentCallState()
-                                        == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
-                                    if (VDBG) log("CHLD:2 Swap Calls");
-                                    PhoneUtils.switchHoldingAndActive(mPhone);
-                                    // Toggle the second callers active state flag
-                                    cdmaSwapSecondCallState();
-                                }
-                            } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                                PhoneUtils.switchHoldingAndActive(mPhone);
-                            } else {
-                                throw new IllegalStateException("Unexpected phone type: " + phoneType);
-                            }
-                            return new AtCommandResult(AtCommandResult.OK);
-                        } else if (args[0].equals(3)) {
-                            if (phoneType == Phone.PHONE_TYPE_CDMA) {
-                                // For CDMA, we need to check if the call is in THRWAY_ACTIVE state
-                                if (PhoneApp.getInstance().cdmaPhoneCallState.getCurrentCallState()
-                                        == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) {
-                                    if (VDBG) log("CHLD:3 Merge Calls");
-                                    PhoneUtils.mergeCalls(mPhone);
-                                }
-                            } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                                if (mForegroundCall.getState().isAlive() &&
-                                        mBackgroundCall.getState().isAlive()) {
-                                    PhoneUtils.mergeCalls(mPhone);
-                                }
-                            } else {
-                                throw new IllegalStateException("Unexpected phone type: " + phoneType);
-                            }
-                            return new AtCommandResult(AtCommandResult.OK);
+                        } else {
+                            throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
+                    } else if (args[0].equals(2)) {
+                        if (phoneType == Phone.PHONE_TYPE_CDMA) {
+                            // For CDMA, the way we switch to a new incoming call is by
+                            // calling PhoneUtils.answerCall(). switchAndHoldActive() won't
+                            // properly update the call state within telephony.
+                            // If the Phone state is already in CONF_CALL then we simply send
+                            // a flash cmd by calling switchHoldingAndActive()
+                            if (mRingingCall.isRinging()) {
+                                if (VDBG) log("CHLD:2 Callwaiting Answer call");
+                                PhoneUtils.answerCall(mPhone);
+                                PhoneUtils.setMute(mPhone, false);
+                                // Setting the second callers state flag to TRUE (i.e. active)
+                                cdmaSetSecondCallState(true);
+                            } else if (PhoneApp.getInstance().cdmaPhoneCallState
+                                    .getCurrentCallState()
+                                    == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
+                                if (VDBG) log("CHLD:2 Swap Calls");
+                                PhoneUtils.switchHoldingAndActive(mPhone);
+                                // Toggle the second callers active state flag
+                                cdmaSwapSecondCallState();
+                            }
+                        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+                            PhoneUtils.switchHoldingAndActive(mPhone);
+                        } else {
+                            throw new IllegalStateException("Unexpected phone type: " + phoneType);
+                        }
+                        return new AtCommandResult(AtCommandResult.OK);
+                    } else if (args[0].equals(3)) {
+                        if (phoneType == Phone.PHONE_TYPE_CDMA) {
+                            // For CDMA, we need to check if the call is in THRWAY_ACTIVE state
+                            if (PhoneApp.getInstance().cdmaPhoneCallState.getCurrentCallState()
+                                    == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) {
+                                if (VDBG) log("CHLD:3 Merge Calls");
+                                PhoneUtils.mergeCalls(mPhone);
+                            }
+                        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+                            if (mForegroundCall.getState().isAlive() &&
+                                    mBackgroundCall.getState().isAlive()) {
+                                PhoneUtils.mergeCalls(mPhone);
+                            }
+                        } else {
+                            throw new IllegalStateException("Unexpected phone type: " + phoneType);
+                        }
+                        return new AtCommandResult(AtCommandResult.OK);
                     }
-                    return new AtCommandResult(AtCommandResult.ERROR);
                 }
+                return new AtCommandResult(AtCommandResult.ERROR);
             }
             @Override
             public AtCommandResult handleTestCommand() {
