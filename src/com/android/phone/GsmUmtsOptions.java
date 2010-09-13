@@ -89,9 +89,11 @@ public class GsmUmtsOptions extends PreferenceActivity {
             }
         }
         /*
-         * APN editor should always be enabled in the case of SV-LTE with 1x voice.
+         * APN editor should always be enabled in the case of SV-LTE with 1x
+         * voice or on an EHRPD capable device.
          */
-        if (SystemProperties.getBoolean("ro.config.svlte1x", false)) {
+        if (SystemProperties.getBoolean("ro.config.svlte1x", false)
+                || SystemProperties.getBoolean("ro.config.ehrpd", false)) {
             mButtonAPNExpand.setEnabled(true);
         }
     }
