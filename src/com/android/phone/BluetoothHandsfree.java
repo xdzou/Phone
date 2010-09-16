@@ -684,8 +684,13 @@ public class BluetoothHandsfree {
                 }
             }
 
-            switch(mForegroundCall.getState()) {
+            Call.State forgroundstate = mForegroundCall.getState();
+
+            if (VDBG) log("Foreground call state : " + forgroundstate);
+
+            switch(forgroundstate) {
             case ACTIVE:
+            case DISCONNECTING:
                 call = 1;
                 mAudioPossible = true;
                 break;
@@ -712,14 +717,22 @@ public class BluetoothHandsfree {
                 mAudioPossible = false;
             }
 
-            switch(mRingingCall.getState()) {
+            Call.State ringingstate = mRingingCall.getState();
+
+            if (VDBG) log("Ringing call state : " + ringingstate);
+
+            switch(ringingstate) {
             case INCOMING:
             case WAITING:
                 callsetup = 1;
                 break;
             }
 
-            switch(mBackgroundCall.getState()) {
+            Call.State backgroundstate = mBackgroundCall.getState();
+
+            if (VDBG) log("Background call state : " + backgroundstate);
+
+            switch(backgroundstate) {
             case HOLDING:
                 if (call == 1) {
                     callheld = 1;
@@ -730,7 +743,7 @@ public class BluetoothHandsfree {
                 break;
             }
 
-            if (mCall != call) {
+            if (mCall != call && callsetup == 0) {
                 if (call == 1) {
                     // This means that a call has transitioned from NOT ACTIVE to ACTIVE.
                     // Switch on audio.
@@ -863,6 +876,12 @@ public class BluetoothHandsfree {
                 }
             }
             sendURC(result.toString());
+
+            if (VDBG) {
+                log("CallSetup: " + Integer.toString(callsetup));
+                log("Call: " + Integer.toString(call));
+                log("CallHeld: " + Integer.toString(callheld));
+            }
         }
 
         private int getCdmaCallHeldStatus(CdmaPhoneCallState.PhoneCallState currState,
