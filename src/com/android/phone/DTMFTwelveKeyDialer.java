@@ -908,7 +908,13 @@ public class DTMFTwelveKeyDialer implements
                                         mPhone.getContext().getContentResolver(),
                                         Settings.Secure.PREFERRED_TTY_MODE,
                                         Phone.TTY_MODE_OFF);
-                        generateTone = (TTYmode == Phone.TTY_MODE_FULL) || (TTYmode == Phone.TTY_MODE_VCO);
+                        /*
+                         * In TTY full and and voice carry over modes,
+                         * DTMF tone should not be played
+                         * generateTone is false for FULL/VCO mode
+                         */
+                        generateTone = !((TTYmode == Phone.TTY_MODE_FULL)
+                                         || (TTYmode == Phone.TTY_MODE_VCO));
                     }
                     if (generateTone) {
                         if (DBG) log("starting local tone " + tone);
