@@ -821,6 +821,10 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             //set the default values for the preferences in the phone.
             PreferenceManager.setDefaultValues(this, R.xml.network_setting, false);
 
+            PreferenceManager.setDefaultValues(this, R.xml.call_independent_services, false);
+
+            PreferenceManager.setDefaultValues(this, R.xml.dual_mode_setting, false);
+
             PreferenceManager.setDefaultValues(this, R.xml.call_feature_setting, false);
 
             // Make sure the audio mode (along with some
@@ -885,9 +889,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                                                               android.provider.Settings.System.HEARING_AID,
                                                               0);
             AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-            audioManager.setParameter(CallFeaturesSetting.HAC_KEY, hac != 0 ?
-                                      CallFeaturesSetting.HAC_VAL_ON :
-                                      CallFeaturesSetting.HAC_VAL_OFF);
+            audioManager.setParameter(CallIndependentServices.HAC_KEY, hac != 0 ?
+                                      CallIndependentServices.HAC_VAL_ON :
+                                      CallIndependentServices.HAC_VAL_OFF);
         }
         Log.v(LOG_TAG,"onCreate done...");
    }

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +29,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import android.util.Log;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -79,6 +81,7 @@ public class FdnSetting extends PreferenceActivity
     private static final int MIN_PIN_LENGTH = 4;
     private static final int MAX_PIN_LENGTH = 8;
 
+    private int mSubscription;
     /**
      * Delegate to the respective handlers.
      */
@@ -414,7 +417,10 @@ public class FdnSetting extends PreferenceActivity
 
         addPreferencesFromResource(R.xml.fdn_setting);
 
-        mPhone = PhoneFactory.getDefaultPhone();
+        // getting selected subscription
+        mSubscription = getIntent().getIntExtra(CallFeaturesSetting.SUBSCRIPTION_ID, 0);
+        Log.d(LOG_TAG, "Getting FDNSetting subscription =" + mSubscription);
+        mPhone = PhoneApp.getPhone(mSubscription);
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();

@@ -1,5 +1,6 @@
 package com.android.phone;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 
@@ -21,14 +22,22 @@ public class CdmaCallOptions extends PreferenceActivity {
     private static final String BUTTON_VP_KEY = "button_voice_privacy_key";
     private CheckBoxPreference mButtonVoicePrivacy;
 
+    private Phone mPhone;
+    private int mSubscription;
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
         addPreferencesFromResource(R.xml.cdma_call_options);
 
+        // getting selected subscription
+        mSubscription = getIntent().getIntExtra(CallFeaturesSetting.SUBSCRIPTION_ID, 0);
+        Log.d(LOG_TAG, "Getting CDMACallOptiong subscription =" + mSubscription);
+        mPhone = PhoneApp.getPhone(mSubscription);
+
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
-        if (PhoneFactory.getDefaultPhone().getPhoneType() != Phone.PHONE_TYPE_CDMA) {
+        if (mPhone.getPhoneType() != Phone.PHONE_TYPE_CDMA) {
             //disable the entire screen
             getPreferenceScreen().setEnabled(false);
         }

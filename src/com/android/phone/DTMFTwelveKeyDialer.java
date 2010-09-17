@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -994,7 +995,7 @@ public class DTMFTwelveKeyDialer implements
             stopDtmfTone();
         } else if (phoneType == Phone.PHONE_TYPE_CDMA) {
             // Cdma case we do stopTone only for Long DTMF Setting
-            if (mDTMFToneType == CallFeaturesSetting.DTMF_TONE_TYPE_LONG) {
+            if (mDTMFToneType == CallIndependentServices.DTMF_TONE_TYPE_LONG) {
                 stopToneCdma();
             }
         } else {
@@ -1011,9 +1012,9 @@ public class DTMFTwelveKeyDialer implements
         // Read the settings as it may be changed by the user during the call
         mDTMFToneType = Settings.System.getInt(mInCallScreen.getContentResolver(),
                 Settings.System.DTMF_TONE_TYPE_WHEN_DIALING,
-                CallFeaturesSetting.DTMF_TONE_TYPE_NORMAL);
+                CallIndependentServices.DTMF_TONE_TYPE_NORMAL);
         // For Short DTMF we need to play the local tone for fixed duration
-        if (mDTMFToneType == CallFeaturesSetting.DTMF_TONE_TYPE_NORMAL) {
+        if (mDTMFToneType == CallIndependentServices.DTMF_TONE_TYPE_NORMAL) {
             sendShortDtmfToNetwork (tone);
         } else {
             // Pass as a char to be sent to network
@@ -1041,7 +1042,7 @@ public class DTMFTwelveKeyDialer implements
 
                     // Start the new tone.
                     int toneDuration = -1;
-                    if (mDTMFToneType == CallFeaturesSetting.DTMF_TONE_TYPE_NORMAL) {
+                    if (mDTMFToneType == CallIndependentServices.DTMF_TONE_TYPE_NORMAL) {
                         toneDuration = DTMF_DURATION_MS;
                     }
                     mToneGenerator.startTone(mToneMap.get(tone), toneDuration);
