@@ -37,6 +37,7 @@ import android.app.AlertDialog;
 import android.content.Intent;
 
 import com.android.internal.telephony.ProxyManager;
+import com.android.internal.telephony.ProxyManager.SubscriptionData;
 
 
 /**
@@ -49,20 +50,25 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
     private Bundle mSubscrInfo;
     private TextView mOkButton, mCancelButton;
-    SubscriptionCheckBoxPreference sub_array[];
-    private boolean sub_err = false;
+    SubscriptionCheckBoxPreference subArray[];
+    private boolean subErr = false;
+    private SubscriptionData[] mCardSubscrInfo;
+    private SubscriptionData mCurrentSelSub;
+    private SubscriptionData mUserSelSub;
+
+    private boolean mIsConfigSub;
 
     //String keys for preference lookup
     private static final String PREF_PARENT_KEY = "subscr_parent";
-    private static final String SUB_GROUP_01_KEY = "sub_group_01";
-    private static final String SUB_GROUP_02_KEY = "sub_group_02";
 
     private final int MAX_SUBSCRIPTIONS = 2;
 
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        initFromIntent(getIntent());
+        mIsConfigSub = getIntent().getBooleanExtra("CONFIG_SUB", true);
+        // get the card subscription info from the Proxy Manager.
+        mCardSubscrInfo = ProxyManager.getInstance().getCardSubscriptions();
 
         addPreferencesFromResource(R.xml.set_subscription_pref);
         setContentView(R.layout.set_subscription_pref_layout);
@@ -85,72 +91,80 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
         // To store the selected subscriptions
         // index 0 for sub0 and index 1 for sub1
-        sub_array = new SubscriptionCheckBoxPreference[MAX_SUBSCRIPTIONS];
+        subArray = new SubscriptionCheckBoxPreference[MAX_SUBSCRIPTIONS];
 
-        populateList();
-    }
+        if(mCardSubscrInfo != null) {
+            populateList();
 
-    /** get the data from the intent */
-    private void initFromIntent(Intent intent) {
-        if (intent != null) {
-            mSubscrInfo = intent.getExtras();
+            mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
+            mCurrentSelSub = ProxyManager.getInstance().getCurrentSubscriptions();
+            if (mCurrentSelSub != null) {
+                PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen()
+                                                     .findPreference(PREF_PARENT_KEY);
+                for(int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
+                    Log.d(TAG, "onCreate: mCurrentSelSub.subscription[" + i + "] = "
+                               + mCurrentSelSub.subscription[i].toString());
+                    if(mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
+                        String key = "slot" + mCurrentSelSub.subscription[i].slotId
+                                     + " index" + mCurrentSelSub.subscription[i].subIndex;
+
+                        Log.d(TAG, "onCreate: key = " + key);
+
+                        PreferenceCategory subGroup = (PreferenceCategory) prefParent
+                               .findPreference("sub_group_" + mCurrentSelSub.subscription[i].slotId);
+                        SubscriptionCheckBoxPreference checkBoxPref =
+                               (SubscriptionCheckBoxPreference) subGroup.findPreference(key);
+                        checkBoxPref.markChecked(mapSub(i));
+                        subArray[i] = (SubscriptionCheckBoxPreference) subGroup.findPreference(key);
+                    }
+                }
+                mUserSelSub.copyFrom(mCurrentSelSub);
+            }
         } else {
-            finish();
+            Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
         }
     }
 
+    private SubscriptionID mapSub(int sub) {
+        SubscriptionID ret = SubscriptionID.NONE;
+        if (sub == 0) ret = SubscriptionID.SUB_0;
+        if (sub == 1) ret = SubscriptionID.SUB_1;
+        return ret;
+    }
 
     /** add radio buttons to the group */
     private void populateList() {
         PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen().findPreference(PREF_PARENT_KEY);
-        int i = 0;
+
         int numApps = 0;
-        String[] subscrInfo = mSubscrInfo.getStringArray("SUBSCR INFO 01");
         Display display = getWindowManager().getDefaultDisplay();
         int width = display.getWidth();
+        int[] subGroupTitle = {R.string.card_01, R.string.card_02};
 
-        if ((subscrInfo != null ) && (subscrInfo.length > 0)) {
-            numApps = subscrInfo.length;
+        Log.d(TAG, "populateList:  mCardSubscrInfo.length = " + mCardSubscrInfo.length);
 
-            // Create a subgroup for the apps in card 01
-            PreferenceCategory subGroup01 = new PreferenceCategory(this);
-            subGroup01.setKey(SUB_GROUP_01_KEY);
-            subGroup01.setTitle(R.string.card_01);
-            prefParent.addPreference(subGroup01);
+        // Create PreferenceCatergory sub groups for each card.
+        for (int k = 0; k < mCardSubscrInfo.length; k++) {
+            if ((mCardSubscrInfo[k] != null ) && (mCardSubscrInfo[k].numSubscriptions > 0)) {
+                numApps = mCardSubscrInfo[k].numSubscriptions;
 
-            // Add each element as a CheckBoxPreference to the group
-            for (; (i < numApps) && (subscrInfo[i] != null); i++){
-                Log.d(TAG, "populateList:  subscrInfo[" + i + "] = " + subscrInfo[i]);
-                SubscriptionCheckBoxPreference newCheckBox = new SubscriptionCheckBoxPreference(this, width);
-                newCheckBox.setTitleText(subscrInfo[i]);
-                // Key is the string : "slot<SlotId> index<IndexId>"
-                newCheckBox.setKey(new String("slot0 index" + Integer.toString(i)));
-                newCheckBox.setOnSubPreferenceClickListener(mCheckBoxListener);
-                subGroup01.addPreference(newCheckBox);
-            }
-        }
+                // Create a subgroup for the apps in card 01
+                PreferenceCategory subGroup = new PreferenceCategory(this);
+                subGroup.setKey("sub_group_" + k);
+                subGroup.setTitle(subGroupTitle[k]);
+                prefParent.addPreference(subGroup);
 
-        subscrInfo = mSubscrInfo.getStringArray("SUBSCR INFO 02");
-
-        if ((subscrInfo != null ) && (subscrInfo.length > 0)) {
-            numApps += subscrInfo.length;
-
-            // Create a subgroup for the apps in card 02
-            PreferenceCategory subGroup02 = new PreferenceCategory(this);
-            subGroup02 = new PreferenceCategory(this);
-            subGroup02.setKey(SUB_GROUP_02_KEY);
-            subGroup02.setTitle(R.string.card_02);
-            prefParent.addPreference(subGroup02);
-
-            // add each element as a SubscriptionCheckBoxPreference to the group
-            for (int j = 0; (i < numApps) && (subscrInfo[j] != null); i++, j++){
-                Log.d(TAG, "populateList:  subscrInfo[" + i + "] = " + subscrInfo[j]);
-                SubscriptionCheckBoxPreference newCheckBox = new SubscriptionCheckBoxPreference(this, width);
-                newCheckBox.setTitleText(subscrInfo[j]);
-                // Key is the string :  "slot<SlotId> index<IndexId>"
-                newCheckBox.setKey(new String("slot1 index" + Integer.toString(j)));
-                newCheckBox.setOnSubPreferenceClickListener(mCheckBoxListener);
-                subGroup02.addPreference(newCheckBox);
+                // Add each element as a CheckBoxPreference to the group
+                for (int i = 0; (i < numApps) && (mCardSubscrInfo[k].subscription[i] != null); i++){
+                    Log.d(TAG, "populateList:  mCardSubscrInfo[" + k + "].subscription[" + i + "] = "
+                          + mCardSubscrInfo[k].subscription[i].toString());
+                    SubscriptionCheckBoxPreference newCheckBox = new SubscriptionCheckBoxPreference(this, width);
+                    newCheckBox.setTitleText(mCardSubscrInfo[k].subscription[i].appType);
+                    // Key is the string : "slot<SlotId> index<IndexId>"
+                    newCheckBox.setKey(new String("slot" + k + " index" + i));
+                    newCheckBox.setOnSubPreferenceClickListener(mCheckBoxListener);
+                    subGroup.addPreference(newCheckBox);
+                }
             }
         }
     }
@@ -164,37 +178,43 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
             if (checked == SubscriptionID.SUB_0) {
                 // If user already selected a sub0 uncheck it
-                if (sub_array[0] != null) {
-                    sub_array[0].setUnChecked();
+                if (subArray[0] != null) {
+                        Log.d(TAG, "onPreferenceClick: clearing previously selected SUB0");
+                        subArray[0].markAllUnChecked();
                 }
-                // Store the sub_array[0] if there is sub0 selected.
-                //if (sub_array[0] == null)
-                sub_array[0] = subPref;
+                // Store the subArray[0] if there is sub0 selected.
+                //if (subArray[0] == null)
+                subArray[0] = subPref;
 
-                // If the user changes the sub_array[1] to sub0 for the same sim app.
-                // mark sub_array[1] as null.
-                if (subPref == sub_array[1]) {
-                    sub_array[1] = null;
+                // If the user changes the subArray[1] to sub0 for the same sim app.
+                // mark subArray[1] as null.
+                if (subPref == subArray[1]) {
+                        Log.d(TAG, "onPreferenceClick: SUB1->SUB0 sets subArray[1] = null");
+                    subArray[1] = null;
                 }
             } else if (checked == SubscriptionID.SUB_1) {
                 // If user already selected a sub1 uncheck it
-                if (sub_array[1] != null) {
-                    sub_array[1].setUnChecked();
+                if (subArray[1] != null) {
+                        Log.d(TAG, "onPreferenceClick: clearing previously selected SUB1");
+                        subArray[1].markAllUnChecked();
                 }
-                sub_array[1] = subPref;
+                subArray[1] = subPref;
 
-                // If the user changes the sub_array[0] to sub0 for the same sim app.
-                // mark sub_array[0] as null.
-                if (subPref == sub_array[0]) {
-                    sub_array[0] = null;
+                // If the user changes the subArray[0] to sub0 for the same sim app.
+                // mark subArray[0] as null.
+                if (subPref == subArray[0]) {
+                        Log.d(TAG, "onPreferenceClick: SUB0->SUB1 sets subArray[0] = null");
+                    subArray[0] = null;
                 }
             } else {
                 // Use unchecks the preference, clear the array if this is present.
-                if (subPref == sub_array[0]) {
-                    sub_array[0] = null;
+                if (subPref == subArray[0]) {
+                    Log.d(TAG, "onPreferenceClick: SUB0->NONE sets subArray[0] = null");
+                    subArray[0] = null;
                 }
-                if (subPref == sub_array[1]) {
-                    sub_array[1] = null;
+                if (subPref == subArray[1]) {
+                    Log.d(TAG, "onPreferenceClick: SUB1->NONE sets subArray[1] = null");
+                    subArray[1] = null;
                 }
             }
             return true;
@@ -211,44 +231,66 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     }
 
     private void setSubscription() {
-        int num_sub_selected = 0;
+        Log.d(TAG, "setSubscription");
 
-        for (int i = 0; i < sub_array.length; i++) {
-            if (sub_array[i] != null) {
-                num_sub_selected++;
+        int numSubSelected = 0;
+        //SubscriptionData userSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
+
+        for (int i = 0; i < subArray.length; i++) {
+            if (subArray[i] != null) {
+                numSubSelected++;
             }
         }
 
-        if (num_sub_selected == 0) {
+        Log.d(TAG, "setSubscription: numSubSelected = " + numSubSelected);
+
+        if (numSubSelected == 0) {
             // Show a message to prompt the user to select atleast one.
             Toast toast = Toast.makeText(getApplicationContext(),
                     R.string.set_subscription_error_atleast_one,
                     Toast.LENGTH_SHORT);
             toast.show();
         } else {
-            int slot_id[] = new int[MAX_SUBSCRIPTIONS];
-            int sub_index[] = new int[MAX_SUBSCRIPTIONS];
-
             for (int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
-                if (sub_array[i] == null) {
+                if (subArray[i] == null) {
                     Log.d(TAG, "setSubscription: Sub " + i + " not selected. Setting -1");
-                    slot_id[i] = -1;
-                    sub_index[i] = -1;
+                    mUserSelSub.subscription[i].slotId = -1;
+                    mUserSelSub.subscription[i].subIndex = -1;
+                    mUserSelSub.subscription[i].subNum = i;
+                    mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
                 } else {
                     // Key is the string :  "slot<SlotId> index<IndexId>"
                     // Split the string into two and get the SlotId and IndexId.
-                    String key = sub_array[i].getKey();
+                    String key = subArray[i].getKey();
                     Log.d(TAG, "setSubscription: key = " + key);
                     String splitKey[] = key.split(" ");
                     String sSlotId = splitKey[0].substring(splitKey[0].indexOf("slot") + 4);
-                    slot_id[i] = Integer.parseInt(sSlotId);
+                    int slotId = Integer.parseInt(sSlotId);
                     String sIndexId = splitKey[1].substring(splitKey[1].indexOf("index") + 5);
-                    sub_index[i] = Integer.parseInt(sIndexId);
+                    int subIndex = Integer.parseInt(sIndexId);
+
+                    // Compate the user selected subscriptio with the current subscriptions.
+                    // If they are not matching, mark it to activate.
+                    mUserSelSub.subscription[i].copyFrom(mCardSubscrInfo[slotId].subscription[subIndex]);
+                    mUserSelSub.subscription[i].subNum = i;
+                    if (mCurrentSelSub != null) {
+                        // subStatus used to store the activation status as the mCardSubscrInfo
+                        // is not keeping track of the activation status.
+                        int subStatus = mCurrentSelSub.subscription[i].subStatus;
+                        mUserSelSub.subscription[i].subStatus = subStatus;
+                        if ((subStatus != ProxyManager.SUB_ACTIVATED) ||
+                            (!mUserSelSub.subscription[i].equals(mCurrentSelSub.subscription[i]))) {
+                            // User selected a new subscription.  Need to activate this.
+                            mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_ACTIVATE;
+                        }
+                    } else {
+                        mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_ACTIVATE;
+                    }
                 }
             }
 
             ProxyManager mProxyManager = ProxyManager.getInstance();
-            String result[] = mProxyManager.setSubscription(MAX_SUBSCRIPTIONS, slot_id, sub_index);
+            String result[] = mProxyManager.setSubscription(mUserSelSub, false);
 
             if (result != null) {
                 displayAlertDialog(result);
@@ -262,16 +304,20 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         String dispMsg = "";
 
         if (msg[0] != null && msg[0].equals("FAILED")) {
-            sub_err = true;
+            subErr = true;
         }
         if (msg[1] != null && msg[1].equals("FAILED")) {
-            sub_err = true;
+            subErr = true;
         }
 
         for (int i = 0; i < msg.length; i++) {
             if (msg[i] != null) {
-                dispMsg = dispMsg + "Set Subscription on Sub " + i + ": " + msg[i] + "\n";
+                dispMsg = dispMsg + "Set Subscription on Sub " + Integer.toString(i+1) + ": " + msg[i] + "\n";
             }
+        }
+
+        if(mIsConfigSub) {
+            dispMsg = dispMsg + "\nPlease gracefully reboot the phone to reflect the subscription changes.";
         }
 
         Log.d(TAG, "displayAlertDialog:  dispMsg = " + dispMsg);
@@ -287,7 +333,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     public void onDismiss(DialogInterface dialog) {
         // If the setSubscription failed for any of the sub, then don'd dismiss the
         // set subscription screen.
-        if(!sub_err) {
+        if(!subErr) {
             finish();
         }
     }
@@ -297,7 +343,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     public void onClick(DialogInterface dialog, int which) {
         // If the setSubscription failed for any of the sub, then don'd dismiss the
         // set subscription screen.
-        if(!sub_err) {
+        if(!subErr) {
             finish();
         }
     }
@@ -312,12 +358,18 @@ class SubscriptionCheckBoxPreference extends Preference implements View.OnClickL
     String mTitle;
     int mWidth;
     Preference.OnPreferenceClickListener mOnPrefClickListener;
+    boolean mCheckBox1Status, mCheckBox2Status;
 
     public SubscriptionCheckBoxPreference(Context context, int width) {
         super(context);
+
+        Log.d("SubscriptionCheckBoxPreference", "Constructor: ENTER: width = " + width);
+
         setLayoutResource(R.layout.preference_set_sub);
         mWidth = width;
         mOnPrefClickListener = null;
+        mCheckBox1Status = false;
+        mCheckBox2Status = false;
     }
 
     public void setTitleText(String resId) {
@@ -333,9 +385,11 @@ class SubscriptionCheckBoxPreference extends Preference implements View.OnClickL
 
         mCheckBox1 = (CheckBox) view.findViewById(R.id.check1);
         mCheckBox1.setOnClickListener(this);
+        mCheckBox1.setChecked(mCheckBox1Status);
         mCheckBox1.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
         mCheckBox2 = (CheckBox) view.findViewById(R.id.check2);
         mCheckBox2.setOnClickListener(this);
+        mCheckBox2.setChecked(mCheckBox2Status);
         mCheckBox2.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
         mTitleView = (TextView) view.findViewById(R.id.title1);
         mTitleView.setText(mTitle);
@@ -362,9 +416,39 @@ class SubscriptionCheckBoxPreference extends Preference implements View.OnClickL
         }
     }
 
-    public void setUnChecked() {
+    public void markAllUnChecked() {
         mCheckBox1.setChecked(false);
         mCheckBox2.setChecked(false);
+    }
+
+    public void markChecked(SubscriptionID onSub) {
+        if (onSub == SubscriptionID.SUB_0) {
+            if (mCheckBox1 != null) {
+                if (mCheckBox2 != null && mCheckBox2.isChecked()) {
+                    mCheckBox2.setChecked(false);
+                    mCheckBox2Status = false;
+                }
+                mCheckBox1.setChecked(true);
+            } else {
+                //onBindView yet to call.  set a flag and set checked in onBindView
+                mCheckBox1Status = true;
+                mCheckBox2Status = false;
+                Log.d("SubscriptionCheckBoxPreference", "markChecked: mCheckBox1 == null");
+            }
+        } else if (onSub == SubscriptionID.SUB_1) {
+            if (mCheckBox2 != null) {
+                if (mCheckBox1 != null && mCheckBox1.isChecked()) {
+                    mCheckBox1.setChecked(false);
+                    mCheckBox1Status = false;
+                }
+                mCheckBox2.setChecked(true);
+            } else {
+                //onBindView yet to call.  set a flag and set checked in onBindView
+                mCheckBox2Status = true;
+                mCheckBox1Status = false;
+                Log.d("SubscriptionCheckBoxPreference", "markChecked: mCheckBox2 == null");
+            }
+        }
     }
 
     public SubscriptionID getSelectedSubscription() {
