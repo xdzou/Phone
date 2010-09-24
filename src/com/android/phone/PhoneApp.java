@@ -1659,6 +1659,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             clearOtaState();
         }
         clearInCallScreenMode();
+        cdmaPhoneCallState = myPhone.mCdmaPhoneCallState;
+        cdmaOtaProvisionData = myPhone.mCdmaOtaProvisionData;
+        cdmaOtaConfigData = myPhone.mCdmaOtaConfigData;
+        cdmaOtaScreenState = myPhone.mCdmaOtaScreenState;
+        cdmaOtaInCallScreenUiState = myPhone.mCdmaOtaInCallScreenUiState;
 
         getRinger(subscription).updateRingerContextAfterRadioTechnologyChange(myPhone.mPhone);
         getCallNotifier(subscription).updateCallNotifierRegistrationsAfterRadioTechnologyChange();
