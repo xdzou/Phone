@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
+import android.provider.Settings.SettingNotFoundException;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -133,9 +134,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             return true;
         } else if (preference == mButtonPreferredNetworkMode) {
             //displays the value taken from the Settings.System
-            int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
-                    getContentResolver(), android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                    preferredNetworkMode);
+            int settingsNetworkMode = getPreferredNetworkMode();
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
             return true;
         }
@@ -191,6 +190,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             log("Settings onCreate subscription =" + mSubscription);
             mPhone = PhoneApp.getPhone(mSubscription);
         } else {
+            mSubscription = 0;
             mPhone = PhoneApp.getDefaultPhone();
         }
         mHandler = new MyHandler();
@@ -287,9 +287,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                 mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
 
                 //Get the networkMode from Settings.System and displays it
-                int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
-                        getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                        preferredNetworkMode);
+                int settingsNetworkMode = getPreferredNetworkMode();
                 mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
                 // The intent code that resided here in the past has been moved into the
                 // more conventional location in network_setting.xml
@@ -367,9 +365,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             mButtonPreferredNetworkMode.setValue((String) objValue);
             int buttonNetworkMode;
             buttonNetworkMode = Integer.valueOf((String) objValue).intValue();
-            int settingsNetworkMode = android.provider.Settings.Secure.getInt(
-                    mPhone.getContext().getContentResolver(),
-                    android.provider.Settings.Secure.PREFERRED_NETWORK_MODE, preferredNetworkMode);
+            int settingsNetworkMode = getPreferredNetworkMode();
             if (buttonNetworkMode != settingsNetworkMode) {
                 int modemNetworkMode = Phone.PREFERRED_NT_MODE;
                 switch(buttonNetworkMode) {
@@ -421,10 +417,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                         modemNetworkMode = Phone.PREFERRED_NT_MODE;
                 }
                 UpdatePreferredNetworkModeSummary(buttonNetworkMode);
-
-                android.provider.Settings.Secure.putInt(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                        buttonNetworkMode );
+                setPreferredNetworkMode(buttonNetworkMode);
                 //Set the modem network mode
                 mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
                         .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
@@ -433,6 +426,27 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
 
         // always let the preference setting proceed.
         return true;
+    }
+
+    private int getPreferredNetworkMode() {
+        int nwMode;
+        try {
+            nwMode = android.provider.Settings.Secure.getIntAtIndex(
+                    mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
+                    mSubscription);
+        } catch (SettingNotFoundException snfe) {
+            log("getPreferredNetworkMode: Could not find PREFERRED_NETWORK_MODE!!!");
+            nwMode = preferredNetworkMode;
+        }
+        return nwMode;
+    }
+
+    private void setPreferredNetworkMode(int nwMode) {
+        android.provider.Settings.Secure.putIntAtIndex(
+                    mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
+                    mSubscription, nwMode);
     }
 
     private class MyHandler extends Handler {
@@ -464,11 +478,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                             modemNetworkMode);
                 }
 
-                int settingsNetworkMode = android.provider.Settings.Secure.getInt(
-                        mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                        preferredNetworkMode);
-
+                int settingsNetworkMode = getPreferredNetworkMode();
                 if (DBG) {
                     log("handleGetPreferredNetworkTypeReponse: settingsNetworkMode = " +
                             settingsNetworkMode);
@@ -507,10 +517,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
                         }
 
                         //changes the Settings.System accordingly to modemNetworkMode
-                        android.provider.Settings.Secure.putInt(
-                                mPhone.getContext().getContentResolver(),
-                                android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                                settingsNetworkMode );
+                        setPreferredNetworkMode(settingsNetworkMode);
                     }
 
                     UpdatePreferredNetworkModeSummary(modemNetworkMode);
@@ -529,9 +536,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             if (ar.exception == null) {
                 int networkMode = Integer.valueOf(
                         mButtonPreferredNetworkMode.getValue()).intValue();
-                android.provider.Settings.Secure.putInt(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                        networkMode );
+                setPreferredNetworkMode(networkMode);
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
@@ -541,9 +546,7 @@ public class Settings extends PreferenceActivity implements DialogInterface.OnCl
             //set the mButtonPreferredNetworkMode
             mButtonPreferredNetworkMode.setValue(Integer.toString(preferredNetworkMode));
             //set the Settings.System
-            android.provider.Settings.Secure.putInt(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                        preferredNetworkMode );
+            setPreferredNetworkMode(preferredNetworkMode);
             //Set the Modem
             mPhone.setPreferredNetworkType(preferredNetworkMode,
                     this.obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
