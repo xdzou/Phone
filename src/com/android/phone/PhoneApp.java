@@ -377,24 +377,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                         }
                     }
 
-                case EVENT_TTY_PREFERRED_MODE_CHANGED:
-                    // TTY mode is only applied if a headset is connected
-                    int ttyMode;
-                    if (isHeadsetPlugged()) {
-                        ttyMode = mPreferredTtyMode;
-                    } else {
-                        ttyMode = Phone.TTY_MODE_OFF;
-                    }
-                    phone.setTTYMode(ttyMode, mHandler.obtainMessage(EVENT_TTY_MODE_SET));
-                    break;
-
-                case EVENT_TTY_MODE_GET:
-                    handleQueryTTYModeResponse(msg);
-                    break;
-
-                case EVENT_TTY_MODE_SET:
-                    handleSetTTYModeResponse(msg);
-                    break;
 
                 default:
                     break;
@@ -541,7 +523,31 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                     }
                     // Update the Proximity sensor based on headset state
                     updateProximitySensorMode(phoneState);
+
+                    // Force TTY state update according to new headset state
+                    if (mTtyEnabled) {
+                        sendMessage(obtainMessage(EVENT_TTY_PREFERRED_MODE_CHANGED, 0));
+                    }
                     break;
+
+              case EVENT_TTY_PREFERRED_MODE_CHANGED:
+                  // TTY mode is only applied if a headset is connected
+                  int ttyMode;
+                  if (isHeadsetPlugged()) {
+                      ttyMode = mPreferredTtyMode;
+                  } else {
+                      ttyMode = Phone.TTY_MODE_OFF;
+                  }
+                  phone.setTTYMode(ttyMode, mHandler.obtainMessage(EVENT_TTY_MODE_SET));
+                  break;
+
+              case EVENT_TTY_MODE_GET:
+                  handleQueryTTYModeResponse(msg);
+                  break;
+
+              case EVENT_TTY_MODE_SET:
+                  handleSetTTYModeResponse(msg);
+                  break;
 
               default:
                   break;
