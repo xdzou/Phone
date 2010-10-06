@@ -28,6 +28,7 @@ import android.provider.Settings;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import android.telephony.ServiceState;
+import android.util.Log;
 import android.view.WindowManager;
 
 /**
@@ -75,9 +76,12 @@ public class EmergencyCallHandler extends Activity {
      */
     private static EmergencyCallEventHandler sHandler;
     private static class EmergencyCallEventHandler extends Handler {
+        private static final String LOG_TAG = "EmergencyCallHandler";
+
         public void handleMessage(Message msg) {
             switch(msg.what) {
                 case EVENT_SERVICE_STATE_CHANGED: {
+                        Log.d(LOG_TAG, "EVENT_SERVICE_STATE_CHANGED");
                         // make the initial call attempt after the radio is turned on.
                         ServiceState state = (ServiceState) ((AsyncResult) msg.obj).result;
                         if (state.getState() != ServiceState.STATE_POWER_OFF) {
@@ -85,6 +89,7 @@ public class EmergencyCallHandler extends Activity {
                                 (EmergencyCallInfo) ((AsyncResult) msg.obj).userObj;
                             // deregister for the service state change events. 
                             eci.phone.unregisterForServiceStateChanged(this);
+                            removeMessages(EVENT_SERVICE_STATE_CHANGED);
                             eci.app.startActivity(eci.intent);
                             eci.dialog.dismiss();
                         }
@@ -92,6 +97,7 @@ public class EmergencyCallHandler extends Activity {
                     break;
 
                 case EVENT_TIMEOUT_EMERGENCY_CALL: {
+                        Log.d(LOG_TAG, "EVENT_TIMEOUT_EMERGENCY_CALL");
                         // repeated call after the timeout period.
                         EmergencyCallInfo eci = (EmergencyCallInfo) msg.obj;
                         eci.app.startActivity(eci.intent);
