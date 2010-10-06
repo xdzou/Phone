@@ -88,6 +88,7 @@ public class EmergencyCallHandler extends Activity {
         public void handleMessage(Message msg) {
             switch(msg.what) {
                 case EVENT_SERVICE_STATE_CHANGED: {
+                    if (DBG) Log.d(TAG, "EVENT_SERVICE_STATE_CHANGED");
                         // make the initial call attempt after the radio is turned on.
                         ServiceState state = (ServiceState) ((AsyncResult) msg.obj).result;
                         if (DBG) Log.d(TAG, "EVENT_SERVICE_STATE_CHANGED: state = " + state);
@@ -96,6 +97,7 @@ public class EmergencyCallHandler extends Activity {
                                 (EmergencyCallInfo) ((AsyncResult) msg.obj).userObj;
                             // deregister for the service state change events. 
                             eci.phone.unregisterForServiceStateChanged(this);
+                            removeMessages(EVENT_SERVICE_STATE_CHANGED);
                             eci.dialog.dismiss();
 
                             if (DBG) Log.d(TAG, "About to (re)launch InCallScreen: " + eci.intent);
