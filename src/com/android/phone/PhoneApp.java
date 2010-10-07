@@ -257,6 +257,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         private CallNotifier mCallNotifier;
         private int mPhoneType;
         private Ringer mRinger;
+        private boolean mIsSimPukLocked;
 
         // Internal PhoneApp Call state tracker
         private CdmaPhoneCallState mCdmaPhoneCallState;
@@ -438,6 +439,10 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     Ringer getRinger() {
         return ringer;
+    }
+
+    boolean isSimPukLocked(int subscription) {
+        return mMyPhones.get(subscription).mIsSimPukLocked;
     }
 
     /**
@@ -1859,6 +1864,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
                 String iccState = intent.getStringExtra(IccCard.INTENT_KEY_ICC_STATE);
                 String reason = intent.getStringExtra(IccCard.INTENT_KEY_LOCKED_REASON);
+                if (IccCard.INTENT_VALUE_LOCKED_ON_PUK.equals(reason)) {
+                    Log.d(LOG_TAG, "Setting mIsSimPukLocked:true on sub :" + subscription);
+                    mMyPhones.get(subscription).mIsSimPukLocked = true;
+                } else {
+                    Log.d(LOG_TAG, "Setting mIsSimPukLocked:false on sub :" + subscription);
+                    mMyPhones.get(subscription).mIsSimPukLocked = false;
+                }
                 if (IccCard.INTENT_VALUE_ICC_READY.equals(iccState)) {
                     if (phone.getPhoneType() == Phone.PHONE_TYPE_GSM) {
                         notifier.updateSuppSvcRegistrationsAfterRadioOn();
