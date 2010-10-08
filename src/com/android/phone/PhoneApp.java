@@ -254,7 +254,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
         private Phone mPhone;
         private CallNotifier mCallNotifier;
-        private BluetoothHandsfree mBtHandsfree;
         private int mPhoneType;
         private Ringer mRinger;
 
@@ -716,7 +715,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
         if (phone == null) {
             PhoneFactory.makeDefaultPhones(this);
-
+            if (BluetoothAdapter.getDefaultAdapter() != null) {
+                mBtHandsfree = new BluetoothHandsfree(this, PhoneFactory.getDefaultPhone());
+                startService(new Intent(this, BluetoothHeadsetService.class));
+            } else {
+                // Device is not bluetooth capable
+                mBtHandsfree = null;
+            }
             for(int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
                 mMyPhones.add(new MyPhone(i));
             }
@@ -730,7 +735,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             MyPhone myPhone = getMyPhone(subscription);
             phone = myPhone.mPhone;
             notifier = myPhone.mCallNotifier;
-            mBtHandsfree = myPhone.mBtHandsfree;
             ringer = myPhone.mRinger;
             NotificationMgr.init(this);
             phoneMgr = new PhoneInterfaceManager(this);
@@ -738,14 +742,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
 
             int phoneType = phone.getPhoneType();
-
-            if (BluetoothAdapter.getDefaultAdapter() != null) {
-                mBtHandsfree = new BluetoothHandsfree(this, phone);
-                startService(new Intent(this, BluetoothHeadsetService.class));
-            } else {
-                // Device is not bluetooth capable
-                mBtHandsfree = null;
-            }
 
             // before registering for phone state changes
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -1674,7 +1670,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         getRinger(subscription).updateRingerContextAfterRadioTechnologyChange(myPhone.mPhone);
         getCallNotifier(subscription).updateCallNotifierRegistrationsAfterRadioTechnologyChange();
         if (mBtHandsfree != null) {
-            mBtHandsfree.updateBtHandsfreeAfterRadioTechnologyChange();
+            mBtHandsfree.updateBtHandsfreeAfterRadioTechnologyChange(subscription);
         }
         if (mInCallScreen != null) {
             mInCallScreen.updateAfterRadioTechnologyChange(myPhone.mPhone);
@@ -1891,7 +1887,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 Phone phone = mMyPhones.get(subscription).mPhone;
                 getCallNotifier(subscription).updateCallNotifierRegistrationsAfterRadioTechnologyChange();
                 if (mBtHandsfree != null) {
-                    mBtHandsfree.updateBtHandsfreeAfterRadioTechnologyChange();
+                    mBtHandsfree.updateBtHandsfreeAfterRadioTechnologyChange(subscription);
                 }
                 if (mInCallScreen != null) {
                    mInCallScreen.updateAfterRadioTechnologyChange(phone);
