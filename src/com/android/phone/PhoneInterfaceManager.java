@@ -1068,23 +1068,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * Returns Interface name
      */
     public String getActiveInterfaceName(String apnType, String ipv) {
-        return mPhone.getInterfaceName(apnType,Enum.valueOf(IPVersion.class, ipv));
+        return getActiveInterfaceNameOnSubscription(apnType, ipv,
+                      PhoneApp.getDataSubscription(mContext));
     }
 
     /**
      * {@hide}
      * Returns Interface name
      */
-    public String getActiveInterfaceName(String apnType) {
-        return getActiveInterfaceNameOnSubscription(apnType, PhoneApp.getDataSubscription(mContext));
-    }
-
-    /**
-     * {@hide}
-     * Returns Interface name for a subscription
-     */
-    public String getActiveInterfaceNameOnSubscription(String apnType, int subscription) {
-        return getPhone(subscription).getInterfaceName(apnType);
+    public String getActiveInterfaceNameOnSubscription(String apnType, String ipv, int subscription) {
+        return getPhone(subscription).getInterfaceName(apnType, Enum.valueOf(IPVersion.class, ipv));
     }
 
     /**
@@ -1092,23 +1085,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * Returns Ip address
      */
     public String getActiveIpAddress(String apnType, String ipv) {
-        return mPhone.getIpAddress(apnType,Enum.valueOf(IPVersion.class, ipv));
+        return getActiveIpAddressOnSubscription(apnType, ipv,
+                      PhoneApp.getDataSubscription(mContext));
     }
 
     /**
      * {@hide}
      * Returns Ip address
      */
-    public String getActiveIpAddress(String apnType) {
-        return getActiveIpAddressOnSubscription(apnType, PhoneApp.getDataSubscription(mContext));
-    }
-
-    /**
-     * {@hide}
-     * Returns Ip address for a subscription
-     */
-    public String getActiveIpAddressOnSubscription(String apnType, int subscription) {
-        return getPhone(subscription).getIpAddress(apnType);
+    public String getActiveIpAddressOnSubscription(String apnType, String ipv, int subscription) {
+        return getPhone(subscription).getIpAddress(apnType, Enum.valueOf(IPVersion.class, ipv));
     }
 
     /**
@@ -1116,23 +1102,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * Returns Gateway address
      */
     public String getActiveGateway(String apnType, String ipv) {
-        return mPhone.getGateway(apnType,Enum.valueOf(IPVersion.class, ipv));
+        return getActiveGatewayOnSubscription(apnType, ipv,
+                      PhoneApp.getDataSubscription(mContext));
     }
 
     /**
      * {@hide}
      * Returns Gateway address
      */
-    public String getActiveGateway(String apnType) {
-        return getActiveGatewayOnSubscription(apnType, PhoneApp.getDataSubscription(mContext));
-    }
-
-    /**
-     * {@hide}
-     * Returns Gateway address for a subscription
-     */
-    public String getActiveGatewayOnSubscription(String apnType, int subscription) {
-        return getPhone(subscription).getGateway(apnType);
+    public String getActiveGatewayOnSubscription(String apnType, String ipv, int subscription) {
+        return getPhone(subscription).getGateway(apnType, Enum.valueOf(IPVersion.class, ipv));
     }
 
     /**
