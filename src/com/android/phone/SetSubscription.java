@@ -19,6 +19,9 @@ package com.android.phone;
 import java.lang.Integer;
 
 import android.os.Bundle;
+import android.os.Message;
+import android.os.Handler;
+import android.os.AsyncResult;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
@@ -33,12 +36,13 @@ import android.widget.CheckBox;
 import android.widget.LinearLayout.LayoutParams;
 import android.content.DialogInterface;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.app.Dialog;
 
 import android.content.Intent;
 
 import com.android.internal.telephony.ProxyManager;
 import com.android.internal.telephony.ProxyManager.SubscriptionData;
-
 
 /**
  * Displays a dialer like interface to Set the Subscriptions.
@@ -62,6 +66,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private static final String PREF_PARENT_KEY = "subscr_parent";
 
     private final int MAX_SUBSCRIPTIONS = 2;
+
+    private final int EVENT_SET_SUBSCRIPTION_DONE = 1;
+
+    private final int DIALOG_SET_SUBSCRIPTION_IN_PROGRESS = 100;
 
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -97,31 +105,51 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             populateList();
 
             mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
-            mCurrentSelSub = ProxyManager.getInstance().getCurrentSubscriptions();
-            if (mCurrentSelSub != null) {
-                PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen()
-                                                     .findPreference(PREF_PARENT_KEY);
-                for(int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
-                    Log.d(TAG, "onCreate: mCurrentSelSub.subscription[" + i + "] = "
-                               + mCurrentSelSub.subscription[i].toString());
-                    if(mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
-                        String key = "slot" + mCurrentSelSub.subscription[i].slotId
-                                     + " index" + mCurrentSelSub.subscription[i].subIndex;
 
-                        Log.d(TAG, "onCreate: key = " + key);
-
-                        PreferenceCategory subGroup = (PreferenceCategory) prefParent
-                               .findPreference("sub_group_" + mCurrentSelSub.subscription[i].slotId);
-                        SubscriptionCheckBoxPreference checkBoxPref =
-                               (SubscriptionCheckBoxPreference) subGroup.findPreference(key);
-                        checkBoxPref.markChecked(mapSub(i));
-                        subArray[i] = (SubscriptionCheckBoxPreference) subGroup.findPreference(key);
-                    }
-                }
-                mUserSelSub.copyFrom(mCurrentSelSub);
-            }
+            updateCheckBoxes();
         } else {
             Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
+        }
+    }
+
+    private void updateCheckBoxes() {
+        PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen()
+                                             .findPreference(PREF_PARENT_KEY);
+        int subGroupCount = prefParent.getPreferenceCount();
+        Log.d(TAG, "updateCheckBoxes subGroupCount = " + subGroupCount);
+        for (int i = 0; i < subGroupCount; i++) {
+            PreferenceCategory subGroup = (PreferenceCategory) prefParent
+                   .findPreference("sub_group_" + i);
+            int count = subGroup.getPreferenceCount();
+            Log.d(TAG, "updateCheckBoxes count = " + count);
+            for (int j = 0; j < count; j++) {
+                SubscriptionCheckBoxPreference checkBoxPref =
+                          (SubscriptionCheckBoxPreference) subGroup.getPreference(j);
+                checkBoxPref.markAllUnChecked();
+            }
+        }
+
+        mCurrentSelSub = ProxyManager.getInstance().getCurrentSubscriptions();
+        if (mCurrentSelSub != null) {
+            for(int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
+                Log.d(TAG, "updateCheckBoxes: mCurrentSelSub.subscription[" + i + "] = "
+                           + mCurrentSelSub.subscription[i]);
+                subArray[i] = null;
+                if(mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
+                    String key = "slot" + mCurrentSelSub.subscription[i].slotId
+                                 + " index" + mCurrentSelSub.subscription[i].subIndex;
+
+                    Log.d(TAG, "updateCheckBoxes: key = " + key);
+
+                    PreferenceCategory subGroup = (PreferenceCategory) prefParent
+                           .findPreference("sub_group_" + mCurrentSelSub.subscription[i].slotId);
+                    SubscriptionCheckBoxPreference checkBoxPref =
+                           (SubscriptionCheckBoxPreference) subGroup.findPreference(key);
+                    checkBoxPref.markChecked(mapSub(i));
+                    subArray[i] = checkBoxPref;
+                }
+            }
+            mUserSelSub.copyFrom(mCurrentSelSub);
         }
     }
 
@@ -234,6 +262,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         Log.d(TAG, "setSubscription");
 
         int numSubSelected = 0;
+        subErr = false;
         //SubscriptionData userSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
 
         for (int i = 0; i < subArray.length; i++) {
@@ -289,40 +318,119 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                 }
             }
 
-            ProxyManager mProxyManager = ProxyManager.getInstance();
-            String result[] = mProxyManager.setSubscription(mUserSelSub, false);
+            showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
 
-            if (result != null) {
-                displayAlertDialog(result);
-            } else {
-                finish();
-            }
+            Message setSubComplete = Message.obtain(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
+            ProxyManager mProxyManager = ProxyManager.getInstance();
+            mProxyManager.setSubscription(mUserSelSub, setSubComplete);
         }
     }
 
-    void displayAlertDialog(String msg[]) {
-        String dispMsg = "";
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            AsyncResult ar;
 
-        if (msg[0] != null && msg[0].equals("FAILED")) {
+            switch(msg.what) {
+                case EVENT_SET_SUBSCRIPTION_DONE:
+                    Log.d(TAG, "EVENT_SET_SUBSCRIPTION_DONE");
+                    dismissDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                    getPreferenceScreen().setEnabled(true);
+                    ar = (AsyncResult) msg.obj;
+
+                    String result[] = (String[]) ar.result;
+
+                    if (result != null) {
+                        displayAlertDialog(result);
+                    } else {
+                        finish();
+                    }
+                    break;
+            }
+        }
+    };
+
+    @Override
+    protected Dialog onCreateDialog(int id) {
+        if (id == DIALOG_SET_SUBSCRIPTION_IN_PROGRESS) {
+            ProgressDialog dialog = new ProgressDialog(this);
+
+            dialog.setMessage(getResources().getString(R.string.set_uicc_subscription_progress));
+            dialog.setCancelable(false);
+            dialog.setIndeterminate(true);
+
+            return dialog;
+        }
+        return null;
+    }
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        if (id == DIALOG_SET_SUBSCRIPTION_IN_PROGRESS) {
+            // when the dialogs come up, we'll need to indicate that
+            // we're in a busy state to disallow further input.
+            getPreferenceScreen().setEnabled(false);
+        }
+    }
+    private boolean isFailed(String status) {
+        Log.d(TAG, "isFailed(" + status + ")");
+        if (status == null ||
+            (status != null &&
+             (status.equals("DEACTIVATE FAILED") ||
+              status.equals("DEACTIVATE NOT SUPPORTED") ||
+              status.equals("ACTIVATE FAILED") ||
+              status.equals("ACTIVATE NOT SUPPORTED")))) {
+            return true;
+        }
+        return false;
+    }
+
+    String setSubscriptionStatusToString(String status) {
+        String retStr = null;
+        if (status.equals("ACTIVATE SUCCESS")) {
+            retStr = getResources().getString(R.string.set_sub_activate_success);
+        } else if (status.equals("DEACTIVATE SUCCESS")) {
+            retStr = getResources().getString(R.string.set_sub_deactivate_success);
+        } else if (status.equals("DEACTIVATE FAILED")) {
+            retStr = getResources().getString(R.string.set_sub_deactivate_failed);
+        } else if (status.equals("DEACTIVATE NOT SUPPORTED")) {
+            retStr = getResources().getString(R.string.set_sub_deactivate_not_supported);
+        } else if (status.equals("ACTIVATE FAILED")) {
+            retStr = getResources().getString(R.string.set_sub_activate_failed);
+        } else if (status.equals("ACTIVATE NOT SUPPORTED")) {
+            retStr = getResources().getString(R.string.set_sub_activate_not_supported);
+        } else if (status.equals("No change in Subscription")) {
+            retStr = getResources().getString(R.string.set_sub_no_change);
+        }
+        return retStr;
+    }
+
+    void displayAlertDialog(String msg[]) {
+        int resSubId[] = {R.string.set_sub_1, R.string.set_sub_2};
+        String dispMsg = "";
+        int title = R.string.set_sub_failed;
+
+        if (msg[0] != null && isFailed(msg[0])) {
             subErr = true;
         }
-        if (msg[1] != null && msg[1].equals("FAILED")) {
+        if (msg[1] != null && isFailed(msg[1])) {
             subErr = true;
         }
 
         for (int i = 0; i < msg.length; i++) {
             if (msg[i] != null) {
-                dispMsg = dispMsg + "Set Subscription on Sub " + Integer.toString(i+1) + ": " + msg[i] + "\n";
+                dispMsg = dispMsg + getResources().getString(resSubId[i]) +
+                                      setSubscriptionStatusToString(msg[i]) + "\n";
             }
         }
 
-        if(mIsConfigSub) {
-            dispMsg = dispMsg + "\nPlease gracefully reboot the phone to reflect the subscription changes.";
+        if (!subErr) {
+            title = R.string.set_sub_success;
         }
 
         Log.d(TAG, "displayAlertDialog:  dispMsg = " + dispMsg);
         new AlertDialog.Builder(this).setMessage(dispMsg)
-            .setTitle(android.R.string.dialog_alert_title)
+            .setTitle(title)
             .setIcon(android.R.drawable.ic_dialog_alert)
             .setPositiveButton(android.R.string.yes, this)
             .show()
@@ -346,6 +454,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         if(!subErr) {
             finish();
         }
+        updateCheckBoxes();
     }
 }
 
@@ -417,8 +526,12 @@ class SubscriptionCheckBoxPreference extends Preference implements View.OnClickL
     }
 
     public void markAllUnChecked() {
-        mCheckBox1.setChecked(false);
-        mCheckBox2.setChecked(false);
+        if (mCheckBox1 != null) {
+            mCheckBox1.setChecked(false);
+        }
+        if (mCheckBox2 != null) {
+            mCheckBox2.setChecked(false);
+        }
     }
 
     public void markChecked(SubscriptionID onSub) {
