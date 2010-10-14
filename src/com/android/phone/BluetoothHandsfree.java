@@ -43,12 +43,14 @@ import android.os.SystemProperties;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.TelephonyIntents;
+import com.android.internal.telephony.PhoneFactory;
 
 import java.util.LinkedList;
 
@@ -67,7 +69,8 @@ public class BluetoothHandsfree {
     public static final int TYPE_HANDSFREE         = 2;
 
     private final Context mContext;
-    private final Phone mPhone;
+    private Phone mPhone;
+    private int mSubscription;
     private final BluetoothA2dp mA2dp;
 
     private BluetoothDevice mA2dpDevice;
@@ -170,6 +173,7 @@ public class BluetoothHandsfree {
     public BluetoothHandsfree(Context context, Phone phone) {
         mPhone = phone;
         mContext = context;
+        mSubscription = mPhone.getSubscription();
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         boolean bluetoothCapable = (adapter != null);
         mHeadset = null;  // nothing connected yet
@@ -299,6 +303,13 @@ public class BluetoothHandsfree {
         mAudioManager.setParameters(HEADSET_NAME+"="+name+";"+HEADSET_NREC+"=on");
     }
 
+    private void setActivePhone(Phone phone) {
+        Log.d(TAG, "setActivePhone subscription :" + phone.getSubscription());
+        mPhone = phone;
+        mRingingCall = phone.getRingingCall();
+        mForegroundCall = phone.getForegroundCall();
+        mBackgroundCall = phone.getBackgroundCall();
+    }
 
     /** Represents the data that we send in a +CIND or +CIEV command to the HF
      */
@@ -367,7 +378,17 @@ public class BluetoothHandsfree {
                 case PRECISE_CALL_STATE_CHANGED:
                 case PHONE_CDMA_CALL_WAITING:
                     Connection connection = null;
-                    if (((AsyncResult) msg.obj).result instanceof Connection) {
+                    AsyncResult ar = (AsyncResult) msg.obj;
+                    // Get the phone object that was passed in registerForPreciseCallStateChanged.
+                    if (ar.userObj != null) {
+                        Phone phone = (Phone) ar.userObj;
+                        if (phone != mPhone) {
+                            setActivePhone(phone);
+                        }
+                    } else {
+                        Log.e(TAG, "No phone obj received!");
+                    }
+                    if (ar.result instanceof Connection) {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
                     }
                     handlePreciseCallStateChange(sendUpdate(), connection);
@@ -378,6 +399,7 @@ public class BluetoothHandsfree {
 
         private BluetoothPhoneState() {
             // init members
+            Phone phone;
             updateServiceState(false, mPhone.getServiceState());
             handlePreciseCallStateChange(false, null);
             mBattchg = 5;  // There is currently no API to get battery level
@@ -385,13 +407,19 @@ public class BluetoothHandsfree {
             mSignal = asuToSignal(mPhone.getSignalStrength());
 
             // register for updates
+            // BT headset/dongle don't support subscription parameter in AT commands.
+            // So, we are not registering for SERVICE_STATE indications on SUB2 and
+            // register for service state changes only on default subscription.
             mPhone.registerForServiceStateChanged(mStateChangeHandler,
                                                   SERVICE_STATE_CHANGED, null);
-            mPhone.registerForPreciseCallStateChanged(mStateChangeHandler,
-                    PRECISE_CALL_STATE_CHANGED, null);
-            if (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-                mPhone.registerForCallWaiting(mStateChangeHandler,
-                                              PHONE_CDMA_CALL_WAITING, null);
+            for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+                phone = PhoneFactory.getPhone(i);
+                phone.registerForPreciseCallStateChanged(mStateChangeHandler,
+                    PRECISE_CALL_STATE_CHANGED, phone);
+                if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                    phone.registerForCallWaiting(mStateChangeHandler,
+                                              PHONE_CDMA_CALL_WAITING, phone);
+                }
             }
             IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             filter.addAction(TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED);
@@ -399,22 +427,23 @@ public class BluetoothHandsfree {
             mContext.registerReceiver(mStateReceiver, filter);
         }
 
-        private void updateBtPhoneStateAfterRadioTechnologyChange() {
+        private void updateBtPhoneStateAfterRadioTechnologyChange(int subscription) {
             if(VDBG) Log.d(TAG, "updateBtPhoneStateAfterRadioTechnologyChange...");
-
-            //Unregister all events from the old obsolete phone
-            mPhone.unregisterForServiceStateChanged(mStateChangeHandler);
-            mPhone.unregisterForPreciseCallStateChanged(mStateChangeHandler);
-            mPhone.unregisterForCallWaiting(mStateChangeHandler);
-
-            //Register all events new to the new active phone
-            mPhone.registerForServiceStateChanged(mStateChangeHandler,
+            Phone phone = PhoneFactory.getPhone(subscription);
+            //Unregister all events from the old obsolete phone and
+            //register all events new to the new active phone
+            phone.unregisterForPreciseCallStateChanged(mStateChangeHandler);
+            phone.registerForPreciseCallStateChanged(mStateChangeHandler,
+                                                  PRECISE_CALL_STATE_CHANGED, phone);
+            if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                phone.unregisterForCallWaiting(mStateChangeHandler);
+                phone.registerForCallWaiting(mStateChangeHandler,
+                                              PHONE_CDMA_CALL_WAITING, phone);
+            }
+            if (subscription == mSubscription) {
+                phone.unregisterForServiceStateChanged(mStateChangeHandler);
+                phone.registerForServiceStateChanged(mStateChangeHandler,
                                                   SERVICE_STATE_CHANGED, null);
-            mPhone.registerForPreciseCallStateChanged(mStateChangeHandler,
-                    PRECISE_CALL_STATE_CHANGED, null);
-            if (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-                mPhone.registerForCallWaiting(mStateChangeHandler,
-                                              PHONE_CDMA_CALL_WAITING, null);
             }
         }
 
@@ -1064,15 +1093,17 @@ public class BluetoothHandsfree {
         mContext.sendBroadcast(intent, android.Manifest.permission.BLUETOOTH);
     }
 
-    void updateBtHandsfreeAfterRadioTechnologyChange() {
+    void updateBtHandsfreeAfterRadioTechnologyChange(int subscription) {
         if(VDBG) Log.d(TAG, "updateBtHandsfreeAfterRadioTechnologyChange...");
 
         //Get the Call references from the new active phone again
-        mRingingCall = mPhone.getRingingCall();
-        mForegroundCall = mPhone.getForegroundCall();
-        mBackgroundCall = mPhone.getBackgroundCall();
+        if (subscription == mPhone.getSubscription()) {
+            mRingingCall = mPhone.getRingingCall();
+            mForegroundCall = mPhone.getForegroundCall();
+            mBackgroundCall = mPhone.getBackgroundCall();
+        }
 
-        mBluetoothPhoneState.updateBtPhoneStateAfterRadioTechnologyChange();
+        mBluetoothPhoneState.updateBtPhoneStateAfterRadioTechnologyChange(subscription);
     }
 
     /** Request to establish SCO (audio) connection to bluetooth
