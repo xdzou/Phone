@@ -693,7 +693,6 @@ public class BluetoothHandsfree {
 
             switch(forgroundstate) {
             case ACTIVE:
-            case DISCONNECTING:
                 call = 1;
                 mAudioPossible = true;
                 break;
@@ -716,6 +715,11 @@ public class BluetoothHandsfree {
                 audioOn();
                 mAudioPossible = true;
                 break;
+            case DISCONNECTING:
+                // When disconnecting, whether the foreground call was ACTIVE,
+                // DIALING, or ALERTING, the associated BT call state does not
+                // change
+                call = mCall;
             default:
                 mAudioPossible = false;
             }
