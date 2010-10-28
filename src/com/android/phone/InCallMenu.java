@@ -213,10 +213,7 @@ class InCallMenu {
         // This usually has "Show/Hide dialpad", but that gets replaced by
         // "Manage conference" if a conference call is active.
         // As managing conference is only valid for GSM and not for CDMA
-        int phoneType = phone.getPhoneType();
-        if (phoneType == Phone.PHONE_TYPE_GSM) {
-            mInCallMenuView.addItemView(mManageConference, 0);
-        }
+        mInCallMenuView.addItemView(mManageConference, 0);
         mInCallMenuView.addItemView(mShowDialpad, 0);
 
         // Row 1:
@@ -229,16 +226,11 @@ class InCallMenu {
         // In this row we see *either*  bluetooth/speaker/mute/hold
         // *or* answerAndHold/answerAndEnd, but never all 6 together.
         // For CDMA only Answer or Ignore option is valid for a Call Waiting scenario
-        if (phoneType == Phone.PHONE_TYPE_CDMA) {
-            mInCallMenuView.addItemView(mAnswer, 2);
-            mInCallMenuView.addItemView(mIgnore, 2);
-        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-            mInCallMenuView.addItemView(mHold, 2);
-            mInCallMenuView.addItemView(mAnswerAndHold, 2);
-            mInCallMenuView.addItemView(mAnswerAndEnd, 2);
-        } else {
-            throw new IllegalStateException("Unexpected phone type: " + phoneType);
-        }
+        mInCallMenuView.addItemView(mAnswer, 2);
+        mInCallMenuView.addItemView(mIgnore, 2);
+        mInCallMenuView.addItemView(mHold, 2);
+        mInCallMenuView.addItemView(mAnswerAndHold, 2);
+        mInCallMenuView.addItemView(mAnswerAndEnd, 2);
         mInCallMenuView.addItemView(mMute, 2);
         mInCallMenuView.addItemView(mSpeaker, 2);
         mInCallMenuView.addItemView(mBluetooth, 2);
