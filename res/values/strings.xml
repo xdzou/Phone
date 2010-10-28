@@ -1393,5 +1393,29 @@
     <string name="sub_0">SUB 1</string>
     <!-- Set Subscription screen: label sub 2 -->
     <string name="sub_1">SUB 2</string>
+    <!-- Set Subscription screen: Progress message -->
+    <string name="set_uicc_subscription_progress">Set subscription in progress...</string>
+    <!-- Set Subscription screen: Set subscriptio success -->
+    <string name="set_sub_success">Set subscription success</string>
+    <!-- Set Subscription screen: Set subscriptio success -->
+    <string name="set_sub_failed">Set subscription failed</string>
+    <!-- Set Subscription screen: Subscription 1 -->
+    <string name="set_sub_1">Subscription 1: </string>
+    <!-- Set Subscription screen: Subscription 2 -->
+    <string name="set_sub_2">Subscription 2: </string>
+    <!-- Set Subscription screen: Subscription activate success -->
+    <string name="set_sub_activate_success">Activate success</string>
+    <!-- Set Subscription screen: Subscription deactivate success -->
+    <string name="set_sub_deactivate_success">Deactivate success</string>
+    <!-- Set Subscription screen: Subscription activate failed -->
+    <string name="set_sub_activate_failed">Activate failed</string>
+    <!-- Set Subscription screen: Subscription deactivate failed -->
+    <string name="set_sub_deactivate_failed">Deactivate failed</string>
+    <!-- Set Subscription screen: Subscription activate not supported -->
+    <string name="set_sub_activate_not_supported">Activate not supported</string>
+    <!-- Set Subscription screen: Subscription deactivate not supported -->
+    <string name="set_sub_deactivate_not_supported">Deactivate not supported</string>
+    <!-- Set Subscription screen: No change in subscription -->
+    <string name="set_sub_no_change">No change in Subscription</string>
 
 </resources>
