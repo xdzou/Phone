@@ -54,6 +54,8 @@ public class OutgoingCallBroadcaster extends Activity {
     public static final String EXTRA_ALREADY_CALLED = "android.phone.extra.ALREADY_CALLED";
     public static final String EXTRA_ORIGINAL_URI = "android.phone.extra.ORIGINAL_URI";
 
+    /** the key used to specify subscription to be used for emergency calls */
+    public static final String SUBSCRIPTION = "Subscription";
     /**
      * Identifier for intent extra for sending an empty Flash message for
      * CDMA networks. This message is used by the network to simulate a
@@ -262,6 +264,9 @@ public class OutgoingCallBroadcaster extends Activity {
                 finish();
                 return;
             }
+            int sub = PhoneApp.getInstance().getVoiceSubscriptionInService();
+            intent.putExtra(SUBSCRIPTION, sub);
+            Log.d(TAG, "Attempting emergency call on sub :" + sub);
             callNow = true;
         } else {
             Log.e(TAG, "Unhandled Intent " + intent + ".");

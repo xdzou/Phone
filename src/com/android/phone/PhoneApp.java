@@ -466,6 +466,23 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
     }
 
+    /**
+      * Get the subscription that has service
+      */
+    public int getVoiceSubscriptionInService() {
+        int voiceSub = getVoiceSubscription(getApplicationContext());
+        int sub = voiceSub;
+        for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+            Phone phone = getPhone(i);
+            int ss = phone.getServiceState().getState();
+            if ((ss == ServiceState.STATE_IN_SERVICE)
+                    || (ss == ServiceState.STATE_EMERGENCY_ONLY)) {
+                sub = i;
+                if (sub == voiceSub) break;
+            }
+        }
+        return sub;
+    }
 
     CdmaPhoneCallState getCdmaPhoneCallState (int subscription) {
         MyPhone myPhone = getMyPhone(subscription);

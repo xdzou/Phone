@@ -47,9 +47,13 @@ import android.view.WindowManager;
  * EMERGENCY_CALL_RETRY_KEY to convey information about the current state.
  */
 public class EmergencyCallHandler extends Activity {
+    private static final String LOG_TAG = "EmergencyCallHandler";
     /** the key used to get the count from our Intent's extra(s) */
     public static final String EMERGENCY_CALL_RETRY_KEY = "emergency_call_retry_count";
     
+    /** the key used to specify subscription to be used for emergency calls */
+    public static final String SUBSCRIPTION = "Subscription";
+
     /** count indicating an initial attempt at the call should be made. */
     public static final int INITIAL_ATTEMPT = -1;
     
@@ -76,7 +80,6 @@ public class EmergencyCallHandler extends Activity {
      */
     private static EmergencyCallEventHandler sHandler;
     private static class EmergencyCallEventHandler extends Handler {
-        private static final String LOG_TAG = "EmergencyCallHandler";
 
         public void handleMessage(Message msg) {
             switch(msg.what) {
@@ -148,7 +151,10 @@ public class EmergencyCallHandler extends Activity {
         if (retryCount == INITIAL_ATTEMPT) {
             // place the number of pending retries in the intent.
             eci.intent.putExtra(EMERGENCY_CALL_RETRY_KEY, NUMBER_OF_RETRIES);
-            
+            int sub = PhoneApp.getInstance().getVoiceSubscriptionInService();
+            eci.intent.putExtra(SUBSCRIPTION, sub);
+            Log.d(LOG_TAG, "Attempting emergency call on sub :" + sub);
+
             // turn the radio on and listen for it to complete.
             phone.registerForServiceStateChanged(sHandler, 
                     EVENT_SERVICE_STATE_CHANGED, eci);
@@ -174,7 +180,7 @@ public class EmergencyCallHandler extends Activity {
         } else {
             // decrement and store the number of retries.
             eci.intent.putExtra(EMERGENCY_CALL_RETRY_KEY, (retryCount - 1));
-            
+
             // get the message and attach the data, then wait the alloted
             // time and send.
             Message m = sHandler.obtainMessage(EVENT_TIMEOUT_EMERGENCY_CALL);

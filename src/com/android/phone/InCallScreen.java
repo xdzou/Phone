@@ -342,6 +342,16 @@ public class InCallScreen extends Activity
 
                 case PHONE_DISCONNECT:
                     onDisconnect((AsyncResult) msg.obj);
+                    // PHONE_DISCONNECT could have cleared the
+                    // the UI. See if any other call in progress. If so,
+                    // try to resume InCallScreen. getPhoneInCall could
+                    // return default phone if none of the phone is in call.
+                    // Hence, check if the phone is really in call.
+                    if (PhoneApp.getInstance().getPhoneInCall().isInCall()) {
+                        Intent intent = new Intent(Intent.ACTION_MAIN);
+                        intent.setClass(getApplicationContext(), InCallScreen.class);
+                        startActivity(intent);
+                    }
                     break;
 
                 case EVENT_HEADSET_PLUG_STATE_CHANGED:
@@ -1048,6 +1058,8 @@ public class InCallScreen extends Activity
      */
     public void endInCallScreenSession() {
         if (DBG) log("endInCallScreenSession()...");
+        boolean hasCall = PhoneApp.getInstance().getPhoneInCall().isInCall();
+        if (hasCall) return;
         moveTaskToBack(true);
         setInCallScreenMode(InCallScreenMode.UNDEFINED);
     }
@@ -1186,15 +1198,18 @@ public class InCallScreen extends Activity
             return InCallInitStatus.SUCCESS;
         } else if (action.equals(Intent.ACTION_CALL)
                 || action.equals(Intent.ACTION_CALL_EMERGENCY)) {
-
             int subscription = 0;
-            if (TelephonyManager.isDsdsEnabled()) {
+            if (action.equals(Intent.ACTION_CALL_EMERGENCY)) {
+                subscription = getIntent().getIntExtra("Subscription",
+                        PhoneApp.getVoiceSubscription(getApplicationContext()));
+                log("Received ACTION_CALL_EMERGENCY intent.Attempting call on sub: " + subscription);
+            } else {
                 // Obtain the preferred voice subscription.
                 // Fetched from Dual Sim Settings.
                 subscription = PhoneApp.getVoiceSubscription(getApplicationContext());
-                setPhone(PhoneApp.getPhone(subscription));
-                log("Received ACTION_CALL intent Voice Sub: " + subscription);
+                log("Received ACTION_CALL intent.Attempting call on sub: " + subscription);
             }
+            setPhone(PhoneApp.getPhone(subscription));
             app.setRestoreMuteOnInCallResume(false);
 
             // If a provider is used, extract the info to build the
