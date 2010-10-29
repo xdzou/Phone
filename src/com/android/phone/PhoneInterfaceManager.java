@@ -74,13 +74,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * request after sending. The main thread will notify the request when it is complete.
      */
     private static final class MainThreadRequest {
-        /** The argument to use for the request */
-        public Object argument;
+        /** The first argument to use for the request */
+        public Object arg1;
+        /** The second argument to use for the request */
+        public Object arg2;
         /** The result of the request that is run on the main thread */
         public Object result;
 
-        public MainThreadRequest(Object argument) {
-            this.argument = argument;
+        public MainThreadRequest(Object arg1, Object arg2) {
+            this.arg1 = arg1;
+            this.arg2 = arg2;
         }
     }
 
@@ -106,8 +109,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             switch (msg.what) {
                 case CMD_HANDLE_PIN_MMI:
                     request = (MainThreadRequest) msg.obj;
+                    int sub = (Integer) request.arg2;
+                    Phone phone = PhoneApp.getPhone(sub);
+                    Log.i(LOG_TAG,"CMD_HANDLE_PIN_MMI: sub :" + phone.getSubscription());
                     request.result = Boolean.valueOf(
-                            mPhone.handlePinMmi((String) request.argument));
+                            phone.handlePinMmi((String) request.arg1));
                     // Wake up the requesting thread
                     synchronized (request) {
                         request.notifyAll();
@@ -147,7 +153,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_END_CALL:
                     request = (MainThreadRequest) msg.obj;
                     boolean hungUp = false;
-                    Phone phone = PhoneApp.getInstance().getPhoneInCall();
+                    phone = PhoneApp.getInstance().getPhoneInCall();
                     int phoneType = phone.getPhoneType();
                     if (phoneType == Phone.PHONE_TYPE_CDMA) {
                         // CDMA: If the user presses the Power button we treat it as
@@ -170,7 +176,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_INVOKE_OEM_RIL_REQUEST:
                     request = (MainThreadRequest)msg.obj;
                     onCompleted = obtainMessage(EVENT_INVOKE_OEM_RIL_REQUEST, request);
-                    mPhone.invokeOemRilRequestRaw((byte[])request.argument, onCompleted);
+                    mPhone.invokeOemRilRequestRaw((byte[])request.arg1, onCompleted);
                     break;
 
                 case EVENT_INVOKE_OEM_RIL_REQUEST:
@@ -200,12 +206,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * waits for the request to complete, and returns the result.
      * @see sendRequestAsync
      */
-    private Object sendRequest(int command, Object argument) {
+    private Object sendRequest(int command, Object arg1, Object arg2) {
         if (Looper.myLooper() == mMainThreadHandler.getLooper()) {
             throw new RuntimeException("This method will deadlock if called from the main thread.");
         }
 
-        MainThreadRequest request = new MainThreadRequest(argument);
+        MainThreadRequest request = new MainThreadRequest(arg1, arg2);
         Message msg = mMainThreadHandler.obtainMessage(command, request);
         msg.sendToTarget();
 
@@ -382,7 +388,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     public boolean endCallOnSubscription(int subscription) {
         enforceCallPermission();
         //TODO DSDA: Pass subscription info.
-        return (Boolean) sendRequest(CMD_END_CALL, null);
+        return (Boolean) sendRequest(CMD_END_CALL, null, null);
     }
 
     public void answerRingingCall() {
@@ -502,6 +508,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     public boolean isSimPinEnabledOnSubscription(int subscription) {
         enforceReadPermission();
         return (PhoneApp.getInstance().isSimPinEnabled(subscription));
+    }
+
+    public boolean isSimPukLockedOnSubscription(int subscription) {
+        enforceReadPermission();
+        return (PhoneApp.getInstance().isSimPukLocked(subscription));
     }
 
     public boolean supplyPin(String pin) {
@@ -700,7 +711,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public boolean handlePinMmiOnSubscription(String dialString, int subscription) {
         enforceModifyPermission();
-        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString);
+        return (Boolean) sendRequest(CMD_HANDLE_PIN_MMI, dialString, subscription);
     }
 
     public void cancelMissedCallsNotification() {
@@ -799,7 +810,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
         try {
             cells = (ArrayList<NeighboringCellInfo>) sendRequest(
-                    CMD_HANDLE_NEIGHBORING_CELL, null);
+                    CMD_HANDLE_NEIGHBORING_CELL, null, null);
         } catch (RuntimeException e) {
             Log.e(LOG_TAG, "getNeighboringCellInfo " + e);
         }
@@ -876,7 +887,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         // TODO: Check Permissions of the application
 
         try {
-            AsyncResult result = (AsyncResult)sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, request);
+            AsyncResult result = (AsyncResult)sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, request, null);
             if(result.exception == null) {
                 returnValue = 0;
                 if (result.result != null) {
