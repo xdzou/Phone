@@ -56,9 +56,12 @@ public class FdnSetting extends PreferenceActivity
     // Preference is handled solely in xml.
     private static final String BUTTON_FDN_ENABLE_KEY = "button_fdn_enable_key";
     private static final String BUTTON_CHANGE_PIN2_KEY = "button_change_pin2_key";
+    private static final String BUTTON_FDN_KEY = "button_fdn_list_key";
+    private static final String SUB_ID = "sub_id";
 
     private EditPinPreference mButtonEnableFDN;
     private EditPinPreference mButtonChangePin2;
+    private PreferenceScreen mSubscriptionPrefFDN;
 
     // State variables
     private String mOldPin;
@@ -421,6 +424,9 @@ public class FdnSetting extends PreferenceActivity
         mSubscription = getIntent().getIntExtra(CallFeaturesSetting.SUBSCRIPTION_ID, 0);
         Log.d(LOG_TAG, "Getting FDNSetting subscription =" + mSubscription);
         mPhone = PhoneApp.getPhone(mSubscription);
+
+        mSubscriptionPrefFDN  = (PreferenceScreen) findPreference(BUTTON_FDN_KEY);
+        mSubscriptionPrefFDN.getIntent().putExtra("sub_id", mSubscription);
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
