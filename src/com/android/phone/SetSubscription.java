@@ -43,6 +43,7 @@ import android.content.Intent;
 
 import com.android.internal.telephony.ProxyManager;
 import com.android.internal.telephony.ProxyManager.SubscriptionData;
+import com.android.internal.telephony.ProxyManager.Subscription;
 
 /**
  * Displays a dialer like interface to Set the Subscriptions.
@@ -115,17 +116,17 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private void updateCheckBoxes() {
         PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen()
                                              .findPreference(PREF_PARENT_KEY);
-        int subGroupCount = prefParent.getPreferenceCount();
-        Log.d(TAG, "updateCheckBoxes subGroupCount = " + subGroupCount);
-        for (int i = 0; i < subGroupCount; i++) {
+        for (int i = 0; i < mCardSubscrInfo.length; i++) {
             PreferenceCategory subGroup = (PreferenceCategory) prefParent
                    .findPreference("sub_group_" + i);
-            int count = subGroup.getPreferenceCount();
-            Log.d(TAG, "updateCheckBoxes count = " + count);
-            for (int j = 0; j < count; j++) {
-                SubscriptionCheckBoxPreference checkBoxPref =
-                          (SubscriptionCheckBoxPreference) subGroup.getPreference(j);
-                checkBoxPref.markAllUnChecked();
+            if (subGroup != null) {
+                int count = subGroup.getPreferenceCount();
+                Log.d(TAG, "updateCheckBoxes count = " + count);
+                for (int j = 0; j < count; j++) {
+                    SubscriptionCheckBoxPreference checkBoxPref =
+                              (SubscriptionCheckBoxPreference) subGroup.getPreference(j);
+                    checkBoxPref.markAllUnChecked();
+                }
             }
         }
 
@@ -163,18 +164,17 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     /** add radio buttons to the group */
     private void populateList() {
         PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen().findPreference(PREF_PARENT_KEY);
-
-        int numApps = 0;
         Display display = getWindowManager().getDefaultDisplay();
         int width = display.getWidth();
         int[] subGroupTitle = {R.string.card_01, R.string.card_02};
 
         Log.d(TAG, "populateList:  mCardSubscrInfo.length = " + mCardSubscrInfo.length);
 
+        int k = 0;
         // Create PreferenceCatergory sub groups for each card.
-        for (int k = 0; k < mCardSubscrInfo.length; k++) {
-            if ((mCardSubscrInfo[k] != null ) && (mCardSubscrInfo[k].numSubscriptions > 0)) {
-                numApps = mCardSubscrInfo[k].numSubscriptions;
+        for (SubscriptionData cardSub : mCardSubscrInfo) {
+            if ((cardSub != null ) && (cardSub.numSubscriptions > 0)) {
+                int i = 0;
 
                 // Create a subgroup for the apps in card 01
                 PreferenceCategory subGroup = new PreferenceCategory(this);
@@ -183,17 +183,22 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                 prefParent.addPreference(subGroup);
 
                 // Add each element as a CheckBoxPreference to the group
-                for (int i = 0; (i < numApps) && (mCardSubscrInfo[k].subscription[i] != null); i++){
-                    Log.d(TAG, "populateList:  mCardSubscrInfo[" + k + "].subscription[" + i + "] = "
-                          + mCardSubscrInfo[k].subscription[i].toString());
-                    SubscriptionCheckBoxPreference newCheckBox = new SubscriptionCheckBoxPreference(this, width);
-                    newCheckBox.setTitleText(mCardSubscrInfo[k].subscription[i].appType);
-                    // Key is the string : "slot<SlotId> index<IndexId>"
-                    newCheckBox.setKey(new String("slot" + k + " index" + i));
-                    newCheckBox.setOnSubPreferenceClickListener(mCheckBoxListener);
-                    subGroup.addPreference(newCheckBox);
+                for (Subscription sub : cardSub.subscription) {
+                    if (sub != null && sub.appType != null) {
+                        Log.d(TAG, "populateList:  mCardSubscrInfo[" + k + "].subscription["
+                                + i + "] = " + sub);
+                        SubscriptionCheckBoxPreference newCheckBox =
+                                                 new SubscriptionCheckBoxPreference(this, width);
+                        newCheckBox.setTitleText(sub.appType);
+                        // Key is the string : "slot<SlotId> index<IndexId>"
+                        newCheckBox.setKey(new String("slot" + k + " index" + i));
+                        newCheckBox.setOnSubPreferenceClickListener(mCheckBoxListener);
+                        subGroup.addPreference(newCheckBox);
+                    }
+                    i++;
                 }
             }
+            k++;
         }
     }
 
