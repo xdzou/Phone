@@ -204,7 +204,7 @@ public class SpecialCharSequenceMgr {
                 }
             } else {
                 // Change Pin request (**04). Use voice phone.
-                int voiceSub = app.getVoiceSubscription(context);
+                int voiceSub = app.getVoiceSubscription();
                 phone = app.getPhone(voiceSub);
             }
             boolean isMMIHandled = phone.handlePinMmi(input);
