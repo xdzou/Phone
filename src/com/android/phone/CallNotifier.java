@@ -16,10 +16,13 @@
 
 package com.android.phone;
 
+import java.util.List;
+
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
+import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
@@ -131,6 +134,7 @@ public class CallNotifier extends Handler
     private static final int PHONE_ENHANCED_VP_OFF = 10;
     private static final int PHONE_RINGBACK_TONE = 11;
     private static final int PHONE_RESEND_MUTE = 12;
+    private static final int PHONE_AUTO_ANSWER = 13;
 
     // Events generated internally:
     private static final int PHONE_MWI_CHANGED = 21;
@@ -352,6 +356,11 @@ public class CallNotifier extends Handler
                 mApplication.notificationMgr.updateInCallNotification();
                 break;
 
+            case PHONE_AUTO_ANSWER:
+                // Called after auto answer timer expires
+                onPhoneAutoAnswer();
+                break;
+
             default:
                 // super.handleMessage(msg);
         }
@@ -368,6 +377,16 @@ public class CallNotifier extends Handler
             onCfiChanged(cfi);
         }
     };
+
+    private void onPhoneAutoAnswer() {
+        Log.d(LOG_TAG, "Autoanswering ringing call");
+        Call ringingCall = mCM.getFirstActiveRingingCall();
+        if (ringingCall != null) {
+            PhoneUtils.answerCall(ringingCall);
+        } else {
+            Log.e(LOG_TAG, "No ringing call to answer!!");
+        }
+    }
 
     /**
      * Handles a "new ringing connection" event from the telephony layer.
@@ -438,7 +457,21 @@ public class CallNotifier extends Handler
         // - don't ring for call waiting connections
         // - do this before showing the incoming call panel
         if (PhoneUtils.isRealIncomingCall(state)) {
+            int mAutoAnswer = Settings.System.getInt(mApplication.getContentResolver(),
+                    Settings.System.AUTO_ANSWER_TIMEOUT, -1);
+
+            // Reset Auto answer timeout
+            removeMessages(PHONE_AUTO_ANSWER);
+
             startIncomingCallQuery(c);
+
+            // If Auto Answer feature has been enabled, the call is automatically
+            // answered after a timeout value selected by the user.
+            if (mAutoAnswer != -1) {
+                Log.d(LOG_TAG, "Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+                Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
+                sendMessageDelayed(message, mAutoAnswer);
+            }
         } else {
             if (VDBG) log("- starting call waiting tone...");
             if (mCallWaitingTonePlayer == null) {
