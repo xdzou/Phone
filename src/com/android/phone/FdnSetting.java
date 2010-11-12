@@ -84,7 +84,7 @@ public class FdnSetting extends PreferenceActivity
     private static final int MIN_PIN_LENGTH = 4;
     private static final int MAX_PIN_LENGTH = 8;
 
-    private int mSubscription;
+    private int mSubscription = 0;
     /**
      * Delegate to the respective handlers.
      */
@@ -455,7 +455,7 @@ public class FdnSetting extends PreferenceActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mPhone = PhoneFactory.getDefaultPhone();
+        mPhone = PhoneApp.getPhone(mSubscription);
         updateEnableFDN();
         checkPin2StatusAndUpdateFdnScreen();
     }
