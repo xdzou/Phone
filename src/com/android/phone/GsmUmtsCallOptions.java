@@ -33,11 +33,12 @@ public class GsmUmtsCallOptions extends PreferenceActivity {
     private final boolean DBG = (PhoneApp.DBG_LEVEL >= 2);
 
     private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
-    public static final String SUBSCRIPTION_ID_CF = "SUBSCRIPTION_ID_CF";
+    private static final String BUTTON_MORE_EXPAND_KEY = "button_more_expand_key";
+    public static final String SUBSCRIPTION_ID = "SUBSCRIPTION_ID";
 
     private PreferenceScreen subscriptionPrefCFE;
 
-    private int mSubscription;
+    private int mSubscription = 0;
     private Phone mPhone;
 
     @Override
@@ -50,8 +51,11 @@ public class GsmUmtsCallOptions extends PreferenceActivity {
         mSubscription = getIntent().getIntExtra(CallFeaturesSetting.SUBSCRIPTION_ID, 0);
         // setting selected subscription for GsmUmtsCallForwardOptions.java
         subscriptionPrefCFE  = (PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY);
-        subscriptionPrefCFE.getIntent().putExtra(SUBSCRIPTION_ID_CF, mSubscription);
-
+        subscriptionPrefCFE.getIntent().putExtra(SUBSCRIPTION_ID, mSubscription);
+        // setting selected subscription for GsmUmtsAdditionalCallOptions.java
+        PreferenceScreen subscriptionPrefAdditionSettings =
+                (PreferenceScreen) findPreference(BUTTON_MORE_EXPAND_KEY);
+        subscriptionPrefAdditionSettings.getIntent().putExtra(SUBSCRIPTION_ID, mSubscription);
         Log.d(LOG_TAG, "Getting GsmUmtsCallOptions subscription =" + mSubscription);
         mPhone = PhoneApp.getPhone(mSubscription);
 
