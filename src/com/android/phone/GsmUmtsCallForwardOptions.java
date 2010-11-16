@@ -41,7 +41,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
 
     private boolean mFirstResume;
     private Bundle mIcicle;
-    private int mSubscription;
+    private int mSubscription = 0;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -50,7 +50,7 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
         addPreferencesFromResource(R.xml.callforward_options);
 
         // getting selected subscription
-        mSubscription = getIntent().getIntExtra(GsmUmtsCallOptions.SUBSCRIPTION_ID_CF, 0);
+        mSubscription = getIntent().getIntExtra(GsmUmtsCallOptions.SUBSCRIPTION_ID, 0);
         Log.d(LOG_TAG, "Insdie CF options, Getting subscription =" + mSubscription);
 
         PreferenceScreen prefSet = getPreferenceScreen();
