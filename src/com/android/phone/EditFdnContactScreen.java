@@ -35,6 +35,7 @@ import android.text.Selection;
 import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.method.DialerKeyListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -374,6 +375,8 @@ public class EditFdnContactScreen extends Activity {
     }
 
     private void handleResult(boolean success, boolean invalidNumber) {
+        Phone mPhone;
+
         if (success) {
             if (DBG) log("handleResult: success!");
             showStatus(getResources().getText(mAddContact ?
@@ -383,16 +386,16 @@ public class EditFdnContactScreen extends Activity {
             if (invalidNumber)
                 showStatus(getResources().getText(R.string.fdn_invalid_number));
             else {
-		if (PhoneFactory.getDefaultPhone().getIccCard().getIccPin2Blocked()) {
-		    showStatus(getResources().getText(R.string.fdn_enable_puk2_requested));
-		} else if (PhoneFactory.getDefaultPhone().getIccCard().getIccPuk2Blocked()) {
-		    showStatus(getResources().getText(R.string.puk2_blocked));
-		} else {
+                mPhone = PhoneApp.getPhone(mSubscription);
+                if (mPhone.getIccCard().getIccPin2Blocked()) {
+                    showStatus(getResources().getText(R.string.fdn_enable_puk2_requested));
+                } else if (mPhone.getIccCard().getIccPuk2Blocked()) {
+                    showStatus(getResources().getText(R.string.puk2_blocked));
+                } else {
                     showStatus(getResources().getText(R.string.pin2_invalid));
-		}
-	    }
+                }
+            }
         }
-
         mHandler.postDelayed(new Runnable() {
             public void run() {
                 finish();
