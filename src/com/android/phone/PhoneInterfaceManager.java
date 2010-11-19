@@ -268,11 +268,6 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return PhoneApp.getPhone(subscription);
     }
 
-    // returns default subscription, 0 in the case of single standby.
-    private int getDefaultSubscription() {
-        return PhoneApp.getDefaultSubscription();
-    }
-
     //
     // Implementation of the ITelephony interface.
     //
@@ -662,7 +657,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public boolean enableDataConnectivity() {
-        return enableDataConnectivityOnSubscription(PhoneApp.getDataSubscription(mContext));
+        return enableDataConnectivityOnSubscription(PhoneApp.getDataSubscription());
     }
 
     public boolean enableDataConnectivityOnSubscription(int subscription) {
@@ -671,7 +666,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public int enableApnType(String type) {
-        return enableApnTypeOnSubscription(type, PhoneApp.getDataSubscription(mContext));
+        return enableApnTypeOnSubscription(type, PhoneApp.getDataSubscription());
     }
 
     public int enableApnTypeOnSubscription(String type, int subscription) {
@@ -680,7 +675,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public int disableApnType(String type) {
-        return disableApnTypeOnSubscription(type, PhoneApp.getDataSubscription(mContext));
+        return disableApnTypeOnSubscription(type, PhoneApp.getDataSubscription());
     }
 
     public int disableApnTypeOnSubscription(String type, int subscription) {
@@ -689,7 +684,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public boolean disableDataConnectivity() {
-        return disableDataConnectivityOnSubscription(PhoneApp.getDataSubscription(mContext));
+        return disableDataConnectivityOnSubscription(PhoneApp.getDataSubscription());
     }
 
     public boolean disableDataConnectivityOnSubscription(int subscription) {
@@ -698,7 +693,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public boolean isDataConnectivityPossible() {
-        return isDataConnectivityPossibleOnSubscription(PhoneApp.getDataSubscription(mContext));
+        return isDataConnectivityPossibleOnSubscription(PhoneApp.getDataSubscription());
     }
 
     public boolean isDataConnectivityPossibleOnSubscription(int subscription) {
@@ -732,7 +727,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public int getDataState() {
-        return getDataStateOnSubscription(PhoneApp.getDataSubscription(mContext));
+        return getDataStateOnSubscription(PhoneApp.getDataSubscription());
     }
 
     public int getDataStateOnSubscription(int subscription) {
@@ -740,7 +735,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public int getDataActivity() {
-        return getDataActivityOnSubscription(PhoneApp.getDataSubscription(mContext));
+        return getDataActivityOnSubscription(PhoneApp.getDataSubscription());
     }
 
     public int getDataActivityOnSubscription(int subscription) {
@@ -1080,7 +1075,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getActiveInterfaceName(String apnType, String ipv) {
         return getActiveInterfaceNameOnSubscription(apnType, ipv,
-                      PhoneApp.getDataSubscription(mContext));
+                      PhoneApp.getDataSubscription());
     }
 
     /**
@@ -1097,7 +1092,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getActiveIpAddress(String apnType, String ipv) {
         return getActiveIpAddressOnSubscription(apnType, ipv,
-                      PhoneApp.getDataSubscription(mContext));
+                      PhoneApp.getDataSubscription());
     }
 
     /**
@@ -1114,7 +1109,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public String getActiveGateway(String apnType, String ipv) {
         return getActiveGatewayOnSubscription(apnType, ipv,
-                      PhoneApp.getDataSubscription(mContext));
+                      PhoneApp.getDataSubscription());
     }
 
     /**
@@ -1136,7 +1131,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     public void setDataReadinessChecks(boolean checkConnectivity, boolean checkSubscription,
             boolean tryDataCalls) {
         setDataReadinessChecksOnSubscription(checkConnectivity, checkSubscription,
-                   tryDataCalls, PhoneApp.getDataSubscription(mContext));
+                   tryDataCalls, PhoneApp.getDataSubscription());
     }
 
     /**
@@ -1147,5 +1142,29 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         enforceModifyPermission();
         getPhone(subscription).setDataReadinessChecks(checkConnectivity,
                    checkSubscription, tryDataCalls);
+    }
+
+    /**
+     * {@hide}
+     * Returns Default subscription, 0 in the case of single standby.
+     */
+    public int getDefaultSubscription() {
+        return PhoneApp.getDefaultSubscription();
+    }
+
+    /**
+     * {@hide}
+     * Returns Preferred Voice subscription.
+     */
+    public int getPreferredVoiceSubscription() {
+        return PhoneApp.getVoiceSubscription();
+    }
+
+    /**
+     * {@hide}
+     * Returns Preferred Data subscription.
+     */
+    public int getPreferredDataSubscription() {
+        return PhoneApp.getDataSubscription();
     }
 }

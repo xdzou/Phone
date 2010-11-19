@@ -229,10 +229,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     private int mPhoneType;
     static boolean mPhoneCreate = false;
-    static private int defaultSubscription = 0;
-    static private int voiceSubscription = 0;
-    static private int dataSubscription = 0;
-    static private int smsSubscription = 0;
+    private int defaultSubscription = 0;
 
     /**
      * Set the restore mute state flag. Used when we are setting the mute state
@@ -385,22 +382,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
      }
 
-     public MyPhone getMyPhone(int subscription) {
+    private MyPhone getMyPhone(int subscription) {
         MyPhone myPhone = null;
-        int i;
 
-        if (mMyPhones.size() == 0) {
-            return null;
+        if (subscription < mMyPhones.size()) {
+            myPhone = mMyPhones.get(subscription);
         }
-        for (i = 0; i < mMyPhones.size(); i++) {
-            myPhone = mMyPhones.get(i);
-            if (myPhone.mPhone.getSubscription() == subscription) {
-                break;
-            }
-        }
-        if (i == mMyPhones.size()) {
-            return null;
-        }
+
         return myPhone;
     }
 
@@ -422,7 +410,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         if (!mPhoneCreate) {
             throw new IllegalStateException("Default phones haven't been made yet!");
         }
-        return mMyPhones.get(defaultSubscription).mPhone;
+        return mMyPhones.get(getDefaultSubscription()).mPhone;
     }
 
     static Phone getPhone(int subscription) {
@@ -470,7 +458,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
       * Get the subscription that has service
       */
     public int getVoiceSubscriptionInService() {
-        int voiceSub = getVoiceSubscription(getApplicationContext());
+        int voiceSub = getVoiceSubscription();
         int sub = voiceSub;
         for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
             Phone phone = getPhone(i);
@@ -591,138 +579,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
     }
 
-    /*Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            Phone.State phoneState;
-            checkPhoneType();
-            switch (msg.what) {
-
-                case EVENT_UPDATE_INCALL_NOTIFICATION:
-                    // Tell the NotificationMgr to update the "ongoing
-                    // call" icon in the status bar, if necessary.
-                    // Currently, this is triggered by a bluetooth headset
-                    // state change (since the status bar icon needs to
-                    // turn blue when bluetooth is active.)
-                    NotificationMgr.getDefault().updateInCallNotification();
-                    break;
-
-                case EVENT_DATA_ROAMING_DISCONNECTED:
-                    NotificationMgr.getDefault().showDataDisconnectedRoaming();
-                    break;
-
-                case EVENT_DATA_ROAMING_OK:
-                    NotificationMgr.getDefault().hideDataDisconnectedRoaming();
-                    break;
-
-                case MMI_COMPLETE:
-                    onMMIComplete((AsyncResult) msg.obj);
-                    break;
-
-                case MMI_CANCEL:
-                    PhoneUtils.cancelMmiCode(phone);
-                    break;
-
-                case EVENT_WIRED_HEADSET_PLUG:
-                    // Since the presence of a wired headset or bluetooth affects the
-                    // speakerphone, update the "speaker" state.  We ONLY want to do
-                    // this on the wired headset connect / disconnect events for now
-                    // though, so we're only triggering on EVENT_WIRED_HEADSET_PLUG.
-
-                    phoneState = phone.getState();
-                    // Do not change speaker state if phone is not off hook
-                    if (phoneState == Phone.State.OFFHOOK) {
-                        if (mBtHandsfree == null || !mBtHandsfree.isAudioOn()) {
-                            if (!isHeadsetPlugged()) {
-                                // if the state is "not connected", restore the speaker state.
-                                PhoneUtils.restoreSpeakerMode(getApplicationContext());
-                            } else {
-                                // if the state is "connected", force the speaker off without
-                                // storing the state.
-                                PhoneUtils.turnOnSpeaker(getApplicationContext(), false, false);
-                            }
-                        }
-                    }
-                    // Update the Proximity sensor based on headset state
-                    updateProximitySensorMode(phoneState);
-
-                    // Force TTY state update according to new headset state
-                    if (mTtyEnabled) {
-                        sendMessage(obtainMessage(EVENT_TTY_PREFERRED_MODE_CHANGED, 0));
-                    }
-                    break;
-
-                case EVENT_SIM_STATE_CHANGED:
-                    // Marks the event where the SIM goes into ready state.
-                    // Right now, this is only used for the PUK-unlocking
-                    // process.
-                    if (msg.obj.equals(IccCard.INTENT_VALUE_ICC_READY)) {
-                        // when the right event is triggered and there
-                        // are UI objects in the foreground, we close
-                        // them to display the lock panel.
-                        if (mPUKEntryActivity != null) {
-                            mPUKEntryActivity.finish();
-                            mPUKEntryActivity = null;
-                        }
-                        if (mPUKEntryProgressDialog != null) {
-                            mPUKEntryProgressDialog.dismiss();
-                            mPUKEntryProgressDialog = null;
-                        }
-                    }
-                    break;
-
-                case EVENT_UNSOL_CDMA_INFO_RECORD:
-                    //TODO: handle message here;
-                    break;
-
-                case EVENT_DOCK_STATE_CHANGED:
-                    // If the phone is docked/undocked during a call, and no wired or BT headset
-                    // is connected: turn on/off the speaker accordingly.
-                    boolean inDockMode = false;
-                    if (mDockState == Intent.EXTRA_DOCK_STATE_DESK ||
-                            mDockState == Intent.EXTRA_DOCK_STATE_CAR) {
-                        inDockMode = true;
-                    }
-                    if (VDBG) Log.d(LOG_TAG, "received EVENT_DOCK_STATE_CHANGED. Phone inDock = "
-                            + inDockMode);
-
-                    phoneState = phone.getState();
-                    if (phoneState == Phone.State.OFFHOOK &&
-                            !isHeadsetPlugged() &&
-                            !(mBtHandsfree != null && mBtHandsfree.isAudioOn())) {
-                        PhoneUtils.turnOnSpeaker(getApplicationContext(), inDockMode, true);
-
-                        if (mInCallScreen != null) {
-                            mInCallScreen.requestUpdateTouchUi();
-                        }
-                    }
-
-                case EVENT_TTY_PREFERRED_MODE_CHANGED:
-                    // TTY mode is only applied if a headset is connected
-                    int ttyMode;
-                    if (isHeadsetPlugged()) {
-                        ttyMode = mPreferredTtyMode;
-                    } else {
-                        ttyMode = Phone.TTY_MODE_OFF;
-                    }
-                    phone.setTTYMode(ttyMode, mHandler.obtainMessage(EVENT_TTY_MODE_SET));
-                    break;
-
-                case EVENT_TTY_MODE_GET:
-                    handleQueryTTYModeResponse(msg);
-                    break;
-
-                case EVENT_TTY_MODE_SET:
-                    handleSetTTYModeResponse(msg);
-                    break;
-
-                case EVENT_TECHNOLOGY_CHANGED:
-                    // Nothing to do here. already handled by checkPhoneType above
-                    break;
-            }
-        }
-    }; */
-
     public PhoneApp() {
         sMe = this;
     }
@@ -752,10 +608,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             // Initialize the telephony framework
 
             Log.v(LOG_TAG, "after makeDefaultPhones");
-            // Get the default phone
-            int subscription = getDefaultSubscription();
+            // Get the default subscription from the system property
+            defaultSubscription = getDefaultSubscription();
+
             // Set Default fields
-            MyPhone myPhone = getMyPhone(subscription);
+            MyPhone myPhone = getMyPhone(defaultSubscription);
             phone = myPhone.mPhone;
             notifier = myPhone.mCallNotifier;
             ringer = myPhone.mRinger;
@@ -815,6 +672,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             intentFilter.addAction(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED);
             intentFilter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
+            intentFilter.addAction(TelephonyIntents.ACTION_DEFAULT_SUBSCRIPTION_CHANGED);
             if (mTtyEnabled) {
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
             }
@@ -1829,7 +1687,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                                                             BluetoothHeadset.STATE_ERROR);
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: HEADSET_STATE_CHANGED_ACTION");
                 if (VDBG) Log.d(LOG_TAG, "==> new state: " + mBluetoothHeadsetState);
-                MyPhone myPhone = mMyPhones.get(getDefaultSubscription());
+                MyPhone myPhone = mMyPhones.get(defaultSubscription);
                 updateBluetoothIndication(myPhone.mPhone, true);  // Also update any visible UI if necessary
             } else if (action.equals(BluetoothHeadset.ACTION_AUDIO_STATE_CHANGED)) {
                 mBluetoothHeadsetAudioState =
@@ -1837,7 +1695,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                                            BluetoothHeadset.STATE_ERROR);
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: HEADSET_AUDIO_STATE_CHANGED_ACTION");
                 if (VDBG) Log.d(LOG_TAG, "==> new state: " + mBluetoothHeadsetAudioState);
-                MyPhone myPhone = mMyPhones.get(getDefaultSubscription());
+                MyPhone myPhone = mMyPhones.get(defaultSubscription);
                 updateBluetoothIndication(myPhone.mPhone, true);  // Also update any visible UI if necessary
             } else if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_ANY_DATA_CONNECTION_STATE_CHANGED");
@@ -1869,7 +1727,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 mHandler.sendMessage(mHandler.obtainMessage(EVENT_WIRED_HEADSET_PLUG, 0));
             } else if (action.equals(Intent.ACTION_BATTERY_LOW)) {
                 if (VDBG) Log.d(LOG_TAG, "mReceiver: ACTION_BATTERY_LOW");
-                getCallNotifier(getDefaultSubscription()).sendBatteryLow();  //Play a warning tone if in-call
+                getCallNotifier(defaultSubscription).sendBatteryLow();  //Play a warning tone if in-call
             } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED))) {
                 MyPhoneHandler handler = getMyPhoneHandler(subscription);
 
@@ -1948,7 +1806,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 mDockState = intent.getIntExtra(Intent.EXTRA_DOCK_STATE,
                         Intent.EXTRA_DOCK_STATE_UNDOCKED);
                 if (VDBG) Log.d(LOG_TAG, "ACTION_DOCK_EVENT -> mDockState = " + mDockState);
-                mHandler.sendMessage(mHandler.obtainMessage(EVENT_DOCK_STATE_CHANGED, 0));
+                MyPhoneHandler handler = getMyPhoneHandler(subscription);
+                handler.sendMessage(handler.obtainMessage(EVENT_DOCK_STATE_CHANGED, 0));
             } else if (action.equals(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION)) {
                 mPreferredTtyMode = intent.getIntExtra(TtyIntent.TTY_PREFFERED_MODE,
                                                        Phone.TTY_MODE_OFF);
@@ -1961,6 +1820,10 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 if (ringerMode == AudioManager.RINGER_MODE_SILENT) {
                     notifier.silenceRinger();
                 }
+            } else if (action.equals(TelephonyIntents.ACTION_DEFAULT_SUBSCRIPTION_CHANGED)) {
+                Log.d(LOG_TAG, "Default subscription changed, subscription: " + subscription);
+                defaultSubscription = subscription;
+                setDefaultPhone(subscription);
             }
         }
     }
@@ -2187,53 +2050,52 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         dpPanel.show();
     }
 
+    // updates cdma variables of PhoneApp
+    public void updatePhoneAppCdmaVariables(int subscription) {
+        Log.d(LOG_TAG, "updatePhoneAppCdmaVariables(" + subscription + ")");
+        MyPhone myPhone = mMyPhones.get(subscription);
+        if (myPhone == null)
+            return;
+
+        if (myPhone.mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+            cdmaPhoneCallState = myPhone.mCdmaPhoneCallState;
+            cdmaOtaProvisionData = myPhone.mCdmaOtaProvisionData;
+            cdmaOtaConfigData = myPhone.mCdmaOtaConfigData;
+            cdmaOtaScreenState = myPhone.mCdmaOtaScreenState;
+            cdmaOtaInCallScreenUiState = myPhone.mCdmaOtaInCallScreenUiState;
+        }
+    }
+
     // sets the default phone in PhoneApp
-    void SetDefaultPhone(int subscription){
-        //TODO DSDS
-        //When default phone dynamically changes need to handle
+    void setDefaultPhone(int subscription){
+        Log.d(LOG_TAG, "setDefaultPhone(" + subscription + ")");
         MyPhone myPhone = mMyPhones.get(subscription);
         phone = myPhone.mPhone;
+        mLastPhoneState = myPhone.mLastPhoneState;
         notifier = myPhone.mCallNotifier;
-        cdmaPhoneCallState = myPhone.mCdmaPhoneCallState;
+        ringer = myPhone.mRinger;
+        updatePhoneAppCdmaVariables(subscription);
         defaultSubscription = subscription;
     }
 
-
-     /* Gets the default subscription */
+    /* Gets the default subscription */
     public static int getDefaultSubscription() {
-        return defaultSubscription;
+        return PhoneFactory.getDefaultSubscription();
     }
 
     /* Gets User preferred Voice subscription setting*/
-    public static int getVoiceSubscription(Context context) {
-        try {
-            voiceSubscription = Settings.System.getInt(context.getContentResolver(),Settings.System.DUAL_SIM_VOICE_CALL);
-            Log.d(LOG_TAG, "getVoiceSubscription voiceSubscription: " + voiceSubscription);
-        } catch (SettingNotFoundException snfe) {
-            Log.e(LOG_TAG, "Settings Exception Reading Dual Sim Voice Call Values", snfe);
-        }
-        return voiceSubscription;
+    public static int getVoiceSubscription() {
+        return PhoneFactory.getVoiceSubscription();
     }
 
- /* Gets User preferred Data subscription setting*/
-    public static int getDataSubscription(Context context) {
-        try {
-            dataSubscription = Settings.System.getInt(context.getContentResolver(),Settings.System.DUAL_SIM_DATA_CALL);
-        } catch (SettingNotFoundException snfe) {
-            Log.e(LOG_TAG, "Settings Exception Reading Dual Sim Data Call Values", snfe);
-        }
-        return dataSubscription;
+    /* Gets User preferred Data subscription setting*/
+    public static int getDataSubscription() {
+        return PhoneFactory.getDataSubscription();
     }
 
     /* Gets User preferred SMS subscription setting*/
-    public static int getSMSSubscription(Context context) {
-        try {
-            smsSubscription = Settings.System.getInt(context.getContentResolver(),Settings.System.DUAL_SIM_SMS);
-            Log.d(LOG_TAG, "getSMSSubscription 1: " + smsSubscription);
-        } catch (SettingNotFoundException snfe) {
-            Log.e(LOG_TAG, "Settings Exception Reading Dual Sim SMS Values", snfe);
-        }
-        return smsSubscription;
+    public static int getSMSSubscription() {
+        return PhoneFactory.getSMSSubscription();
     }
 
     /* package */ void clearUserActivityTimeout() {

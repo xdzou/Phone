@@ -568,7 +568,7 @@ public class InCallScreen extends Activity
         getWindow().addFlags(flags);
 
         if (TelephonyManager.isDsdsEnabled()) {
-            subscription = PhoneApp.getVoiceSubscription(getApplicationContext());
+            subscription = PhoneApp.getVoiceSubscription();
             setPhone(PhoneApp.getPhone(subscription));
             log("onCreate setting voice sub: " + subscription);
         } else {
@@ -1201,12 +1201,12 @@ public class InCallScreen extends Activity
             int subscription = 0;
             if (action.equals(Intent.ACTION_CALL_EMERGENCY)) {
                 subscription = getIntent().getIntExtra("Subscription",
-                        PhoneApp.getVoiceSubscription(getApplicationContext()));
+                        PhoneApp.getVoiceSubscription());
                 log("Received ACTION_CALL_EMERGENCY intent.Attempting call on sub: " + subscription);
             } else {
                 // Obtain the preferred voice subscription.
                 // Fetched from Dual Sim Settings.
-                subscription = PhoneApp.getVoiceSubscription(getApplicationContext());
+                subscription = PhoneApp.getVoiceSubscription();
                 log("Received ACTION_CALL intent.Attempting call on sub: " + subscription);
             }
             setPhone(PhoneApp.getPhone(subscription));
