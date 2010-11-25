@@ -193,7 +193,7 @@ public class CallNotifier extends Handler
     private AudioManager mAudioManager;
 
     public CallNotifier(PhoneApp app, Phone phone, Ringer ringer,
-                        BluetoothHandsfree btMgr, CallLogAsync callLog) {
+                        BluetoothHandsfree btMgr, CallLogAsync callLog, int subscription) {
         mApplication = app;
         mPhone = phone;
         mCallLog = callLog;
@@ -243,7 +243,7 @@ public class CallNotifier extends Handler
 
         TelephonyManager telephonyManager = (TelephonyManager)app.getSystemService(
                 Context.TELEPHONY_SERVICE);
-        telephonyManager.listen(mPhoneStateListener,
+        telephonyManager.listen(getPhoneStateListener(subscription),
                 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
                 | PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR);
     }
@@ -429,17 +429,23 @@ public class CallNotifier extends Handler
         suppSvcNotification = null;
     }
 
-    PhoneStateListener mPhoneStateListener = new PhoneStateListener() {
-        @Override
-        public void onMessageWaitingIndicatorChanged(boolean mwi) {
-            onMwiChanged(mwi);
-        }
+    private PhoneStateListener getPhoneStateListener(int sub) {
+        Log.d(LOG_TAG, "getPhoneStateListener: SUBSCRIPTION == " + sub);
 
-        @Override
-        public void onCallForwardingIndicatorChanged(boolean cfi) {
-            onCfiChanged(cfi);
-        }
-    };
+        PhoneStateListener mPhoneStateListener = new PhoneStateListener(sub) {
+
+            @Override
+            public void onMessageWaitingIndicatorChanged(boolean mwi) {
+                onMwiChanged(mwi);
+            }
+
+            @Override
+            public void onCallForwardingIndicatorChanged(boolean cfi) {
+                onCfiChanged(cfi);
+            }
+        };
+        return mPhoneStateListener;
+    }
 
     private void onPhoneAutoAnswer() {
         Call mForegroundCall = mPhone.getForegroundCall();

@@ -283,7 +283,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             mPhoneType = mPhone.getPhoneType();
             mHandler = new MyPhoneHandler(mPhone);
             mRinger = new Ringer(mPhone);
-            mCallNotifier = new CallNotifier(PhoneApp.sMe, mPhone, mRinger, mBtHandsfree, new CallLogAsync());
+            mCallNotifier = new CallNotifier(PhoneApp.sMe, mPhone, mRinger, mBtHandsfree,
+                                             new CallLogAsync(), subscription);
 
             // register for MMI/USSD
             mPhone.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
