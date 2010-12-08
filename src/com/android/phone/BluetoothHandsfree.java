@@ -263,6 +263,9 @@ public class BluetoothHandsfree {
 
         if (isIncallAudio()) {
             audioOn();
+        } else if (mRingingCall.isRinging()) {
+            // need to update HS with RING when single ringing call exist
+            mBluetoothPhoneState.ring();
         }
     }
 
@@ -1726,6 +1729,10 @@ public class BluetoothHandsfree {
                             sendURC("OK");  // send immediately, then initiate audio
                             if (isIncallAudio()) {
                                 audioOn();
+                            } else if (mRingingCall.isRinging()) {
+                                // need to update HS with RING cmd when single
+                                // ringing call exist
+                                mBluetoothPhoneState.ring();
                             }
                             // only send OK once
                             return new AtCommandResult(AtCommandResult.UNSOLICITED);
@@ -1961,6 +1968,9 @@ public class BluetoothHandsfree {
                 sendURC("OK");  // send reply first, then connect audio
                 if (isIncallAudio()) {
                     audioOn();
+                } else if (mRingingCall.isRinging()) {
+                    // need to update HS with RING when single ringing call exist
+                    mBluetoothPhoneState.ring();
                 }
                 // already replied
                 return new AtCommandResult(AtCommandResult.UNSOLICITED);
