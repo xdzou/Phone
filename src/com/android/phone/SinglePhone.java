@@ -109,14 +109,4 @@ public class SinglePhone {
         }
     }
 
-    public void clearCdmaVariables() {
-
-        if (mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-            mCdmaPhoneCallState = null;
-            mCdmaOtaProvisionData = null;
-            mCdmaOtaConfigData = null;
-            mCdmaOtaScreenState = null;
-            mCdmaOtaInCallScreenUiState = null;
-        }
-    }
 };

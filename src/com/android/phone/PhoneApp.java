@@ -261,10 +261,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             Log.d(LOG_TAG,"old phone type:"+singlePhone.mPhoneType+ ", New Phone type:"+singlePhone.mPhone.getPhoneType());
             if (singlePhone.mPhoneType != singlePhone.mPhone.getPhoneType()) {
                 Log.d(LOG_TAG,"handleMessage: radio Technology has changed (" + singlePhone.mPhone.getPhoneName() + ")");
-                if (singlePhone.mPhoneType == Phone.PHONE_TYPE_CDMA) {
-                    //clear cdma variables of single phone as RAT changed.
-                    clearCdmaVariables(i);
-                }
                 initForNewRadioTechnology(i);
                 singlePhone.mPhoneType = singlePhone.mPhone.getPhoneType();
             }
@@ -620,16 +616,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             cdmaOtaScreenState = singlePhone.mCdmaOtaScreenState;
             cdmaOtaInCallScreenUiState = singlePhone.mCdmaOtaInCallScreenUiState;
         }
-    }
-
-    private void clearCdmaVariables(int subscription) {
-        SinglePhone singlePhone = getSinglePhone(subscription);
-        singlePhone.clearCdmaVariables();
-        cdmaPhoneCallState = null;
-        cdmaOtaProvisionData = null;
-        cdmaOtaConfigData = null;
-        cdmaOtaScreenState = null;
-        cdmaOtaInCallScreenUiState = null;
     }
 
     @Override
@@ -1333,9 +1319,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         Phone phone = singlePhone.mPhone;
 
         if (singlePhone.mPhone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-           // Create an instance of CdmaPhoneCallState and initialize it to IDLE
            singlePhone.initializeCdmaVariables();
            updatePhoneAppCdmaVariables(subscription);
+        } else {
            clearOtaState();
         }
 
@@ -1705,11 +1691,31 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     // it is safe to call clearOtaState() even if the InCallScreen isn't active
     public void clearOtaState() {
-        if (DBG) Log.d(LOG_TAG, "- clearOtaState ...");
         if ((mInCallScreen != null)
                 && (mInCallScreen.otaUtils != null)) {
             mInCallScreen.otaUtils.cleanOtaScreen(true);
-            if (DBG) Log.d(LOG_TAG, "  - clearOtaState clears OTA screen");
+        } else {
+            cleanOtaScreen();
+        }
+    }
+
+    public void cleanOtaScreen() {
+        if (DBG)
+            Log.d(LOG_TAG, "cleanOtaScreen");
+
+        // clean application OTA state
+        if (cdmaOtaProvisionData != null) {
+            cdmaOtaProvisionData.isOtaCallCommitted = false;
+            cdmaOtaProvisionData.isOtaCallIntentProcessed = false;
+            cdmaOtaProvisionData.inOtaSpcState = false;
+            cdmaOtaProvisionData.activationCount = 0;
+            cdmaOtaProvisionData.otaSpcUptime = 0;
+        }
+        if (cdmaOtaScreenState != null) {
+            cdmaOtaScreenState.otaScreenState = OtaUtils.CdmaOtaScreenState.OtaScreenState.OTA_STATUS_UNDEFINED;
+        }
+        if (cdmaOtaInCallScreenUiState != null) {
+            cdmaOtaInCallScreenUiState.state = OtaUtils.CdmaOtaInCallScreenUiState.State.UNDEFINED;
         }
     }
 
