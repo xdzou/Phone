@@ -1601,11 +1601,30 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     // it is safe to call clearOtaState() even if the InCallScreen isn't active
     public void clearOtaState() {
-        if (DBG) Log.d(LOG_TAG, "- clearOtaState ...");
+        cleanOtaScreen();
         if ((mInCallScreen != null)
                 && (mInCallScreen.otaUtils != null)) {
             mInCallScreen.otaUtils.cleanOtaScreen(true);
-            if (DBG) Log.d(LOG_TAG, "  - clearOtaState clears OTA screen");
+        }
+    }
+
+    public void cleanOtaScreen() {
+        if (DBG)
+            Log.d(LOG_TAG, "cleanOtaScreen");
+
+        // clean application OTA state
+        if (cdmaOtaProvisionData != null) {
+            cdmaOtaProvisionData.isOtaCallCommitted = false;
+            cdmaOtaProvisionData.isOtaCallIntentProcessed = false;
+            cdmaOtaProvisionData.inOtaSpcState = false;
+            cdmaOtaProvisionData.activationCount = 0;
+            cdmaOtaProvisionData.otaSpcUptime = 0;
+        }
+        if (cdmaOtaScreenState != null) {
+            cdmaOtaScreenState.otaScreenState = OtaUtils.CdmaOtaScreenState.OtaScreenState.OTA_STATUS_UNDEFINED;
+        }
+        if (cdmaOtaInCallScreenUiState != null) {
+            cdmaOtaInCallScreenUiState.state = OtaUtils.CdmaOtaInCallScreenUiState.State.UNDEFINED;
         }
     }
 

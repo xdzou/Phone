@@ -950,6 +950,9 @@ public class InCallScreen extends Activity
         mIsDestroyed = true;
 
         final PhoneApp app = PhoneApp.getInstance();
+        if (otaUtils != null) {
+            otaUtils.cleanOtaScreen(true);
+        }
         app.setInCallScreenInstance(null);
 
         // Clear out the InCallScreen references in various helper objects
@@ -3752,15 +3755,19 @@ public class InCallScreen extends Activity
                 break;
 
             case OTA_NORMAL:
-                otaUtils.setCdmaOtaInCallScreenUiState(
-                        OtaUtils.CdmaOtaInCallScreenUiState.State.NORMAL);
-                mInCallPanel.setVisibility(View.GONE);
+                if (otaUtils != null) {
+                    otaUtils.setCdmaOtaInCallScreenUiState(
+                            OtaUtils.CdmaOtaInCallScreenUiState.State.NORMAL);
+                    mInCallPanel.setVisibility(View.GONE);
+                }
                 break;
 
             case OTA_ENDED:
-                otaUtils.setCdmaOtaInCallScreenUiState(
-                        OtaUtils.CdmaOtaInCallScreenUiState.State.ENDED);
-                mInCallPanel.setVisibility(View.GONE);
+                if (otaUtils != null) {
+                    otaUtils.setCdmaOtaInCallScreenUiState(
+                            OtaUtils.CdmaOtaInCallScreenUiState.State.ENDED);
+                    mInCallPanel.setVisibility(View.GONE);
+                }
                 break;
 
             case UNDEFINED:
@@ -4844,7 +4851,7 @@ public class InCallScreen extends Activity
             }
 
             inOtaCall = checkIsOtaCall(getIntent());
-            if (inOtaCall) {
+            if ((inOtaCall) && (otaUtils != null)) {
                 OtaUtils.CdmaOtaInCallScreenUiState.State cdmaOtaInCallScreenState =
                         otaUtils.getCdmaOtaInCallScreenUiState();
                 if (cdmaOtaInCallScreenState == OtaUtils.CdmaOtaInCallScreenUiState.State.NORMAL) {
