@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -253,6 +254,9 @@ public class BluetoothHandsfree {
 
         if (isIncallAudio()) {
             audioOn();
+        } else if (mCM.getFirstActiveRingingCall().isRinging()) {
+            // need to update HS with RING when single ringing call exist
+            mBluetoothPhoneState.ring();
         }
     }
 
@@ -416,11 +420,24 @@ public class BluetoothHandsfree {
         }
 
         private boolean sendUpdate() {
-            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mIndicatorsEnabled;
+            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mIndicatorsEnabled
+                   && mServiceConnectionEstablished;
         }
 
         private boolean sendClipUpdate() {
-            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mClip;
+            return isHeadsetConnected() && mHeadsetType == TYPE_HANDSFREE && mClip &&
+                   mServiceConnectionEstablished;
+        }
+
+        private boolean sendRingUpdate() {
+            if (isHeadsetConnected() && !mIgnoreRing && !mStopRing &&
+                    mCM.getFirstActiveRingingCall().isRinging()) {
+                if (mHeadsetType == TYPE_HANDSFREE) {
+                    return mServiceConnectionEstablished ? true : false;
+                }
+                return true;
+            }
+            return false;
         }
 
         private void stopRing() {
@@ -678,7 +695,11 @@ public class BluetoothHandsfree {
                 }
             }
 
-            switch(foregroundCall.getState()) {
+            Call.State forgroundstate = foregroundCall.getState();
+
+            if (VDBG) log("Foreground call state : " + forgroundstate);
+
+            switch(forgroundstate) {
             case ACTIVE:
                 call = 1;
                 mAudioPossible = true;
@@ -713,7 +734,11 @@ public class BluetoothHandsfree {
                 mAudioPossible = false;
             }
 
-            switch(ringingCall.getState()) {
+            Call.State ringingstate = ringingCall.getState();
+
+            if (VDBG) log("Ringing call state : " + ringingstate);
+
+            switch(ringingstate) {
             case INCOMING:
             case WAITING:
                 callsetup = 1;
@@ -727,7 +752,11 @@ public class BluetoothHandsfree {
                 break;
             }
 
-            switch(backgroundCall.getState()) {
+            Call.State backgroundstate = backgroundCall.getState();
+
+            if (VDBG) log("Background call state : " + backgroundstate);
+
+            switch(backgroundstate) {
             case HOLDING:
                 if (call == 1) {
                     callheld = 1;
@@ -745,7 +774,7 @@ public class BluetoothHandsfree {
                 break;
             }
 
-            if (mCall != call) {
+            if (mCall != call && callsetup == 0) {
                 if (call == 1) {
                     // This means that a call has transitioned from NOT ACTIVE to ACTIVE.
                     // Switch on audio.
@@ -880,6 +909,12 @@ public class BluetoothHandsfree {
                 }
             }
             sendURC(result.toString());
+
+            if (VDBG) {
+                log("CallSetup: " + Integer.toString(callsetup));
+                log("Call: " + Integer.toString(call));
+                log("CallHeld: " + Integer.toString(callheld));
+            }
         }
 
         private int getCdmaCallHeldStatus(CdmaPhoneCallState.PhoneCallState currState,
@@ -904,7 +939,7 @@ public class BluetoothHandsfree {
 
 
         private AtCommandResult ring() {
-            if (!mIgnoreRing && !mStopRing && mCM.getFirstActiveRingingCall().isRinging()) {
+            if (sendRingUpdate()) {
                 AtCommandResult result = new AtCommandResult(AtCommandResult.UNSOLICITED);
                 result.addResponse("RING");
                 if (sendClipUpdate()) {
@@ -1458,7 +1493,16 @@ public class BluetoothHandsfree {
 
         int mpty = 0;
         if (currCdmaCallState == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
-            mpty = 1;
+            if (prevCdmaCallState == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE){
+                // If the current state is reached after merging two calls
+                // we set the multiparty call true.
+                mpty = 1;
+            } else {
+                // CALL_CONF state is not from merging two calls, but from
+                // accepting the second call. In this case first will be on
+                // hold.
+                mpty = 0;
+            }
         } else {
             mpty = 0;
         }
@@ -1680,6 +1724,10 @@ public class BluetoothHandsfree {
                             sendURC("OK");  // send immediately, then initiate audio
                             if (isIncallAudio()) {
                                 audioOn();
+                            } else if (mCM.getFirstActiveRingingCall().isRinging()) {
+                                // need to update HS with RING cmd when single
+                                // ringing call exist
+                                mBluetoothPhoneState.ring();
                             }
                             // only send OK once
                             return new AtCommandResult(AtCommandResult.UNSOLICITED);
@@ -1918,6 +1966,9 @@ public class BluetoothHandsfree {
                 sendURC("OK");  // send reply first, then connect audio
                 if (isIncallAudio()) {
                     audioOn();
+                } else if (mCM.getFirstActiveRingingCall().isRinging()) {
+                    // need to update HS with RING when single ringing call exist
+                    mBluetoothPhoneState.ring();
                 }
                 // already replied
                 return new AtCommandResult(AtCommandResult.UNSOLICITED);
