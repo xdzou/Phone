@@ -779,7 +779,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
             String notificationTitle = mContext.getString(R.string.notification_voicemail_title);
             String vmNumber = phone.getVoiceMailNumber();
-            if (DBG) log("- got vm number: '" + vmNumber + "'");
+            int subscription = phone.getSubscription();
+            if (DBG) log("- got vm number: '" + vmNumber + "'" + " on Subscription: " + subscription);
 
             // Watch out: vmNumber may be null, for two possible reasons:
             //
@@ -846,6 +847,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
             Intent intent = new Intent(Intent.ACTION_CALL,
                     Uri.fromParts("voicemail", "", null));
+            intent.putExtra("subId", subscription);
             PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
 
             Notification notification = new Notification(
