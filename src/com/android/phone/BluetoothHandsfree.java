@@ -774,7 +774,7 @@ public class BluetoothHandsfree {
                 break;
             }
 
-            if (mCall != call && callsetup == 0) {
+            if (mCall != call) {
                 if (call == 1) {
                     // This means that a call has transitioned from NOT ACTIVE to ACTIVE.
                     // Switch on audio.
