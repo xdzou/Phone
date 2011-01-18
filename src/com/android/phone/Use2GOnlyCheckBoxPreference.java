@@ -44,6 +44,7 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
 
     public Use2GOnlyCheckBoxPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        mPhone = PhoneFactory.getDefaultPhone();
         mHandler = new MyHandler();
     }
 
