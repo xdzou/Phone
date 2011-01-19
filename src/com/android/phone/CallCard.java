@@ -517,13 +517,15 @@ public class CallCard extends FrameLayout
                     if (DBG) log("- displayMainCallStatus: using data we already have...");
                     if (o instanceof CallerInfo) {
                         CallerInfo ci = (CallerInfo) o;
-                        // Update CNAP information if Phone state change occurred
+                        // Update CNAP information and phone number if Phone state change occurred
                         ci.cnapName = conn.getCnapName();
                         ci.numberPresentation = conn.getNumberPresentation();
                         ci.namePresentation = conn.getCnapNamePresentation();
+                        ci.phoneNumber = conn.getAddress();
                         if (DBG) log("- displayMainCallStatus: CNAP data from Connection: "
                                 + "CNAP name=" + ci.cnapName
-                                + ", Number/Name Presentation=" + ci.numberPresentation);
+                                + ", Number/Name Presentation=" + ci.numberPresentation
+                                + ", Number=" + ci.phoneNumber);
                         if (DBG) log("   ==> Got CallerInfo; updating display: ci = " + ci);
                         updateDisplayForPerson(ci, presentation, false, call);
                     } else if (o instanceof PhoneUtils.CallerInfoToken){
