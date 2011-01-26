@@ -678,7 +678,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
         // Activate a couple of special Notification features if an
         // incoming call is ringing:
-        if (hasRingingCall) {
+        if (hasRingingCall || hasActiveCall) {
             // We actually want to launch the incoming call UI at this point
             // (rather than just posting a notification to the status bar).
             // Setting fullScreenIntent will cause the InCallScreen to be
