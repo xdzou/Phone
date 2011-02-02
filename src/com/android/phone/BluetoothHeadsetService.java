@@ -270,9 +270,10 @@ public class BluetoothHeadsetService extends Service {
                     mBtHandsfree.onBluetoothDisabled();
                     mAg.stop();
                     if (currDevice != null) {
-                        setState(currDevice, BluetoothHeadset.STATE_DISCONNECTED,
-                                BluetoothHeadset.RESULT_FAILURE,
-                                BluetoothHeadset.LOCAL_DISCONNECT);
+                        try {
+                            // disconnect HFP/HSP connection
+                            mBinder.disconnectHeadset(currDevice);
+                        } catch (RemoteException e) {Log.e(TAG, e.toString());}
                     }
                     break;
                 }
