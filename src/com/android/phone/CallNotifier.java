@@ -376,10 +376,10 @@ public class CallNotifier extends Handler
 
     private void onPhoneAutoAnswer() {
         Log.d(LOG_TAG, "Autoanswering ringing call");
-        List<Call> ringingCalls = mCM.getRingingCalls();
-        if (ringingCalls != null && ringingCalls.size() > 0) {
+        Call ringingCall = mCM.getFirstActiveRingingCall();
+        if (ringingCall != null) {
             try {
-                mCM.acceptCall(ringingCalls.get(0));
+                mCM.acceptCall(ringingCall);
             } catch (CallStateException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
