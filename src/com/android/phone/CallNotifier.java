@@ -790,6 +790,8 @@ public class CallNotifier extends Handler
             // remove it!
             if (DBG) log("stopRing()... (OFFHOOK state)");
             mRinger.stopRing();
+            if (DBG) log("Reset Auto answer timeout");
+            removeMessages(PHONE_AUTO_ANSWER);
 
             // put a icon in the status bar
             if (DBG) log("- updating notification for phone state change...");
