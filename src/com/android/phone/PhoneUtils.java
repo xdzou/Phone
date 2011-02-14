@@ -2361,7 +2361,7 @@ public class PhoneUtils {
      * @param number the phone number, or SIP address.
      */
     public static Phone pickPhoneBasedOnNumber(CallManager cm,
-            String scheme, String number, String primarySipUri) {
+            String scheme, String number, String primarySipUri, int subscription) {
         if (DBG) log("pickPhoneBasedOnNumber: scheme " + scheme
                 + ", number " + number + ", sipUri " + primarySipUri);
 
@@ -2369,7 +2369,7 @@ public class PhoneUtils {
             Phone phone = getSipPhoneFromUri(cm, primarySipUri);
             if (phone != null) return phone;
         }
-        return PhoneApp.getPhone(PhoneApp.getVoiceSubscription());
+        return PhoneApp.getPhone(subscription);
     }
 
     public static Phone getSipPhoneFromUri(CallManager cm, String target) {

@@ -108,11 +108,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             MainThreadRequest request;
             Message onCompleted;
             AsyncResult ar;
+            int sub = getDefaultSubscription();
 
             switch (msg.what) {
                 case CMD_HANDLE_PIN_MMI:
                     request = (MainThreadRequest) msg.obj;
-                    int sub = (Integer) request.arg2;
+                    sub = (Integer) request.arg2;
                     Phone phone = PhoneApp.getPhone(sub);
                     Log.i(LOG_TAG,"CMD_HANDLE_PIN_MMI: sub :" + phone.getSubscription());
                     request.result = Boolean.valueOf(
@@ -156,7 +157,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                 case CMD_END_CALL:
                     request = (MainThreadRequest) msg.obj;
                     boolean hungUp = false;
-                    phone = mCM.getPhoneInCall();
+                    sub = (Integer) request.arg1;
+                    log("Ending call on subscription =" + sub);
+                    phone = mApp.getPhone(sub);
                     int phoneType = phone.getPhoneType();
                     if (phoneType == Phone.PHONE_TYPE_CDMA) {
                         // CDMA: If the user presses the Power button we treat it as
@@ -399,7 +402,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * @return true is a call was ended
      */
     public boolean endCall() {
-        return endCallOnSubscription(getDefaultSubscription());
+        int sub = getDefaultSubscription();
+        for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+            if (isOffhookOnSubscription(i)) {
+                sub = i;
+                break;
+            }
+        }
+        return endCallOnSubscription(sub);
     }
 
     /**
@@ -408,7 +418,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     public boolean endCallOnSubscription(int subscription) {
         enforceCallPermission();
-        return (Boolean) sendRequest(CMD_END_CALL, null, null);
+        return (Boolean) sendRequest(CMD_END_CALL, subscription, null);
     }
 
     public void answerRingingCall() {
@@ -487,11 +497,19 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public boolean isOffhook() {
-        return (mCM.getState() == Phone.State.OFFHOOK);
+        return isOffhookOnSubscription(getDefaultSubscription());
+    }
+
+    public boolean isOffhookOnSubscription(int subscription) {
+        return (getPhone(subscription).getState() == Phone.State.OFFHOOK);
     }
 
     public boolean isRinging() {
-        return (mCM.getState() == Phone.State.RINGING);
+        return (isRingingOnSubscription(getDefaultSubscription()));
+    }
+
+    public boolean isRingingOnSubscription(int subscription) {
+        return (getPhone(subscription).getState() == Phone.State.RINGING);
     }
 
     public boolean isIdle() {

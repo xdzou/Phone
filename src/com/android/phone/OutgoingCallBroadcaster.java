@@ -164,6 +164,7 @@ public class OutgoingCallBroadcaster extends Activity {
             Uri uri, String number) {
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
         newIntent.putExtra(Intent.EXTRA_PHONE_NUMBER, number);
+        newIntent.putExtra(SUBSCRIPTION, PhoneApp.getVoiceSubscription());
 
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
 
@@ -239,7 +240,6 @@ public class OutgoingCallBroadcaster extends Activity {
             if (!Intent.ACTION_CALL.equals(intent.getAction())) {
                 Log.w(TAG, "Attempt to deliver non-CALL action; forcing to CALL");
                 intent.setAction(Intent.ACTION_CALL);
-                intent.putExtra(SUBSCRIPTION, PhoneApp.getVoiceSubscription());
             }
         }
 
