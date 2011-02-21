@@ -469,7 +469,17 @@ public class InCallTouchUi extends FrameLayout
         // when the operation isn't available.
         mSwapButtonContainer.setVisibility(
                 inCallControlState.canSwap ? View.VISIBLE : View.GONE);
-
+        //In constructor, this check is already made, but for MULTISIM another
+        //check is required as the subs can have both CDMA and GSM,which
+        // need to display different labels.
+        if (inCallControlState.canSwap) {
+            if ((phoneType == Phone.PHONE_TYPE_GSM)
+                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                mSwapButtonLabel.setText(R.string.onscreenSwapCallsText);
+            } else if (phoneType == Phone.PHONE_TYPE_CDMA) {
+                mSwapButtonLabel.setText(R.string.onscreenManageCallsText);
+            }
+        }
         if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
             // "Merge"
             // This button is totally hidden (rather than just disabled)

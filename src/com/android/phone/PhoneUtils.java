@@ -2024,7 +2024,7 @@ public class PhoneUtils {
      * state of the Phone.
      */
     /* package */ static boolean okToSwapCalls(CallManager cm) {
-        int phoneType = cm.getDefaultPhone().getPhoneType();
+        int phoneType = cm.getFgPhone().getPhoneType();
         if (phoneType == Phone.PHONE_TYPE_CDMA) {
             // CDMA: "Swap" is enabled only when the phone reaches a *generic*.
             // state by either accepting a Call Waiting or by merging two calls
@@ -2428,7 +2428,7 @@ public class PhoneUtils {
         b.append(" allLinesTaken ").append(allLinesTaken);
         Log.d(LOG_TAG, b.toString());
 
-        Phone phone = cm.getDefaultPhone();
+        Phone phone = cm.getFgPhone();
         // On CDMA phones, dump out the CdmaPhoneCallState too:
         if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
             if (app.cdmaPhoneCallState != null) {
