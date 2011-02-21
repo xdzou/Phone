@@ -372,7 +372,7 @@ public class EditFdnContactScreen extends Activity {
     }
 
     private void handleResult(boolean success, boolean invalidNumber) {
-        Phone phone;
+        Phone mPhone;
 
         if (success) {
             if (DBG) log("handleResult: success!");
@@ -380,11 +380,17 @@ public class EditFdnContactScreen extends Activity {
                     R.string.fdn_contact_added : R.string.fdn_contact_updated));
         } else {
             if (DBG) log("handleResult: failed!");
-            if (invalidNumber)
+            if (invalidNumber) {
                 showStatus(getResources().getText(R.string.fdn_invalid_number));
-            else {
-                phone = PhoneApp.getPhone(mSubscription);
-                showStatus(getResources().getText(R.string.pin2_invalid));
+            } else {
+                mPhone = PhoneApp.getPhone(mSubscription);
+                if (mPhone.getIccCard().getIccPin2Blocked()) {
+                    showStatus(getResources().getText(R.string.fdn_enable_puk2_requested));
+                } else if (mPhone.getIccCard().getIccPuk2Blocked()) {
+                    showStatus(getResources().getText(R.string.puk2_blocked));
+                } else {
+                    showStatus(getResources().getText(R.string.pin2_invalid));
+                }
             }
         }
 
