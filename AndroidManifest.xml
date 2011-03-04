@@ -122,6 +122,11 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="MultiSimDialerActivity"
+                android:permission="android.permission.CALL_PRIVILEGED"
+                android:configChanges="orientation|keyboardHidden">
+        </activity>
+
         <activity android:name="OutgoingCallBroadcaster"
                 android:permission="android.permission.CALL_PHONE"
                 android:theme="@android:style/Theme.NoDisplay"

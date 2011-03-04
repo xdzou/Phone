@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,6 +66,7 @@ public class BluetoothHandsfree {
     public static final int TYPE_UNKNOWN           = 0;
     public static final int TYPE_HEADSET           = 1;
     public static final int TYPE_HANDSFREE         = 2;
+    public static final String BLUETOOTH = "Bluetooth";
 
     private final Context mContext;
     private final CallManager mCM;
@@ -1249,6 +1250,10 @@ public class BluetoothHandsfree {
         Intent intent = new Intent(Intent.ACTION_CALL_PRIVILEGED,
                 Uri.fromParts("tel", number, null));
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // this extra is to check if the CALL_PRIVILEGED intent is
+        // from Bluetooth, thereby, avoid prompting the user for subs
+        // when Prompt is selected in MultiSim scenario.
+        intent.putExtra(BLUETOOTH, "true");
         mContext.startActivity(intent);
 
         // We do not immediately respond OK, wait until we get a phone state

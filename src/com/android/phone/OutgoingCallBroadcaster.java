@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2008, 2011 The Android Open Source Project
  * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,11 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.ProxyManager;
+import com.android.internal.telephony.ProxyManager.SubscriptionData;
+import com.android.internal.telephony.ProxyManager.Subscription;
+import com.android.internal.telephony.PhoneFactory;
+import android.telephony.TelephonyManager;
 
 /**
  * OutgoingCallBroadcaster receives CALL and CALL_PRIVILEGED Intents, and
@@ -51,6 +56,8 @@ public class OutgoingCallBroadcaster extends Activity {
     private static final String TAG = "OutgoingCallBroadcaster";
     private static final boolean DBG =
             (PhoneApp.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
+    private int mSubscription;
+    private Intent mIntent;
 
     public static final String EXTRA_ALREADY_CALLED = "android.phone.extra.ALREADY_CALLED";
     public static final String EXTRA_ORIGINAL_URI = "android.phone.extra.ORIGINAL_URI";
@@ -59,6 +66,7 @@ public class OutgoingCallBroadcaster extends Activity {
 
     /** the key used to specify subscription to be used for emergency calls */
     public static final String SUBSCRIPTION = "Subscription";
+    public static final String BLUETOOTH = "Bluetooth";
 
     /**
      * Identifier for intent extra for sending an empty Flash message for
@@ -164,7 +172,7 @@ public class OutgoingCallBroadcaster extends Activity {
             Uri uri, String number) {
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
         newIntent.putExtra(Intent.EXTRA_PHONE_NUMBER, number);
-        newIntent.putExtra(SUBSCRIPTION, PhoneApp.getVoiceSubscription());
+        newIntent.putExtra(SUBSCRIPTION, mSubscription);
 
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
 
@@ -184,11 +192,11 @@ public class OutgoingCallBroadcaster extends Activity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        Intent intent = getIntent();
+        mIntent = getIntent();
         final Configuration configuration = getResources().getConfiguration();
 
         if (DBG) Log.v(TAG, "onCreate: this = " + this + ", icicle = " + icicle);
-        if (DBG) Log.v(TAG, " - getIntent() = " + intent);
+        if (DBG) Log.v(TAG, " - getIntent() = " + mIntent);
         if (DBG) Log.v(TAG, " - configuration = " + configuration);
 
         if (icicle != null) {
@@ -217,9 +225,34 @@ public class OutgoingCallBroadcaster extends Activity {
 
             return;
         }
+        boolean promptEnabled = PhoneFactory.isPromptEnabled();
+        String number = PhoneNumberUtils.getNumberFromIntent(mIntent, this);
+        if (TelephonyManager.isMultiSimEnabled() && promptEnabled &&
+               (activeSubCount() > 1) && (!isIntentFromBluetooth()) && (!isSIPCall(number))) {
+            Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
+            Intent intent_extra = new Intent(this, MultiSimDialerActivity.class);
+            String scheme = "";
+            if (mIntent.getData() != null)
+                scheme =  mIntent.getData().getScheme();
+            if ((scheme != null) && (scheme.equals("voicemail"))) {
+                intent_extra.putExtra("voicemail", "voicemail");
+            }
+            intent_extra.putExtra("phoneNumber", number);
+            int requestCode = 1;
+            startActivityForResult(intent_extra, requestCode);
+        } else {
+            mSubscription = PhoneApp.getVoiceSubscription();
+            Log.d(TAG, "subscription when there is no prompt is "+ mSubscription);
+            processIntent();
+        }
+    }
 
-        String action = intent.getAction();
-        String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
+    private void processIntent() {
+        String action = mIntent.getAction();
+        mIntent.putExtra(SUBSCRIPTION, mSubscription);
+        Log.d(TAG, "outGoingcallBroadCaster action is"+ action);
+        String number = PhoneNumberUtils.getNumberFromIntent(mIntent, this);
+        Log.d(TAG, " number from Intent : "+ number);
         // Check the number, don't convert for sip uri
         // TODO put uriNumber under PhoneNumberUtils
         if (number != null) {
@@ -233,13 +266,13 @@ public class OutgoingCallBroadcaster extends Activity {
 
         boolean callNow;
 
-        if (getClass().getName().equals(intent.getComponent().getClassName())) {
+        if (getClass().getName().equals(mIntent.getComponent().getClassName())) {
             // If we were launched directly from the OutgoingCallBroadcaster,
             // not one of its more privileged aliases, then make sure that
             // only the non-privileged actions are allowed.
-            if (!Intent.ACTION_CALL.equals(intent.getAction())) {
+            if (!Intent.ACTION_CALL.equals(mIntent.getAction())) {
                 Log.w(TAG, "Attempt to deliver non-CALL action; forcing to CALL");
-                intent.setAction(Intent.ACTION_CALL);
+                mIntent.setAction(Intent.ACTION_CALL);
             }
         }
 
@@ -250,13 +283,13 @@ public class OutgoingCallBroadcaster extends Activity {
                     ? Intent.ACTION_CALL_EMERGENCY
                     : Intent.ACTION_CALL;
             if (DBG) Log.v(TAG, "- updating action from CALL_PRIVILEGED to " + action);
-            intent.setAction(action);
+            mIntent.setAction(action);
         }
 
         if (Intent.ACTION_CALL.equals(action)) {
             if (emergencyNumber) {
                 Log.w(TAG, "Cannot call emergency number " + number
-                        + " with CALL Intent " + intent + ".");
+                        + " with CALL Intent " + mIntent + ".");
 
                 Intent invokeFrameworkDialer = new Intent();
 
@@ -268,8 +301,8 @@ public class OutgoingCallBroadcaster extends Activity {
                 invokeFrameworkDialer.setClassName("com.android.contacts",
                                                    "com.android.contacts.DialtactsActivity");
                 invokeFrameworkDialer.setAction(Intent.ACTION_DIAL);
-                invokeFrameworkDialer.setData(intent.getData());
-                invokeFrameworkDialer.putExtra(SUBSCRIPTION, PhoneApp.getVoiceSubscription());
+                invokeFrameworkDialer.setData(mIntent.getData());
+                invokeFrameworkDialer.putExtra(SUBSCRIPTION, mSubscription);
 
                 if (DBG) Log.v(TAG, "onCreate(): calling startActivity for Dialer: "
                                + invokeFrameworkDialer);
@@ -277,6 +310,8 @@ public class OutgoingCallBroadcaster extends Activity {
                 finish();
                 return;
             }
+            mIntent.putExtra(SUBSCRIPTION, mSubscription);
+            Log.d(TAG, "for non emergency call,sub is  :" + mSubscription);
             callNow = false;
         } else if (Intent.ACTION_CALL_EMERGENCY.equals(action)) {
             // ACTION_CALL_EMERGENCY case: this is either a CALL_PRIVILEGED
@@ -286,16 +321,16 @@ public class OutgoingCallBroadcaster extends Activity {
             // activity built in to the Phone app.)
             if (!emergencyNumber) {
                 Log.w(TAG, "Cannot call non-emergency number " + number
-                        + " with EMERGENCY_CALL Intent " + intent + ".");
+                        + " with EMERGENCY_CALL Intent " + mIntent + ".");
                 finish();
                 return;
             }
             int sub = PhoneApp.getInstance().getVoiceSubscriptionInService();
-            intent.putExtra(SUBSCRIPTION, sub);
+            mIntent.putExtra(SUBSCRIPTION, sub);
             Log.d(TAG, "Attempting emergency call on sub :" + sub);
             callNow = true;
         } else {
-            Log.e(TAG, "Unhandled Intent " + intent + ".");
+            Log.e(TAG, "Unhandled Intent " + mIntent + ".");
             finish();
             return;
         }
@@ -315,7 +350,7 @@ public class OutgoingCallBroadcaster extends Activity {
          * send an empty flash or something else is fishy.  Whatever the problem, there's no
          * number, so there's no point in allowing apps to modify the number. */
         if (number == null || TextUtils.isEmpty(number)) {
-            if (intent.getBooleanExtra(EXTRA_SEND_EMPTY_FLASH, false)) {
+            if (mIntent.getBooleanExtra(EXTRA_SEND_EMPTY_FLASH, false)) {
                 Log.i(TAG, "onCreate: SEND_EMPTY_FLASH...");
                 PhoneUtils.sendEmptyFlash(PhoneApp.getPhone());
                 finish();
@@ -323,13 +358,14 @@ public class OutgoingCallBroadcaster extends Activity {
             } else {
                 Log.i(TAG, "onCreate: null or empty number, setting callNow=true...");
                 callNow = true;
+                mIntent.putExtra(SUBSCRIPTION, mSubscription);
             }
         }
 
         if (callNow) {
-            intent.setClass(this, InCallScreen.class);
-            if (DBG) Log.v(TAG, "onCreate(): callNow case, calling startActivity: " + intent);
-            startActivity(intent);
+            mIntent.setClass(this, InCallScreen.class);
+            if (DBG) Log.v(TAG, "onCreate(): callNow case, calling startActivity: " + mIntent);
+            startActivity(mIntent);
         }
 
         // For now, SIP calls will be processed directly without a
@@ -342,10 +378,10 @@ public class OutgoingCallBroadcaster extends Activity {
         // EXTRA_PHONE_NUMBER extra, but instead using a new separate extra to hold
         // the outgoing SIP address.  (Be sure to document whether it's a URI or just
         // a plain address, whether it could be a tel: URI, etc.)
-        Uri uri = intent.getData();
+        Uri uri = mIntent.getData();
         String scheme = uri.getScheme();
         if ("sip".equals(scheme) || PhoneNumberUtils.isUriNumber(number)) {
-            startSipCallOptionsHandler(this, intent, uri, number);
+            startSipCallOptionsHandler(this, mIntent, uri, number);
             finish();
             return;
         }
@@ -354,13 +390,59 @@ public class OutgoingCallBroadcaster extends Activity {
         if (number != null) {
             broadcastIntent.putExtra(Intent.EXTRA_PHONE_NUMBER, number);
         }
-        PhoneUtils.checkAndCopyPhoneProviderExtras(intent, broadcastIntent);
+        PhoneUtils.checkAndCopyPhoneProviderExtras(mIntent, broadcastIntent);
         broadcastIntent.putExtra(EXTRA_ALREADY_CALLED, callNow);
         broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
+        broadcastIntent.putExtra(SUBSCRIPTION, mSubscription);
 
         if (DBG) Log.v(TAG, "Broadcasting intent: " + broadcastIntent + ".");
         sendOrderedBroadcast(broadcastIntent, PERMISSION, new OutgoingCallReceiver(),
                 null, Activity.RESULT_OK, number, null);
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // Collect subscription data from the intent and use it
+        if (resultCode == RESULT_CANCELED) {
+            Log.d(TAG, "activity cancelled or backkey pressed ");
+            finish();
+        } else if (resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            mSubscription = extras.getInt(SUBSCRIPTION);
+            Log.d(TAG, "subscription selected from multiSimDialer" + mSubscription);
+            processIntent();
+        }
+    }
+
+    private int activeSubCount() {
+        ProxyManager proxyManager = ProxyManager.getInstance();
+        int count = proxyManager.numSubsActive();
+        if (DBG) Log.v(TAG, "count of subs activated " + count);
+        return count;
+    }
+
+    private boolean  isIntentFromBluetooth() {
+        boolean btIntent = false;
+        Bundle extras = mIntent.getExtras();
+        if (extras != null) {
+            if ((extras.getString(BLUETOOTH) != null) && (extras.getString(BLUETOOTH).equals("true"))) {
+                btIntent = true;
+                Log.d(TAG, "isIntentFromBluetooth " + btIntent + "intent :"+ extras.getString(BLUETOOTH));
+            }
+        }
+        return btIntent;
+    }
+
+    private boolean isSIPCall(String number) {
+        boolean sipCall = false;
+        String scheme = "";
+        if (mIntent.getData() != null) {
+            scheme =  mIntent.getData().getScheme();
+            if ((scheme != null) && ("sip".equals(scheme) || PhoneNumberUtils.isUriNumber(number))) {
+                sipCall = true;
+            }
+        }
+        Log.d(TAG, "isSIPCall : " + sipCall);
+        return sipCall;
     }
 
     // Implement onConfigurationChanged() purely for debugging purposes,

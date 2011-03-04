@@ -807,6 +807,11 @@
     <!-- dual mode settings screen, setting summary text -->
     <string name="sub_two">Manage Subscription 2</string>
 
+    <!-- dual prompt, setting option name -->
+    <string name="prompt">Prompt</string>
+    <!-- dual mode settings screen, setting summary text -->
+    <string name="prompt_user">Prompt User</string>
+
     <!-- FDN settings strings -->
     <!-- Call settings screen, setting option name -->
     <string name="fdn">Fixed Dialing Numbers</string>
@@ -1585,6 +1590,14 @@
     <string name="card_01">Card 1</string>
     <!-- Set Subscription screen: label Card 2 -->
     <string name="card_02">Card 2</string>
+
+    <!-- Set dual dialer for MultiSim -->
+    <string name="place_a_call1">Subscription 1</string>
+    <string name="place_a_call2">Subscription 2</string>
+    <string name="count_down">Seconds: </string>
+    <string name="call_number">To: </string>
+    <string name="cancel_call">Cancel</string>
+
     <!-- Set Subscription screen: Message shown in error dialog -->
     <string name="set_subscription_error_max_two">Select maximum two subscriptions</string>
     <!-- Set Subscription screen: Message shown in error dialog -->

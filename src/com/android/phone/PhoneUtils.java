@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (C) 2006, 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2368,7 +2368,7 @@ public class PhoneUtils {
     public static Phone pickPhoneBasedOnNumber(CallManager cm,
             String scheme, String number, String primarySipUri, int subscription) {
         if (DBG) log("pickPhoneBasedOnNumber: scheme " + scheme
-                + ", number " + number + ", sipUri " + primarySipUri);
+                + ", number " + number + ", sipUri " + primarySipUri + "subscription " + subscription);
 
         if (primarySipUri != null) {
             Phone phone = getSipPhoneFromUri(cm, primarySipUri);
