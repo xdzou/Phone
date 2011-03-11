@@ -404,7 +404,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     public boolean endCall() {
         int sub = getDefaultSubscription();
         for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
-            if (isOffhookOnSubscription(i)) {
+            // Pick the subscription which is not IDLE i.e OFFHOOK or RINGING.
+            if (!isIdleOnSubscription(i)) {
                 sub = i;
                 break;
             }
