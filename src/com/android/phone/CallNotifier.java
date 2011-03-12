@@ -389,7 +389,7 @@ public class CallNotifier extends Handler
 
             @Override
             public void onCallForwardingIndicatorChanged(boolean cfi) {
-                onCfiChanged(cfi);
+                onCfiChanged(cfi, mSubscription);
             }
         };
         return mPhoneStateListener;
@@ -1279,9 +1279,9 @@ public class CallNotifier extends Handler
         sendMessageDelayed(message, delayMillis);
     }
 
-    private void onCfiChanged(boolean visible) {
+    private void onCfiChanged(boolean visible, int subscription) {
         if (VDBG) log("onCfiChanged(): " + visible);
-        NotificationMgr.getDefault().updateCfi(visible);
+        NotificationMgr.getDefault().updateCfi(visible, subscription);
     }
 
     /**
