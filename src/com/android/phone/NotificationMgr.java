@@ -78,6 +78,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     static final int CALL_FORWARD_NOTIFICATION = 6;
     static final int DATA_DISCONNECTED_ROAMING_NOTIFICATION = 7;
     static final int SELECTED_OPERATOR_FAIL_NOTIFICATION = 8;
+    static final int CALL_FORWARD_NOTIFICATION_SUB2 = 9;
 
     private static NotificationMgr sMe = null;
     private Phone mPhone;
@@ -906,8 +907,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *
      * @param visible true if there are messages waiting
      */
-    /* package */ void updateCfi(boolean visible) {
-        if (DBG) log("updateCfi(): " + visible);
+    /* package */ void updateCfi(boolean visible, int subscription) {
+        if (DBG) log("updateCfi(): " + visible + "sub = " + subscription);
+        int notificationId = 0;
+        int [] callfwdIcon = {R.drawable.stat_sys_phone_call_forward_sub1,
+                R.drawable.stat_sys_phone_call_forward_sub2};
         if (visible) {
             // If Unconditional Call Forwarding (forward all calls) for VOICE
             // is enabled, just show a notification.  We'll default to expanded
@@ -920,6 +924,10 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             // effort though, since there are multiple layers of messages that
             // will need to propagate that information.
 
+            int resId = R.drawable.stat_sys_phone_call_forward;
+            if (TelephonyManager.isMultiSimEnabled()) {
+                resId = callfwdIcon[subscription];
+            }
             Notification notification;
             final boolean showExpandedNotification = true;
             if (showExpandedNotification) {
@@ -930,7 +938,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
                 notification = new Notification(
                         mContext,  // context
-                        R.drawable.stat_sys_phone_call_forward,  // icon
+                        resId,  // icon
                         null, // tickerText
                         0,  // The "timestamp" of this notification is meaningless;
                             // we only care about whether CFI is currently on or not.
@@ -941,7 +949,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
             } else {
                 notification = new Notification(
-                        R.drawable.stat_sys_phone_call_forward,  // icon
+                        resId,  // icon
                         null,  // tickerText
                         System.currentTimeMillis()  // when
                         );
@@ -949,11 +957,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
             notification.flags |= Notification.FLAG_ONGOING_EVENT;  // also implies FLAG_NO_CLEAR
 
-            mNotificationMgr.notify(
-                    CALL_FORWARD_NOTIFICATION,
-                    notification);
+            notificationId = (subscription == 0) ? CALL_FORWARD_NOTIFICATION : CALL_FORWARD_NOTIFICATION_SUB2;
+            mNotificationMgr.notify(notificationId, notification);
         } else {
-            mNotificationMgr.cancel(CALL_FORWARD_NOTIFICATION);
+            notificationId = (subscription == 0) ? CALL_FORWARD_NOTIFICATION : CALL_FORWARD_NOTIFICATION_SUB2;
+            mNotificationMgr.cancel(notificationId);
         }
     }
 
