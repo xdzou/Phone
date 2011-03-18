@@ -79,6 +79,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     static final int DATA_DISCONNECTED_ROAMING_NOTIFICATION = 7;
     static final int SELECTED_OPERATOR_FAIL_NOTIFICATION = 8;
     static final int CALL_FORWARD_NOTIFICATION_SUB2 = 9;
+    static final int VOICEMAIL_NOTIFICATION_SUB2 = 10;
 
     private static NotificationMgr sMe = null;
     private Phone mPhone;
@@ -799,8 +800,11 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      */
     /* package */ void updateMwi(boolean visible, Phone phone) {
         if (DBG) log("updateMwi(): " + visible);
+        int subscription = phone.getSubscription();
         if (visible) {
             int resId = android.R.drawable.stat_notify_voicemail;
+            int[] iconId = {android.R.drawable.stat_notify_voicemail_sub1,
+                   android.R.drawable.stat_notify_voicemail_sub2};
 
             // This Notification can get a lot fancier once we have more
             // information about the current voicemail messages.
@@ -814,8 +818,10 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
             String notificationTitle = mContext.getString(R.string.notification_voicemail_title);
             String vmNumber = phone.getVoiceMailNumber();
-            int subscription = phone.getSubscription();
             if (DBG) log("- got vm number: '" + vmNumber + "'" + " on Subscription: " + subscription);
+            if (TelephonyManager.isMultiSimEnabled()) {
+                resId = iconId[subscription];
+            }
 
             // Watch out: vmNumber may be null, for two possible reasons:
             //
@@ -896,10 +902,13 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             notification.defaults |= Notification.DEFAULT_SOUND;
             notification.flags |= Notification.FLAG_NO_CLEAR;
             configureLedNotification(notification);
-            mNotificationMgr.notify(VOICEMAIL_NOTIFICATION, notification);
+
+            int notificationId = (subscription == 0) ? VOICEMAIL_NOTIFICATION : VOICEMAIL_NOTIFICATION_SUB2;
+            mNotificationMgr.notify(notificationId, notification);
         } else {
-            mNotificationMgr.cancel(VOICEMAIL_NOTIFICATION);
-        }
+            int notificationId = (subscription == 0) ? VOICEMAIL_NOTIFICATION : VOICEMAIL_NOTIFICATION_SUB2;
+            mNotificationMgr.cancel(notificationId);
+       }
     }
 
     /**
