@@ -1106,4 +1106,14 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         enforceModifyPermission();
         mPhone.setDataReadinessChecks(checkConnectivity, checkSubscription, tryDataCalls);
     }
+
+    /**
+     * Sets the transmit power
+     *
+     * @param power - Specifies the transmit power that is allowed
+     */
+    public void setTransmitPower(int powerLevel) {
+        enforceModifyPermission();
+        mPhone.setTransmitPower(powerLevel);
+    }
 }
