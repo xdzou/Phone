@@ -420,7 +420,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         }
 
         // create the target call log intent
-        final Intent intent = PhoneApp.createCallLogIntent();
+        final Intent intent = PhoneApp.createCallLogIntent(subscription);
 
         // make the notification
         Notification note = new Notification(mContext, // context

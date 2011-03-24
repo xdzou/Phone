@@ -654,8 +654,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         return mBtHandsfree;
     }
 
-    static Intent createCallLogIntent() {
+    static Intent createCallLogIntent(int subscription) {
         Intent  intent = new Intent(Intent.ACTION_VIEW, null);
+        intent.putExtra("Subscription", subscription);
         intent.setType("vnd.android.cursor.dir/calls");
         return intent;
     }

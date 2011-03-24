@@ -2980,7 +2980,7 @@ public class InCallScreen extends Activity
                         && (mLastDisconnectCause != Connection.DisconnectCause.INCOMING_REJECTED)
                         && !isPhoneStateRestricted(phone)) {
                     if (VDBG) log("- Show Call Log after disconnect...");
-                    final Intent intent = PhoneApp.createCallLogIntent();
+                    final Intent intent = PhoneApp.createCallLogIntent(phone.getSubscription());
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     startActivity(intent);
                     // Even in this case we still call endInCallScreenSession (below),
