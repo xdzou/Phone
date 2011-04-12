@@ -62,8 +62,6 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private SubscriptionData mCurrentSelSub;
     private SubscriptionData mUserSelSub;
 
-    private boolean mIsConfigSub;
-
     //String keys for preference lookup
     private static final String PREF_PARENT_KEY = "subscr_parent";
 
@@ -74,44 +72,73 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private final int DIALOG_SET_SUBSCRIPTION_IN_PROGRESS = 100;
 
     public void onCreate(Bundle icicle) {
+        boolean newCardNotify = getIntent().getBooleanExtra("NOTIFY_NEW_CARD_AVAILABLE", false);
+        if (!newCardNotify) {
+            setTheme(android.R.style.Theme);
+        }
         super.onCreate(icicle);
 
-        mIsConfigSub = getIntent().getBooleanExtra("CONFIG_SUB", true);
-        // get the card subscription info from the Proxy Manager.
-        mCardSubscrInfo = ProxyManager.getInstance().getCardSubscriptions();
-
-        addPreferencesFromResource(R.xml.set_subscription_pref);
-        setContentView(R.layout.set_subscription_pref_layout);
-
-        mOkButton = (TextView) findViewById(R.id.ok);
-        mOkButton.setOnClickListener(this);
-        mCancelButton = (TextView) findViewById(R.id.cancel);
-        mCancelButton.setOnClickListener(this);
-
-        TextView t1 = (TextView) findViewById(R.id.sub_1);
-        TextView t2 = (TextView) findViewById(R.id.sub_2);
-        TextView t3 = (TextView) findViewById(R.id.app_name);
-
-        // align the labels
-        Display display = getWindowManager().getDefaultDisplay();
-        int width = display.getWidth();
-        t1.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
-        t2.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
-        t3.setLayoutParams(new LayoutParams(width - 150, LayoutParams.WRAP_CONTENT));
-
-        // To store the selected subscriptions
-        // index 0 for sub0 and index 1 for sub1
-        subArray = new SubscriptionCheckBoxPreference[MAX_SUBSCRIPTIONS];
-
-        if(mCardSubscrInfo != null) {
-            populateList();
-
-            mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
-
-            updateCheckBoxes();
+        if (newCardNotify) {
+            Log.d(TAG, "onCreate: Notify new cards are available!!!!");
+            notifyNewCardAvailable();
         } else {
-            Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
+            // get the card subscription info from the Proxy Manager.
+            mCardSubscrInfo = ProxyManager.getInstance().getCardSubscriptions();
+
+            addPreferencesFromResource(R.xml.set_subscription_pref);
+            setContentView(R.layout.set_subscription_pref_layout);
+
+            mOkButton = (TextView) findViewById(R.id.ok);
+            mOkButton.setOnClickListener(this);
+            mCancelButton = (TextView) findViewById(R.id.cancel);
+            mCancelButton.setOnClickListener(this);
+
+            TextView t1 = (TextView) findViewById(R.id.sub_1);
+            TextView t2 = (TextView) findViewById(R.id.sub_2);
+            TextView t3 = (TextView) findViewById(R.id.app_name);
+
+            // align the labels
+            Display display = getWindowManager().getDefaultDisplay();
+            int width = display.getWidth();
+            t1.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
+            t2.setLayoutParams(new LayoutParams(75, LayoutParams.WRAP_CONTENT));
+            t3.setLayoutParams(new LayoutParams(width - 150, LayoutParams.WRAP_CONTENT));
+
+            // To store the selected subscriptions
+            // index 0 for sub0 and index 1 for sub1
+            subArray = new SubscriptionCheckBoxPreference[MAX_SUBSCRIPTIONS];
+
+            if(mCardSubscrInfo != null) {
+                populateList();
+
+                mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
+
+                updateCheckBoxes();
+            } else {
+                Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
+            }
         }
+    }
+
+    private void notifyNewCardAvailable() {
+        Log.d(TAG, "notifyNewCardAvailable()");
+
+        new AlertDialog.Builder(this).setMessage(R.string.new_cards_available)
+            .setTitle(R.string.config_sub_title)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(TAG, "new card dialog box:  onClick");
+                        finish();
+                    }
+                })
+            .show()
+            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    public void onDismiss(DialogInterface dialog) {
+                        Log.d(TAG, "new card dialog box:  onDismiss");
+                        finish();
+                    }
+                });
     }
 
     private void updateCheckBoxes() {

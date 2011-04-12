@@ -1630,4 +1630,8 @@
     <string name="set_sub_deactivate_not_supported">Deactivate not supported</string>
     <!-- Set Subscription screen: No change in subscription -->
     <string name="set_sub_no_change">No change in Subscription</string>
+    <!-- Set Subscription screen: New cards available -->
+    <string name="new_cards_available">New card available. Please configure subscriptions.</string>
+    <!-- Set Subscription screen: Configure subscription dialog title -->
+    <string name="config_sub_title">Configure Subscriptions</string>
 </resources>
