@@ -16,6 +16,7 @@
 
 package com.android.phone;
 
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -23,6 +24,7 @@ import android.preference.PreferenceScreen;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.TelephonyProperties;
 
 /**
  * List of Network-specific settings screens.
@@ -74,6 +76,15 @@ public class GsmUmtsOptions {
                 mPrefScreen.removePreference(mPrefScreen
                       .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
             }
+        }
+
+        /*
+         * APN editor should always be enabled in the case of SV-LTE with 1x
+         * voice or on an EHRPD capable device.
+         */
+        if (SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SUPPORT_SVLTE1X, false)
+                || SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SUPPORT_EHRPD, false)) {
+            mButtonAPNExpand.setEnabled(true);
         }
     }
 
