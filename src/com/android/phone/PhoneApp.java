@@ -1306,11 +1306,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     private void onMMIComplete(AsyncResult r) {
         if (VDBG) Log.d(LOG_TAG, "onMMIComplete()...");
-        Phone localPhone = null;
         MmiCode mmiCode = (MmiCode) r.result;
-        if (r.userObj != null ) {
-            localPhone = (Phone)r.userObj;
-        }
+        Phone localPhone = (Phone) mmiCode.getPhone();
         PhoneUtils.displayMMIComplete(localPhone, getInstance(), mmiCode, null, null);
     }
 
