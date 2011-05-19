@@ -65,6 +65,7 @@ import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.EriInfo;
 import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.internal.telephony.sip.SipPhoneFactory;
+import com.android.internal.telephony.UiccConstants;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
@@ -293,9 +294,12 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                         // Normal case: show the "SIM network unlock" PIN entry screen.
                         // The user won't be able to do anything else until
                         // they enter a valid SIM network PIN.
-                        Log.i(LOG_TAG, "show sim depersonal panel");
+                        AsyncResult ar = (AsyncResult) msg.obj;
+                        int sub = (Integer) ar.result;
+                        Phone phone = getPhone(sub);
+                        Log.i(LOG_TAG, "Show network deperso panel for sub = " + sub);
                         IccNetworkDepersonalizationPanel ndpPanel =
-                                new IccNetworkDepersonalizationPanel(PhoneApp.getInstance());
+                                new IccNetworkDepersonalizationPanel(PhoneApp.getInstance(), phone);
                         ndpPanel.show();
                     }
                     break;
@@ -509,13 +513,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
             notifier = new CallNotifier(this, phone, ringer, mBtHandsfree, new CallLogAsync());
 
-            // register for ICC status
-            IccCard sim = phone.getIccCard();
-            if (sim != null) {
-                if (VDBG) Log.v(LOG_TAG, "register for ICC status");
-                sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
-            }
-
             // register for MMI/USSD
             mCM.registerForMmiComplete(mHandler, MMI_COMPLETE, null);
 
@@ -571,6 +568,11 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
 
         for(int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
+            // register for ICC status
+            IccCard sim = getSinglePhone(i).mPhone.getIccCard();
+            if (sim != null) {
+                sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
+            }
             updatePhoneAppCdmaVariables(i) ;
         }
 
@@ -1324,7 +1326,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
            clearOtaState();
         }
 
-	clearInCallScreenMode();
+        clearInCallScreenMode();
 
         ringer.updateRingerContextAfterRadioTechnologyChange(this.phone);
         notifier.updateCallNotifierRegistrationsAfterRadioTechnologyChange();
@@ -1530,7 +1532,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                         Log.i(LOG_TAG, "Ignoring ICC Perso Locked event "
                               + "not showing Depersonalization screen for PIN entry");
                     } else {
-                       showDepersonalizationScreen(reason);
+                        Log.i(LOG_TAG, "Received SIM_STATE_CHANGED intent for Perso Locked on sub="
+                                + subscription);
+                        showDepersonalizationScreen(reason, subscription);
                     }
                 }
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
@@ -1781,8 +1785,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
     }
 
-    private void showDepersonalizationScreen(String reason) {
-        int subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK;
+    private void showDepersonalizationScreen(String reason, int subscription) {
+        int subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_NETWORK.ordinal();
 
         if (IccCard.INTENT_VALUE_LOCKED_NETWORK.equals(reason)) {
            //Network Depersonalization is presently handled
@@ -1791,41 +1795,43 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                  + "since this is handled differently");
         } else if (IccCard.INTENT_VALUE_LOCKED_NETWORK_SUBSET.equals(reason)) {
            Log.i(LOG_TAG,"SIM NETWORK SUBSET Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_SIM_NETWORK_SUBSET;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_NETWORK_SUBSET.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_CORPORATE.equals(reason)) {
            Log.i(LOG_TAG,"SIM CORPORATE Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_SIM_CORPORATE;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_CORPORATE.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_SERVICE_PROVIDER.equals(reason)) {
            Log.i(LOG_TAG,"SIM SERVICE PROVIDER Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_SIM_SERVICE_PROVIDER;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_SERVICE_PROVIDER.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_SIM.equals(reason)) {
            Log.i(LOG_TAG,"SIM SIM Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_SIM_SIM;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_SIM.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_NETWORK1.equals(reason)) {
            Log.i(LOG_TAG,"RUIM NETWORK1 Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_NETWORK1;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_NETWORK1.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_NETWORK2.equals(reason)) {
            Log.i(LOG_TAG,"RUIM NETWORK2 Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_NETWORK2;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_NETWORK2.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_HRPD.equals(reason)) {
            Log.i(LOG_TAG,"RUIM HRPD Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_HRPD;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_HRPD.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_CORPORATE.equals(reason)) {
            Log.i(LOG_TAG,"RUIM CORPORATE Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_CORPORATE;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_CORPORATE.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_SERVICE_PROVIDER.equals(reason)) {
            Log.i(LOG_TAG,"RUIM SERVICE PROVIDER Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_SERVICE_PROVIDER;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_SERVICE_PROVIDER.ordinal();
         } else if (IccCard.INTENT_VALUE_LOCKED_RUIM_RUIM.equals(reason)) {
            Log.i(LOG_TAG,"RUIM RUIM Depersonalization");
-           subtype = IccDepersonalizationConstants.ICC_RUIM_RUIM;
+           subtype = UiccConstants.PersoSubState.PERSOSUBSTATE_RUIM_RUIM.ordinal();
         } else {
            Log.e(LOG_TAG,"Unsupported Depersonalization: reason = " + reason);
         }
 
-        if (subtype != IccDepersonalizationConstants.ICC_SIM_NETWORK) {
+        if (subtype != UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_NETWORK.ordinal()) {
+            Log.i(LOG_TAG,"Show Deperso panel for subtype =" + subtype + " on subscription ="
+                    + subscription);
             IccDepersonalizationPanel dpPanel =
-                 new IccDepersonalizationPanel(PhoneApp.getInstance(),subtype);
+                 new IccDepersonalizationPanel(PhoneApp.getInstance(), subtype, subscription);
             dpPanel.show();
         }
     }

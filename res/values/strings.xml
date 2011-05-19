@@ -242,6 +242,8 @@
     <string name="label_rspdp">RUIM service provider unlock PIN</string>
     <!-- Label text for PIN entry widget on RUIM RUIM Depersonalization panel -->
     <string name="label_rdp">RUIM RUIM unlock PIN</string>
+    <!-- Label text for displaying subscription info -->
+    <string name="label_subscription">for Subscription</string>
     <!-- Button label on SIM Network Depersonalization panel -->
     <string name="sim_ndp_unlock_text">Unlock</string>
     <!-- Button label on SIM Network Depersonalization panel -->

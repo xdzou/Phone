@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2008, 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
@@ -60,6 +61,7 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
     private LinearLayout mEntryPanel;
     private LinearLayout mStatusPanel;
     private TextView     mStatusText;
+    private TextView     mTitleText;
 
     private Button       mUnlockButton;
     private Button       mDismissButton;
@@ -109,8 +111,9 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
     };
 
     //constructor
-    public IccNetworkDepersonalizationPanel(Context context) {
+    public IccNetworkDepersonalizationPanel(Context context, Phone phone) {
         super(context);
+        mPhone = phone;
     }
 
     @Override
@@ -149,7 +152,12 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
         mStatusPanel = (LinearLayout) findViewById(R.id.status_panel);
         mStatusText = (TextView) findViewById(R.id.status_text);
 
-        mPhone = PhoneFactory.getDefaultPhone();
+        if (TelephonyManager.isMultiSimEnabled()) {
+            mTitleText = (TextView) findViewById(R.id.perso_subtype_text);
+            String displayText = getContext().getString(R.string.label_ndp) + " " +
+                    getContext().getString(R.string.label_subscription) + (mPhone.getSubscription() + 1);
+            mTitleText.setText(displayText);
+        }
     }
 
     @Override
@@ -175,6 +183,7 @@ public class IccNetworkDepersonalizationPanel extends IccPanel {
             }
 
             if (DBG) log("requesting network depersonalization with code " + pin);
+            log("supplyNetworkDepersonalization for subscription = " + mPhone.getSubscription());
             mPhone.getIccCard().supplyNetworkDepersonalization(pin,
                     Message.obtain(mHandler, EVENT_ICC_NTWRK_DEPERSONALIZATION_RESULT));
             indicateBusy();
