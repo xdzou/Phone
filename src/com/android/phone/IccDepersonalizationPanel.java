@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.UiccConstants;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,6 +53,7 @@ public class IccDepersonalizationPanel extends IccPanel {
 
     private Phone mPhone;
     private int mPersoSubtype;
+    private int mSubscription;
 
     //UI elements
     private EditText     mPinEntry;
@@ -61,6 +64,11 @@ public class IccDepersonalizationPanel extends IccPanel {
 
     private Button       mUnlockButton;
     private Button       mDismissButton;
+
+    private final int ENTRY = 0;
+    private final int IN_PROGRESS = 1;
+    private final int ERROR = 2;
+    private final int SUCCESS = 3;
 
     //private textwatcher to control text entry.
     private TextWatcher mPinEntryWatcher = new TextWatcher() {
@@ -85,7 +93,7 @@ public class IccDepersonalizationPanel extends IccPanel {
                 AsyncResult res = (AsyncResult) msg.obj;
                 if (res.exception != null) {
                     if (DBG) log("De-Personalization request failure.");
-                    indicateError();
+                    displayStatus(ERROR);
                     postDelayed(new Runnable() {
                                     public void run() {
                                         hideAlert();
@@ -95,7 +103,7 @@ public class IccDepersonalizationPanel extends IccPanel {
                                 }, 3000);
                 } else {
                     if (DBG) log("De-Personalization success.");
-                    indicateSuccess();
+                    displayStatus(SUCCESS);
                     postDelayed(new Runnable() {
                                     public void run() {
                                         dismiss();
@@ -109,13 +117,14 @@ public class IccDepersonalizationPanel extends IccPanel {
     //constructor
     public IccDepersonalizationPanel(Context context) {
         super(context);
-        mPersoSubtype = IccDepersonalizationConstants.ICC_SIM_NETWORK;
+        mPersoSubtype = UiccConstants.PersoSubState.PERSOSUBSTATE_SIM_NETWORK.ordinal();
     }
 
     //constructor
-    public IccDepersonalizationPanel(Context context,int subtype) {
+    public IccDepersonalizationPanel(Context context, int subtype, int subscription) {
         super(context);
         mPersoSubtype = subtype;
+        mSubscription = subscription;
     }
 
     @Override
@@ -135,7 +144,7 @@ public class IccDepersonalizationPanel extends IccPanel {
 
         mEntryPanel = (LinearLayout) findViewById(R.id.entry_panel);
         mPersoSubtypeText = (TextView) findViewById(R.id.perso_subtype_text);
-        setPersoPanelTitle();
+        displayStatus(ENTRY);
 
         mUnlockButton = (Button) findViewById(R.id.ndp_unlock);
         mUnlockButton.setOnClickListener(mUnlockListener);
@@ -156,7 +165,7 @@ public class IccDepersonalizationPanel extends IccPanel {
         mStatusPanel = (LinearLayout) findViewById(R.id.status_panel);
         mStatusText = (TextView) findViewById(R.id.status_text);
 
-        mPhone = PhoneFactory.getDefaultPhone();
+        mPhone = PhoneApp.getPhone(mSubscription);
     }
 
     @Override
@@ -181,65 +190,212 @@ public class IccDepersonalizationPanel extends IccPanel {
                 return;
             }
 
-            log("requesting De-Personalization with subtype " + mPersoSubtype);
+            log("Requesting De-Personalization for subtype " + mPersoSubtype +
+                    " on subscription = " + mSubscription);
             mPhone.invokeDepersonalization(pin, mPersoSubtype,
                 Message.obtain(mHandler, EVENT_ICC_DEPERSONALIZATION_RESULT));
-            indicateBusy();
+            displayStatus(IN_PROGRESS);
         }
     };
 
-    private void indicateBusy() {
-        int[] busyLabels = { R.string.requesting_unlock,
-                             R.string.requesting_nw_subset_unlock,
-                             R.string.requesting_sp_unlock,
-                             R.string.requesting_corporate_unlock,
-                             R.string.requesting_sim_unlock,
-                             R.string.requesting_rnw1_unlock,
-                             R.string.requesting_rnw2_unlock,
-                             R.string.requesting_rhrpd_unlock,
-                             R.string.requesting_rsp_unlock,
-                             R.string.requesting_rc_unlock,
-                             R.string.requesting_ruim_unlock };
-
-        mStatusText.setText(busyLabels[mPersoSubtype - 1]);
-        mEntryPanel.setVisibility(View.GONE);
-        mStatusPanel.setVisibility(View.VISIBLE);
-    }
-
-    private void indicateError() {
-        int[] errorLabels = { R.string.unlock_failed,
-                              R.string.nw_subset_unlock_failed,
-                              R.string.sp_unlock_failed,
-                              R.string.corporate_unlock_failed,
-                              R.string.sim_unlock_failed,
-                              R.string.rnw1_unlock_failed,
-                              R.string.rnw2_unlock_failed,
-                              R.string.rhrpd_unlock_failed,
-                              R.string.rsp_unlock_failed,
-                              R.string.rc_unlock_failed,
-                              R.string.ruim_unlock_failed };
-
-        mStatusText.setText(errorLabels[mPersoSubtype - 1]);
-        mEntryPanel.setVisibility(View.GONE);
-        mStatusPanel.setVisibility(View.VISIBLE);
-    }
-
-    private void indicateSuccess() {
-        int[] successLabels = { R.string.unlock_success,
-                                R.string.nw_subset_unlock_success,
-                                R.string.sp_unlock_success,
-                                R.string.corporate_unlock_success,
-                                R.string.sim_unlock_success,
-                                R.string.rnw1_unlock_success,
-                                R.string.rnw2_unlock_success,
-                                R.string.rhrpd_unlock_success,
-                                R.string.rsp_unlock_success,
-                                R.string.rc_unlock_success,
-                                R.string.ruim_unlock_success };
-
-        mStatusText.setText(successLabels[mPersoSubtype - 1]);
-        mEntryPanel.setVisibility(View.GONE);
-        mStatusPanel.setVisibility(View.VISIBLE);
+    private void displayStatus(int type) {
+        int label = 0;
+        UiccConstants.PersoSubState persosubtype = UiccConstants.PersoSubState.values()[mPersoSubtype];
+        switch (persosubtype) {
+            case PERSOSUBSTATE_SIM_NETWORK:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_ndp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_SIM_NETWORK_SUBSET:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_nsdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_nw_subset_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.nw_subset_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.nw_subset_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_SIM_CORPORATE:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_cdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_corporate_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.corporate_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.corporate_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_SIM_SERVICE_PROVIDER:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_spdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_sp_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.sp_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.sp_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_SIM_SIM:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_sdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_sim_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.sim_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.sim_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_RUIM_NETWORK1:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rn1dp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_rnw1_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.rnw1_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.rnw1_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_RUIM_NETWORK2:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rn2dp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_rnw2_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.rnw2_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.rnw2_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_RUIM_HRPD:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rhrpd;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_rhrpd_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.rhrpd_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.rhrpd_unlock_success;
+                        break;
+                 }
+                 break;
+            case PERSOSUBSTATE_RUIM_CORPORATE:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rcdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_rc_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.rc_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.rc_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_RUIM_SERVICE_PROVIDER:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rspdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_rsp_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.rsp_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.rsp_unlock_success;
+                        break;
+                }
+                break;
+            case PERSOSUBSTATE_RUIM_RUIM:
+                switch (type) {
+                    case ENTRY:
+                        label = R.string.label_rdp;
+                        break;
+                    case IN_PROGRESS:
+                        label = R.string.requesting_ruim_unlock;
+                        break;
+                    case ERROR:
+                        label = R.string.ruim_unlock_failed;
+                        break;
+                    case SUCCESS:
+                        label = R.string.ruim_unlock_success;
+                        break;
+                }
+                break;
+            default:
+                log ("Unsupported Perso Subtype :" + persosubtype);
+                break;
+        }
+        if (type == 0) {
+            String displayText = "";
+            if (TelephonyManager.isMultiSimEnabled()) {
+                displayText = getContext().getString(label) + " " +
+                        getContext().getString(R.string.label_subscription) + (mSubscription + 1);
+            } else {
+                displayText = getContext().getString(label);
+            }
+            mPersoSubtypeText.setText(displayText);
+        } else {
+            mStatusText.setText(label);
+            mEntryPanel.setVisibility(View.GONE);
+            mStatusPanel.setVisibility(View.VISIBLE);
+        }
     }
 
     private void hideAlert() {
@@ -254,24 +410,7 @@ public class IccDepersonalizationPanel extends IccPanel {
         }
     };
 
-    //Sets title of Depersonalization Panel.
-    private void setPersoPanelTitle() {
-        int[] panelTitles = { R.string.label_ndp,
-                              R.string.label_nsdp,
-                              R.string.label_spdp,
-                              R.string.label_cdp,
-                              R.string.label_sdp,
-                              R.string.label_rn1dp,
-                              R.string.label_rn2dp,
-                              R.string.label_rhrpd,
-                              R.string.label_rspdp,
-                              R.string.label_rcdp,
-                              R.string.label_rdp };
-
-        mPersoSubtypeText.setText(panelTitles[mPersoSubtype - 1]);
-    }
-
     private void log(String msg) {
-        Log.v(TAG, "[IccDepersonalizationPanel] " + msg);
+        Log.d(TAG, "[IccDepersonalizationPanel] " + msg);
     }
 }
