@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Window;
 import android.widget.CursorAdapter;
@@ -49,6 +51,9 @@ public class ADNList extends ListActivity {
     protected static final int NUMBER_COLUMN = 1;
     protected static final int EMAILS_COLUMN = 2;
 
+    private static final int SUB1 = 0;
+    private static final int SUB2 = 1;
+
     private static final int[] VIEW_NAMES = new int[] {
         android.R.id.text1,
         android.R.id.text2
@@ -67,6 +72,7 @@ public class ADNList extends ListActivity {
     private TextView mEmptyText;
 
     protected int mInitialSelection = -1;
+    protected int mSubscription = 0;
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -93,8 +99,15 @@ public class ADNList extends ListActivity {
 
     protected Uri resolveIntent() {
         Intent intent = getIntent();
+        mSubscription = TelephonyManager.getPreferredVoiceSubscription();
         if (intent.getData() == null) {
-            intent.setData(Uri.parse("content://icc/adn"));
+            if (mSubscription == SUB1) {
+                intent.setData(Uri.parse("content://icc/adn_sub1"));
+            } else if (mSubscription == SUB2) {
+                intent.setData(Uri.parse("content://icc/adn_sub2"));
+            } else {
+                if (DBG) log("resolveIntent: invalid subscription");
+            }
         }
 
         return intent.getData();
