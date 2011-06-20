@@ -69,6 +69,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
     private final int EVENT_SET_SUBSCRIPTION_DONE = 1;
 
+    private final int EVENT_SIM_STATE_CHANGED = 2;
+
     private final int DIALOG_SET_SUBSCRIPTION_IN_PROGRESS = 100;
 
     public void onCreate(Bundle icicle) {
@@ -117,7 +119,14 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             } else {
                 Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
             }
+
+            ProxyManager.getInstance().registerForSimStateChanged(mHandler, EVENT_SIM_STATE_CHANGED, null);
         }
+    }
+
+    protected void onDestroy () {
+        super.onDestroy();
+        ProxyManager.getInstance().unRegisterForSimStateChanged(mHandler);
     }
 
     private void notifyNewCardAvailable() {
@@ -334,6 +343,17 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                     String sIndexId = splitKey[1].substring(splitKey[1].indexOf("index") + 5);
                     int subIndex = Integer.parseInt(sIndexId);
 
+                    if (mCardSubscrInfo[slotId] == null) {
+                        Log.d(TAG, "setSubscription: mCardSubscrInfo is not in sync with ProxyManager");
+                        mUserSelSub.subscription[i].slotId = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].m3gppIndex = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].m3gpp2Index = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].subId = i;
+                        mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
+                        continue;
+                    }
+
+
                     // Compate the user selected subscriptio with the current subscriptions.
                     // If they are not matching, mark it to activate.
                     mUserSelSub.subscription[i].copyFrom(mCardSubscrInfo[slotId].subscription[subIndex]);
@@ -381,6 +401,22 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                     } else {
                         finish();
                     }
+                    break;
+                case EVENT_SIM_STATE_CHANGED:
+                    Log.d(TAG, "EVENT_SIM_STATE_CHANGED");
+                    PreferenceScreen prefParent = (PreferenceScreen) getPreferenceScreen()
+                                             .findPreference(PREF_PARENT_KEY);
+
+                    for (int i = 0; i < mCardSubscrInfo.length; i++) {
+                        PreferenceCategory subGroup = (PreferenceCategory) prefParent
+                                 .findPreference("sub_group_" + i);
+                        if (subGroup != null) {
+                            subGroup.removeAll();
+                        }
+                    }
+                    prefParent.removeAll();
+                    populateList();
+                    updateCheckBoxes();
                     break;
             }
         }
