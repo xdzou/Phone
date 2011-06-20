@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +40,7 @@ import android.provider.ContactsContract.CommonDataKinds.GroupMembership;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.provider.ContactsContract.CommonDataKinds.StructuredName;
 import android.text.TextUtils;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -63,9 +65,13 @@ public class SimContacts extends ADNList {
 
     private static final int MENU_IMPORT_ONE = 1;
     private static final int MENU_IMPORT_ALL = 2;
+    private static final int SUB1 = 0;
+    private static final int SUB2 = 1;
     private ProgressDialog mProgressDialog;
 
     private Account mAccount;
+
+    protected int mSubscription = 0;
 
     private static class NamePhoneTypePair {
         final String name;
@@ -258,7 +264,14 @@ public class SimContacts extends ADNList {
     @Override
     protected Uri resolveIntent() {
         Intent intent = getIntent();
-        intent.setData(Uri.parse("content://icc/adn"));
+        mSubscription = TelephonyManager.getPreferredVoiceSubscription();
+        if (mSubscription == SUB1) {
+            intent.setData(Uri.parse("content://icc/adn_sub1"));
+        } else if (mSubscription == SUB2) {
+            intent.setData(Uri.parse("content://icc/adn_sub2"));
+        } else {
+            Log.d(TAG, "resolveIntent:Invalid subcription");
+        }
         if (Intent.ACTION_PICK.equals(intent.getAction())) {
             // "index" is 1-based
             mInitialSelection = intent.getIntExtra("index", 0) - 1;
