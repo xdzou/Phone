@@ -61,6 +61,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private SubscriptionData[] mCardSubscrInfo;
     private SubscriptionData mCurrentSelSub;
     private SubscriptionData mUserSelSub;
+    private ProxyManager mProxyManager;
 
     //String keys for preference lookup
     private static final String PREF_PARENT_KEY = "subscr_parent";
@@ -85,7 +86,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             notifyNewCardAvailable();
         } else {
             // get the card subscription info from the Proxy Manager.
-            mCardSubscrInfo = ProxyManager.getInstance().getCardSubscriptions();
+            mProxyManager = ProxyManager.getInstance();
+            mCardSubscrInfo = mProxyManager.getCardSubscriptions();
 
             addPreferencesFromResource(R.xml.set_subscription_pref);
             setContentView(R.layout.set_subscription_pref_layout);
@@ -113,20 +115,26 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             if(mCardSubscrInfo != null) {
                 populateList();
 
-                mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
+                mUserSelSub = mProxyManager.new SubscriptionData(MAX_SUBSCRIPTIONS);
 
                 updateCheckBoxes();
             } else {
                 Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
             }
 
-            ProxyManager.getInstance().registerForSimStateChanged(mHandler, EVENT_SIM_STATE_CHANGED, null);
+            mProxyManager.registerForSimStateChanged(mHandler, EVENT_SIM_STATE_CHANGED, null);
+            if (mProxyManager.isSetSubscriptionInProgress()) {
+                Log.d(TAG, "onCreate: SetSubscription is in progress when started this activity");
+                showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
+            }
         }
     }
 
     protected void onDestroy () {
         super.onDestroy();
-        ProxyManager.getInstance().unRegisterForSimStateChanged(mHandler);
+        mProxyManager.unRegisterForSimStateChanged(mHandler);
+        mProxyManager.unRegisterForSetSubscriptionCompleted(mHandler);
     }
 
     private void notifyNewCardAvailable() {
@@ -167,7 +175,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             }
         }
 
-        mCurrentSelSub = ProxyManager.getInstance().getCurrentSubscriptions();
+        mCurrentSelSub = mProxyManager.getCurrentSubscriptions();
         if (mCurrentSelSub != null) {
             for(int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
                 Log.d(TAG, "updateCheckBoxes: mCurrentSelSub.subscription[" + i + "] = "
@@ -375,10 +383,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             }
 
             showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+            mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
 
-            Message setSubComplete = Message.obtain(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
-            ProxyManager mProxyManager = ProxyManager.getInstance();
-            mProxyManager.setSubscription(mUserSelSub, setSubComplete);
+            mProxyManager.setSubscription(mUserSelSub);
         }
     }
 
@@ -390,6 +397,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             switch(msg.what) {
                 case EVENT_SET_SUBSCRIPTION_DONE:
                     Log.d(TAG, "EVENT_SET_SUBSCRIPTION_DONE");
+                    mProxyManager.unRegisterForSetSubscriptionCompleted(mHandler);
                     dismissDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
                     getPreferenceScreen().setEnabled(true);
                     ar = (AsyncResult) msg.obj;
