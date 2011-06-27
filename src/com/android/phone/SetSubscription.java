@@ -54,13 +54,13 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private static final String TAG = "SetSubscription";
     public static final int SUBSCRIPTION_INDEX_INVALID = 99999;
 
-    private Bundle mSubscrInfo;
     private TextView mOkButton, mCancelButton;
     SubscriptionCheckBoxPreference subArray[];
     private boolean subErr = false;
     private SubscriptionData[] mCardSubscrInfo;
     private SubscriptionData mCurrentSelSub;
     private SubscriptionData mUserSelSub;
+    private ProxyManager mProxyManager;
 
     private boolean mIsConfigSub;
 
@@ -78,6 +78,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
 
         mIsConfigSub = getIntent().getBooleanExtra("CONFIG_SUB", true);
         // get the card subscription info from the Proxy Manager.
+        mProxyManager = ProxyManager.getInstance();
         mCardSubscrInfo = ProxyManager.getInstance().getCardSubscriptions();
 
         addPreferencesFromResource(R.xml.set_subscription_pref);
@@ -106,12 +107,22 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         if(mCardSubscrInfo != null) {
             populateList();
 
-            mUserSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
+            mUserSelSub = mProxyManager.new SubscriptionData(MAX_SUBSCRIPTIONS);
 
             updateCheckBoxes();
         } else {
             Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
         }
+        if (mProxyManager.isSetSubscriptionInProgress()) {
+            Log.d(TAG, "onCreate: SetSubscription is in progress when started this activity");
+            showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+            mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
+        }
+    }
+
+    protected void onDestroy () {
+        super.onDestroy();
+        mProxyManager.unRegisterForSetSubscriptionCompleted(mHandler);
     }
 
     private void updateCheckBoxes() {
@@ -131,7 +142,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             }
         }
 
-        mCurrentSelSub = ProxyManager.getInstance().getCurrentSubscriptions();
+        mCurrentSelSub = mProxyManager.getCurrentSubscriptions();
         if (mCurrentSelSub != null) {
             for(int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
                 Log.d(TAG, "updateCheckBoxes: mCurrentSelSub.subscription[" + i + "] = "
@@ -328,10 +339,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             }
 
             showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+            mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
 
-            Message setSubComplete = Message.obtain(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
-            ProxyManager mProxyManager = ProxyManager.getInstance();
-            mProxyManager.setSubscription(mUserSelSub, setSubComplete);
+            mProxyManager.setSubscription(mUserSelSub);
         }
     }
 
@@ -343,6 +353,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             switch(msg.what) {
                 case EVENT_SET_SUBSCRIPTION_DONE:
                     Log.d(TAG, "EVENT_SET_SUBSCRIPTION_DONE");
+                    mProxyManager.unRegisterForSetSubscriptionCompleted(mHandler);
                     dismissDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
                     getPreferenceScreen().setEnabled(true);
                     ar = (AsyncResult) msg.obj;
