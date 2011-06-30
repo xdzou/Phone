@@ -1064,8 +1064,11 @@ public class InCallScreen extends Activity
     public void endInCallScreenSession() {
         if (DBG) log("endInCallScreenSession()...");
         // Do not end the session if a call is on progress.
-        if (mCM.hasActiveFgCall() || mCM.hasActiveBgCall()) return;
-        endInCallScreenSession(false);
+        if (mCM.getState() == Phone.State.IDLE) {
+            endInCallScreenSession(false);
+        } else {
+            Log.i(LOG_TAG, "endInCallScreenSession(): Call in progress");
+        }
     }
 
     /**
