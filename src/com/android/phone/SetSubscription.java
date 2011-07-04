@@ -81,12 +81,13 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         }
         super.onCreate(icicle);
 
+        mProxyManager = ProxyManager.getInstance();
+
         if (newCardNotify) {
             Log.d(TAG, "onCreate: Notify new cards are available!!!!");
             notifyNewCardAvailable();
         } else {
             // get the card subscription info from the Proxy Manager.
-            mProxyManager = ProxyManager.getInstance();
             mCardSubscrInfo = mProxyManager.getCardSubscriptions();
 
             addPreferencesFromResource(R.xml.set_subscription_pref);
