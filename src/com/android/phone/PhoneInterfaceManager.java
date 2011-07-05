@@ -41,6 +41,7 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.ProxyManager;
+import com.android.internal.telephony.QosSpec;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -685,6 +686,36 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     public int disableApnType(String type) {
         enforceModifyPermission();
         return getPhone(PhoneApp.getDataSubscription()).disableApnType(type);
+    }
+
+    public int enableQos(int transId, QosSpec qosSpec, String type) {
+        log("enableQos");
+        return getPhone(PhoneApp.getDataSubscription()).enableQos(transId, qosSpec, type);
+    }
+
+    public int disableQos(int qosId) {
+        log("disableQos");
+        return getPhone(PhoneApp.getDataSubscription()).disableQos(qosId);
+    }
+
+    public int modifyQos(int qosId, QosSpec qosSpec) {
+        log("modifyQos");
+        return getPhone(PhoneApp.getDataSubscription()).modifyQos(qosId, qosSpec);
+    }
+
+    public int suspendQos(int qosId) {
+        log("suspendQos");
+        return getPhone(PhoneApp.getDataSubscription()).suspendQos(qosId);
+    }
+
+    public int resumeQos(int qosId) {
+        log("resumeQos");
+        return getPhone(PhoneApp.getDataSubscription()).resumeQos(qosId);
+    }
+
+    public int getQosStatus(int qosId) {
+        Log.d(LOG_TAG, "getQosStatus");
+        return getPhone(PhoneApp.getDataSubscription()).getQosStatus(qosId);
     }
 
     public boolean disableDataConnectivity() {
