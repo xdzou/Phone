@@ -688,9 +688,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return getPhone(PhoneApp.getDataSubscription()).disableApnType(type);
     }
 
-    public int enableQos(int transId, QosSpec qosSpec, String type) {
+    public int enableQos(QosSpec qosSpec, String type) {
         log("enableQos");
-        return getPhone(PhoneApp.getDataSubscription()).enableQos(transId, qosSpec, type);
+        return getPhone(PhoneApp.getDataSubscription()).enableQos(qosSpec, type);
     }
 
     public int disableQos(int qosId) {
