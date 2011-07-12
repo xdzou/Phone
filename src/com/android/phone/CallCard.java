@@ -819,6 +819,38 @@ public class CallCard extends FrameLayout
                             callForwardTxt = getContext().getString(R.string.card_title_MOcall_forwarding);
                             break;
 
+                        case SuppServiceNotification.MO_CODE_CALL_IS_WAITING:
+                            //This message is displayed on A when the B is busy on another call and Call waiting
+                            //is enabled on B
+                            callForwardTxt = getContext().getString(R.string.card_title_calliswaiting);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_CUG_CALL:
+                            //This message is displayed on A, when A makes call to B, both A & B
+                            //belong to a CUG group
+                            callForwardTxt = getContext().getString(R.string.card_title_cugcall);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_OUTGOING_CALLS_BARRED:
+                            //This message is displayed on A when outging is barred on A
+                            callForwardTxt = getContext().getString(R.string.card_title_outgoing_barred);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_INCOMING_CALLS_BARRED:
+                            //This message is displayed on A, when A is calling B & incoming is barred on B
+                            callForwardTxt = getContext().getString(R.string.card_title_incoming_barred);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_CLIR_SUPPRESSION_REJECTED:
+                            //This message is displayed on A, when CLIR suppression is rejected
+                            callForwardTxt = getContext().getString(R.string.card_title_clir_suppression_rejected);
+                            break;
+
+                        case SuppServiceNotification.MO_CODE_CALL_DEFLECTED:
+                            //This message is displayed on A, when the outgoing call gets deflected to C from B
+                            callForwardTxt = getContext().getString(R.string.card_title_call_deflected);
+                            break;
+
                         default:
                             log("Received unsupported MO SS Notification :" + suppSvcNotification.code);
                             break;
@@ -831,6 +863,52 @@ public class CallCard extends FrameLayout
                         case SuppServiceNotification.MT_CODE_FORWARDED_CALL:
                             //This message is displayed on C when the incoming call is forwarded from B
                             callForwardTxt = getContext().getString(R.string.card_title_forwarded_MTcall);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_CUG_CALL:
+                            //This message is displayed on B, when A makes call to B, both A & B
+                            //belong to a CUG group
+                            callForwardTxt = getContext().getString(R.string.card_title_cugcall);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_CALL_ON_HOLD:
+                            //This message is displayed on B,when A makes call to B & puts it on hold
+                            callForwardTxt = getContext().getString(R.string.card_title_callonhold);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_CALL_RETRIEVED:
+                            //This message is displayed on B,when A makes call to B, puts it on hold & retrives it back.
+                            callForwardTxt = getContext().getString(R.string.card_title_callretrieved);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_MULTI_PARTY_CALL:
+                            //This message is displayed on B when the the call is changed as multiparty
+                            callForwardTxt = getContext().getString(R.string.card_title_multipartycall);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_ON_HOLD_CALL_RELEASED:
+                            //This message is displayed on B, when A makes call to B, puts it on hold & then releases it.
+                            callForwardTxt = getContext().getString(R.string.card_title_callonhold_released);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_FORWARD_CHECK_RECEIVED:
+                            //This message is displayed on C when the incoming call is forwarded from B
+                            callForwardTxt = getContext().getString(R.string.card_title_forwardcheckreceived);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_CALL_CONNECTING_ECT:
+                            //This message is displayed on B,when Call is connecting through Explicit Cold Transfer
+                            callForwardTxt = getContext().getString(R.string.card_title_callconnectingect);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_CALL_CONNECTED_ECT:
+                            //This message is displayed on B,when Call is connected through Explicit Cold Transfer
+                            callForwardTxt = getContext().getString(R.string.card_title_callconnectedect);
+                            break;
+
+                        case SuppServiceNotification.MT_CODE_DEFLECTED_CALL:
+                            //This message is displayed on B when the incoming call is deflected call
+                            callForwardTxt = getContext().getString(R.string.card_title_deflectedcall);
                             break;
 
                         case SuppServiceNotification.MT_CODE_ADDITIONAL_CALL_FORWARDED:
