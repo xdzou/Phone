@@ -360,6 +360,13 @@ public class CallNotifier extends Handler
 
                 if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
                     suppSvcNotification = (SuppServiceNotification)((AsyncResult) msg.obj).result;
+                    InCallScreen inCallScreen = mApplication.getInCallScreen();
+                    if (inCallScreen != null) {
+                        CallCard callCard = (CallCard) inCallScreen.findViewById(R.id.callCard);
+                        callCard.updateState(mCM);
+                    } else {
+                        Log.d(LOG_TAG, "SUPP_SERVICE_NOTIFY mInCallScreen null");
+                    }
                 }
                 break;
 
