@@ -1089,7 +1089,7 @@ public class BluetoothHandsfree {
                     }
                     break;
                 case MESSAGE_CHECK_PENDING_SCO:
-                    if (mPendingSco && isA2dpMultiProfile()) {
+                    if (mPendingSco) {
                         Log.w(TAG, "Timeout suspending A2DP for SCO (mA2dpState = " +
                                 mA2dpState + "). Starting SCO anyway");
                         mOutgoingSco = createScoSocket();
@@ -1162,7 +1162,7 @@ public class BluetoothHandsfree {
 
         mA2dpSuspended = false;
         mPendingSco = false;
-        if (isA2dpMultiProfile() && mA2dpState == BluetoothA2dp.STATE_PLAYING) {
+        if ( mA2dpState == BluetoothA2dp.STATE_PLAYING) {
             if (DBG) log("suspending A2DP stream for SCO");
             mA2dpSuspended = mA2dp.suspendSink(mA2dpDevice);
             if (mA2dpSuspended) {
@@ -1214,10 +1214,8 @@ public class BluetoothHandsfree {
                 ", mIncomingSco:" + mIncomingSco);
 
         if (mA2dpSuspended) {
-            if (isA2dpMultiProfile()) {
               if (DBG) log("resuming A2DP stream after disconnecting SCO");
               mA2dp.resumeSink(mA2dpDevice);
-            }
             mA2dpSuspended = false;
         }
 
