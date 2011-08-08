@@ -25,7 +25,7 @@ public class CdmaCallOptions extends PreferenceActivity {
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        addPreferencesFromResource(R.xml.cdma_call_options);
+        addPreferencesFromResource(R.xml.cdma_call_privacy);
 
         // getting selected subscription
         int subscription = getIntent().getIntExtra(CallFeaturesSetting.SUBSCRIPTION_ID, 0);
@@ -34,11 +34,12 @@ public class CdmaCallOptions extends PreferenceActivity {
         Phone phone = PhoneApp.getPhone(subscription);
 
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
-        if (phone.getPhoneType() != Phone.PHONE_TYPE_CDMA) {
-            //disable the entire screen
-            getPreferenceScreen().setEnabled(false);
-        }
-    }
+        if (phone.getPhoneType() != Phone.PHONE_TYPE_CDMA
+                 || getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
+             //disable the entire screen
+             getPreferenceScreen().setEnabled(false);
+         }
+     }
 
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
