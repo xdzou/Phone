@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +58,7 @@ public class EmergencyCallbackModeService extends Service {
     private long mTimeLeft = 0;
     private Phone mPhone = null;
     private boolean mInEmergencyCall = false;
+    private int mSubscription = 0;
 
     private static final int ECM_TIMER_RESET = 1;
 
@@ -72,10 +74,22 @@ public class EmergencyCallbackModeService extends Service {
 
     @Override
     public void onCreate() {
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (intent != null) {
+            mSubscription = intent.getIntExtra("Subscription", PhoneApp.getDefaultSubscription());
+        } else {
+            Log.d(LOG_TAG, "onStartCommand: intent null");
+        }
+        mPhone = PhoneApp.getPhone(mSubscription);
+
         // Check if it is CDMA phone
-        if (PhoneFactory.getDefaultPhone().getPhoneType() != Phone.PHONE_TYPE_CDMA) {
+        if (mPhone.getPhoneType() != Phone.PHONE_TYPE_CDMA) {
             Log.e(LOG_TAG, "Error! Emergency Callback Mode not supported for " +
-                    PhoneFactory.getDefaultPhone().getPhoneName() + " phones");
+                    mPhone.getPhoneName() + " phones");
             stopSelf();
         }
 
@@ -88,10 +102,10 @@ public class EmergencyCallbackModeService extends Service {
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
         // Register ECM timer reset notfication
-        mPhone = PhoneFactory.getDefaultPhone();
         mPhone.registerForEcmTimerReset(mHandler, ECM_TIMER_RESET, null);
 
         startTimerNotification();
+        return START_STICKY;
     }
 
     @Override
@@ -167,10 +181,11 @@ public class EmergencyCallbackModeService extends Service {
                 R.drawable.picture_emergency25x25,
                 getText(R.string.phone_entered_ecm_text), 0);
 
+        Intent intent = new Intent(EmergencyCallbackModeExitDialog.ACTION_SHOW_ECM_EXIT_DIALOG);
+        intent.putExtra("Subscription", mSubscription);
         // PendingIntent to launch Emergency Callback Mode Exit activity if the user selects
         // this notification
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-                new Intent(EmergencyCallbackModeExitDialog.ACTION_SHOW_ECM_EXIT_DIALOG), 0);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
         // Format notification string
         String text = null;
