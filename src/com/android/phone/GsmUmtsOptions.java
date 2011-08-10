@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2008, 2011 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,13 @@ public class GsmUmtsOptions {
 
     private int mSubscription = 0;
 
+    private Phone mPhone;
+
     public GsmUmtsOptions(PreferenceActivity prefActivity, PreferenceScreen prefScreen, int subscription) {
         mPrefActivity = prefActivity;
         mPrefScreen = prefScreen;
         mSubscription = subscription;
+        mPhone = PhoneApp.getPhone(mSubscription);
         create();
     }
 
@@ -60,21 +63,30 @@ public class GsmUmtsOptions {
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonOperatorSelectionExpand.getIntent().putExtra(Settings.SUBSCRIPTION, mSubscription);
         mButtonPrefer2g = (CheckBoxPreference) mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY);
-        Phone phone = PhoneApp.getPhone(mSubscription);
-        Use2GOnlyCheckBoxPreference.updatePhone(phone);
-        if (phone.getPhoneType() != Phone.PHONE_TYPE_GSM) {
+        Use2GOnlyCheckBoxPreference.updatePhone(mPhone);
+        enableScreen();
+    }
+
+    public void enableScreen() {
+        if (mPhone.getPhoneType() != Phone.PHONE_TYPE_GSM) {
             log("Not a GSM phone");
             mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
         } else if (mPrefActivity.getResources().getBoolean(R.bool.csp_enabled)) {
-            if (PhoneFactory.getDefaultPhone().isCspPlmnEnabled()) {
+            if (mPhone.isCspPlmnEnabled()) {
                 log("[CSP] Enabling Operator Selection menu.");
                 mButtonOperatorSelectionExpand.setEnabled(true);
             } else {
                 log("[CSP] Disabling Operator Selection menu.");
-                mPrefScreen.removePreference(mPrefScreen
-                      .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
+                mButtonOperatorSelectionExpand =
+                        (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
+                if (mButtonOperatorSelectionExpand != null) {
+                    mPrefScreen.removePreference(mPrefScreen
+                          .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
+                } else {
+                    log("Operator Selection Menu already removed!");
+                }
             }
         }
 
