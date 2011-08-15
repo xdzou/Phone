@@ -689,33 +689,28 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return getPhone(PhoneApp.getDataSubscription()).disableApnType(type);
     }
 
-    public int enableQos(QosSpec qosSpec, String type) {
-        log("enableQos");
-        return getPhone(PhoneApp.getDataSubscription()).enableQos(qosSpec, type);
+    public int enableQos(QosSpec qosSpec, String type, String ipv) {
+        return getPhone(PhoneApp.getDataSubscription()).enableQos(
+                    qosSpec, type, Enum.valueOf(IPVersion.class, ipv));
     }
 
     public int disableQos(int qosId) {
-        log("disableQos");
         return getPhone(PhoneApp.getDataSubscription()).disableQos(qosId);
     }
 
     public int modifyQos(int qosId, QosSpec qosSpec) {
-        log("modifyQos");
         return getPhone(PhoneApp.getDataSubscription()).modifyQos(qosId, qosSpec);
     }
 
     public int suspendQos(int qosId) {
-        log("suspendQos");
         return getPhone(PhoneApp.getDataSubscription()).suspendQos(qosId);
     }
 
     public int resumeQos(int qosId) {
-        log("resumeQos");
         return getPhone(PhoneApp.getDataSubscription()).resumeQos(qosId);
     }
 
     public int getQosStatus(int qosId) {
-        Log.d(LOG_TAG, "getQosStatus");
         return getPhone(PhoneApp.getDataSubscription()).getQosStatus(qosId);
     }
 
