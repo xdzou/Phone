@@ -1547,11 +1547,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             } else if (action.equals(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
                 Phone phone = getPhone(subscription);
                 if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-                    Log.d(LOG_TAG, "Emergency Callback Mode arrived in PhoneApp.");
+                    Log.d(LOG_TAG, "Emergency Callback Mode arrived in PhoneApp"
+                            + " on Sub =" + subscription);
                     // Start Emergency Callback Mode service
                     if (intent.getBooleanExtra("phoneinECMState", false)) {
-                        context.startService(new Intent(context,
-                                EmergencyCallbackModeService.class));
+                        Intent ecbmIntent = new Intent(context, EmergencyCallbackModeService.class);
+                        ecbmIntent.putExtra("Subscription", subscription);
+                        context.startService(ecbmIntent);
                     }
                 } else {
                     Log.e(LOG_TAG, "Error! Emergency Callback Mode not supported for " +
