@@ -161,6 +161,7 @@ public class Settings extends PreferenceActivity implements Preference.OnPrefere
         // upon resumption from the sub-activity, make sure we re-enable the
         // preferences.
         getPreferenceScreen().setEnabled(true);
+        if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
 
         if (getPreferenceScreen().findPreference(BUTTON_PREFERED_NETWORK_MODE) != null)  {
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
