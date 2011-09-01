@@ -277,6 +277,7 @@ public class BluetoothHandsfree {
             startDebug();
         }
 
+        mRemoteCodec = 0;
         if (isIncallAudio()) {
             audioOn();
         } else if (mCM.getFirstActiveRingingCall().isRinging()) {
@@ -601,12 +602,7 @@ public class BluetoothHandsfree {
                                 if (mPendingScoForA2dp) {
                                     mHandler.removeMessages(MESSAGE_CHECK_PENDING_SCO);
                                     if (DBG) log("A2DP suspended, completing SCO");
-                                    mOutgoingSco = createScoSocket();
-                                    if (!mOutgoingSco.connect(
-                                            mHeadset.getRemoteDevice().getAddress(),
-                                            mHeadset.getRemoteDevice().getName())) {
-                                        mOutgoingSco = null;
-                                    }
+                                    connectSco(CODEC_MSBC == mRemoteCodec);
                                     mPendingScoForA2dp = false;
                                 }
                             }
@@ -1118,7 +1114,7 @@ public class BluetoothHandsfree {
                     if (mPendingScoForA2dp) {
                         Log.w(TAG, "Timeout suspending A2DP for SCO (mA2dpState = " +
                                 mA2dpState + "). Starting SCO anyway");
-                        mOutgoingSco = createScoSocket();
+                        mOutgoingSco = createScoSocket(CODEC_MSBC == mRemoteCodec);
                         if (!(isHeadsetConnected() &&
                                 mOutgoingSco.connect(mHeadset.getRemoteDevice().getAddress(),
                                  mHeadset.getRemoteDevice().getName()))) {
@@ -1168,7 +1164,8 @@ public class BluetoothHandsfree {
 
     private void connectSco(boolean wbs) {
         mOutgoingSco = createScoSocket(wbs);
-        if (!mOutgoingSco.connect(mHeadset.getRemoteDevice().getAddress(),
+        if (!mOutgoingSco.connect(
+                mHeadset.getRemoteDevice().getAddress(),
                 mHeadset.getRemoteDevice().getName())) {
             mOutgoingSco = null;
         }
@@ -1271,11 +1268,7 @@ public class BluetoothHandsfree {
         }
 
         if (!mPendingScoForA2dp && !mPendingScoForWbs) {
-            mOutgoingSco = createScoSocket();
-            if (!mOutgoingSco.connect(mHeadset.getRemoteDevice().getAddress(),
-                    mHeadset.getRemoteDevice().getName())) {
-                mOutgoingSco = null;
-            }
+            connectSco(CODEC_MSBC == mRemoteCodec);
         }
 
         return true;
