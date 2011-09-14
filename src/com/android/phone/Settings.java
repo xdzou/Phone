@@ -263,6 +263,8 @@ public class Settings extends PreferenceActivity implements Preference.OnPrefere
                     mPhone.getContext().getContentResolver(),
                     android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
                     mSubscription, nwMode);
+        // Refresh the GSM UMTS options UI on network mode change
+        if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
     }
 
     private class MyHandler extends Handler {
