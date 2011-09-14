@@ -70,16 +70,20 @@ public class GsmUmtsOptions {
     public void enableScreen() {
         if (mPhone.getPhoneType() != Phone.PHONE_TYPE_GSM) {
             log("Not a GSM phone");
-            mButtonOperatorSelectionExpand.setEnabled(false);
+            if (mButtonOperatorSelectionExpand != null)
+                mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
+        } else if (!mPhone.isManualNetSelAllowed()){
+            if (mButtonOperatorSelectionExpand != null)
+                mButtonOperatorSelectionExpand.setEnabled(false);
         } else if (mPrefActivity.getResources().getBoolean(R.bool.csp_enabled)) {
+            mButtonOperatorSelectionExpand =
+                    (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
             if (mPhone.isCspPlmnEnabled()) {
                 log("[CSP] Enabling Operator Selection menu.");
                 mButtonOperatorSelectionExpand.setEnabled(true);
             } else {
                 log("[CSP] Disabling Operator Selection menu.");
-                mButtonOperatorSelectionExpand =
-                        (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
                 if (mButtonOperatorSelectionExpand != null) {
                     mPrefScreen.removePreference(mPrefScreen
                           .findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
