@@ -70,7 +70,6 @@ public class GsmUmtsOptions {
     public void enableScreen() {
         if (mPhone.getPhoneType() != Phone.PHONE_TYPE_GSM) {
             log("Not a GSM phone");
-            mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
         } else if (mPrefActivity.getResources().getBoolean(R.bool.csp_enabled)) {
@@ -88,15 +87,6 @@ public class GsmUmtsOptions {
                     log("Operator Selection Menu already removed!");
                 }
             }
-        }
-
-        /*
-         * APN editor should always be enabled in the case of SV-LTE with 1x
-         * voice or on an EHRPD capable device.
-         */
-        if (SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SUPPORT_SVLTE1X, false)
-                || SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SUPPORT_EHRPD, false)) {
-            mButtonAPNExpand.setEnabled(true);
         }
     }
 
