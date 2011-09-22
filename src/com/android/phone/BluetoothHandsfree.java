@@ -1972,7 +1972,12 @@ public class BluetoothHandsfree {
                         c = ((String) args[0]).charAt(0);
                     }
                     if (isValidDtmf(c)) {
-                        phone.sendDtmf(c);
+                        if (phone.getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                            String s = Character.toString(c);
+                            phone.sendBurstDtmf(s, 0, 0, null);
+                        } else {
+                            phone.sendDtmf(c);
+                        }
                         return new AtCommandResult(AtCommandResult.OK);
                     }
                 }
