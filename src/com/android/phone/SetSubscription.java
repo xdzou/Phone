@@ -315,8 +315,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         Log.d(TAG, "setSubscription");
 
         int numSubSelected = 0;
+        int deactRequiredCount = 0;
         subErr = false;
-        //SubscriptionData userSelSub = ProxyManager.getInstance().new SubscriptionData(MAX_SUBSCRIPTIONS);
 
         for (int i = 0; i < subArray.length; i++) {
             if (subArray[i] != null) {
@@ -341,6 +341,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                     mUserSelSub.subscription[i].m3gpp2Index = SUBSCRIPTION_INDEX_INVALID;
                     mUserSelSub.subscription[i].subId = i;
                     mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
+
+                    if (mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
+                        deactRequiredCount++;
+                    }
                 } else {
                     // Key is the string :  "slot<SlotId> index<IndexId>"
                     // Split the string into two and get the SlotId and IndexId.
@@ -359,6 +363,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         mUserSelSub.subscription[i].m3gpp2Index = SUBSCRIPTION_INDEX_INVALID;
                         mUserSelSub.subscription[i].subId = i;
                         mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
+
+                        if (mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
+                            deactRequiredCount++;
+                        }
                         continue;
                     }
 
@@ -377,17 +385,52 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                             // User selected a new subscription.  Need to activate this.
                             mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_ACTIVATE;
                         }
+
+                        if (mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED
+                                && mUserSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATE) {
+                            deactRequiredCount++;
+                        }
                     } else {
                         mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_ACTIVATE;
                     }
                 }
             }
 
-            showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
-            mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
+            if (deactRequiredCount >= MAX_SUBSCRIPTIONS) {
+                errorMutipleDeactivate();
+            } else {
+                showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
 
-            mProxyManager.setSubscription(mUserSelSub);
+                mProxyManager.setSubscription(mUserSelSub);
+            }
         }
+    }
+
+    /**
+     *  Displays an dialog box with error message.
+     *  "Deactivation of both subscription is not supported"
+     */
+    private void errorMutipleDeactivate() {
+        Log.d(TAG, "errorMutipleDeactivate()");
+
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.config_sub_title)
+            .setMessage(R.string.deact_all_sub_not_supported)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(TAG, "errorMutipleDeactivate:  onClick");
+                        updateCheckBoxes();
+                    }
+                })
+            .show()
+            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    public void onDismiss(DialogInterface dialog) {
+                        Log.d(TAG, "errorMutipleDeactivate:  onDismiss");
+                        updateCheckBoxes();
+                    }
+                });
     }
 
     private Handler mHandler = new Handler() {

@@ -1514,8 +1514,6 @@
     <string name="cancel_call">Cancel</string>
 
     <!-- Set Subscription screen: Message shown in error dialog -->
-    <string name="set_subscription_error_max_two">Select maximum two subscriptions</string>
-    <!-- Set Subscription screen: Message shown in error dialog -->
     <string name="set_subscription_error_atleast_one">Select atleast one subscription</string>
     <!-- Set Subscription screen: label sub 1 -->
     <string name="sub_1">SUB 1</string>
@@ -1549,4 +1547,6 @@
     <string name="new_cards_available">New card available. Please configure subscriptions.</string>
     <!-- Set Subscription screen: Configure subscription dialog title -->
     <string name="config_sub_title">Configure Subscriptions</string>
+    <!-- Set Subscription screen: Deactivate both subscription not supported -->
+    <string name="deact_all_sub_not_supported">Deactivation of both the subscriptions is not supported.</string>
 </resources>
