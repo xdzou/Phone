@@ -191,47 +191,13 @@ public class Settings extends PreferenceActivity implements Preference.OnPrefere
             buttonNetworkMode = Integer.valueOf((String) objValue).intValue();
             int settingsNetworkMode = getPreferredNetworkMode();
             if (buttonNetworkMode != settingsNetworkMode) {
-                int modemNetworkMode;
-                switch(buttonNetworkMode) {
-                    case Phone.NT_MODE_GLOBAL:
-                        modemNetworkMode = Phone.NT_MODE_GLOBAL;
-                        break;
-                    case Phone.NT_MODE_EVDO_NO_CDMA:
-                        modemNetworkMode = Phone.NT_MODE_EVDO_NO_CDMA;
-                        break;
-                    case Phone.NT_MODE_CDMA_NO_EVDO:
-                        modemNetworkMode = Phone.NT_MODE_CDMA_NO_EVDO;
-                        break;
-                    case Phone.NT_MODE_CDMA:
-                        modemNetworkMode = Phone.NT_MODE_CDMA;
-                        break;
-                    case Phone.NT_MODE_GSM_UMTS:
-                        modemNetworkMode = Phone.NT_MODE_GSM_UMTS;
-                        break;
-                    case Phone.NT_MODE_WCDMA_ONLY:
-                        modemNetworkMode = Phone.NT_MODE_WCDMA_ONLY;
-                        break;
-                    case Phone.NT_MODE_GSM_ONLY:
-                        modemNetworkMode = Phone.NT_MODE_GSM_ONLY;
-                        break;
-                    case Phone.NT_MODE_WCDMA_PREF:
-                        modemNetworkMode = Phone.NT_MODE_WCDMA_PREF;
-                        break;
-                    case Phone.NT_MODE_CDMA_AND_LTE_EVDO:
-                        modemNetworkMode = Phone.NT_MODE_CDMA_AND_LTE_EVDO;
-                        break;
-                    case Phone.NT_MODE_GSM_WCDMA_LTE:
-                        modemNetworkMode = Phone.NT_MODE_GSM_WCDMA_LTE;
-                        break;
-                    case Phone.NT_MODE_GLOBAL_LTE:
-                        modemNetworkMode = Phone.NT_MODE_GLOBAL_LTE;
-                        break;
-                    case Phone.NT_MODE_LTE_ONLY:
-                        modemNetworkMode = Phone.NT_MODE_LTE_ONLY;
-                        break;
-                    default:
-                        modemNetworkMode = Phone.PREFERRED_NT_MODE;
+                int modemNetworkMode = buttonNetworkMode;
+                // if new mode is invalid set mode to default preferred
+                if ((modemNetworkMode < Phone.NT_MODE_WCDMA_PREF)
+                        || (modemNetworkMode > Phone.NT_MODE_LTE_WCDMA)) {
+                    modemNetworkMode = Phone.PREFERRED_NT_MODE;
                 }
+
                 UpdatePreferredNetworkModeSummary(buttonNetworkMode);
                 setPreferredNetworkMode(buttonNetworkMode);
                 //Set the modem network mode
@@ -314,7 +280,8 @@ public class Settings extends PreferenceActivity implements Preference.OnPrefere
                         modemNetworkMode == Phone.NT_MODE_CDMA_AND_LTE_EVDO ||
                         modemNetworkMode == Phone.NT_MODE_GSM_WCDMA_LTE ||
                         modemNetworkMode == Phone.NT_MODE_GLOBAL_LTE ||
-                        modemNetworkMode == Phone.NT_MODE_LTE_ONLY) {
+                        modemNetworkMode == Phone.NT_MODE_LTE_ONLY ||
+                        modemNetworkMode == Phone.NT_MODE_LTE_WCDMA) {
                     if (DBG) {
                         log("handleGetPreferredNetworkTypeResponse: if 1: modemNetworkMode = " +
                                 modemNetworkMode);
@@ -413,6 +380,9 @@ public class Settings extends PreferenceActivity implements Preference.OnPrefere
                 break;
             case Phone.NT_MODE_GLOBAL_LTE:
                 mButtonPreferredNetworkMode.setSummary("Preferred network mode: Global + LTE");
+                break;
+            case Phone.NT_MODE_LTE_WCDMA:
+                mButtonPreferredNetworkMode.setSummary("Preferred network mode: LTE/WCDMA");
                 break;
             default:
                 // should never come here
