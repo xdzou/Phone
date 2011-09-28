@@ -367,7 +367,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     private boolean showCallScreenInternal(boolean specifyInitialDialpadState,
                                            boolean initialDialpadState) {
-        if (isIdle()) {
+        int sub = mCM.getPhoneInCall().getSubscription();
+        if (isIdleOnSubscription(sub)) {
             return false;
         }
         // If the phone isn't idle then go to the in-call screen
@@ -377,7 +378,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
             if (specifyInitialDialpadState) {
                 intent = PhoneApp.createInCallIntent(initialDialpadState);
             } else {
-                intent = PhoneApp.createInCallIntent(getPreferredVoiceSubscription());
+                intent = PhoneApp.createInCallIntent(sub);
             }
             mApp.startActivity(intent);
         } finally {
