@@ -1513,13 +1513,17 @@ public class BluetoothHandsfree {
         Call foregroundCall = mCM.getActiveFgCall();
         Call ringingCall = mCM.getFirstActiveRingingCall();
 
+        if (ringingCall == null) {
+            return new AtCommandResult(AtCommandResult.ERROR);
+        }
+
         Call.State ringingCallState = ringingCall.getState();
         // If the Ringing Call state is INCOMING, that means this is the very first call
         // hence there should not be any Foreground Call
         if (ringingCallState == Call.State.INCOMING) {
             if (VDBG) log("Filling clccConnections[0] for INCOMING state");
             clccConnections[0] = ringingCall.getLatestConnection();
-        } else if (foregroundCall.getState().isAlive()) {
+        } else if ((foregroundCall != null) && foregroundCall.getState().isAlive()) {
             // Getting Foreground Call connection based on Call state
             if (ringingCall.isRinging()) {
                 if (VDBG) log("Filling clccConnections[0] & [1] for CALL WAITING state");
