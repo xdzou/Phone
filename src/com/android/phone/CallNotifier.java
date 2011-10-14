@@ -399,12 +399,9 @@ public class CallNotifier extends Handler
         Log.d(LOG_TAG, "Autoanswering ringing call");
         Call ringingCall = mCM.getFirstActiveRingingCall();
         if (ringingCall != null) {
-            try {
-                mCM.acceptCall(ringingCall);
-            } catch (CallStateException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+            PhoneUtils.answerCall(ringingCall);
+        } else {
+            Log.e(LOG_TAG, "No ringing call to answer!!");
         }
     }
 
