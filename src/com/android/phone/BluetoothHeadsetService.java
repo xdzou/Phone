@@ -88,6 +88,7 @@ public class BluetoothHeadsetService extends Service {
         filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         filter.addAction(AudioManager.VOLUME_CHANGED_ACTION);
         filter.addAction(BluetoothDevice.ACTION_UUID);
+        filter.addAction(BluetoothHandsfree.SLC_ESTABLISHED);
         registerReceiver(mBluetoothReceiver, filter);
 
         IBinder b = ServiceManager.getService(BluetoothAdapter.BLUETOOTH_SERVICE);
@@ -306,7 +307,20 @@ public class BluetoothHeadsetService extends Service {
                     // We have got SDP records for the device we are interested in.
                     getSdpRecordsAndConnect(device);
                 }
+            } else if (action.equals(BluetoothHandsfree.SLC_ESTABLISHED)) {
+                int newState = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, 0);
+                if (newState == BluetoothHeadset.STATE_CONNECTED) {
+                    if (currDevice == null || device == null) {
+                        return;
+                    }
+                    if (device.equals(currDevice)) {
+                        log("SLC is up , broadcasting connected intent");
+                        setState(device,
+                                BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
+                    }
+                }
             }
+
         }
     };
 
@@ -442,8 +456,14 @@ public class BluetoothHeadsetService extends Service {
                 if (DBG) log("Rfcomm connected");
                 mConnectThread = null;
                 HeadsetBase headset = (HeadsetBase)msg.obj;
-                setState(device,
-                        BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
+                ParcelUuid[] uuids = null;
+                try {
+                    uuids = mBluetoothService.getRemoteUuids(device.getAddress());
+                } catch(android.os.RemoteException e) {log("Remote exc " + e);}
+                if (uuids != null && !(BluetoothUuid.isUuidPresent(uuids, BluetoothUuid.Handsfree))) {
+                    setState(device,
+                            BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
+                }
 
                 mRemoteHeadsets.get(device).mHeadset = headset;
                 mBtHandsfree.connectHeadset(headset, mRemoteHeadsets.get(device).mHeadsetType);
