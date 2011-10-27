@@ -689,10 +689,6 @@ public class InCallScreen extends Activity
         // Listen for broadcast intents that might affect the onscreen UI.
         registerReceiver(mReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 
-        // Keep a "dialer session" active when we're in the foreground.
-        // (This is needed to play DTMF tones.)
-        mDialer.startDialerSession();
-
         // Check for any failures that happened during onCreate() or onNewIntent().
         if (DBG) log("- onResume: initial status = " + mInCallInitialStatus);
         boolean handledStartupError = false;
@@ -710,6 +706,10 @@ public class InCallScreen extends Activity
             // CallCard setup) will fall back to a "blank" state if the
             // phone isn't in use.
             mInCallInitialStatus = InCallInitStatus.SUCCESS;
+        } else {
+            // Keep a "dialer session" active when we're in the foreground.
+            // (This is needed to play DTMF tones.)
+            mDialer.startDialerSession();
         }
 
         // Set the volume control handler while we are in the foreground.
