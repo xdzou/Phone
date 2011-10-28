@@ -170,6 +170,8 @@ public class BluetoothHandsfree {
     private static final int CODEC_CVSD = 1 << 0;
     private static final int CODEC_MSBC = 1 << 1;
 
+    private static final int CODEC_NEGOTIATION_TIMEOUT = 10000; // 10 seconds
+
     public static String typeToString(int type) {
         switch (type) {
         case TYPE_UNKNOWN:
@@ -1137,6 +1139,7 @@ public class BluetoothHandsfree {
                     // fall back to NB
                     if (mPendingScoForWbs) {
                         Log.i(TAG, "Timeout codec connection setup, starting SCO anyway using NB");
+                        mLocalCodec = CODEC_CVSD;
                         mAudioManager.setParameters(HEADSET_SAMPLERATE + "=8000");
                         connectSco(false);
                         mPendingScoForWbs = false;
@@ -1157,7 +1160,8 @@ public class BluetoothHandsfree {
                 if (DBG) log("SCO_FAILED, sending +BCS:1 to try NB");
                 mExpectingBCS = true;
                 sendURC("+BCS:1");
-                sendMessageDelayed(obtainMessage(CODEC_CONNECTION_SETUP_TIMEOUT), 2000);
+                sendMessageDelayed(obtainMessage(CODEC_CONNECTION_SETUP_TIMEOUT),
+                        CODEC_NEGOTIATION_TIMEOUT);
             }
         }
     };
@@ -1260,7 +1264,7 @@ public class BluetoothHandsfree {
                     mExpectingBCS = true;
                     sendURC("+BCS:2");
                     Message msg = mHandler.obtainMessage(CODEC_CONNECTION_SETUP_TIMEOUT);
-                    mHandler.sendMessageDelayed(msg, 2000);
+                    mHandler.sendMessageDelayed(msg, CODEC_NEGOTIATION_TIMEOUT);
                 }
             } else {
                 mAudioManager.setParameters(HEADSET_SAMPLERATE + "=8000");
