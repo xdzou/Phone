@@ -525,7 +525,7 @@ public class CallCard extends FrameLayout
                         String connAddress = conn.getAddress();
                         String number = PhoneNumberUtils.stripSeparators(ci.phoneNumber);
                         if (!(ci.isEmergencyNumber() || ci.isVoiceMailNumber()) &&
-                            (!connAddress.equals(number))) {
+                            (connAddress != null && !connAddress.equals(number))) {
                             log("- displayMainCallStatus: Phone number modified!!");
                             CallerInfo newCi = CallerInfo.getCallerInfo(getContext(), connAddress);
                             if (newCi != null) {
