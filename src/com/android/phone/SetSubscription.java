@@ -335,14 +335,14 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         } else {
             for (int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
                 if (subArray[i] == null) {
-                    Log.d(TAG, "setSubscription: Sub " + i + " not selected. Setting 99999");
-                    mUserSelSub.subscription[i].slotId = SUBSCRIPTION_INDEX_INVALID;
-                    mUserSelSub.subscription[i].m3gppIndex = SUBSCRIPTION_INDEX_INVALID;
-                    mUserSelSub.subscription[i].m3gpp2Index = SUBSCRIPTION_INDEX_INVALID;
-                    mUserSelSub.subscription[i].subId = i;
-                    mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
-
                     if (mCurrentSelSub.subscription[i].subStatus == ProxyManager.SUB_ACTIVATED) {
+                        Log.d(TAG, "setSubscription: Sub " + i + " not selected. Setting 99999");
+                        mUserSelSub.subscription[i].slotId = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].m3gppIndex = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].m3gpp2Index = SUBSCRIPTION_INDEX_INVALID;
+                        mUserSelSub.subscription[i].subId = i;
+                        mUserSelSub.subscription[i].subStatus = ProxyManager.SUB_DEACTIVATE;
+
                         deactRequiredCount++;
                     }
                 } else {
