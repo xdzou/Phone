@@ -317,6 +317,7 @@ public class BluetoothHeadsetService extends Service {
                         log("SLC is up , broadcasting connected intent");
                         setState(device,
                                 BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
+                        mHandler.removeMessages(MESSAGE_SLC_TIMEOUT);
                     }
                 }
             }
@@ -325,6 +326,7 @@ public class BluetoothHeadsetService extends Service {
     };
 
     private static final int CONNECT_HEADSET_DELAYED = 1;
+    private static final int MESSAGE_SLC_TIMEOUT = 2;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -332,6 +334,19 @@ public class BluetoothHeadsetService extends Service {
                 case CONNECT_HEADSET_DELAYED:
                     BluetoothDevice device = (BluetoothDevice) msg.obj;
                     getSdpRecordsAndConnect(device);
+                    break;
+                case MESSAGE_SLC_TIMEOUT:
+                    log("Handling SLC Timeout");
+                    BluetoothDevice curDevice = getCurrentDevice();
+                    BluetoothDevice sdevice = (BluetoothDevice) msg.obj;
+                    if (curDevice == null ||
+                        (mRemoteHeadsets.get(curDevice).mState !=
+                        BluetoothHeadset.STATE_CONNECTING) ||
+                        !sdevice.equals(curDevice)) {
+                       return;  // stale events
+                    }
+                    setState(sdevice,
+                            BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
                     break;
             }
         }
@@ -463,6 +478,11 @@ public class BluetoothHeadsetService extends Service {
                 if (uuids != null && !(BluetoothUuid.isUuidPresent(uuids, BluetoothUuid.Handsfree))) {
                     setState(device,
                             BluetoothHeadset.STATE_CONNECTED, BluetoothHeadset.RESULT_SUCCESS);
+                } else {
+                    log("HFP device, scheduling SLC timer");
+                    Message slc_msg = mHandler.obtainMessage(MESSAGE_SLC_TIMEOUT);
+                    slc_msg.obj = device;
+                    mHandler.sendMessageDelayed(slc_msg, 2000);
                 }
 
                 mRemoteHeadsets.get(device).mHeadset = headset;
