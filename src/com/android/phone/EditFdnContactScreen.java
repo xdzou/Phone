@@ -263,7 +263,7 @@ public class EditFdnContactScreen extends Activity {
 
     private Uri getContentURI() {
         if (mSubscription == SUB1) {
-            return Uri.parse("content://icc/fdn_sub1");
+            return Uri.parse("content://icc/fdn");
         } else if (mSubscription == SUB2) {
             return Uri.parse("content://icc/fdn_sub2");
         } else {
