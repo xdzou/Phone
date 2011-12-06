@@ -120,7 +120,7 @@ public class DeleteFdnContactScreen extends Activity {
         buf.append("'");
 
         if (mSubscription == SUB1) {
-            uri = Uri.parse("content://icc/fdn_sub1");
+            uri = Uri.parse("content://icc/fdn");
         } else if (mSubscription == SUB2) {
             uri = Uri.parse("content://icc/fdn_sub2");
         } else {

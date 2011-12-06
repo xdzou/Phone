@@ -47,7 +47,7 @@ public class FdnList extends ADNList {
         Intent intent = getIntent();
         mSubscription = getIntent().getIntExtra("sub_id", 0);
         if (mSubscription == SUB1) {
-            intent.setData(Uri.parse("content://icc/fdn_sub1"));
+            intent.setData(Uri.parse("content://icc/fdn"));
         } else if (mSubscription == SUB2) {
             intent.setData(Uri.parse("content://icc/fdn_sub2"));
         } else {

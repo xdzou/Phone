@@ -266,7 +266,7 @@ public class SimContacts extends ADNList {
         Intent intent = getIntent();
         mSubscription = TelephonyManager.getPreferredVoiceSubscription();
         if (mSubscription == SUB1) {
-            intent.setData(Uri.parse("content://icc/adn_sub1"));
+            intent.setData(Uri.parse("content://icc/adn"));
         } else if (mSubscription == SUB2) {
             intent.setData(Uri.parse("content://icc/adn_sub2"));
         } else {
