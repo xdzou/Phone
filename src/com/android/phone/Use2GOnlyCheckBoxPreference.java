@@ -61,6 +61,7 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
    }
 
     public static void updatePhone(Phone phone) {
+        Log.i(LOG_TAG, "updatePhone subscription :" + phone.getSubscription());
         mPhone = phone;
         mPhone.getPreferredNetworkType(
                  mHandler.obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));

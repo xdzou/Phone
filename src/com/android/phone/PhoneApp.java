@@ -1,5 +1,9 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011-2012 Code Aurora Forum. All rights reserved.
+ *
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +53,7 @@ import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.preference.PreferenceManager;
 import android.provider.Settings.System;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
@@ -66,6 +71,7 @@ import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
+import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 /**
  * Top-level Application class for the Phone app.
  */
@@ -96,7 +102,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     private static final String PROPERTY_AIRPLANE_MODE_ON = "persist.radio.airplane_mode_on";
 
     // Message codes; see mHandler below.
-    private static final int EVENT_SIM_NETWORK_LOCKED = 3;
+    static final int EVENT_SIM_NETWORK_LOCKED = 3;
     private static final int EVENT_WIRED_HEADSET_PLUG = 7;
     private static final int EVENT_SIM_STATE_CHANGED = 8;
     private static final int EVENT_UPDATE_INCALL_NOTIFICATION = 9;
@@ -107,7 +113,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     private static final int EVENT_TTY_PREFERRED_MODE_CHANGED = 14;
     private static final int EVENT_TTY_MODE_GET = 15;
     private static final int EVENT_TTY_MODE_SET = 16;
-    private static final int EVENT_START_SIP_SERVICE = 17;
+    static final int EVENT_START_SIP_SERVICE = 17;
 
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
@@ -164,7 +170,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     public static final String ACTION_SEND_SMS_FROM_NOTIFICATION =
             "com.android.phone.ACTION_SEND_SMS_FROM_NOTIFICATION";
 
-    private static PhoneApp sMe;
+    protected static PhoneApp sMe;
 
     // A few important fields we expose to the rest of the package
     // directly (rather than thru set/get methods) for efficiency.
@@ -189,13 +195,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     // The InCallScreen instance (or null if the InCallScreen hasn't been
     // created yet.)
-    private InCallScreen mInCallScreen;
+    protected InCallScreen mInCallScreen;
 
     // The currently-active PUK entry activity and progress dialog.
     // Normally, these are the Emergency Dialer and the subsequent
     // progress dialog.  null if there is are no such objects in
     // the foreground.
-    private Activity mPUKEntryActivity;
+    protected Activity mPUKEntryActivity;
     private ProgressDialog mPUKEntryProgressDialog;
 
     private boolean mIsSimPinEnabled;
@@ -204,19 +210,19 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     // True if a wired headset is currently plugged in, based on the state
     // from the latest Intent.ACTION_HEADSET_PLUG broadcast we received in
     // mReceiver.onReceive().
-    private boolean mIsHeadsetPlugged;
+    protected boolean mIsHeadsetPlugged;
 
     // True if the keyboard is currently *not* hidden
     // Gets updated whenever there is a Configuration change
-    private boolean mIsHardKeyboardOpen;
+    protected boolean mIsHardKeyboardOpen;
 
     // True if we are beginning a call, but the phone state has not changed yet
     private boolean mBeginningCall;
 
     // Last phone state seen by updatePhoneState()
-    private Phone.State mLastPhoneState = Phone.State.IDLE;
+    protected Phone.State mLastPhoneState = Phone.State.IDLE;
 
-    private WakeState mWakeState = WakeState.SLEEP;
+    protected WakeState mWakeState = WakeState.SLEEP;
 
     /**
      * Timeout setting used by PokeLock.
@@ -234,24 +240,24 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     private boolean mIgnoreTouchUserActivity = false;
     private final IBinder mPokeLockToken = new Binder();
 
-    private IPowerManager mPowerManagerService;
-    private PowerManager.WakeLock mWakeLock;
-    private PowerManager.WakeLock mPartialWakeLock;
-    private PowerManager.WakeLock mProximityWakeLock;
-    private KeyguardManager mKeyguardManager;
-    private AccelerometerListener mAccelerometerListener;
+    protected IPowerManager mPowerManagerService;
+    protected PowerManager.WakeLock mWakeLock;
+    protected PowerManager.WakeLock mPartialWakeLock;
+    protected PowerManager.WakeLock mProximityWakeLock;
+    protected KeyguardManager mKeyguardManager;
+    protected AccelerometerListener mAccelerometerListener;
     private int mOrientation = AccelerometerListener.ORIENTATION_UNKNOWN;
 
-    private UpdateLock mUpdateLock;
+    protected UpdateLock mUpdateLock;
 
     // Broadcast receiver for various intent broadcasts (see onCreate())
-    private final BroadcastReceiver mReceiver = new PhoneAppBroadcastReceiver();
+    protected BroadcastReceiver mReceiver;
 
     // Broadcast receiver purely for ACTION_MEDIA_BUTTON broadcasts
-    private final BroadcastReceiver mMediaButtonReceiver = new MediaButtonBroadcastReceiver();
+    protected BroadcastReceiver mMediaButtonReceiver;
 
     /** boolean indicating restoring mute state on InCallScreen.onResume() */
-    private boolean mShouldRestoreMuteOnInCallResume;
+    protected boolean mShouldRestoreMuteOnInCallResume;
 
     /**
      * The singleton OtaUtils instance used for OTASP calls.
@@ -274,9 +280,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     public OtaUtils.CdmaOtaInCallScreenUiState cdmaOtaInCallScreenUiState;
 
     // TTY feature enabled on this platform
-    private boolean mTtyEnabled;
+    protected boolean mTtyEnabled;
     // Current TTY operating mode selected by user
-    private int mPreferredTtyMode = Phone.TTY_MODE_OFF;
+    protected int mPreferredTtyMode = Phone.TTY_MODE_OFF;
     private boolean mTtySetOnPowerUp = false;
 
     /**
@@ -307,15 +313,16 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 // temporary. Will move it to a persistent communication process
                 // later.
                 case EVENT_START_SIP_SERVICE:
-                    SipService.start(getApplicationContext());
+                    SipService.start(mContext);
                     break;
 
                 // TODO: This event should be handled by the lock screen, just
                 // like the "SIM missing" and "Sim locked" cases (bug 1804111).
                 case EVENT_SIM_NETWORK_LOCKED:
-                    if (getResources().getBoolean(R.bool.ignore_sim_network_locked_events)) {
+                    if (mContext.getResources().getBoolean(
+                            R.bool.ignore_sim_network_locked_events)) {
                         // Some products don't have the concept of a "SIM network lock"
-                        Log.i(LOG_TAG, "Ignoring EVENT_SIM_NETWORK_LOCKED event; "
+                        Log.i(LOG_TAG, "Ignoring EVENT_PERSO_LOCKED event; "
                               + "not showing 'SIM network unlock' PIN entry screen");
                     } else {
                         // Normal case: show the "SIM network unlock" PIN entry screen.
@@ -446,7 +453,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             }
         }
     };
-
+    static MSimPhoneApp msApp;
+    Context mContext;
     public PhoneApp() {
         sMe = this;
     }
@@ -454,6 +462,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     @Override
     public void onCreate() {
         if (VDBG) Log.v(LOG_TAG, "onCreate()...");
+        mContext = this;
 
         ContentResolver resolver = getContentResolver();
 
@@ -467,7 +476,13 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         // sVoiceCapable =
         //   getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY_VOICE_CALLS);
 
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            Log.v(LOG_TAG, "PhoneApp onCreate() DSDS Enabled!!!!");
+            msApp = new MSimPhoneApp(this);
+            msApp.onCreate();
+        } else {
         if (phone == null) {
+            Log.d(LOG_TAG, "non dsds PhoneApp:");
             // Initialize the telephony framework
             PhoneFactory.makeDefaultPhones(this);
 
@@ -508,6 +523,10 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             }
 
             ringer = Ringer.init(this);
+
+            mReceiver = new PhoneAppBroadcastReceiver();
+            mMediaButtonReceiver = new MediaButtonBroadcastReceiver();
+
 
             // before registering for phone state changes
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -665,18 +684,24 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                                       CallFeaturesSetting.HAC_VAL_ON :
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
+      }
    }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
-        if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
-            mIsHardKeyboardOpen = true;
-        } else {
-            mIsHardKeyboardOpen = false;
-        }
 
-        // Update the Proximity sensor based on keyboard state
-        updateProximitySensorMode(mCM.getState());
+        if (msApp != null) {
+            msApp.onConfigurationChanged(newConfig);
+        } else {
+            if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
+                mIsHardKeyboardOpen = true;
+            } else {
+                mIsHardKeyboardOpen = false;
+            }
+
+            // Update the Proximity sensor based on keyboard state
+            updateProximitySensorMode(mCM.getState());
+        }
         super.onConfigurationChanged(newConfig);
     }
 
@@ -691,7 +716,15 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
      * Returns the Phone associated with this instance
      */
     static Phone getPhone() {
-        return getInstance().phone;
+       return getInstance().phone;
+    }
+
+    static Phone getPhone(int subscription) {
+       if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+           return msApp.getPhone(subscription);
+       } else {
+           return getInstance().phone;
+       }
     }
 
     Ringer getRinger() {
@@ -767,7 +800,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
-    private static String getCallScreenClassName() {
+    protected static String getCallScreenClassName() {
         return InCallScreen.class.getName();
     }
 
@@ -1152,7 +1185,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         // Note that we need to make a fresh call to this method any
         // time the speaker state changes.  (That happens in
         // PhoneUtils.turnOnSpeaker().)
-        boolean isSpeakerInUse = (state == Phone.State.OFFHOOK) && PhoneUtils.isSpeakerOn(this);
+        boolean isSpeakerInUse = (state == Phone.State.OFFHOOK)
+                && PhoneUtils.isSpeakerOn(this.mContext);
 
         // TODO (bug 1440854): The screen timeout *might* also need to
         // depend on the bluetooth state, but this isn't as clear-cut as
@@ -1311,7 +1345,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 // we are using a headset, the keyboard is open, or the device
                 // is being held in a horizontal position.
                 boolean screenOnImmediately = (isHeadsetPlugged()
-                            || PhoneUtils.isSpeakerOn(this)
+                            || PhoneUtils.isSpeakerOn(this.mContext)
                             || ((mBtHandsfree != null) && mBtHandsfree.isAudioOn())
                             || mIsHardKeyboardOpen);
 
@@ -1445,7 +1479,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         return mKeyguardManager;
     }
 
-    private void onMMIComplete(AsyncResult r) {
+    protected void onMMIComplete(AsyncResult r) {
         if (VDBG) Log.d(LOG_TAG, "onMMIComplete()...");
         MmiCode mmiCode = (MmiCode) r.result;
         PhoneUtils.displayMMIComplete(phone, getInstance(), mmiCode, null, null);
@@ -1596,7 +1630,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     /**
      * Receiver for misc intent broadcasts the Phone app cares about.
      */
-    private class PhoneAppBroadcastReceiver extends BroadcastReceiver {
+    protected class PhoneAppBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -1717,7 +1751,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
      * adjust its IntentFilter's priority (to make sure we get these
      * intents *before* the media player.)
      */
-    private class MediaButtonBroadcastReceiver extends BroadcastReceiver {
+    protected class MediaButtonBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
@@ -1808,7 +1842,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
         if (ss != null) {
             int state = ss.getState();
-            notificationMgr.updateNetworkSelection(state);
+            notificationMgr.updateNetworkSelection(state, this.phone);
 
             if ((state == ServiceState.STATE_IN_SERVICE
                     || state == ServiceState.STATE_EMERGENCY_ONLY)
@@ -1916,7 +1950,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
             Intent ttyModeChanged = new Intent(TtyIntent.TTY_ENABLED_CHANGE_ACTION);
             ttyModeChanged.putExtra("ttyEnabled", ttymode != Phone.TTY_MODE_OFF);
-            sendBroadcast(ttyModeChanged);
+            mContext.sendBroadcast(ttyModeChanged);
         }
     }
 
@@ -2024,4 +2058,27 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             return PhoneApp.createCallLogIntent();
         }
     }
+
+    Phone.State getPhoneState(int subscription) {
+        return getPhoneState();
+    }
+
+    /* Gets the default subscription */
+    public int getDefaultSubscription() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    /* Gets User preferred Voice subscription setting*/
+    public int getVoiceSubscription() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    public int getVoiceSubscriptionInService() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    Intent createInCallIntent(int subscription) {
+        return PhoneApp.createInCallIntent();
+    }
+
 }
