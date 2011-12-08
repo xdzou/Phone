@@ -92,7 +92,7 @@ public class CallNotifier extends Handler
     private static final int AUTO_ANSWER_DEFAULT_MS = -1;
 
     /** The singleton instance. */
-    private static CallNotifier sInstance;
+    protected static CallNotifier sInstance;
 
     // Boolean to keep track of whether or not a CDMA Call Waiting call timed out.
     //
@@ -150,7 +150,7 @@ public class CallNotifier extends Handler
     private static final int PHONE_AUTO_ANSWER = 13;
 
     // Events generated internally:
-    private static final int PHONE_MWI_CHANGED = 21;
+    protected static final int PHONE_MWI_CHANGED = 21;
     private static final int CALLWAITING_CALLERINFO_DISPLAY_DONE = 22;
     private static final int CALLWAITING_ADDCALL_DISABLE_TIMEOUT = 23;
     private static final int DISPLAYINFO_NOTIFICATION_DONE = 24;
@@ -163,7 +163,7 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
-    private PhoneGlobals mApplication;
+    protected PhoneGlobals mApplication;
     private CallManager mCM;
     private Ringer mRinger;
     private BluetoothHeadset mBluetoothHeadset;
@@ -211,7 +211,7 @@ public class CallNotifier extends Handler
     }
 
     /** Private constructor; @see init() */
-    private CallNotifier(PhoneGlobals app, Phone phone, Ringer ringer, CallLogAsync callLog) {
+    protected CallNotifier(PhoneGlobals app, Phone phone, Ringer ringer, CallLogAsync callLog) {
         mApplication = app;
         mCM = app.mCM;
         mCallLog = callLog;
@@ -240,9 +240,12 @@ public class CallNotifier extends Handler
                                     mBluetoothProfileServiceListener,
                                     BluetoothProfile.HEADSET);
         }
+        listen();
+    }
 
-        TelephonyManager telephonyManager = (TelephonyManager)app.getSystemService(
-                Context.TELEPHONY_SERVICE);
+    protected void listen() {
+        TelephonyManager telephonyManager = (TelephonyManager)mApplication.
+            getSystemService(Context.TELEPHONY_SERVICE);
         telephonyManager.listen(mPhoneStateListener,
                 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
                 | PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR);
@@ -1317,7 +1320,7 @@ public class CallNotifier extends Handler
         PhoneUtils.setAudioMode(mCM);
     }
 
-    private void onMwiChanged(boolean visible) {
+    protected void onMwiChanged(boolean visible) {
         if (VDBG) log("onMwiChanged(): " + visible);
 
         // "Voicemail" is meaningless on non-voice-capable devices,
@@ -1344,7 +1347,7 @@ public class CallNotifier extends Handler
         sendMessageDelayed(message, delayMillis);
     }
 
-    private void onCfiChanged(boolean visible) {
+    protected void onCfiChanged(boolean visible) {
         if (VDBG) log("onCfiChanged(): " + visible);
         mApplication.notificationMgr.updateCfi(visible);
     }
