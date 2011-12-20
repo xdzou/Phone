@@ -1003,6 +1003,7 @@ public class BluetoothHandsfree {
     private static final int CHECK_CALL_STARTED = 4;
     private static final int CHECK_VOICE_RECOGNITION_STARTED = 5;
     private static final int MESSAGE_CHECK_PENDING_SCO = 6;
+    private static final int MESSAGE_DELAYED_SCO_UPDATE = 7;
 
     private final Handler mHandler = new Handler() {
         @Override
@@ -1082,6 +1083,11 @@ public class BluetoothHandsfree {
                         }
                         mPendingSco = false;
                     }
+                    break;
+                case MESSAGE_DELAYED_SCO_UPDATE:
+                        mAudioManager.setBluetoothScoOn(false);
+                        broadcastAudioStateIntent(BluetoothHeadset.AUDIO_STATE_DISCONNECTED,
+                               mHeadset.getRemoteDevice());
                     break;
                 }
             }
@@ -1219,8 +1225,8 @@ public class BluetoothHandsfree {
             }
             mConnectedSco.close();
             mConnectedSco = null;
-            mAudioManager.setBluetoothScoOn(false);
-            broadcastAudioStateIntent(BluetoothHeadset.AUDIO_STATE_DISCONNECTED, device);
+            Message msg = mHandler.obtainMessage(MESSAGE_DELAYED_SCO_UPDATE);
+            mHandler.sendMessageDelayed(msg, 500);
         }
         if (mOutgoingSco != null) {
             mOutgoingSco.close();
