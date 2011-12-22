@@ -325,11 +325,10 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                         // Normal case: show the "perso unlock" PIN entry screen.
                         // The user won't be able to do anything else until
                         // they enter a valid PIN.
-                        Log.i(LOG_TAG, "show sim depersonal panel");
-                        int subtype = (Integer)((AsyncResult)msg.obj).result;
-                        IccDepersonalizationPanel dpPanel =
-                                new IccDepersonalizationPanel(PhoneApp.getInstance(), subtype);
-                        dpPanel.show();
+                        AsyncResult ar = (AsyncResult) msg.obj;
+                        if (ar.result != null) {
+                            initIccDepersonalizationPanel(ar);
+                        }
                     }
                     break;
 
@@ -451,6 +450,15 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             }
         }
     };
+
+    void initIccDepersonalizationPanel(AsyncResult ar) {
+        Log.i(LOG_TAG, "show sim depersonal panel");
+        int subtype = (Integer)ar.result;
+        IccDepersonalizationPanel dpPanel =
+                new IccDepersonalizationPanel(PhoneApp.getInstance(), subtype);
+        dpPanel.show();
+    }
+
     static MSimPhoneApp msApp;
     Context mContext;
     public PhoneApp() {
@@ -1517,15 +1525,6 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
         if (mInCallScreen != null) {
             mInCallScreen.updateAfterRadioTechnologyChange();
-        }
-
-        // Update registration for ICC status after radio technology change
-        IccCard sim = phone.getIccCard();
-        if (sim != null) {
-            if (DBG) Log.d(LOG_TAG, "Update registration for ICC status...");
-
-            //Register all events new to the new active phone
-            sim.registerForPersoLocked(mHandler, EVENT_PERSO_LOCKED, null);
         }
     }
 
