@@ -1,4 +1,7 @@
-/*
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2009 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,11 +64,13 @@ public class InCallTouchUi extends FrameLayout
         PopupMenu.OnMenuItemClickListener, PopupMenu.OnDismissListener {
     private static final String LOG_TAG = "InCallTouchUi";
     private static final boolean DBG = (PhoneApp.DBG_LEVEL >= 2);
+    private static final boolean IMS_DBG = Log.isLoggable("IMS", Log.DEBUG);
 
     // Incoming call widget targets
     private static final int ANSWER_CALL_ID = 0;  // drag right
     private static final int SEND_SMS_ID = 1;  // drag up
     private static final int DECLINE_CALL_ID = 2;  // drag left
+    private static final int ANSWER_VOICE_ONLY_CALL_ID = 3;  // drag bottom
 
     /**
      * Reference to the InCallScreen activity that owns us.  This may be
@@ -106,6 +111,10 @@ public class InCallTouchUi extends FrameLayout
     // "Audio mode" PopupMenu
     private PopupMenu mAudioModePopup;
     private boolean mAudioModePopupVisible = false;
+
+    int incomingCWBottomMargin;// Bottom margin for incoming call widget
+    int incomingCWHeight;      // Original height of incoming call widget
+    int incomingCWVideoHeight; // New height of incoming call widget with video
 
     // Time of the most recent "answer" or "reject" action (see updateState())
     private long mLastIncomingCallActionTime;  // in SystemClock.uptimeMillis() time base
@@ -158,6 +167,16 @@ public class InCallTouchUi extends FrameLayout
         // "Drag-to-answer" widget for incoming calls.
         mIncomingCallWidget = (GlowPadView) findViewById(R.id.incomingCallWidget);
         mIncomingCallWidget.setOnTriggerListener(this);
+
+        // Store the bottom margin of the incoming call widget from the XML
+        // resource file
+        ViewGroup.MarginLayoutParams callWidgetLp =
+                (ViewGroup.MarginLayoutParams) mIncomingCallWidget.getLayoutParams();
+        incomingCWBottomMargin = callWidgetLp.bottomMargin;
+        incomingCWHeight = callWidgetLp.height;
+        incomingCWVideoHeight = 0;
+        if (IMS_DBG) log("callWidgetLp.bottomMargin: " + incomingCWBottomMargin);
+        if (IMS_DBG) log("callWidgetLp.height: " + incomingCWHeight);
 
         // Container for the UI elements shown while on a regular call.
         mInCallControls = findViewById(R.id.inCallControls);
@@ -1049,6 +1068,11 @@ public class InCallTouchUi extends FrameLayout
                 mLastIncomingCallActionTime = SystemClock.uptimeMillis();
                 break;
 
+            case ANSWER_VOICE_ONLY_CALL_ID:
+                if (DBG) log("ANSWER_VOICE_ONLY_CALL_ID: answer!");
+                mInCallScreen.handleOnscreenButtonClick(R.id.incomingCallAnswerVoiceOnly);
+                break;
+
             default:
                 Log.wtf(LOG_TAG, "onDialTrigger: unexpected whichHandle value: " + whichHandle);
                 break;
@@ -1152,20 +1176,42 @@ public class InCallTouchUi extends FrameLayout
         // everytime when this method is called during a single incoming call.
         if (targetResourceId != mIncomingCallWidget.getTargetResourceId()) {
             if (allowRespondViaSms) {
-                // The GlowPadView widget is allowed to have all 3 choices:
-                // Answer, Decline, and Respond via SMS.
-                mIncomingCallWidget.setTargetResources(targetResourceId);
-                mIncomingCallWidget.setTargetDescriptionsResourceId(
-                        R.array.incoming_call_widget_3way_target_descriptions);
-                mIncomingCallWidget.setDirectionDescriptionsResourceId(
-                        R.array.incoming_call_widget_3way_direction_descriptions);
+                if (!PhoneUtils.isIMSVideoCall(ringingCall)) {
+                    // The GlowPadView widget is allowed to have all 3 choices:
+                    // Answer, Decline, and Respond via SMS.
+                    mIncomingCallWidget.setTargetResources(targetResourceId);
+                    mIncomingCallWidget.setTargetDescriptionsResourceId(
+                            R.array.incoming_call_widget_3way_target_descriptions);
+                    mIncomingCallWidget.setDirectionDescriptionsResourceId(
+                            R.array.incoming_call_widget_3way_direction_descriptions);
+
+                } else {
+
+                    // The GlowPadView widget is allowed to have all 4 choices:
+                    // Answer, Decline, Respond via SMS and Answer with voice.
+                    mIncomingCallWidget.setTargetResources(targetResourceId);
+                    mIncomingCallWidget.setTargetDescriptionsResourceId(
+                            R.array.incoming_call_widget_4way_ims_target_descriptions);
+                    mIncomingCallWidget.setDirectionDescriptionsResourceId(
+                            R.array.incoming_call_widget_4way_ims_direction_descriptions);
+                }
             } else {
-                // You only get two choices: Answer or Decline.
-                mIncomingCallWidget.setTargetResources(targetResourceId);
-                mIncomingCallWidget.setTargetDescriptionsResourceId(
-                        R.array.incoming_call_widget_2way_target_descriptions);
-                mIncomingCallWidget.setDirectionDescriptionsResourceId(
-                        R.array.incoming_call_widget_2way_direction_descriptions);
+                if (!PhoneUtils.isIMSVideoCall(ringingCall)) {
+
+                    // You only get two choices: Answer or Decline.
+                    mIncomingCallWidget.setTargetResources(targetResourceId);
+                    mIncomingCallWidget.setTargetDescriptionsResourceId(
+                            R.array.incoming_call_widget_2way_target_descriptions);
+                    mIncomingCallWidget.setDirectionDescriptionsResourceId(
+                            R.array.incoming_call_widget_2way_direction_descriptions);
+                } else {
+                    // You only get two choices: Answer or Decline.
+                    mIncomingCallWidget.setTargetResources(targetResourceId);
+                    mIncomingCallWidget.setTargetDescriptionsResourceId(
+                            R.array.incoming_call_widget_3way_ims_target_descriptions);
+                    mIncomingCallWidget.setDirectionDescriptionsResourceId(
+                            R.array.incoming_call_widget_3way_ims_direction_descriptions);
+                }
             }
 
             // This will be used right after this block.
@@ -1181,6 +1227,9 @@ public class InCallTouchUi extends FrameLayout
         }
 
         mIncomingCallWidget.setVisibility(View.VISIBLE);
+
+        // Update the layout of the wave view widget
+        updateIncomingCallWidgetLayout(ringingCall);
 
         // Finally, manually trigger a "ping" animation.
         //
@@ -1200,6 +1249,50 @@ public class InCallTouchUi extends FrameLayout
                 // *before* starting the ping animation.
                 // This value doesn't need to be very precise.
                 250 /* msec */);
+    }
+
+    /**
+     * Adjust the bottom margin of the incoming call widget to accommodate the
+     * bottom icon for the incoming video call screen. If the call is not a
+     * video call then re-adjust the size to the original size
+     *
+     * @param ringingCall
+     */
+    private void updateIncomingCallWidgetLayout(Call ringingCall) {
+        boolean isVideoCall = PhoneUtils.isIMSVideoCall(ringingCall);
+        ViewGroup.MarginLayoutParams callWidgetLp =
+                (ViewGroup.MarginLayoutParams) mIncomingCallWidget.getLayoutParams();
+
+        if (isVideoCall) {
+            // Add extra space to accommodate the bottom icon.
+            callWidgetLp.bottomMargin = 20;
+
+            // Adjust the height to accommodate the bottom icon. This needs to
+            // be done due to the bug in the implementation of MultiWaveView
+            // widget that assumes that there would not be a bottom icon while
+            // calculating the height even though the MultiWaveView widget supports
+            // bottom icon
+            if (incomingCWVideoHeight > 0) {
+                callWidgetLp.height = incomingCWVideoHeight;
+            } else if ((mIncomingCallWidget.getHeight() > 0)) {
+                int bottomIconHeight = getContext().getResources()
+                        .getDrawable(R.drawable.ic_lockscreen_answer_video_normal)
+                        .getIntrinsicHeight() / 2;
+                incomingCWVideoHeight = mIncomingCallWidget.getHeight() + bottomIconHeight;
+                callWidgetLp.height = incomingCWVideoHeight;
+                if (IMS_DBG) log("icon height: " + bottomIconHeight);
+                if (IMS_DBG) log("mIncomingCW.getHeight(): " + mIncomingCallWidget.getHeight());
+            }
+        } else {
+            // Reset the bottom margin and the height if the bottom icon need not be shown
+            callWidgetLp.bottomMargin = incomingCWBottomMargin;
+            callWidgetLp.height = incomingCWHeight;
+        }
+
+        // Equivalent to setting android:layout_marginBottom and layout_height in XML
+        if (IMS_DBG) log("callWidgetLp.bottomMargin: " + callWidgetLp.bottomMargin);
+        if (IMS_DBG) log("callWidgetLp.height:" + callWidgetLp.height);
+        mIncomingCallWidget.setLayoutParams(callWidgetLp);
     }
 
     /**

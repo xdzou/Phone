@@ -82,6 +82,33 @@
         <item>@null</item>
     </array>
 
+    <!--  But in cases where the incoming call is VT the GlowPadView widget
+          provides 4 choices:
+         - Answer (drag right)
+         - Reject (drag left)
+         - Respond via SMS (drag up) -->
+    <array name="incoming_call_widget_4way_ims_targets">
+        <item>@drawable/ic_lockscreen_answer_video</item>
+        <item>@drawable/ic_lockscreen_answer</item>
+        <item>@drawable/ic_lockscreen_text</item>
+        <item>@drawable/ic_lockscreen_decline</item>
+        <item>@null</item>"
+    </array>
+    <array name="incoming_call_widget_4way_ims_target_descriptions">
+        <item>@string/description_target_answer_video</item>
+        <item>@string/description_target_answer</item>
+        <item>@string/description_target_send_sms</item>
+        <item>@string/description_target_decline</item>
+        <item>@null</item>"
+    </array>
+    <array name="incoming_call_widget_4way_ims_direction_descriptions">
+        <item>@*android:string/description_direction_right</item>
+        <item>@*android:string/description_direction_up</item>
+        <item>@*android:string/description_direction_left</item>
+        <item>@*android:string/description_direction_down</item>
+        <item>@null</item>
+    </array>
+
     <!-- But in some cases "Respond via SMS" isn't available, so there are
          only 2 choices:
          - Answer (drag right)
@@ -102,6 +129,34 @@
         <item>@*android:string/description_direction_right</item>
         <item>@null</item>
         <item>@*android:string/description_direction_left</item>
+        <item>@null</item>
+    </array>
+
+    <!-- But in some cases where incoming call is VT and
+         "Respond via SMS" isn't available, so there are
+         only 3 choices:
+         - Answer with video (drag right)
+         - Reject (drag left)
+         - Answer as Voice (drag down) -->
+    <array name="incoming_call_widget_3way_ims_targets">
+        <item>@drawable/ic_lockscreen_answer_video</item>
+        <item>@null</item>
+        <item>@drawable/ic_lockscreen_decline</item>
+        <item>@drawable/ic_lockscreen_answer</item>
+        <item>@null</item>"
+    </array>
+    <array name="incoming_call_widget_3way_ims_target_descriptions">
+        <item>@string/description_target_answer_video</item>
+        <item>@null</item>
+        <item>@string/description_target_decline</item>
+        <item>@string/description_target_answer</item>
+        <item>@null</item>"
+    </array>
+    <array name="incoming_call_widget_3way_ims_direction_descriptions">
+        <item>@*android:string/description_direction_right</item>
+        <item>@null</item>
+        <item>@*android:string/description_direction_left</item>
+        <item>@*android:string/description_direction_down</item>
         <item>@null</item>
     </array>
 
