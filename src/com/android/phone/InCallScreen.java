@@ -68,6 +68,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.MmiCode;
@@ -863,6 +864,11 @@ public class InCallScreen extends Activity
         // Release any "dialer session" resources, now that we're no
         // longer in the foreground.
         mDialer.stopDialerSession();
+
+        // Call onPause on CallCard
+        if (mCallCard != null) {
+            mCallCard.onPause();
+        }
 
         // If the device is put to sleep as the phone call is ending,
         // we may see cases where the DELAYED_CLEANUP_AFTER_DISCONNECT
@@ -3070,6 +3076,9 @@ public class InCallScreen extends Activity
             case R.id.incomingCallAnswer:
                 internalAnswerCall();
                 break;
+            case R.id.incomingCallAnswerVoiceOnly:
+                internalAnswerCall(CallDetails.CALL_TYPE_VOICE);
+                break;
             case R.id.incomingCallReject:
                 hangupRingingCall();
                 break;
@@ -3571,6 +3580,15 @@ public class InCallScreen extends Activity
      * ringing or waiting call.
      */
     private void internalAnswerCall() {
+        internalAnswerCall(CallDetails.CALL_TYPE_UNKNOWN);
+    }
+
+    /**
+     * Answer a ringing call with calltype specified. answerCallType is
+     * valid only for IMS calls. This method does nothing if there's no
+     * ringing or waiting call.
+     */
+    private void internalAnswerCall(int answerCallType) {
         if (DBG) log("internalAnswerCall()...");
         // if (DBG) PhoneUtils.dumpCallState(mPhone);
 
@@ -3596,7 +3614,7 @@ public class InCallScreen extends Activity
                             + "CDMA incoming and end SIP ongoing");
                     PhoneUtils.answerAndEndActive(mCM, ringing);
                 } else {
-                    PhoneUtils.answerCall(ringing);
+                    PhoneUtils.answerCall(ringing, answerCallType);
                 }
             } else if (phoneType == Phone.PHONE_TYPE_SIP) {
                 if (DBG) log("internalAnswerCall: answering (SIP)...");
