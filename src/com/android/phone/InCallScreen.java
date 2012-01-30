@@ -820,6 +820,11 @@ public class InCallScreen extends Activity
         // longer in the foreground.
         mDialer.stopDialerSession();
 
+        // Call onPause on CallCard
+        if (mCallCard != null) {
+            mCallCard.onPause();
+        }
+
         // If the device is put to sleep as the phone call is ending,
         // we may see cases where the DELAYED_CLEANUP_AFTER_DISCONNECT
         // event gets handled AFTER the device goes to sleep and wakes
