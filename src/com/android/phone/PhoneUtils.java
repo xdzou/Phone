@@ -255,6 +255,19 @@ public class PhoneUtils {
      * @see #answerAndEndActive(CallManager, Call)
      */
     /* package */ static boolean answerCall(Call ringing) {
+        return answerCall(ringing, CallDetails.CALL_TYPE_UNKNOWN);
+    }
+
+    /**
+     * Answer the currently-ringing call.
+     *
+     * @return true if we answered the call, or false if there wasn't
+     *         actually a ringing incoming call, or some other error occurred.
+     *
+     * @see #answerAndEndHolding(CallManager, Call)
+     * @see #answerAndEndActive(CallManager, Call)
+     */
+    /* package */ static boolean answerCall(Call ringing, int answerCallType) {
         log("answerCall(" + ringing + ")...");
         final PhoneGlobals app = PhoneGlobals.getInstance();
 
@@ -312,7 +325,7 @@ public class PhoneUtils {
                 final boolean isRealIncomingCall = isRealIncomingCall(ringing.getState());
 
                 //if (DBG) log("sPhone.acceptCall");
-                app.mCM.acceptCall(ringing);
+                app.mCM.acceptCall(ringing, answerCallType);
                 answered = true;
 
                 // Always reset to "unmuted" for a freshly-answered call
@@ -2791,37 +2804,19 @@ public class PhoneUtils {
      * @return
      */
     public static boolean isImsVideoCall(Call call) {
-        /* FIXME -port later
-        if (DBG) log("In isIMSVideoCallActive");
-        List<Connection> connections = call.getConnections();
-        CallDetails callDetails;
-
-        // Check if connection exist
-        if (connections == null || connections.size() < 1) {
-            if (DBG) log("No active connection for this call");
-            return false;
+        if (DBG) log("In isImsVideoCall call=" + call);
+        Phone phone = call.getPhone();
+        if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            try {
+                int callType = phone.getCallType(call);
+                if (callType == CallDetails.CALL_TYPE_VT || callType == CallDetails.CALL_TYPE_VS_RX
+                        || callType == CallDetails.CALL_TYPE_VS_TX) {
+                    return true;
+                }
+            } catch (CallStateException ex) {
+                Log.e(LOG_TAG, "isIMSVideoCall: caught " + ex, ex);
+            }
         }
-
-        // Video Call doesn't support conferencing so if there are more than one
-        // connection then the call can not be of type VT
-        if (connections.size() > 1) {
-            return false;
-        }
-
-        // Get call type and call domain
-        callDetails = connections.get(0).getCallDetails();
-        if (callDetails == null) {
-            if (DBG) log("Call details is null");
-            return false;
-        }
-
-        if (DBG) log("In callType: " + callDetails.call_type + ", callDomain: "
-                    + callDetails.call_domain);
-        if ((callDetails != null) && (callDetails.call_type == CallDetails.RIL_CALL_TYPE_VT)
-                && (callDetails.call_domain == CallDetails.RIL_CALL_DOMAIN_PS)) {
-            return true;
-        }
-        */
         return false;
     }
 
@@ -2832,6 +2827,8 @@ public class PhoneUtils {
      * @return
      */
     public static boolean isImsVideoCallActive(Call call) {
+        if (call == null) return false;
+
         // Check if there is an active call
         if (call.getState() != Call.State.ACTIVE) {
             if (DBG) log("Call is not active");
