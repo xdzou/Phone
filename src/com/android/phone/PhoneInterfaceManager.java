@@ -28,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.ServiceState;
@@ -43,6 +44,7 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.QosSpec;
+import com.android.internal.telephony.IOemHookCallback;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -66,6 +68,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int EVENT_UNSOL_OEM_HOOK_EXT_APP = 9;
     private static final int CMD_SET_TRANSMIT_POWER = 10;
     private static final int EVENT_SET_TRANSMIT_POWER_DONE = 11;
+    private static final int CMD_INVOKE_OEM_RIL_REQUEST_ASYNC = 12;
+    private static final int EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE = 13;
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -91,6 +95,24 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     /**
+     * A request object for use with {@link MainThreadHandler}. The main thread
+     * will notify the request when it is complete.
+     */
+    private static final class MainThreadRequestAsync {
+        /** The first argument to use for the request */
+        public Object arg1;
+        /** The second argument to use for the callback */
+        public Object arg2;
+        /** The result of the request that is run on the main thread */
+        public Object result;
+
+        public MainThreadRequestAsync(Object arg1, Object arg2) {
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+        }
+    }
+
+    /**
      * A handler that processes messages on the main thread in the phone process. Since many
      * of the Phone calls are not thread safe this is needed to shuttle the requests from the
      * inbound binder threads to the main thread in the phone process.  The Binder thread
@@ -106,6 +128,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         @Override
         public void handleMessage(Message msg) {
             MainThreadRequest request;
+            MainThreadRequestAsync requestAsync;
             Message onCompleted;
             AsyncResult ar;
 
@@ -188,6 +211,26 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     }
                     break;
 
+                case CMD_INVOKE_OEM_RIL_REQUEST_ASYNC:
+                    requestAsync = (MainThreadRequestAsync) msg.obj;
+                    onCompleted = obtainMessage(
+                            EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE, requestAsync);
+                    mPhone.invokeOemRilRequestRaw((byte[]) requestAsync.arg1,
+                            onCompleted);
+                    break;
+
+                case EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE:
+                    ar = (AsyncResult) msg.obj;
+                    requestAsync = (MainThreadRequestAsync) ar.userObj;
+                    requestAsync.result = ar.result;
+                    IOemHookCallback cb = (IOemHookCallback) requestAsync.arg2;
+                    try {
+                        cb.onOemHookResponse((byte[]) (requestAsync.result));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
                 case EVENT_UNSOL_OEM_HOOK_EXT_APP:
                     ar = (AsyncResult)msg.obj;
                     broadcastUnsolOemHookIntent((byte[])(ar.result));
@@ -264,6 +307,18 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     private void sendRequestAsync(int command) {
         mMainThreadHandler.sendEmptyMessage(command);
+    }
+
+    /**
+     * Posts the specified command to be executed on the main thread, and
+     * returns the result without waiting for the request to complete,
+     *
+     * @see sendRequestAsync
+     */
+    private void sendRequestAsync(int command, Object arg1, Object arg2) {
+        MainThreadRequestAsync request = new MainThreadRequestAsync(arg1, arg2);
+        Message msg = mMainThreadHandler.obtainMessage(command, request);
+        msg.sendToTarget();
     }
 
     /**
@@ -819,6 +874,17 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         }
 
         return returnValue;
+    }
+
+    public void sendOemRilRequestRawAsync(byte[] request,
+            IOemHookCallback oemHookCb) {
+        try {
+            sendRequestAsync(CMD_INVOKE_OEM_RIL_REQUEST_ASYNC, request,
+                    oemHookCb);
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "sendOemRilRequestRawAsync: Runtime Exception");
+        }
+
     }
 
     /**
