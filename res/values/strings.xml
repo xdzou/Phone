@@ -908,6 +908,8 @@
     <string name="pin2_invalid">FDN not updated: you entered an incorrect PIN.</string>
     <!-- FDN settings: error message displayed in a popup (toast) -->
     <string name="fdn_invalid_number">FDN not updated: number cannot exceed 20 digits.</string>
+    <!-- FDN settings: error message displayed in a popup (toast) -->
+    <string name="fdn_failed">FDN operation failed.</string>
 
     <!-- ADN related strings -->
     <!-- Placeholder text displayed while loading the list of SIM contacts -->

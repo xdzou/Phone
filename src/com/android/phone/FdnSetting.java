@@ -219,16 +219,23 @@ public class FdnSetting extends PreferenceActivity
                 // a toast, or just update the UI.
                 case EVENT_PIN2_ENTRY_COMPLETE: {
                         AsyncResult ar = (AsyncResult) msg.obj;
-                        if (ar.exception != null) {
+                        if (ar.exception != null && ar.exception instanceof CommandException) {
                             // see if PUK2 is requested and alert the user accordingly.
-                            CommandException ce = (CommandException) ar.exception;
-                            if (ce.getCommandError() == CommandException.Error.SIM_PUK2) {
-                                // make sure we set the PUK2 state so that we can skip
-                                // some redundant behaviour.
-                                displayMessage(R.string.fdn_enable_puk2_requested);
-                                resetPinChangeStateForPUK2();
-                            } else {
-                                displayMessage(R.string.pin2_invalid);
+                            CommandException.Error e =
+                                            ((CommandException) ar.exception).getCommandError();
+                            switch (e) {
+                                case SIM_PUK2:
+                                    // make sure we set the PUK2 state so that we can skip
+                                    // some redundant behaviour.
+                                    displayMessage(R.string.fdn_enable_puk2_requested);
+                                    resetPinChangeStateForPUK2();
+                                    break;
+                                case PASSWORD_INCORRECT:
+                                    displayMessage(R.string.pin2_invalid);
+                                    break;
+                                default:
+                                    displayMessage(R.string.fdn_failed);
+                                    break;
                             }
                         }
                         updateEnableFDN();
