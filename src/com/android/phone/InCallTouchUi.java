@@ -460,7 +460,8 @@ public class InCallTouchUi extends FrameLayout
                 // we always set the mMergeButton to GONE
                 mMergeButton.setVisibility(View.GONE);
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                    || (phoneType == Phone.PHONE_TYPE_SIP)
+                    || (phoneType == Phone.PHONE_TYPE_IMS)) {
                 mMergeButton.setVisibility(View.VISIBLE);
                 mMergeButton.setEnabled(true);
                 mAddButton.setVisibility(View.GONE);

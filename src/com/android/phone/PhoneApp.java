@@ -1236,11 +1236,15 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         boolean isDialing = (phone.getForegroundCall().getState() == Call.State.DIALING);
         boolean showingDisconnectedConnection =
                 PhoneUtils.hasDisconnectedConnections(phone) && isShowingCallScreen;
-        boolean keepScreenOn = isRinging || isDialing || showingDisconnectedConnection;
+        boolean isVideoCallActive = PhoneUtils.isIMSVideoCallActive(mCM.getActiveFgCall());
+        boolean keepScreenOn = isRinging || isDialing || showingDisconnectedConnection
+                || isVideoCallActive;
         if (DBG) Log.d(LOG_TAG, "updateWakeState: keepScreenOn = " + keepScreenOn
                        + " (isRinging " + isRinging
                        + ", isDialing " + isDialing
-                       + ", showingDisc " + showingDisconnectedConnection + ")");
+                       + ", showingDisc " + showingDisconnectedConnection
+                       + ", isVideoCallActive " + isVideoCallActive
+                       + ")");
         // keepScreenOn == true means we'll hold a full wake lock:
         requestWakeState(keepScreenOn ? WakeState.FULL : WakeState.SLEEP);
     }
@@ -1354,7 +1358,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 boolean screenOnImmediately = (isHeadsetPlugged()
                             || PhoneUtils.isSpeakerOn(this.mContext)
                             || ((mBtHandsfree != null) && mBtHandsfree.isAudioOn())
-                            || mIsHardKeyboardOpen);
+                            || mIsHardKeyboardOpen
+                            || PhoneUtils.isIMSVideoCallActive(mCM.getActiveFgCall()));
 
                 // We do not keep the screen off when the user is outside in-call screen and we are
                 // horizontal, but we do not force it on when we become horizontal until the
