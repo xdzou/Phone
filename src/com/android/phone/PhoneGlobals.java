@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1063,15 +1067,17 @@ public class PhoneGlobals extends ContextWrapper
         //
         boolean isRinging = (state == PhoneConstants.State.RINGING);
         boolean isDialing = (phone.getForegroundCall().getState() == Call.State.DIALING);
+        boolean isVideoCallActive = PhoneUtils.isImsVideoCallActive(mCM.getActiveFgCall());
         boolean showingQuickResponseDialog = (mInCallScreen != null) &&
                 mInCallScreen.isQuickResponseDialogShowing();
         boolean showingDisconnectedConnection =
                 PhoneUtils.hasDisconnectedConnections(phone) && isShowingCallScreen;
-        boolean keepScreenOn = isRinging || isDialing ||
+        boolean keepScreenOn = isRinging || isDialing || isVideoCallActive ||
                 (showingDisconnectedConnection && !showingQuickResponseDialog);
         if (DBG) Log.d(LOG_TAG, "updateWakeState: keepScreenOn = " + keepScreenOn
                        + " (isRinging " + isRinging
                        + ", isDialing " + isDialing
+                       + ", isVideoCallActive " + isVideoCallActive
                        + ", showingQuickResponse " + showingQuickResponseDialog
                        + ", showingDisc " + showingDisconnectedConnection + ")");
         // keepScreenOn == true means we'll hold a full wake lock:
@@ -1142,7 +1148,9 @@ public class PhoneGlobals extends ContextWrapper
                 boolean screenOnImmediately = (isHeadsetPlugged()
                                                || PhoneUtils.isSpeakerOn(this)
                                                || isBluetoothHeadsetAudioOn()
-                                               || mIsHardKeyboardOpen);
+                                               || mIsHardKeyboardOpen
+                                               || PhoneUtils.isImsVideoCallActive(
+                                                       mCM.getActiveFgCall()));
 
                 // We do not keep the screen off when the user is outside in-call screen and we are
                 // horizontal, but we do not force it on when we become horizontal until the
