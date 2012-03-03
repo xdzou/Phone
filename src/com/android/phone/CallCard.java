@@ -299,7 +299,8 @@ public class CallCard extends FrameLayout
         Phone phone = fgCall.getPhone();
 
         int phoneType = phone.getPhoneType();
-        if (phoneType == Phone.PHONE_TYPE_CDMA) {
+        if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             if ((mApplication.cdmaPhoneCallState.getCurrentCallState()
                     == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE)
                     && mApplication.cdmaPhoneCallState.IsThreeWayCallOrigStateDialing()) {
@@ -433,7 +434,8 @@ public class CallCard extends FrameLayout
             // has only one connection.)
             Connection conn = null;
             int phoneType = call.getPhone().getPhoneType();
-            if (phoneType == Phone.PHONE_TYPE_CDMA) {
+            if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                  || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 conn = call.getLatestConnection();
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
                   || (phoneType == Phone.PHONE_TYPE_SIP)) {
@@ -589,7 +591,8 @@ public class CallCard extends FrameLayout
             Call call = (Call) cookie;
             Connection conn = null;
             int phoneType = call.getPhone().getPhoneType();
-            if (phoneType == Phone.PHONE_TYPE_CDMA) {
+            if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                  || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 conn = call.getLatestConnection();
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
                   || (phoneType == Phone.PHONE_TYPE_SIP)) {
@@ -1288,7 +1291,8 @@ public class CallCard extends FrameLayout
                 {
                     Connection conn = null;
                     int phoneType = call.getPhone().getPhoneType();
-                    if (phoneType == Phone.PHONE_TYPE_CDMA) {
+                    if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                            || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                         conn = call.getLatestConnection();
                     } else if ((phoneType == Phone.PHONE_TYPE_GSM)
                             || (phoneType == Phone.PHONE_TYPE_SIP)) {

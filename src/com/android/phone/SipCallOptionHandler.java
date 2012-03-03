@@ -150,8 +150,9 @@ public class SipCallOptionHandler extends Activity implements
         boolean isInCellNetwork = PhoneApp.getInstance().phoneMgr.isRadioOn();
         boolean isKnownCallScheme = Constants.SCHEME_TEL.equals(scheme)
                 || Constants.SCHEME_SIP.equals(scheme);
-        boolean isRegularCall = Constants.SCHEME_TEL.equals(scheme)
-                && !PhoneNumberUtils.isUriNumber(mNumber);
+        boolean isRegularCall = (Constants.SCHEME_TEL.equals(scheme)
+                && !PhoneNumberUtils.isUriNumber(mNumber))
+                || PhoneUtils.isIMSCallIntent(scheme, mIntent);
 
         // Bypass the handler if the call scheme is not sip or tel.
         if (!isKnownCallScheme) {

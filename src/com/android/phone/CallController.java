@@ -16,6 +16,7 @@
 
 package com.android.phone;
 
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Phone;
 import com.android.phone.Constants.CallStatusCode;
@@ -329,6 +330,7 @@ public class CallController extends Handler {
 
         final InCallUiState inCallUiState = mApp.inCallUiState;
         String number;
+        int callType;
         Phone phone = null;
 
         // Check the current ServiceState to make sure it's OK
@@ -358,6 +360,8 @@ public class CallController extends Handler {
             String sipPhoneUri = intent.getStringExtra(
                     OutgoingCallBroadcaster.EXTRA_SIP_PHONE_URI);
             int sub = intent.getIntExtra(SUBSCRIPTION_KEY, mApp.getVoiceSubscription());
+            callType = intent.getIntExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE,
+                    CallDetails.RIL_CALL_TYPE_VOICE);
             phone = PhoneUtils.pickPhoneBasedOnNumber(mCM, scheme, number, sipPhoneUri, sub);
             if (VDBG) log("- got Phone instance: " + phone + ", class = " + phone.getClass());
 
@@ -474,7 +478,7 @@ public class CallController extends Handler {
                                               number,
                                               contactUri,
                                               (isEmergencyNumber || isEmergencyIntent),
-                                              inCallUiState.providerGatewayUri);
+                                              inCallUiState.providerGatewayUri, callType);
 
         switch (callStatus) {
             case PhoneUtils.CALL_STATUS_DIALED:

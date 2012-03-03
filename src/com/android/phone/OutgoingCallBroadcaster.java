@@ -72,6 +72,8 @@ public class OutgoingCallBroadcaster extends Activity
     public static final String EXTRA_SIP_PHONE_URI = "android.phone.extra.SIP_PHONE_URI";
     public static final String EXTRA_ACTUAL_NUMBER_TO_DIAL =
             "android.phone.extra.ACTUAL_NUMBER_TO_DIAL";
+    static final String EXTRA_CALL_TYPE = "android.phone.extra.CALL_TYPE";
+    static final String EXTRA_CALL_DOMAIN = "android.phone.extra.CALL_DOMAIN";
 
     /** the key used to specify subscription to be used for emergency calls */
     public static final String BLUETOOTH = "Bluetooth";
@@ -284,6 +286,7 @@ public class OutgoingCallBroadcaster extends Activity
         newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
         newIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
+        PhoneUtils.copyIMSExtras(intent, newIntent);
 
         // Finally, launch the SipCallOptionHandler, with the copy of the
         // original CALL intent stashed away in the EXTRA_NEW_CALL_INTENT

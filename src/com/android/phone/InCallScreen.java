@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1345,7 +1347,8 @@ public class InCallScreen extends Activity
         final boolean hasHoldingCall = mCM.hasActiveBgCall();
 
         int phoneType = mCM.getFgPhone().getPhoneType();
-        if (phoneType == Phone.PHONE_TYPE_CDMA) {
+        if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             // The green CALL button means either "Answer", "Swap calls/On Hold", or
             // "Add to 3WC", depending on the current state of the Phone.
 
@@ -2302,7 +2305,8 @@ public class InCallScreen extends Activity
             String postDialStr = null;
             List<Connection> fgConnections = mCM.getFgCallConnections();
             int phoneType = mCM.getFgPhone().getPhoneType();
-            if (phoneType == Phone.PHONE_TYPE_CDMA) {
+            if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 Connection fgLatestConnection = mCM.getFgCallLatestConnection();
                 if (mApp.cdmaPhoneCallState.getCurrentCallState() ==
                         CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
@@ -3387,13 +3391,14 @@ public class InCallScreen extends Activity
             if (phoneType == Phone.PHONE_TYPE_CDMA) {
                 if (DBG) log("internalAnswerCall: answering (CDMA)...");
                 if (mCM.hasActiveFgCall()
-                        && mCM.getFgPhone().getPhoneType() == Phone.PHONE_TYPE_SIP) {
+                        && (mCM.getFgPhone().getPhoneType() == Phone.PHONE_TYPE_SIP)
+                        || mCM.getFgPhone().getPhoneType() == Phone.PHONE_TYPE_RIL_IMS) {
                     // The incoming call is CDMA call and the ongoing
                     // call is a SIP call. The CDMA network does not
                     // support holding an active call, so there's no
-                    // way to swap between a CDMA call and a SIP call.
+                    // way to swap between a CDMA call and a SIP or IMS call.
                     // So for now, we just don't allow a CDMA call and
-                    // a SIP call to be active at the same time.We'll
+                    // a SIP or IMS call to be active at the same time.We'll
                     // "answer incoming, end ongoing" in this case.
                     if (DBG) log("internalAnswerCall: answer "
                             + "CDMA incoming and end SIP ongoing");
@@ -3419,7 +3424,25 @@ public class InCallScreen extends Activity
                 } else {
                     PhoneUtils.answerCall(ringing);
                 }
-            }else if (phoneType == Phone.PHONE_TYPE_GSM){
+            } else if (phoneType == Phone.PHONE_TYPE_RIL_IMS) {
+                if (DBG) log("internalAnswerCall: answering (SIP)...");
+                if (mCM.hasActiveFgCall()
+                        && mCM.getFgPhone().getPhoneType() == Phone.PHONE_TYPE_CDMA) {
+                    // Similar to the PHONE_TYPE_CDMA handling.
+                    // The incoming call is IMS call and the ongoing
+                    // call is a CDMA call. The CDMA network does not
+                    // support holding an active call, so there's no
+                    // way to swap between a CDMA call and a SIP call.
+                    // So for now, we just don't allow a CDMA call and
+                    // a SIP call to be active at the same time.We'll
+                    // "answer incoming, end ongoing" in this case.
+                    if (DBG) log("internalAnswerCall: answer "
+                            + "IMS incoming and end CDMA ongoing");
+                    PhoneUtils.answerAndEndActive(mCM, ringing);
+                } else {
+                    PhoneUtils.answerCall(ringing);
+                }
+            } else if (phoneType == Phone.PHONE_TYPE_GSM){
                 // GSM: this is usually just a wrapper around
                 // PhoneUtils.answerCall(), *but* we also need to do
                 // something special for the "both lines in use" case.

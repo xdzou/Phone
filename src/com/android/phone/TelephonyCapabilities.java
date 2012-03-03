@@ -63,7 +63,8 @@ public class TelephonyCapabilities {
             } else {
                 return false;
             }
-        } else if (phoneType == Phone.PHONE_TYPE_SIP) {
+        } else if ((phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             return false;
         } else {
             throw new IllegalStateException("Unexpected phone type: " + phoneType);
@@ -198,7 +199,8 @@ public class TelephonyCapabilities {
      */
     /* package */ static boolean supportsHoldAndUnhold(Phone phone) {
         return ((phone.getPhoneType() == Phone.PHONE_TYPE_GSM)
-                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP));
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP)
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_RIL_IMS));
     }
 
     /**
@@ -220,6 +222,7 @@ public class TelephonyCapabilities {
      */
     /* package */ static boolean supportsAnswerAndHold(Phone phone) {
         return ((phone.getPhoneType() == Phone.PHONE_TYPE_GSM)
-                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP));
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP)
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_RIL_IMS));
     }
 }

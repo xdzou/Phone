@@ -1675,7 +1675,8 @@ public class CallNotifier extends Handler
                     toneLengthMillis = Integer.MAX_VALUE - TONE_TIMEOUT_BUFFER;
                     break;
                 case TONE_BUSY:
-                    if (phoneType == Phone.PHONE_TYPE_CDMA) {
+                    if ((phoneType == Phone.PHONE_TYPE_CDMA)
+                            || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                         toneType = ToneGenerator.TONE_CDMA_NETWORK_BUSY_ONE_SHOT;
                         toneVolume = TONE_RELATIVE_VOLUME_LOPRI;
                         toneLengthMillis = 1000;
