@@ -280,6 +280,11 @@ public class BluetoothHeadsetService extends Service {
                             mBinder.disconnectHeadset(currDevice);
                         } catch (RemoteException e) {Log.e(TAG, e.toString());}
                     }
+                    if (mConnectThread != null) {
+                        try {
+                            mBinder.cancelConnectThread();
+                        } catch (RemoteException e) {}
+                    }
                     break;
                 }
             } else if (action.equals(BluetoothDevice.ACTION_BOND_STATE_CHANGED)) {
