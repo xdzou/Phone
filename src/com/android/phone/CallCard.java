@@ -151,7 +151,9 @@ public class CallCard extends FrameLayout
      * Called when the InCallScreen activity is being paused
      */
     void onPause() {
-        mVideoCallPanel.onPause();
+        if (isVideoCallWidgetVisible()) {
+            mVideoCallPanel.onPause();
+        }
     }
 
     public void onTickForCallTimeElapsed(long timeElapsed) {
@@ -608,6 +610,12 @@ public class CallCard extends FrameLayout
         Call.State state = call.getState();
         if (DBG) log("  - Videocall.state: " + state);
 
+        // Null check
+        if (mVideoCallPanel == null) {
+            log("VideocallPanel is null");
+            return;
+        }
+
         switch (state) {
             case DIALING:
                 switchInVideoCallAudio();
@@ -646,6 +654,15 @@ public class CallCard extends FrameLayout
         if (DBG) log("Hide videocall widget");
         mPhoto.setVisibility(View.VISIBLE);
         mVideoCallPanel.setVisibility(View.GONE);
+    }
+
+    /**
+     * Return true if video call panel is available and is visible
+     *
+     * @return
+     */
+    private boolean isVideoCallWidgetVisible() {
+        return ((mVideoCallPanel != null) && (mVideoCallPanel.getVisibility() == View.VISIBLE));
     }
 
     /**
@@ -1481,10 +1498,11 @@ public class CallCard extends FrameLayout
      */
     private void showImage(ImageView view, int resource) {
         view.setImageResource(resource);
-        if (mVideoCallPanel.getVisibility() != View.VISIBLE) {
-            view.setVisibility(View.VISIBLE);
-        } else {
+        // If video call widget is visible then do not show the photo widget
+        if (isVideoCallWidgetVisible()) {
             view.setVisibility(View.INVISIBLE);
+        } else {
+            view.setVisibility(View.VISIBLE);
         }
     }
 
@@ -1496,10 +1514,11 @@ public class CallCard extends FrameLayout
      */
     private void showImage(ImageView view, Drawable drawable) {
         view.setImageDrawable(drawable);
-        if (mVideoCallPanel.getVisibility() != View.VISIBLE) {
-            view.setVisibility(View.VISIBLE);
-        } else {
+        // If video call widget is visible then do not show the photo widget
+        if (isVideoCallWidgetVisible()) {
             view.setVisibility(View.INVISIBLE);
+        } else {
+            view.setVisibility(View.VISIBLE);
         }
     }
 
