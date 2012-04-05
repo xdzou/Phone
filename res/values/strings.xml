@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2007 The Android Open Source Project
+     Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+     Not a contribution.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -1440,7 +1442,7 @@
     <!-- Title displayed SIP account settings in the sip settings category. [CHAR LIMIT=NONE] -->
     <string name="sip_accounts">Internet calling (SIP) accounts</string>
     <!-- Title displayed SIP account settings in the sip settings category. [CHAR LIMIT=NONE] -->
-    <string name="sip_accounts_title">Accounts</string>
+    <string name="sip_accounts_title">SIP Accounts</string>
     <!-- The Sip Account Settings's summary. [CHAR LIMIT=NONE] -->
     <string name="sip_accounts_summary">Manage Internet calling (SIP) accounts and status</string>
     <!-- Title displayed for the button of receiving incoming SIP calls flag. Enabled for receiving calls. [CHAR LIMIT=NONE] -->
@@ -1648,6 +1650,26 @@
     <string translatable="false" name="advanced_settings_container">advanced settings container</string>
     <string translatable="false" name="auth_username">AuthUserName</string>
     <!-- End of SIP settings related strings -->
+
+    <!-- IMS settings related strings -->
+    <!-- Title of the ims editor screen. [CHAR LIMIT=NONE] -->
+    <string name="ims_edit_title">IMS account details</string>
+    <!-- Title displayed IMS account settings in the sip settings category. [CHAR LIMIT=NONE] -->
+    <string name="ims_accounts_title">IMS Account</string>
+    <!-- Text of the domain address preference. [CHAR LIMIT=NONE] -->
+    <string name="ims_domain_address_title">IMS Server</string>
+    <!-- Text of the transport type preference. [CHAR LIMIT=NONE] -->
+    <string translatable="false" name="call_type">CallType</string>
+    <string name="call_type_title">IMS Call type</string>
+    <!-- Default IMS call type. -->
+    <string translatable="false" name="default_ims_call_type">Voice</string>
+    <!-- Default to IMS call. -->
+    <string translatable="false" name="use_ims_default">UseImsDefault</string>
+    <!-- Text of the use IMS default preference. [CHAR LIMIT=NONE] -->
+    <string name="use_ims_default_title">Use IMS Always</string>
+    <!-- Default to IMS call summary. -->
+    <string name="use_ims_default_summary">Use IMS for all voice calls</string>
+    <!-- End of IMS settings related strings -->
 
     <!-- Dialog title to notify user that Voice calling is not supported
          on this device. [CHAR LIMIT=40] -->

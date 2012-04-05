@@ -586,6 +586,11 @@
                 android:theme="@android:style/Theme.Holo.DialogWhenLarge"
                 android:configChanges="orientation|screenSize|keyboardHidden">
         </activity>
+       <activity android:name=".ims.ImsEditor"
+                android:theme="@android:style/Theme.Holo.DialogWhenLarge"
+                android:configChanges="orientation|screenSize|keyboardHidden"
+                android:uiOptions="splitActionBarWhenNarrow">
+        </activity>
         <activity android:name=".SipCallOptionHandler"
                 android:theme="@android:style/Theme.Holo.NoActionBar"
                 android:configChanges="orientation|screenSize|keyboardHidden">

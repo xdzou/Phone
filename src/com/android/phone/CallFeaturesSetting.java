@@ -1,5 +1,7 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +21,7 @@ package com.android.phone;
 import com.android.internal.telephony.CallForwardInfo;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.sip.SipSharedPreferences;
 
@@ -1487,6 +1490,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         updateVoiceNumberField();
         mVMProviderSettingsForced = false;
         createSipCallSettings();
+        createImsSettings();
 
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
@@ -1507,6 +1511,12 @@ public class CallFeaturesSetting extends PreferenceActivity
                     mButtonSipCallOptions.findIndexOfValue(
                             mSipSharedPreferences.getSipCallOption()));
             mButtonSipCallOptions.setSummary(mButtonSipCallOptions.getEntry());
+        }
+    }
+
+    private void createImsSettings() {
+        if (PhoneFactory.isCallOnImsEnabled()) {
+            addPreferencesFromResource(R.xml.ims_settings_category);
         }
     }
 

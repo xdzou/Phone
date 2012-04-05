@@ -1,5 +1,7 @@
 /**
  * Copyright (C) 2010 The Android Open Source Project
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +18,14 @@
 
 package com.android.phone;
 
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.phone.sip.SipProfileDb;
 import com.android.phone.sip.SipSettings;
 import com.android.phone.sip.SipSharedPreferences;
+import com.android.phone.ims.ImsSharedPreferences;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -39,6 +43,7 @@ import android.os.Bundle;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -65,6 +70,7 @@ public class SipCallOptionHandler extends Activity implements
     static final String TAG = "SipCallOptionHandler";
     private static final boolean DBG =
             (PhoneApp.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
+    private static final boolean IMS_DBG = Log.isLoggable("IMS", Log.DEBUG);
 
     static final int DIALOG_SELECT_PHONE_TYPE = 0;
     static final int DIALOG_SELECT_OUTGOING_SIP_PHONE = 1;
@@ -78,12 +84,16 @@ public class SipCallOptionHandler extends Activity implements
     private String mCallOption;
     private String mNumber;
     private SipSharedPreferences mSipSharedPreferences;
+    private ImsSharedPreferences mImsSharedPreferences;
     private SipProfileDb mSipProfileDb;
     private Dialog[] mDialogs = new Dialog[DIALOG_SIZE];
     private SipProfile mOutgoingSipProfile;
     private TextView mUnsetPriamryHint;
     private boolean mUseSipPhone = false;
     private boolean mMakePrimary = false;
+    private boolean isImsDefault = false;
+    private String imsServerAddress;
+    private int imsCallType;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -144,6 +154,15 @@ public class SipCallOptionHandler extends Activity implements
         mSipSharedPreferences = new SipSharedPreferences(this);
         mCallOption = mSipSharedPreferences.getSipCallOption();
         if (DBG) Log.v(TAG, "Call option: " + mCallOption);
+
+        mImsSharedPreferences = new ImsSharedPreferences(this);
+        isImsDefault = mImsSharedPreferences.getisImsDefault();
+        imsServerAddress = mImsSharedPreferences.getServerAddress();
+        imsCallType = mImsSharedPreferences.getCallType();
+        if (IMS_DBG) Log.v(TAG, "IMS Server: " + imsServerAddress +
+                " IMS call type: " + imsCallType +
+                " is IMS default: " + isImsDefault);
+
         Uri uri = mIntent.getData();
         String scheme = uri.getScheme();
         mNumber = PhoneNumberUtils.getNumberFromIntent(mIntent, this);
@@ -392,6 +411,10 @@ public class SipCallOptionHandler extends Activity implements
                     showDialog(DIALOG_START_SIP_SETTINGS);
                     return;
                 } else {
+                    // Convert the voice call intent to the IMS intent if user
+                    // requested to make an IMS call
+                    convertCallToIMS();
+
                     // Woo hoo -- it's finally OK to initiate the outgoing call!
                     PhoneApp.getInstance().callController.placeCall(mIntent);
                 }
@@ -445,5 +468,46 @@ public class SipCallOptionHandler extends Activity implements
             if (p.getUriString().equals(primarySipUri)) return p;
         }
         return null;
+    }
+
+    /**
+     * If user requested to use IMS for all regular calls and the intent is not
+     * already the IMS intent and not a SIP call then covert the intent to the
+     * IMS intent
+     */
+    private void convertCallToIMS() {
+        Uri uri = mIntent.getData();
+        String scheme = uri.getScheme();
+        String imsNumber;
+
+        // If it is a SIP call or user doesn't want to make an IMS call or it is already an IMS
+        // intent then leave the call intent as is
+        if (mUseSipPhone && !isImsDefault && PhoneUtils.isIMSCallIntent(scheme, mIntent)) {
+            return;
+        }
+
+        // If user didn't specify the IMS server address in the IMS settings then
+        // modem would append the IMS server address the UE is registered to.
+        if (TextUtils.isEmpty(imsServerAddress)) {
+            imsNumber = PhoneNumberUtils.stripSeparators(mNumber);
+        } else {
+            imsNumber = PhoneNumberUtils.stripSeparators(mNumber) + "@" + imsServerAddress;
+        }
+
+        mIntent.setData(Uri.fromParts(Constants.SCHEME_SIP, imsNumber, null));
+        mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
+                CallDetails.RIL_CALL_DOMAIN_PS);
+        mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE, imsCallType);
+
+        // If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present,
+        // set the phone number there. (That extra takes precedence over the
+        // actual number included in the intent.)
+        if (mIntent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
+            mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
+                    imsNumber);
+        }
+
+        Log.d(TAG, "Converting regular call to IMS call");
+        if (IMS_DBG) Log.d(TAG, " IMS number: " + imsNumber);
     }
 }

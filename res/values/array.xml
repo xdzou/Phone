@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2010 The Android Open Source Project
+     Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+     Not a contribution.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -19,6 +21,11 @@
     <string-array translatable="false" name="transport_types">
         <item>UDP</item>
         <item>TCP</item>
+    </string-array>
+
+    <string-array translatable="false" name="ims_call_types">
+        <item>Voice</item>
+        <item>Video</item>
     </string-array>
 
     <string-array translatable="true" name="sip_call_options_entries">
