@@ -30,6 +30,7 @@
 #define VIDEOPHONE_DPL_H_INCLUDED
 
 #include <jni.h>
+
 int register_videophone_Dpl(JNIEnv *e);
 
 #endif // VIDEOPHONE_DPL_H_INCLUDED

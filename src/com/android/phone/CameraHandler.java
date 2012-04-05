@@ -28,7 +28,6 @@
 
 package com.android.phone;
 
-import android.app.Activity;
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
@@ -39,6 +38,7 @@ import android.hardware.Camera.Size;
 import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.WindowManager;
 
 import java.io.IOException;
 import java.util.List;
@@ -60,7 +60,7 @@ public class CameraHandler implements Camera.PreviewCallback{
     private CameraInfo[] mInfo;
     private CameraState mCameraState = CameraState.CAMERA_CLOSED;
     private Parameters mParameters;
-    private Activity mActivity;
+    private Context mContext;
 
     // Use a singleton.
     private static CameraHandler sHolder;
@@ -78,9 +78,9 @@ public class CameraHandler implements Camera.PreviewCallback{
      * This method returns the single instance of CameraManager object
      * @param mContext
      */
-    public static synchronized CameraHandler getInstance(Activity activity) {
+    public static synchronized CameraHandler getInstance(Context context) {
         if (sHolder == null) {
-            sHolder = new CameraHandler(activity);
+            sHolder = new CameraHandler(context);
         }
         return sHolder;
     }
@@ -89,8 +89,8 @@ public class CameraHandler implements Camera.PreviewCallback{
      * Private constructor for CameraManager
      * @param mContext
      */
-    private CameraHandler(Activity activity) {
-        mActivity = activity;
+    private CameraHandler(Context context) {
+        mContext = context;
         mNumberOfCameras = android.hardware.Camera.getNumberOfCameras();
         mInfo = new CameraInfo[mNumberOfCameras];
         for (int i = 0; i < mNumberOfCameras; i++) {
@@ -124,8 +124,12 @@ public class CameraHandler implements Camera.PreviewCallback{
     public synchronized boolean open(int cameraId)
             throws Exception {
         // Check if device policy has disabled the camera.
-        DevicePolicyManager dpm = (DevicePolicyManager) mActivity.getSystemService(
+        DevicePolicyManager dpm = (DevicePolicyManager) mContext.getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
+        if (dpm == null) {
+            throw new Exception("DevicePolicyManager not available");
+        }
+
         if (dpm.getCameraDisabled(null)) {
             throw new Exception("Camera is diabled");
         }
@@ -333,10 +337,16 @@ public class CameraHandler implements Camera.PreviewCallback{
                 new android.hardware.Camera.CameraInfo();
         int result;
         int degrees = 0;
+        int rotation = 0;
 
         // Get display rotation
-        int rotation = mActivity.getWindowManager().getDefaultDisplay()
-                .getRotation();
+        WindowManager wm = (WindowManager) mContext.getSystemService(
+                Context.WINDOW_SERVICE);
+        if (wm == null) {
+            loge("WindowManager not available");
+        }
+
+        rotation = wm.getDefaultDisplay().getRotation();
         switch (rotation) {
             case Surface.ROTATION_0: degrees = 0; break;
             case Surface.ROTATION_90: degrees = 90; break;
@@ -359,7 +369,9 @@ public class CameraHandler implements Camera.PreviewCallback{
      * layer to be sent to the far end device
      */
     public void onPreviewFrame(byte[] data, Camera camera) {
-        MediaHandler.sendPreviewFrame(data);
+        if (MediaHandler.canSendPreview()) {
+            MediaHandler.sendPreviewFrame(data);
+        }
     }
 
     private void log(String msg) {

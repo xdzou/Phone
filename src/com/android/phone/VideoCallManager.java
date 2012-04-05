@@ -30,14 +30,10 @@ package com.android.phone;
 
 import java.io.IOException;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
-import android.os.AsyncResult;
-import android.os.Handler;
-import android.os.Message;
-import android.view.Surface;
 import android.util.Log;
 import com.android.phone.CameraHandler.CameraState;
 
@@ -45,7 +41,7 @@ import java.util.List;
 
 /**
  * Provides an interface for the applications to interact with Camera for the
- * near end preview and sending the frames to the far end and also with IMS DPL
+ * near end preview and sending the frames to the far end and also with Media
  * engine to render the far end video during a Video Call Session.
  */
 public class VideoCallManager {
@@ -53,12 +49,10 @@ public class VideoCallManager {
     private static VideoCallManager sVideoCallManager; // Use a singleton
     private CameraHandler mCameraHandler;
 
-    private static final int CAMERA_PREVIEW_AVAILABLE = 0;
-
     /** @hide */
-    private VideoCallManager(Activity activity) {
+    private VideoCallManager(Context context) {
         log("Instantiating VideoCallManager");
-        mCameraHandler = CameraHandler.getInstance(activity);
+        mCameraHandler = CameraHandler.getInstance(context);
     }
 
     /**
@@ -66,33 +60,62 @@ public class VideoCallManager {
      *
      * @param mContext
      */
-    public static synchronized VideoCallManager getInstance(Activity activity) {
+    public static synchronized VideoCallManager getInstance(Context context) {
         if (sVideoCallManager == null) {
-            sVideoCallManager = new VideoCallManager(activity);
+            sVideoCallManager = new VideoCallManager(context);
         }
         return sVideoCallManager;
     }
 
     /**
-     * Initialize the IMS DPL
+     * Initialize the Media
      */
     public void mediaInit() {
         MediaHandler.init();
     }
 
     /**
-     * Deinitialize the IMS DPL
+     * Deinitialize the Media
      */
     public void mediaDeInit() {
         MediaHandler.deInit();
     }
 
     /**
-     * Send the SurfaceTexture to IMS DPL
+     * Send the SurfaceTexture to Media module
      * @param st SurfaceTexture to be passed
      */
     public void setFarEndSurface(SurfaceTexture st) {
         MediaHandler.setSurface(st);
+    }
+
+    /**
+     * Get negotiated height
+     */
+    public int getNegotiatedHeight() {
+        return MediaHandler.getNegotiatedHeight();
+    }
+
+    /**
+     * Get negotiated width
+     */
+    public int getNegotiatedWidth() {
+        return MediaHandler.getNegotiatedWidth();
+    }
+
+    /**
+     * Get negotiated FPS
+     */
+    public int getNegotiatedFPS() {
+        return MediaHandler.getNegotiatedFPS();
+    }
+
+    public static boolean isMediaReadyToReceivePreview() {
+        return MediaHandler.canSendPreview();
+    }
+
+    public static void setIsMediaReadyToReceivePreview(boolean flag) {
+        MediaHandler.setIsReadyToReceivePreview(flag);
     }
 
     /**
@@ -175,7 +198,7 @@ public class VideoCallManager {
      */
     public int getFrontCameraId() {
         return mCameraHandler.getFrontCameraId();
-    }//        mRegistrants = new RegistrantList();
+    }
 
     /**
      * Return the current camera state
@@ -213,9 +236,8 @@ public class VideoCallManager {
         List<Size> mSupportedPreviewSizes = mCameraHandler.getSupportedPreviewSizes();
         if (mSupportedPreviewSizes == null) return null; // Camera not yet open
 
-        // TODO: Add code to check the isHeight parameter and compare against
-        // width of height rather than always comparing with height as of now
-        // Try to find a size that matches closely with the required height
+        // Try to find a size that matches closely with the required height or
+        // width
         for (Size size : mSupportedPreviewSizes) {
             int srcSize = 0;
             if (isHeight) {

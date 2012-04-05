@@ -7,15 +7,16 @@ LOCAL_PRELINK_MODULE := false
 LOCAL_SRC_FILES:= \
     videophone_ims_jni.cpp \
     videophone.cpp \
-    videophone_impl.cpp
+
 
 LOCAL_C_INCLUDES += \
-    $(JNI_H_INCLUDE)
+    $(JNI_H_INCLUDE) \
 
 LOCAL_SHARED_LIBRARIES := \
     libnativehelper \
     libcutils \
     libutils  \
+    libdl \
 
 LOCAL_CFLAGS += -O0 -g
 

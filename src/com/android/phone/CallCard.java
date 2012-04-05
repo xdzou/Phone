@@ -621,6 +621,7 @@ public class CallCard extends FrameLayout
                 switchInVideoCallAudio();
                 // This is an intentional fall through
             case INCOMING:
+            case ALERTING:
                 mVideoCallPanel.onCallInitiating();
                 break;
 

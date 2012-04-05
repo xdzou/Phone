@@ -29,90 +29,162 @@
 package com.android.phone;
 
 import android.graphics.SurfaceTexture;
+import android.os.Handler;
 import android.util.Log;
-import android.view.Surface;
 
 /**
- *  Provides an interface to interact with IMS DPL to handle the media
- *  part of the video telephony call
+ * Provides an interface to handle the media part of the video telephony call
  */
-public class MediaHandler {
-    private static final String TAG = "VideoCallMediaHandler";
+public class MediaHandler extends Handler {
+
+    private static final String TAG = "VideoCall_MediaHandler";
+
     private static SurfaceTexture sSurface;
 
     private static native int nativeInit();
-    private static native void nativeRenderThread();
     private static native void nativeDeInit();
     private static native void nativeHandleRawFrame(byte[] frame);
-    private static native int nativeSetSurface (SurfaceTexture st);
-    private static native void nativeSetCallMode(int mode);
+    private static native int nativeSetSurface(SurfaceTexture st);
+    private static native short nativeGetNegotiatedFPS();
+    private static native int nativeGetNegotiatedHeight();
+    private static native int nativeGetNegotiatedWidth();
+    private static native void nativeRegisterForMediaEvents();
 
-    private static String libraryName = System.getProperty("ro.vt_ims_library", "vt_jni");
+    public static final int PARAM_READY_EVT = 1;
+    public static final int START_READY_EVT = 2;
+
+    /*
+     * Initializing default negotiated parameters to a working set of valuesso
+     * that the application does not crash in case we do not get the Param ready
+     * event
+     */
+    private static int mNegotiatedHeight = 240;
+    private static int mNegotiatedWidth = 320;
+    private static short mNegotiatedFPS = 20;
+
+    private static boolean isReadyToReceivePreview = false;
+
     static {
         System.loadLibrary("vt_jni");
     }
 
-    private static Thread sRenderThread;
-
     /*
-     * Initialize the IMS DPL
+     * Initialize Media
      */
     public static void init() {
         Log.d(TAG, "init called");
-        if (sRenderThread == null) {
-            if (nativeInit() != 0) {
-                throw new RuntimeException("Unable to initialize Dpl");
-            }
-            sRenderThread = new Thread() {
-                @Override
-                public void run() {
-                    nativeRenderThread();
-                }
-            };
+        if (nativeInit() != 0) {
+            throw new RuntimeException("Unable to initialize Dpl");
         }
+        registerForMediaEvents();
     }
 
     /*
-     * Deinitialize the IMS DPL
+     * Deinitialize Media
      */
     public static void deInit() {
-        boolean interrupted = false;
         Log.d(TAG, "deInit called");
-        if (sRenderThread != null) {
-            nativeDeInit();
-
-            do {
-                try {
-                    interrupted = false;
-                    sRenderThread.join();
-                } catch (InterruptedException e) {
-                    Log.e(TAG, "Interrupted while waiting for Render thread to complete");
-                    interrupted = true;
-                }
-            } while(interrupted);
-            sRenderThread = null;
-        }
+        nativeDeInit();
     }
 
     /**
-     * Send the camera preview frames to the IMS DPL
-     * to be sent to the far end party
-     *
-     * @param data raw frames from the camera
+     * Send the camera preview frames to the media module to be sent to the far
+     * end party
+     * @param frame raw frames from the camera
      */
     public static void sendPreviewFrame(byte[] frame) {
-        Log.d(TAG, "handleRawFrame(" + frame + ")");
         nativeHandleRawFrame(frame);
     }
 
     /**
-     * Send the SurfaceTexture to IMS DPL
-     *
+     * Send the SurfaceTexture to media module
      * @param st
      */
     public static void setSurface(SurfaceTexture st) {
         Log.d(TAG, "setSurface(" + st + ")");
         sSurface = st;
         nativeSetSurface(st);
+    }
+
+    /**
+     * Send the SurfaceTexture to media module. This should be called only for
+     * re-sending an already created surface
+     */
+    private static void setSurface() {
+        Log.d(TAG, "setSurface()");
+        if (sSurface == null) {
+            Log.e(TAG, "sSurface is null. So not passing it down");
+            return;
+        }
+        nativeSetSurface(sSurface);
+    }
+
+    /**
+     * Get Negotiated FPS
+     */
+    public static short getNegotiatedFPS() {
+        Log.d(TAG, "Negotiated FPS = " + mNegotiatedFPS);
+        return mNegotiatedFPS;
+    }
+
+    /**
+     * Get Negotiated Height
+     */
+    public static int getNegotiatedHeight() {
+        Log.d(TAG, "Negotiated Height = " + mNegotiatedHeight);
+        return mNegotiatedHeight;
+    }
+
+    /**
+     * Get Negotiated Width
+     */
+    public static int getNegotiatedWidth() {
+        Log.d(TAG, "Negotiated Width = " + mNegotiatedWidth);
+        return mNegotiatedWidth;
+    }
+
+    public static synchronized boolean canSendPreview() {
+        return MediaHandler.isReadyToReceivePreview;
+    }
+
+    public static synchronized void setIsReadyToReceivePreview(boolean flag) {
+        Log.d(TAG, "setIsReadyToReceivePreview = " + flag);
+        MediaHandler.isReadyToReceivePreview = flag;
+    }
+
+    /**
+     * Register for event that will invoke
+     * {@link MediaHandler#onMediaEvent(int)}
+     */
+    private static void registerForMediaEvents() {
+        Log.d(TAG, "Registering for Media Callback Events");
+        nativeRegisterForMediaEvents();
+    }
+
+    /**
+     * Callback method that is invoked when Media events occur
+     */
+    public static void onMediaEvent(int eventId) {
+        Log.d(TAG, "onMediaEvent eventId = " + eventId);
+        switch (eventId) {
+            case PARAM_READY_EVT:
+                Log.d(TAG, "Received PARAM_READY_EVT. Updating negotiated values");
+                mNegotiatedHeight = nativeGetNegotiatedHeight();
+                mNegotiatedWidth = nativeGetNegotiatedWidth();
+                mNegotiatedFPS = nativeGetNegotiatedFPS();
+
+                /*
+                 * Re-send the surface that was created before. Assumption is
+                 * that this event happens only after the initial surface
+                 * texture is created
+                 */
+                setSurface();
+                break;
+            case START_READY_EVT:
+                Log.d(TAG, "Received START_READY_EVT. Camera frames can be sent now");
+                setIsReadyToReceivePreview(true);
+                break;
+        }
+
     }
 }

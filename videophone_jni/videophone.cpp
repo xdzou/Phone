@@ -30,14 +30,15 @@
 #include <utils/Log.h>
 #include <videophone_ims_jni.h>
 
+JavaVM *jvmPtr;
 
-jint JNI_OnLoad(JavaVM *jvm, void *reserved)
-{
+jint JNI_OnLoad(JavaVM *jvm, void *reserved) {
     JNIEnv *e;
-
     LOGD("%s\n", __func__);
 
-    if (jvm->GetEnv((void **)&e, JNI_VERSION_1_6)) {
+    jvmPtr = jvm;
+    LOGD("jvmPtr initialized to %d", (int) jvm);
+    if (jvm->GetEnv((void **) &e, JNI_VERSION_1_6)) {
         return JNI_ERR;
     }
 

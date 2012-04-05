@@ -79,8 +79,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     private int mBackCameraId;
     private int mCameraId;
 
-    // Property used to indicate that the IMS DPL in running in loopback mode
-    private boolean mIsImsLoopback = false;
+    // Property used to indicate that the Media running in loopback mode
+    private boolean mIsMediaLoopback = false;
 
     /**
     * This class implements the zoom listener for zoomControl
@@ -116,10 +116,10 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
         if (DBG) log("onFinishInflate(this = " + this + ")...");
 
-        // Check the IMS loopback property
+        // Check the Media loopback property
         int property = SystemProperties.getInt("net.lte.VT_LOOPBACK_ENABLE", 0);
-        mIsImsLoopback = (property == 1) ? true : false;
-        if (DBG) log("Is IMS running in loopback mode: " + mIsImsLoopback);
+        mIsMediaLoopback = (property == 1) ? true : false;
+        if (DBG) log("Is Media running in loopback mode: " + mIsMediaLoopback);
 
         // Get UI widgets
         mVideoCallPanel = (ViewGroup) findViewById(R.id.videoCallPanel);
@@ -134,7 +134,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         mCameraPicker.setOnClickListener(this);
 
         // Get the camera IDs for front and back cameras
-        mVideoCallManager = VideoCallManager.getInstance((Activity)mContext);
+        mVideoCallManager = VideoCallManager.getInstance(mContext);
         mBackCameraId = mVideoCallManager.getBackCameraId();
         mFrontCameraId = mVideoCallManager.getFrontCameraId();
 
@@ -165,8 +165,12 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
      * required to be set to specific values on start of every video call
      */
     public void onCallDisconnect() {
-        // Set the surface to null so IMS DPL can release the resources
+        // Set the surface to null to release the resources
         if (DBG) log("onCallDisconnect");
+
+        // Reset the isReadyToReceivePreview flag to false so that we can wait
+        // for this event again for the next call
+        VideoCallManager.setIsMediaReadyToReceivePreview(false);
 
         // Deinitialize DPL
         // This code needs to be called when all the LTE based calls are done
@@ -209,7 +213,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
             return;
         }
         initializeZoom();
-
+        initializeCameraParams();
         // Start camera preview
         startPreview();
     }
@@ -394,6 +398,33 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     }
 
     /**
+     * Initialize camera parameters based on negotiated height, width
+     * TODO: FPS support
+     */
+    private void initializeCameraParams() {
+        try {
+            // Set the camera preview size
+            if (mIsMediaLoopback) {
+                // In loopback mode the IMS is hard coded to render the
+                // camera frames of only the size 176x144 on the far end surface
+                mParameters.setPreviewSize(176, 144);
+            } else {
+                log("Supported Preview Sizes = " + mParameters.getSupportedPreviewSizes());
+                log("Set Preview Size directly with negotiated Height = "
+                        + mVideoCallManager.getNegotiatedHeight()
+                        + " negotiated width= " + mVideoCallManager.getNegotiatedWidth());
+                mParameters.setPreviewSize(mVideoCallManager.getNegotiatedWidth(),
+                        mVideoCallManager.getNegotiatedHeight());
+            }
+
+            mVideoCallManager.setCameraParameters(mParameters);
+        } catch (RuntimeException e) {
+            log("Error setting Camera preview size exception=" + e);
+            log("Supported Preview sizes = " + mParameters.getSupportedPreviewSizes());
+        }
+    }
+
+    /**
      * This method resizes the camera preview based on the aspect ratio
      * supported by camera and the size of VideoCallPanel
      *
@@ -403,39 +434,28 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         if (DBG) log("resizeCameraPreview");
 
         // For now, set the preview size to be 1/4th of the VideoCallPanel
-        mPreviewSize = mVideoCallManager.getCameraPreviewSize(targetSize/4, true);
+        mPreviewSize = mVideoCallManager.getCameraPreviewSize(targetSize / 4, true);
         if (mPreviewSize != null) {
             log("Camera view width:" + mPreviewSize.width + ", height:" + mPreviewSize.height);
             ViewGroup.LayoutParams cameraPreivewLp = mCameraPreview.getLayoutParams();
             cameraPreivewLp.height = mPreviewSize.height;
             cameraPreivewLp.width = mPreviewSize.width;
             mCameraPreview.setLayoutParams(cameraPreivewLp);
-
-            // TODO: The camerea preview shoudl be set to the negotiated width and
-            // height during a SIP negotiation and not the size of the camera view
-            // Set the dimensions for camera preview
-            if (mIsImsLoopback) {
-                // In loopback mode the IMS is hard coded to render the camera frames
-                // of only the size 176x144 on the far end surface
-                mParameters.setPreviewSize(176, 144);
-            } else {
-                mParameters.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
-            }
-            mVideoCallManager.setCameraParameters(mParameters);
         }
     }
 
     /**
-     * This method resizes the far end view based on the negotiate width and
-     * height of the media by IMS DPL and the size of VideoCallPanel
-     *
+     * This method resizes the far end view based on the size of VideoCallPanel
+     * Presently supports only full size far end video
      * @param targetWidth
      * @param targetHeight
      */
     private void resizeFarEndView(int targetWidth, int targetHeight) {
-        if (DBG) log("resizeFarEndView");
+        if (DBG) {
+            log("resizeFarEndView");
+            log("Videocall pandel width:" + targetWidth + ", height:" + targetHeight);
+        }
 
-        log("Far end view width:" + targetWidth + ", height:" + targetHeight);
         ViewGroup.LayoutParams farEndViewLp = mFarEndView.getLayoutParams();
         farEndViewLp.height = targetHeight;
         farEndViewLp.width = targetWidth;

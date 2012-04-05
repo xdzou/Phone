@@ -32,9 +32,25 @@
 #include <jni.h>
 #include <cutils/log.h>
 
-void initImsThinClient(void);
-void frameToEncode(unsigned short *bytes, int size);
-void setFarEndSurface(JNIEnv *e, jobject osurface);
-void deInitImsThinClient();
+jclass gClassMediaHandler;
+
+typedef void (*IMS_EVENT_NOTIFY_CALLBACK)(uint16_t);
+typedef void (*VtImplRegisterCbFun)(IMS_EVENT_NOTIFY_CALLBACK);
+typedef int16_t (*VtImplInitFun)(void);
+typedef int16_t (*VtImplFrameFun)(uint16_t *, uint32_t);
+typedef int16_t (*VtImplSetSurfFun)(JNIEnv *, jobject);
+typedef int16_t (*VtImplDeinitFun)(void);
+typedef uint32_t (*VtImplUint32VoidFunc)(void);
+
+struct VtImplApis {
+    VtImplRegisterCbFun registerAppEventCallback;
+    VtImplInitFun initImsThinClient;
+    VtImplFrameFun frameToEncode;
+    VtImplSetSurfFun setFarEndSurface;
+    VtImplDeinitFun deInitImsThinClient;
+    VtImplUint32VoidFunc getNegotiatedFPS;
+    VtImplUint32VoidFunc getNegotiatedHeight;
+    VtImplUint32VoidFunc getNegotiatedWidth;
+};
 
 #endif
