@@ -63,6 +63,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private SubscriptionData mUserSelSub;
     private ProxyManager mProxyManager;
 
+    private boolean setSubscriptionInProgress = false;
+
     //String keys for preference lookup
     private static final String PREF_PARENT_KEY = "subscr_parent";
 
@@ -305,13 +307,16 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     // for View.OnClickListener
     public void onClick(View v) {
         if (v == mOkButton) {
-            setSubscription();
+            Log.d(TAG, "onClick: setSubscriptionInProgress = " + setSubscriptionInProgress);
+            if (!setSubscriptionInProgress) {
+                setSubscriptionInProgress = setSubscription();
+            }
         } else if (v == mCancelButton) {
             finish();
         }
     }
 
-    private void setSubscription() {
+    private boolean setSubscription() {
         Log.d(TAG, "setSubscription");
 
         int numSubSelected = 0;
@@ -403,8 +408,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                 mProxyManager.registerForSetSubscriptionCompleted(mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
 
                 mProxyManager.setSubscription(mUserSelSub);
+                return true;
             }
         }
+        return false;
     }
 
     /**
@@ -441,6 +448,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             switch(msg.what) {
                 case EVENT_SET_SUBSCRIPTION_DONE:
                     Log.d(TAG, "EVENT_SET_SUBSCRIPTION_DONE");
+                    setSubscriptionInProgress = false;
                     mProxyManager.unRegisterForSetSubscriptionCompleted(mHandler);
                     dismissDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
                     getPreferenceScreen().setEnabled(true);
