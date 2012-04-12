@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.ProxyManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.EriInfo;
 import com.android.internal.telephony.cdma.TtyIntent;
@@ -1872,19 +1873,42 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
 
     /**
       * Get the subscription that has service
+      * Following are the conditions applicable when deciding the subscription for dial
+      * 1. If both subs are provisioned (activated) and both are in_service  -
+           choose default voice preferred sub for placing E911 call
+      * 2. If both subs are provisioned (activated) and only one sub is in_service  -
+      *    choose the sub, which is in_service
+      * 3. If both subs are provisioned (activated) and both are out_of_service  -
+      *    choose first phone to place E911 call
+      * 4. If both subs are deactivated or slots are absent i.e. No SIMs -
+      *    choose first phone to place E911 call
+      * 5. If one sub is deactivated/slot empty i.e. No SIM and the second sub is provisioned -
+      *    no matter whether that sub is in_service, place E911 call on that sub.
       */
     public int getVoiceSubscriptionInService() {
         int voiceSub = getVoiceSubscription();
         //Emergency Call should always go on 1st sub .i.e.0,
         //when both the subscriptions are out of service
         int sub = 0;
-        for (int i = 0; i < TelephonyManager.getPhoneCount(); i++) {
-            Phone phone = getPhone(i);
-            int ss = phone.getServiceState().getState();
-            if ((ss == ServiceState.STATE_IN_SERVICE)
-                    || (ss == ServiceState.STATE_EMERGENCY_ONLY)) {
-                sub = i;
-                if (sub == voiceSub) break;
+        int count = TelephonyManager.getPhoneCount();
+        ProxyManager proxyManager = ProxyManager.getInstance();
+
+        if (proxyManager.numSubsActive() == 1) {
+            for (int i = 0; i < count; i++) {
+                if (proxyManager.isSubActive(i)) {
+                    sub = i;
+                    break;
+                }
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                Phone phone = getPhone(i);
+                int ss = phone.getServiceState().getState();
+                if ((ss == ServiceState.STATE_IN_SERVICE)
+                        || (ss == ServiceState.STATE_EMERGENCY_ONLY)) {
+                    sub = i;
+                    if (sub == voiceSub) break;
+                }
             }
         }
         return sub;
