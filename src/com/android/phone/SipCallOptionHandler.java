@@ -482,7 +482,7 @@ public class SipCallOptionHandler extends Activity implements
 
         // If it is a SIP call or user doesn't want to make an IMS call or it is already an IMS
         // intent then leave the call intent as is
-        if (mUseSipPhone && !isImsDefault && PhoneUtils.isIMSCallIntent(scheme, mIntent)) {
+        if (mUseSipPhone || !isImsDefault || PhoneUtils.isIMSCallIntent(scheme, mIntent)) {
             return;
         }
 

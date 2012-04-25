@@ -1669,6 +1669,12 @@
     <string name="use_ims_default_title">Use IMS Always</string>
     <!-- Default to IMS call summary. -->
     <string name="use_ims_default_summary">Use IMS for all voice calls</string>
+    <!-- Menu item when the menu button is pressed in the IMS account editor. [CHAR LIMIT=NONE] -->
+    <string name="ims_menu_save">Save</string>
+    <!-- Menu item when the menu button is pressed in the IMS account editor. [CHAR LIMIT=NONE] -->
+    <string name="ims_menu_discard">Discard</string>
+    <!-- Title for the button to remove a IMS account. [CHAR LIMIT=NONE] -->
+    <string name="remove_ims_account">Remove account</string>
     <!-- End of IMS settings related strings -->
 
     <!-- Dialog title to notify user that Voice calling is not supported

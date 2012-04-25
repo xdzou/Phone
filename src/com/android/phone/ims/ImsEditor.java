@@ -19,15 +19,10 @@
 package com.android.phone.ims;
 
 import com.android.internal.telephony.CallDetails;
-import com.android.internal.telephony.CallManager;
-import com.android.internal.telephony.Phone;
 import com.android.phone.R;
 
 import android.app.ActionBar;
-import android.app.AlertDialog;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -39,13 +34,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Arrays;
 
 /**
  * The activity class for editing a new or existing IMS profile.
@@ -65,7 +55,6 @@ public class ImsEditor extends PreferenceActivity
     private static final boolean DBG = Log.isLoggable("IMS", Log.DEBUG);
 
     private ImsSharedPreferences mSharedPreferences;
-    private boolean mHomeButtonClicked;
     private Button mRemoveButton;
     private CheckBoxPreference mCheckbox;
 
@@ -121,7 +110,6 @@ public class ImsEditor extends PreferenceActivity
     @Override
     public void onResume() {
         super.onResume();
-        mHomeButtonClicked = false;
         getPreferenceScreen().setEnabled(true);
         if (mRemoveButton != null) mRemoveButton.setEnabled(true);
     }
@@ -133,7 +121,7 @@ public class ImsEditor extends PreferenceActivity
 
         mSharedPreferences = new ImsSharedPreferences(this);
 
-        setContentView(R.layout.sip_settings_ui);
+        setContentView(R.layout.ims_settings_ui);
         addPreferencesFromResource(R.xml.ims_edit);
 
         PreferenceGroup screen = (PreferenceGroup) getPreferenceScreen();
@@ -158,7 +146,6 @@ public class ImsEditor extends PreferenceActivity
     public void onPause() {
         if (DBG) Log.v(TAG, "ImsEditor onPause(): finishing? " + isFinishing());
         if (!isFinishing()) {
-            mHomeButtonClicked = true;
             validateAndSetResult();
         }
         super.onPause();
@@ -167,11 +154,11 @@ public class ImsEditor extends PreferenceActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_SAVE, 0, R.string.sip_menu_save)
+        menu.add(0, MENU_SAVE, 0, R.string.ims_menu_save)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
-        menu.add(0, MENU_DISCARD, 0, R.string.sip_menu_discard)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
-        menu.add(0, MENU_REMOVE, 0, R.string.remove_sip_account)
+        menu.add(0, MENU_DISCARD, 0, R.string.ims_menu_discard)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        menu.add(0, MENU_REMOVE, 0, R.string.remove_ims_account)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
         return true;
     }
@@ -205,35 +192,6 @@ public class ImsEditor extends PreferenceActivity
                 return true;
         }
         return super.onKeyDown(keyCode, event);
-    }
-
-    private void showAlert(Throwable e) {
-        String msg = e.getMessage();
-        if (TextUtils.isEmpty(msg)) msg = e.toString();
-        showAlert(msg);
-    }
-
-    private void showAlert(final String message) {
-        if (mHomeButtonClicked) {
-            if (DBG) Log.v(TAG, "Home button clicked, don't show dialog: " + message);
-            return;
-        }
-        runOnUiThread(new Runnable() {
-            public void run() {
-                new AlertDialog.Builder(ImsEditor.this)
-                        .setTitle(android.R.string.dialog_alert_title)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
-                        .setMessage(message)
-                        .setPositiveButton(R.string.alert_dialog_ok, null)
-                        .show();
-            }
-        });
-    }
-
-    private boolean isEditTextEmpty(PreferenceKey key) {
-        EditTextPreference pref = (EditTextPreference) key.preference;
-        return TextUtils.isEmpty(pref.getText())
-                || pref.getSummary().equals(getString(key.defaultSummary));
     }
 
     private void loadPreferences() {
