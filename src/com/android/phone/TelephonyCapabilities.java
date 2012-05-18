@@ -183,7 +183,8 @@ public class TelephonyCapabilities {
      */
     /* package */ static boolean supportsConferenceCallManagement(Phone phone) {
         return ((phone.getPhoneType() == Phone.PHONE_TYPE_GSM)
-                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP));
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_SIP)
+                || (phone.getPhoneType() == Phone.PHONE_TYPE_RIL_IMS));
     }
 
     /**

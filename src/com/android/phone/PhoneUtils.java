@@ -2130,13 +2130,19 @@ public class PhoneUtils {
         int phoneType = cm.getFgPhone().getPhoneType();
         int bgPhoneType = cm.getBgPhone().getPhoneType();
 
-        if ((phoneType == Phone.PHONE_TYPE_RIL_IMS) ||
-                (bgPhoneType == Phone.PHONE_TYPE_RIL_IMS)) {
-            // If either the foreground or background call is IMS
-            // then do not allow merging the calls. Phone currently
-            // doesn't support IMS call conference or merging a CDMA/GSM
-            // and an IMS call
-            return false;
+        if (phoneType == Phone.PHONE_TYPE_RIL_IMS) {
+            if (bgPhoneType == Phone.PHONE_TYPE_RIL_IMS) {
+                /*
+                 * If both the foreground and background call are IMS then allow
+                 * merging the calls. IMS call conference is supported.
+                 */
+                return !cm.hasActiveRingingCall() && cm.hasActiveFgCall()
+                        && cm.hasActiveBgCall()
+                        && cm.canConference(cm.getFirstActiveBgCall());
+            } else {
+                // merging IMS + CDMA calls is not supported
+                return false;
+            }
         } else if (phoneType == Phone.PHONE_TYPE_CDMA) {
             // CDMA: "Merge" is enabled only when the user is in a 3Way call.
             PhoneApp app = PhoneApp.getInstance();

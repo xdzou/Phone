@@ -1317,7 +1317,8 @@ public class CallCard extends FrameLayout
             showImage(mPhoto, R.drawable.picture_dialing);
             mName.setText(R.string.card_title_in_call);
         } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                || (phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             // Normal GSM (or possibly SIP?) conference call.
             // Display the "conference call" image as the contact photo.
             // TODO: Better visual treatment for contact photos in a
