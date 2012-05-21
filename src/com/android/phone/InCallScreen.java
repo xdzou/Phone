@@ -1135,7 +1135,7 @@ public class InCallScreen extends Activity
         int subscription = mApp.getVoiceSubscription();
         Phone phone = mApp.getPhone(subscription);
         String action = intent.getAction();
-        if (DBG) log("internalResolveIntent: action=" + action);
+        log("internalResolveIntent: action=" + action);
 
         // In gingerbread and earlier releases, the InCallScreen used to
         // directly handle certain intent actions that could initiate phone
@@ -1687,7 +1687,7 @@ public class InCallScreen extends Activity
         Connection c = (Connection) r.result;
         Connection.DisconnectCause cause = c.getDisconnectCause();
         Phone phone = c.getCall().getPhone();
-        if (DBG) log("onDisconnect: connection '" + c + "', cause = " + cause);
+        log("onDisconnect: connection '" + c + "', cause = " + cause);
 
         boolean currentlyIdle = !phoneIsInUse();
         int autoretrySetting = AUTO_RETRY_OFF;
@@ -2849,7 +2849,7 @@ public class InCallScreen extends Activity
      * Handles button clicks from the InCallTouchUi widget.
      */
     /* package */ void handleOnscreenButtonClick(int id) {
-        if (DBG) log("handleOnscreenButtonClick(id " + id + ")...");
+        log("handleOnscreenButtonClick(id " + id + ")...");
 
         switch (id) {
             // Actions while an incoming call is ringing:
@@ -3632,7 +3632,7 @@ public class InCallScreen extends Activity
      * necessary.
      */
     protected void setInCallScreenMode(InCallScreenMode newMode) {
-        if (DBG) log("setInCallScreenMode: " + newMode);
+        log("setInCallScreenMode: " + newMode);
         mApp.inCallUiState.inCallScreenMode = newMode;
 
         switch (newMode) {
