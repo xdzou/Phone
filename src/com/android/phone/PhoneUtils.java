@@ -2182,7 +2182,8 @@ public class PhoneUtils {
             return ((fgCallState == Call.State.ACTIVE)
                     && (app.cdmaPhoneCallState.getAddCallMenuStateAfterCallWaiting()));
         } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                || (phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             // GSM: "Add call" is available only if ALL of the following are true:
             // - There's no incoming ringing call
             // - There's < 2 lines in use
@@ -2198,11 +2199,7 @@ public class PhoneUtils {
                     && ((fgCallState == Call.State.ACTIVE)
                         || (fgCallState == Call.State.IDLE)
                         || (fgCallState == Call.State.DISCONNECTED));
-        } else if (phoneType == Phone.PHONE_TYPE_RIL_IMS) {
-            // Do not allow adding a call while the IMS call is active
-            return false;
-        }
-        else {
+        } else {
             throw new IllegalStateException("Unexpected phone type: " + phoneType);
         }
     }
