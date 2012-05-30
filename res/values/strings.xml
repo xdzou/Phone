@@ -164,6 +164,12 @@
          for a text widget that lets the user enter the digits that should
          replace the "wild" character. -->
     <string name="wild_prompt_str">Replace the wild character with</string>
+    <!-- In-call screen: button label on the "modify call" prompt dialog for IMS call -->
+    <string name="modify_call_prompt_yes">Yes</string>
+    <!-- In-call screen: button label on the "modify call" prompt dialog for IMS call-->
+    <string name="modify_call_prompt_no">No</string>
+    <!-- In-call screen: Modify call request failure. -->
+    <string name="modify_call_failure_str">Modify Call request failed\n</string>
 
     <!-- missing voicemail number -->
     <!-- Title of the "Missing voicemail number" dialog -->
@@ -1190,6 +1196,8 @@
     <string name="onscreenUnholdText">Unhold</string>
     <!-- Text for the onscreen "End call" button -->
     <string name="onscreenEndCallText">End</string>
+    <!-- Text for the onscreen "Modify call" button -->
+    <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
     <!-- Text for the onscreen "Hide Dialpad" button -->

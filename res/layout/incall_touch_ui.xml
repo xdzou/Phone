@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2009 The Android Open Source Project
-
+     Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+     Not a contribution.
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
      You may obtain a copy of the License at
@@ -292,6 +293,17 @@
                     style="@style/InCallButton"
                     android:src="@drawable/ic_merge_holo_dark"
                     android:contentDescription="@string/onscreenMergeCallsText"
+                    />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"/>
+
+                <Button android:id="@+id/modifyCallButton"
+                    style="@style/InCallCompoundButton"
+                    android:background="@drawable/btn_compound_vt"
+                    android:contentDescription="@string/onscreenModifyCallText"
                     />
 
                 <View

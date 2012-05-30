@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2011 The Android Open Source Project
      Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+     Not a contribution.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -56,7 +57,7 @@
 
     <!-- Width of buttons in the main row of in-call buttons.
          NOTE these buttons are wider on some devices; see values-w360dp/dimens.xml -->
-    <dimen name="in_call_button_width">56dp</dimen>
+    <dimen name="in_call_button_width">46dp</dimen>
 
     <!-- Height of the in-call "End" button. -->
     <dimen name="in_call_end_button_height">74dp</dimen>

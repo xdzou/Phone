@@ -174,7 +174,7 @@ public class CameraHandler implements Camera.PreviewCallback{
      */
     public void startPreview(SurfaceTexture mSurfaceTexture) throws IOException {
         if (mCameraState != CameraState.PREVIEW_STOPPED) {
-            loge("Camera state " + mCameraState
+            loge("startPreview: Camera state " + mCameraState
                     + " is not the right camera state for this operation");
             return;
         }
@@ -193,7 +193,7 @@ public class CameraHandler implements Camera.PreviewCallback{
      */
     public synchronized void close() {
         if (mCameraState == CameraState.CAMERA_CLOSED) {
-            loge("Camera state " + mCameraState
+            loge("close: Camera state " + mCameraState
                     + " is not the right camera state for this operation");
             return;
         }
@@ -213,7 +213,7 @@ public class CameraHandler implements Camera.PreviewCallback{
      */
     public void stopPreview() {
         if (mCameraState != CameraState.PREVIEW_STARTED) {
-            loge("Camera state " + mCameraState
+            loge("stopPreview: Camera state " + mCameraState
                     + " is not the right camera state for this operation");
             return;
         }
