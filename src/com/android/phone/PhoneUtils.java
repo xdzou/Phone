@@ -67,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Misc utilities for the Phone app.
@@ -2616,6 +2617,33 @@ public class PhoneUtils {
 
         // Check if this is a video call
         return isIMSVideoCall(call);
+    }
+
+    public static void registerForChangeConnectionTypeRequest(Handler h, int what, Object obj) {
+        CallManager.getInstance().registerForConnectionTypeChangeRequest(h, what, obj);
+    }
+
+    public static void changeConnectionType(Connection conn, Message msg, int newType)
+                    throws CallStateException {
+        changeConnectionType(conn, msg, newType, null);
+    }
+
+    public static void changeConnectionType(Connection conn, Message msg, int newType,
+            Map<String, String> newExtras) throws CallStateException {
+        CallManager.getInstance().changeConnectionType(msg, conn, newType, newExtras);
+    }
+
+    public static void acceptConnectionTypeChange(Connection conn) throws CallStateException {
+        acceptConnectionTypeChange(conn, null);
+    }
+
+    public static void acceptConnectionTypeChange(Connection conn,
+            Map<String, String> newExtras) throws CallStateException {
+        CallManager.getInstance().acceptConnectionTypeChange(conn, newExtras);
+    }
+
+    public static void rejectConnectionTypeChange(Connection conn) throws CallStateException {
+        CallManager.getInstance().rejectConnectionTypeChange(conn);
     }
 
     //
