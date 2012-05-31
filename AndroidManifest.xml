@@ -35,6 +35,7 @@
     <protected-broadcast android:name="android.intent.action.NETWORK_SET_TIMEZONE" />
     <protected-broadcast android:name="android.intent.action.ACTION_SHOW_NOTICE_ECM_BLOCK_OTHERS" />
     <protected-broadcast android:name="android.intent.action.ACTION_MDN_STATE_CHANGED" />
+    <protected-broadcast android:name="android.intent.action.SAFE_WIFI_CHANNELS_CHANGED" />
     <protected-broadcast android:name="android.provider.Telephony.SPN_STRINGS_UPDATED" />
 
     <uses-permission android:name="android.permission.BROADCAST_STICKY" />
