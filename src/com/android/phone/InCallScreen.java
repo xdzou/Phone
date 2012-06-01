@@ -3441,25 +3441,8 @@ public class InCallScreen extends Activity
                 } else {
                     PhoneUtils.answerCall(ringing);
                 }
-            } else if (phoneType == Phone.PHONE_TYPE_RIL_IMS) {
-                if (DBG) log("internalAnswerCall: answering (SIP)...");
-                if (mCM.hasActiveFgCall()
-                        && mCM.getFgPhone().getPhoneType() == Phone.PHONE_TYPE_CDMA) {
-                    // Similar to the PHONE_TYPE_CDMA handling.
-                    // The incoming call is IMS call and the ongoing
-                    // call is a CDMA call. The CDMA network does not
-                    // support holding an active call, so there's no
-                    // way to swap between a CDMA call and a SIP call.
-                    // So for now, we just don't allow a CDMA call and
-                    // a SIP call to be active at the same time.We'll
-                    // "answer incoming, end ongoing" in this case.
-                    if (DBG) log("internalAnswerCall: answer "
-                            + "IMS incoming and end CDMA ongoing");
-                    PhoneUtils.answerAndEndActive(mCM, ringing);
-                } else {
-                    PhoneUtils.answerCall(ringing);
-                }
-            } else if (phoneType == Phone.PHONE_TYPE_GSM){
+            } else if ((phoneType == Phone.PHONE_TYPE_GSM)
+                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 // GSM: this is usually just a wrapper around
                 // PhoneUtils.answerCall(), *but* we also need to do
                 // something special for the "both lines in use" case.
