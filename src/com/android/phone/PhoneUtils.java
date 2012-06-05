@@ -2578,6 +2578,8 @@ public class PhoneUtils {
      */
     public static boolean isIMSVideoCall(Call call) {
         if (DBG) log("In isIMSVideoCallActive");
+        if (call == null) return false;
+
         List<Connection> connections = call.getConnections();
         CallDetails callDetails;
 
@@ -2616,6 +2618,8 @@ public class PhoneUtils {
      * @return
      */
     public static boolean isIMSVideoCallActive(Call call) {
+        if (call == null) return false;
+
         // Check if there is an active call
         if (call.getState() != Call.State.ACTIVE) {
             if (DBG) log("Call is not active");

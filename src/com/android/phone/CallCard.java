@@ -114,6 +114,8 @@ public class CallCard extends FrameLayout
     // Cached DisplayMetrics density.
     private float mDensity;
 
+    private boolean isVTinitialized = false;
+
     public CallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -617,19 +619,24 @@ public class CallCard extends FrameLayout
         }
 
         switch (state) {
-            case DIALING:
-                switchInVideoCallAudio();
-                // This is an intentional fall through
+            case DIALING: // These are an intentional fall through(s)
             case INCOMING:
             case ALERTING:
-                mVideoCallPanel.onCallInitiating();
+                initVideoCall();
                 break;
 
             case ACTIVE:
+                // If phone app didn't receive the previous call states such as
+                // dialing and alerting, make sure that the video call is still
+                // initialized
+                initVideoCall();
+
+                // Show video call widget
                 showVideoCallWidgets();
                 break;
 
             case DISCONNECTED:
+                isVTinitialized = false;
                 mVideoCallPanel.onCallDisconnect();
                 // This is an intentional fall through
             default:
@@ -655,6 +662,17 @@ public class CallCard extends FrameLayout
         if (DBG) log("Hide videocall widget");
         mPhoto.setVisibility(View.VISIBLE);
         mVideoCallPanel.setVisibility(View.GONE);
+    }
+
+    /**
+     * Initializes the video call widgets if not already initialized
+     */
+    private void initVideoCall() {
+        if (!isVTinitialized) {
+            mVideoCallPanel.onCallInitiating();
+            switchInVideoCallAudio(); // Set audio to speaker by default
+            isVTinitialized = true;
+        }
     }
 
     /**
