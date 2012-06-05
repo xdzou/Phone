@@ -137,6 +137,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         mVideoCallManager = VideoCallManager.getInstance(mContext);
         mBackCameraId = mVideoCallManager.getBackCameraId();
         mFrontCameraId = mVideoCallManager.getFrontCameraId();
+        resetCameraDirection();
 
         // Check if camera supports dual cameras
         mNumberOfCameras = mVideoCallManager.getNumberOfCameras();
@@ -153,8 +154,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     public void onCallInitiating() {
         if (DBG) log("onCallInitiating");
 
-        // Reset camera to front camera
-        mCameraId = mFrontCameraId;
+        // Reset camera to front camera if the front camera is available
+        resetCameraDirection();
 
         // Initialize DPL
         mVideoCallManager.mediaInit();
@@ -479,6 +480,18 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         // Restart camera if camera doesn't need to stay off
         if (cameraId != -1) {
             initializeCamera();
+        }
+    }
+
+    /**
+     * Reset the camera direction to the front camera if it is available. Else
+     * set the camera direction to the rear facing
+     */
+    private void resetCameraDirection() {
+        if (mFrontCameraId != -1) {
+            mCameraId = mFrontCameraId;
+        } else {
+            mCameraId = mBackCameraId;
         }
     }
 

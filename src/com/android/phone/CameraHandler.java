@@ -92,15 +92,18 @@ public class CameraHandler implements Camera.PreviewCallback{
     private CameraHandler(Context context) {
         mContext = context;
         mNumberOfCameras = android.hardware.Camera.getNumberOfCameras();
+        log("Number of cameras supported is: " + mNumberOfCameras);
         mInfo = new CameraInfo[mNumberOfCameras];
         for (int i = 0; i < mNumberOfCameras; i++) {
             mInfo[i] = new CameraInfo();
             android.hardware.Camera.getCameraInfo(i, mInfo[i]);
             if (mBackCameraId == -1 && mInfo[i].facing == CameraInfo.CAMERA_FACING_BACK) {
                 mBackCameraId = i;
+                log("Back camera ID is: " + mBackCameraId);
             }
             if (mFrontCameraId == -1 && mInfo[i].facing == CameraInfo.CAMERA_FACING_FRONT) {
                 mFrontCameraId = i;
+                log("Front camera ID is: " + mFrontCameraId);
             }
         }
     }
