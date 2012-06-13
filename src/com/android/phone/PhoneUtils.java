@@ -782,12 +782,12 @@ public class PhoneUtils {
             // a call where  call can have multiple connections such as
             // Three way and Call Waiting.  Therefore retrieving Mute state for
             // latest connection can apply for all connection in that call
-            if ((phoneType == Phone.PHONE_TYPE_CDMA)
-                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
+            if ((phoneType == Phone.PHONE_TYPE_CDMA)) {
                 shouldMute = sConnectionMuteTable.get(
                         phone.getForegroundCall().getLatestConnection());
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                    || (phoneType == Phone.PHONE_TYPE_SIP)
+                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 shouldMute = sConnectionMuteTable.get(c);
             }
             if (shouldMute == null) {
@@ -1332,11 +1332,11 @@ public class PhoneUtils {
             CallerInfoAsyncQuery.OnQueryCompleteListener listener, Object cookie) {
         Connection conn = null;
         int phoneType = call.getPhone().getPhoneType();
-        if ((phoneType == Phone.PHONE_TYPE_CDMA)
-                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
+        if ((phoneType == Phone.PHONE_TYPE_CDMA)) {
             conn = call.getLatestConnection();
         } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                || (phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             conn = call.getEarliestConnection();
         } else {
             throw new IllegalStateException("Unexpected phone type: " + phoneType);
@@ -1991,11 +1991,11 @@ public class PhoneUtils {
             // If an incoming call is ringing, answer it (just like with the
             // CALL button):
             int phoneType = phone.getPhoneType();
-            if ((phoneType == Phone.PHONE_TYPE_CDMA)
-                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
+            if ((phoneType == Phone.PHONE_TYPE_CDMA)) {
                 answerCall(phone.getRingingCall());
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                    || (phoneType == Phone.PHONE_TYPE_SIP)
+                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 if (hasActiveCall && hasHoldingCall) {
                     if (DBG) log("handleHeadsetHook: ringing (both lines in use) ==> answer!");
                     answerAndEndActive(app.mCM, phone.getRingingCall());

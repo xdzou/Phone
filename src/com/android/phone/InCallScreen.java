@@ -1366,8 +1366,7 @@ public class InCallScreen extends Activity
         final boolean hasHoldingCall = mCM.hasActiveBgCall();
 
         int phoneType = mCM.getFgPhone().getPhoneType();
-        if ((phoneType == Phone.PHONE_TYPE_CDMA)
-                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
+        if (phoneType == Phone.PHONE_TYPE_CDMA) {
             // The green CALL button means either "Answer", "Swap calls/On Hold", or
             // "Add to 3WC", depending on the current state of the Phone.
 
@@ -1391,7 +1390,8 @@ public class InCallScreen extends Activity
                 internalSwapCalls();
             }
         } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                || (phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
             if (hasRingingCall) {
                 // If an incoming call is ringing, the CALL button is actually
                 // handled by the PhoneWindowManager.  (We do this to make
@@ -2324,8 +2324,7 @@ public class InCallScreen extends Activity
             String postDialStr = null;
             List<Connection> fgConnections = mCM.getFgCallConnections();
             int phoneType = mCM.getFgPhone().getPhoneType();
-            if ((phoneType == Phone.PHONE_TYPE_CDMA)
-                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
+            if (phoneType == Phone.PHONE_TYPE_CDMA) {
                 Connection fgLatestConnection = mCM.getFgCallLatestConnection();
                 if (mApp.cdmaPhoneCallState.getCurrentCallState() ==
                         CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
@@ -2342,7 +2341,8 @@ public class InCallScreen extends Activity
                     showWaitPromptDialog(fgLatestConnection, postDialStr);
                 }
             } else if ((phoneType == Phone.PHONE_TYPE_GSM)
-                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                    || (phoneType == Phone.PHONE_TYPE_SIP)
+                    || (phoneType == Phone.PHONE_TYPE_RIL_IMS)) {
                 for (Connection cn : fgConnections) {
                     if ((cn != null) && (cn.getPostDialState() == Connection.PostDialState.WAIT)) {
                         postDialStr = cn.getRemainingPostDialString();
