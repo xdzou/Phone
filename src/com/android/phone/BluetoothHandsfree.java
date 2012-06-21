@@ -107,6 +107,7 @@ public class BluetoothHandsfree {
     private boolean mPendingScoForWbs;  // waiting for wbs codec selection before establishing SCO
     private boolean mExpectingBCS = false;  // true after AG sends +BCS:<codec id>
     private boolean mA2dpSuspended;
+    private boolean mPendingA2dpResume = false;
     private boolean mUserWantsAudio;
     private WakeLock mStartCallWakeLock;  // held while waiting for the intent to start call
     private WakeLock mStartVoiceRecognitionWakeLock;  // held while waiting for voice recognition
@@ -1008,6 +1009,11 @@ public class BluetoothHandsfree {
                             if (DBG) log("A2DP suspended, completing SCO");
                             connectScoThread(CODEC_MSBC == mRemoteCodec);
                             mPendingScoForA2dp = false;
+                         } else if (mPendingA2dpResume) {
+                             if (DBG) log("resuming A2DP stream after disconnecting SCO");
+                             mA2dp.resumeSink(mA2dpDevice);
+                             mA2dpSuspended = false;
+                             mPendingA2dpResume = false;
                          }
                      }
                  }
@@ -1667,6 +1673,7 @@ public class BluetoothHandsfree {
 
         mA2dpSuspended = false;
         mPendingScoForA2dp = false;
+        mPendingA2dpResume = false;
         if ( mA2dpState == BluetoothA2dp.STATE_PLAYING) {
             if (DBG) log("suspending A2DP stream for SCO");
             mA2dpSuspended = mA2dp.suspendSink(mA2dpDevice);
@@ -1732,10 +1739,14 @@ public class BluetoothHandsfree {
                 ", mA2dpState: " + mA2dpState +
                 ", mA2dpSuspended: " + mA2dpSuspended);
 
-        if (mA2dpSuspended) {
-            if (DBG) log("resuming A2DP stream after disconnecting SCO");
-            mA2dp.resumeSink(mA2dpDevice);
-            mA2dpSuspended = false;
+        if (!mPendingScoForA2dp) {
+            if (mA2dpSuspended) {
+                if (DBG) log("resuming A2DP stream after disconnecting SCO");
+                mA2dp.resumeSink(mA2dpDevice);
+                mA2dpSuspended = false;
+            }
+        } else { // already suspendSink is in progress, so wait for issuing resume
+            mPendingA2dpResume = true;
         }
 
         mPendingScoForA2dp = false;
