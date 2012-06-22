@@ -170,8 +170,7 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
                         // ending the complete call session
                         hungUp = PhoneUtils.hangupRingingAndActive(phone);
                     } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                        // GSM: End all calls except waiting
-                        hungUp = PhoneUtils.hangupAllCalls(phone);
+                        hungUp = PhoneUtils.hangup(mCM);
                     } else {
                         throw new IllegalStateException("Unexpected phone type: " + phoneType);
                     }
