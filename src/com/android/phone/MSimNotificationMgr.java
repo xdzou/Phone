@@ -91,8 +91,8 @@ public class MSimNotificationMgr extends NotificationMgr {
         int subscription = phone.getSubscription();
         if (visible) {
             int resId = android.R.drawable.stat_notify_voicemail;
-            int[] iconId = {android.R.drawable.stat_notify_voicemail_sub1,
-                    android.R.drawable.stat_notify_voicemail_sub2};
+            int[] iconId = {R.drawable.stat_notify_voicemail_sub1,
+                    R.drawable.stat_notify_voicemail_sub2};
 
             // This Notification can get a lot fancier once we have more
             // information about the current voicemail messages.
