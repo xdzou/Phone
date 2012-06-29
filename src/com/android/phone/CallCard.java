@@ -758,6 +758,10 @@ public class CallCard extends FrameLayout
                 break;
 
             default:
+                // Reset the ElapsedTime value
+                if ((state ==  Call.State.DIALING) || (state == Call.State.ALERTING)) {
+                    updateElapsedTimeWidget(0);
+                }
                 // In all other states (DIALING, INCOMING, HOLDING, etc.),
                 // the "elapsed time" is meaningless, so don't show it.
                 mElapsedTime.setVisibility(View.INVISIBLE);
