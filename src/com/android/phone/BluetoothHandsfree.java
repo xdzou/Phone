@@ -134,6 +134,7 @@ public class BluetoothHandsfree {
     private boolean[] mClccUsed;     // Is this clcc index in use
     private boolean mWaitingForCallStart;
     private boolean mWaitingForVoiceRecognition;
+    private boolean mHfInitiatedVrDeactivation;
     // do not connect audio until service connection is established
     // for 3-way supported devices, this is after AT+CHLD
     // for non-3-way supported devices, this is after AT+CMER (see spec)
@@ -2815,6 +2816,8 @@ public class BluetoothHandsfree {
                                 return new AtCommandResult(AtCommandResult.ERROR);
                             }
                             expectVoiceRecognition();
+                        } else {
+                            return new AtCommandResult(AtCommandResult.ERROR);
                         }
                     }
                     return new AtCommandResult(AtCommandResult.UNSOLICITED);  // send nothing yet
@@ -2822,6 +2825,7 @@ public class BluetoothHandsfree {
                     if (isVoiceRecognitionInProgress()) {
                         audioOff();
                     }
+                    mHfInitiatedVrDeactivation = true;
                     return new AtCommandResult(AtCommandResult.OK);
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
@@ -3127,9 +3131,12 @@ public class BluetoothHandsfree {
         if (!isVoiceRecognitionInProgress()) {
             return false;
         }
-
         mVoiceRecognitionStarted = false;
-
+        if (mHfInitiatedVrDeactivation == true) {
+            mHfInitiatedVrDeactivation = false;
+            //No need to send +BVRA and calling audioOff() as it is already done.
+            return false;
+        }
         sendURC("+BVRA: 0");
         audioOff();
         return true;
