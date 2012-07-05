@@ -2841,12 +2841,14 @@ public class BluetoothHandsfree {
         parser.register("+NREC", new AtCommandHandler() {
             @Override
             public AtCommandResult handleSetCommand(Object[] args) {
-                if (args[0].equals(0)) {
-                    mAudioManager.setParameters(HEADSET_NREC+"=off");
-                    return new AtCommandResult(AtCommandResult.OK);
-                } else if (args[0].equals(1)) {
-                    mAudioManager.setParameters(HEADSET_NREC+"=on");
-                    return new AtCommandResult(AtCommandResult.OK);
+                if (args.length == 1 && (args[0] instanceof Integer)) {
+                    if (args[0].equals(0)) {
+                        mAudioManager.setParameters(HEADSET_NREC+"=off");
+                        return new AtCommandResult(AtCommandResult.OK);
+                    } else if (args[0].equals(1)) {
+                        mAudioManager.setParameters(HEADSET_NREC+"=on");
+                        return new AtCommandResult(AtCommandResult.OK);
+                    }
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
             }
