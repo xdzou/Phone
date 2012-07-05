@@ -2566,34 +2566,16 @@ public class PhoneUtils {
      * @return
      */
     public static boolean isIMSVideoCall(Call call) {
-        if (DBG) log("In isIMSVideoCallActive");
-        if (call == null) return false;
-
-        List<Connection> connections = call.getConnections();
-        CallDetails callDetails;
-
-        // Check if connection exist
-        if (connections == null || connections.size() < 1) {
-            if (DBG) log("No active connection for this call");
+        if (DBG) log("In isIMSVideoCall");
+        Connection conn = call.getEarliestConnection();
+        if(conn == null) {
             return false;
         }
+        CallDetails callDetails = conn.getCallDetails();
 
-        // Video Call doesn't support conferencing so if there are more than one
-        // connection then the call can not be of type VT
-        if (connections.size() > 1) {
-            return false;
-        }
-
-        // Get call type and call domain
-        callDetails = connections.get(0).getCallDetails();
-        if (callDetails == null) {
-            if (DBG) log("Call details is null");
-            return false;
-        }
-
-        if (DBG) log("In callType: " + callDetails.call_type + ", callDomain: "
-                    + callDetails.call_domain);
-        if ((callDetails != null) && (callDetails.call_type == CallDetails.RIL_CALL_TYPE_VT)
+        if ((callDetails != null) && ((callDetails.call_type == CallDetails.RIL_CALL_TYPE_VT) ||
+                (callDetails.call_type == CallDetails.RIL_CALL_TYPE_VS_RX) ||
+                (callDetails.call_type == CallDetails.RIL_CALL_TYPE_VS_TX))
                 && (callDetails.call_domain == CallDetails.RIL_CALL_DOMAIN_PS)) {
             return true;
         }

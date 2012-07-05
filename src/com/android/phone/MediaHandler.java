@@ -41,6 +41,8 @@ public class MediaHandler extends Handler {
 
     private static SurfaceTexture sSurface;
 
+    private static boolean initCalledFlag = false;
+
     private static native int nativeInit();
     private static native void nativeDeInit();
     private static native void nativeHandleRawFrame(byte[] frame);
@@ -72,10 +74,14 @@ public class MediaHandler extends Handler {
      * Initialize Media
      */
     public static void init() {
-        Log.d(TAG, "init called");
-        if (nativeInit() != 0) {
-            throw new RuntimeException("Unable to initialize Dpl");
+        if(!initCalledFlag) {
+            Log.d(TAG, "init called");
+            if (nativeInit() != 0) {
+                throw new RuntimeException("Unable to initialize Dpl");
+            }
+            initCalledFlag = true;
         }
+
         registerForMediaEvents();
     }
 
@@ -85,6 +91,7 @@ public class MediaHandler extends Handler {
     public static void deInit() {
         Log.d(TAG, "deInit called");
         nativeDeInit();
+        initCalledFlag = false;
     }
 
     /**

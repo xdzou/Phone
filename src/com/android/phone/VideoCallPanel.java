@@ -156,9 +156,6 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
         // Reset camera to front camera if the front camera is available
         resetCameraDirection();
-
-        // Initialize DPL
-        mVideoCallManager.mediaInit();
     }
 
     /**
@@ -172,10 +169,6 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         // Reset the isReadyToReceivePreview flag to false so that we can wait
         // for this event again for the next call
         VideoCallManager.setIsMediaReadyToReceivePreview(false);
-
-        // Deinitialize DPL
-        // This code needs to be called when all the LTE based calls are done
-        mVideoCallManager.mediaDeInit();
     }
 
     /**
