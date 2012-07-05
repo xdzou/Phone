@@ -446,6 +446,10 @@ public class CallCard extends FrameLayout
         // If this is a video call then update the state of the VideoCallPanel
         if (isVideoCall(call)) {
             updateVideoCallState(call);
+        } else {
+            // This will hide the VideoCallPanel for any non VT/ non VS call or
+            // downgrade scenarios
+            hideVideoCallWidgets();
         }
 
         if (PhoneUtils.isConferenceCall(call)) {
@@ -660,8 +664,10 @@ public class CallCard extends FrameLayout
      */
     private void hideVideoCallWidgets() {
         if (DBG) log("Hide videocall widget");
-        mPhoto.setVisibility(View.VISIBLE);
-        mVideoCallPanel.setVisibility(View.GONE);
+        if(isVideoCallWidgetVisible()) {
+            mPhoto.setVisibility(View.VISIBLE);
+            mVideoCallPanel.setVisibility(View.GONE);
+        }
     }
 
     /**

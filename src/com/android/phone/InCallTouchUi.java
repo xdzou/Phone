@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
- *
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+ * Not a contribution.
+ *Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,10 +37,13 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallDetails;
+import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.widget.multiwaveview.MultiWaveView;
 import com.android.internal.widget.multiwaveview.MultiWaveView.OnTriggerListener;
@@ -80,6 +85,7 @@ public class InCallTouchUi extends FrameLayout
     private ImageButton mAddButton;
     private ImageButton mMergeButton;
     private ImageButton mEndButton;
+    private Button mModifyCallButton;
     private CompoundButton mDialpadButton;
     private CompoundButton mMuteButton;
     private CompoundButton mAudioButton;
@@ -168,6 +174,8 @@ public class InCallTouchUi extends FrameLayout
         mMergeButton.setOnClickListener(this);
         mEndButton = (ImageButton) mInCallControls.findViewById(R.id.endButton);
         mEndButton.setOnClickListener(this);
+        mModifyCallButton = (Button) mInCallControls.findViewById(R.id.modifyCallButton);
+        mModifyCallButton.setOnClickListener(this);
         mDialpadButton = (CompoundButton) mInCallControls.findViewById(R.id.dialpadButton);
         mDialpadButton.setOnClickListener(this);
         mMuteButton = (CompoundButton) mInCallControls.findViewById(R.id.muteButton);
@@ -349,6 +357,7 @@ public class InCallTouchUi extends FrameLayout
             case R.id.addButton:
             case R.id.mergeButton:
             case R.id.endButton:
+            case R.id.modifyCallButton:
             case R.id.dialpadButton:
             case R.id.muteButton:
             case R.id.holdButton:
@@ -451,6 +460,20 @@ public class InCallTouchUi extends FrameLayout
 
         // "End call"
         mEndButton.setEnabled(inCallControlState.canEndCall);
+
+        Connection fgCallLatestConnection = cm.getFgCallLatestConnection();
+        if (fgCallLatestConnection != null
+                && fgCallLatestConnection.getCallDetails() != null
+                && fgCallLatestConnection.getCallDetails().call_domain
+                                       == CallDetails.RIL_CALL_DOMAIN_PS) {
+            log("videocall: Show modifyCall button");
+            mModifyCallButton.setVisibility(View.VISIBLE);
+            mModifyCallButton.setEnabled(true);
+        } else {
+            log("videocall: Dont show modifyCall button");
+            mModifyCallButton.setVisibility(View.GONE);
+            mModifyCallButton.setEnabled(false);
+        }
 
         // "Dialpad": Enabled only when it's OK to use the dialpad in the
         // first place.
