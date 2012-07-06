@@ -751,7 +751,7 @@ public class DTMFTwelveKeyDialer implements View.OnTouchListener, View.OnKeyList
 
         if (PhoneApp.getInstance().isHeadsetPlugged()) {
             int TTYmode = Settings.Secure.getInt(
-                    PhoneApp.getInstance().getContentResolver(),
+                    PhoneApp.getInstance().mContext.getContentResolver(),
                     Settings.Secure.PREFERRED_TTY_MODE,
                     Phone.TTY_MODE_OFF);
 
