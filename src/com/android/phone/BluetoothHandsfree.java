@@ -2582,7 +2582,6 @@ public class BluetoothHandsfree {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                     } else if (args[0].equals(2)) {
-                        sendURC("OK");
                         if (phoneType == Phone.PHONE_TYPE_CDMA) {
                             // For CDMA, the way we switch to a new incoming call is by
                             // calling PhoneUtils.answerCall(). switchAndHoldActive() won't
@@ -2591,6 +2590,7 @@ public class BluetoothHandsfree {
                             // a flash cmd by calling switchHoldingAndActive()
                             if (ringingCall.isRinging()) {
                                 log("CHLD:2 Callwaiting Answer call");
+                                sendURC("OK");
                                 PhoneUtils.answerCall(ringingCall);
                                 PhoneUtils.setMute(false);
                                 // Setting the second callers state flag to TRUE (i.e. active)
@@ -2599,39 +2599,51 @@ public class BluetoothHandsfree {
                                     .getCurrentCallState()
                                     == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
                                 log("CHLD:2 Swap Calls");
+                                sendURC("OK");
                                 PhoneUtils.switchHoldingAndActive(backgroundCall);
                                 // Toggle the second callers active state flag
                                 cdmaSwapSecondCallState();
+                            } else {
+                                return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+                            if (!mCM.hasActiveFgCall())
+                                return new AtCommandResult(AtCommandResult.ERROR);
+                            sendURC("OK");
                             PhoneUtils.switchHoldingAndActive(backgroundCall);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                         return new AtCommandResult(AtCommandResult.UNSOLICITED);
                     } else if (args[0].equals(3)) {
-                        sendURC("OK");
                         if (phoneType == Phone.PHONE_TYPE_CDMA) {
                             CdmaPhoneCallState.PhoneCallState state =
                                 PhoneApp.getInstance().cdmaPhoneCallState.getCurrentCallState();
                             // For CDMA, we need to check if the call is in THRWAY_ACTIVE state
                             if (state == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) {
                                 log("CHLD:3 Merge Calls");
+                                sendURC("OK");
                                 PhoneUtils.mergeCalls();
                             } else if (state == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
+                                sendURC("OK");
                                 // State is CONF_CALL already and we are getting a merge call
                                 // This can happen when CONF_CALL was entered from a Call Waiting
                                 mBluetoothPhoneState.updateCallHeld();
+                            } else {
+                                return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
                             if (mCM.hasActiveFgCall() && mCM.hasActiveBgCall()) {
+                                sendURC("OK");
                                 PhoneUtils.mergeCalls();
-                            }
+                            } else
+                                return new AtCommandResult(AtCommandResult.ERROR);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                         return new AtCommandResult(AtCommandResult.UNSOLICITED);
-                    }
+                    } else
+                        return new AtCommandResult(AtCommandResult.ERROR);
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
             }
@@ -2870,6 +2882,11 @@ public class BluetoothHandsfree {
             public AtCommandResult handleSetCommand(Object[] args) {
                 // AT+VGM=<gain>    in range [0,15]
                 // Headset/Handsfree is reporting its current gain setting
+                if (args.length != 1 || !(args[0] instanceof Integer)) {
+                    return new AtCommandResult(AtCommandResult.ERROR);
+                }
+                if ((Integer) args[0] > 15) // Invalid VGM gain
+                    return new AtCommandResult(AtCommandResult.ERROR);
                 return new AtCommandResult(AtCommandResult.OK);
             }
         });
@@ -2882,6 +2899,8 @@ public class BluetoothHandsfree {
                 if (args.length != 1 || !(args[0] instanceof Integer)) {
                     return new AtCommandResult(AtCommandResult.ERROR);
                 }
+                if ((Integer) args[0] > 15) // Invalid VGS gain
+                    return new AtCommandResult(AtCommandResult.ERROR);
                 mScoGain = (Integer) args[0];
                 int flag =  mAudioManager.isBluetoothScoOn() ? AudioManager.FLAG_SHOW_UI:0;
 
@@ -3050,8 +3069,10 @@ public class BluetoothHandsfree {
                             mIIEnabled[ii] = true;
                         } else if ((Integer)args[ai] == 0) {
                             mIIEnabled[ii] = false;
-                        }
-                    }
+                        } else
+                            return new AtCommandResult(AtCommandResult.ERROR);
+                    } else
+                        return new AtCommandResult(AtCommandResult.ERROR);
                 }
                 return new AtCommandResult(AtCommandResult.OK);
             }
