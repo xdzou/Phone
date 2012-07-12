@@ -560,6 +560,7 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
 
         // For async handler to identify request type
         private static final int SUPPLY_PIN_COMPLETE = 100;
+        private static final int SIM_ABSENT = 101;
 
         public UnlockSim(IccCard simCard) {
             mSimCard = simCard;
@@ -589,6 +590,17 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
                                         mResult = Phone.PIN_RESULT_SUCCESS;
                                     }
                                     mDone = true;
+                                    mSimCard.unregisterForAbsent(this);
+                                    UnlockSim.this.notifyAll();
+                                }
+                                break;
+                            case SIM_ABSENT:
+                                synchronized (UnlockSim.this) {
+                                    Log.d(LOG_TAG,
+                                            "SIM has been removed Return error for supplyPin.");
+                                    mResult = Phone.PIN_GENERAL_FAILURE;
+                                    mDone = true;
+                                    mSimCard.unregisterForAbsent(this);
                                     UnlockSim.this.notifyAll();
                                 }
                                 break;
@@ -618,6 +630,7 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
             }
             Message callback = Message.obtain(mHandler, SUPPLY_PIN_COMPLETE);
 
+            mSimCard.registerForAbsent(mHandler, SIM_ABSENT, null);
             if (puk == null) {
                 mSimCard.supplyPin(pin, callback);
             } else {
