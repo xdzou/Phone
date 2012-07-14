@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +28,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.CellInfo;
@@ -40,6 +42,9 @@ import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.TelephonyIntents;
+import com.android.internal.telephony.CommandException;
+import com.android.internal.telephony.IOemHookCallback;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -58,6 +63,11 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     private static final int CMD_ANSWER_RINGING_CALL = 4;
     private static final int CMD_END_CALL = 5;  // not used yet
     private static final int CMD_SILENCE_RINGER = 6;
+    private static final int CMD_INVOKE_OEM_RIL_REQUEST = 7;
+    private static final int EVENT_INVOKE_OEM_RIL_REQUEST = 8;
+    private static final int EVENT_UNSOL_OEM_HOOK_EXT_APP = 9;
+    private static final int CMD_INVOKE_OEM_RIL_REQUEST_ASYNC = 12;
+    private static final int EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE = 13;
 
     /** The singleton instance. */
     private static PhoneInterfaceManager sInstance;
@@ -83,6 +93,24 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     /**
+     * A request object for use with {@link MainThreadHandler}. The main thread
+     * will notify the request when it is complete.
+     */
+    private static final class MainThreadRequestAsync {
+        /** The first argument to use for the request */
+        public Object arg1;
+        /** The second argument to use for the callback */
+        public Object arg2;
+        /** The result of the request that is run on the main thread */
+        public Object result;
+
+        public MainThreadRequestAsync(Object arg1, Object arg2) {
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+        }
+    }
+
+    /**
      * A handler that processes messages on the main thread in the phone process. Since many
      * of the Phone calls are not thread safe this is needed to shuttle the requests from the
      * inbound binder threads to the main thread in the phone process.  The Binder thread
@@ -98,6 +126,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         @Override
         public void handleMessage(Message msg) {
             MainThreadRequest request;
+            MainThreadRequestAsync requestAsync;
             Message onCompleted;
             AsyncResult ar;
 
@@ -164,6 +193,47 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                     }
                     break;
 
+                case CMD_INVOKE_OEM_RIL_REQUEST:
+                    request = (MainThreadRequest)msg.obj;
+                    onCompleted = obtainMessage(EVENT_INVOKE_OEM_RIL_REQUEST, request);
+                    mPhone.invokeOemRilRequestRaw((byte[])request.argument, onCompleted);
+                    break;
+
+                case EVENT_INVOKE_OEM_RIL_REQUEST:
+                    ar = (AsyncResult)msg.obj;
+                    request = (MainThreadRequest)ar.userObj;
+                    request.result = ar;
+                    // Wake up the requesting thread
+                    synchronized (request) {
+                        request.notifyAll();
+                    }
+                    break;
+
+                case CMD_INVOKE_OEM_RIL_REQUEST_ASYNC:
+                    requestAsync = (MainThreadRequestAsync) msg.obj;
+                    onCompleted = obtainMessage(
+                            EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE, requestAsync);
+                    mPhone.invokeOemRilRequestRaw((byte[]) requestAsync.arg1,
+                            onCompleted);
+                    break;
+
+                case EVENT_INVOKE_OEM_RIL_REQUEST_ASYNC_DONE:
+                    ar = (AsyncResult) msg.obj;
+                    requestAsync = (MainThreadRequestAsync) ar.userObj;
+                    requestAsync.result = ar.result;
+                    IOemHookCallback cb = (IOemHookCallback) requestAsync.arg2;
+                    try {
+                        cb.onOemHookResponse((byte[]) (requestAsync.result));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+
+                case EVENT_UNSOL_OEM_HOOK_EXT_APP:
+                    ar = (AsyncResult)msg.obj;
+                    broadcastUnsolOemHookIntent((byte[])(ar.result));
+                    break;
+
                 default:
                     Log.w(LOG_TAG, "MainThreadHandler: unexpected message code: " + msg.what);
                     break;
@@ -198,6 +268,13 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return request.result;
     }
 
+    public void broadcastUnsolOemHookIntent(byte[] payload) {
+        Intent intent = new Intent(TelephonyIntents.ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW);
+        intent.putExtra("payload", payload);
+        Log.d(LOG_TAG,"Broadcasting intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW");
+        mApp.sendBroadcast(intent);
+    }
+
     /**
      * Asynchronous ("fire and forget") version of sendRequest():
      * Posts the specified command to be executed on the main thread, and
@@ -206,6 +283,18 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     private void sendRequestAsync(int command) {
         mMainThreadHandler.sendEmptyMessage(command);
+    }
+
+    /**
+     * Posts the specified command to be executed on the main thread, and
+     * returns the result without waiting for the request to complete,
+     *
+     * @see sendRequestAsync
+     */
+    private void sendRequestAsync(int command, Object arg1, Object arg2) {
+        MainThreadRequestAsync request = new MainThreadRequestAsync(arg1, arg2);
+        Message msg = mMainThreadHandler.obtainMessage(command, request);
+        msg.sendToTarget();
     }
 
     /**
@@ -229,6 +318,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         mPhone = phone;
         mCM = PhoneApp.getInstance().mCM;
         mMainThreadHandler = new MainThreadHandler();
+        Log.d(LOG_TAG, " Registering for UNSOL OEM HOOK Responses to deliver external apps");
+        mPhone.setOnUnsolOemHookExtApp(mMainThreadHandler, EVENT_UNSOL_OEM_HOOK_EXT_APP, null);
         publish();
     }
 
@@ -714,6 +805,50 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public int getActivePhoneType() {
         return mPhone.getPhoneType();
+    }
+
+    public int sendOemRilRequestRaw(byte[] request, byte[] response) {
+        int returnValue = 0;
+        // TODO: Check Permissions of the application
+
+        try {
+            AsyncResult result = (AsyncResult)sendRequest(CMD_INVOKE_OEM_RIL_REQUEST, request);
+            if(result.exception == null) {
+                returnValue = 0;
+                if (result.result != null) {
+                    byte[] responseData = (byte[])(result.result);
+                    if(responseData.length > response.length) {
+                        Log.w(LOG_TAG, "Buffer to copy response too small: Response length is " +
+                                responseData.length +  "bytes. Buffer Size is " +
+                                response.length + "bytes.");
+                    }
+                    System.arraycopy(responseData, 0, response, 0, responseData.length);
+                    returnValue = responseData.length;
+                }
+
+            } else {
+                CommandException ex = (CommandException) result.exception;
+                returnValue = ex.getCommandError().ordinal();
+                if(returnValue > 0) returnValue *= -1;
+            }
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "sendOemRilRequestRaw: Runtime Exception");
+            returnValue = (CommandException.Error.GENERIC_FAILURE.ordinal());
+            if(returnValue > 0) returnValue *= -1;
+        }
+
+        return returnValue;
+    }
+
+    public void sendOemRilRequestRawAsync(byte[] request,
+            IOemHookCallback oemHookCb) {
+        try {
+            sendRequestAsync(CMD_INVOKE_OEM_RIL_REQUEST_ASYNC, request,
+                    oemHookCb);
+        } catch (RuntimeException e) {
+            Log.w(LOG_TAG, "sendOemRilRequestRawAsync: Runtime Exception");
+        }
+
     }
 
     /**
