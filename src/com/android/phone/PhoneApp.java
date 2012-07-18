@@ -35,6 +35,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -122,6 +123,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     // Don't use message codes larger than 99 here; those are reserved for
     // the individual Activities of the Phone UI.
 
+    // Specify if Android supports VoLTE/VT calls on IMS
+    private static final String CALLS_ON_IMS_ENABLED_PROPERTY = "persist.radio.calls.on.ims";
     /**
      * Allowable values for the poke lock code (timeout between a user activity and the
      * going to sleep), please refer to {@link com.android.server.PowerManagerService}
@@ -503,6 +506,8 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             mCM = CallManager.getInstance();
             mCM.registerPhone(phone);
 
+            createImsService();
+
             // Create the NotificationMgr singleton, which is used to display
             // status bar icons and control other status bar behavior.
             notificationMgr = NotificationMgr.init(this);
@@ -693,6 +698,30 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
         }
       }
    }
+
+    public void createImsService() {
+        if (SystemProperties.getBoolean(CALLS_ON_IMS_ENABLED_PROPERTY, false)) {
+            try {
+                // send intent to start ims service n get phone from ims service
+                boolean bound = bindService(new Intent("com.qualcomm.ims.IImsService"),
+                        ImsServiceConnection, Context.BIND_AUTO_CREATE);
+                Log.d(LOG_TAG, "IMSService bound request : " + bound);
+            } catch (NoClassDefFoundError e) {
+                Log.w(LOG_TAG, "Ignoring IMS class not found exception " + e);
+            }
+        }
+    }
+
+    private static ServiceConnection ImsServiceConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(LOG_TAG,"Ims Service Connected");
+            //Get handle to IImsService.Stub.asInterface(service);
+        }
+
+        public void onServiceDisconnected(ComponentName arg0) {
+            Log.w(LOG_TAG,"Ims Service onServiceDisconnected");
+        }
+    };
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
