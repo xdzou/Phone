@@ -91,7 +91,7 @@ public class MSimPhoneApp extends PhoneApp {
     private static final boolean VDBG = (PhoneApp.DBG_LEVEL >= 2);
 
     // Message codes; see mHandler below.
-    static final int EVENT_SIM_NETWORK_LOCKED = 3;
+    private static final int EVENT_PERSO_LOCKED = 3;
     private static final int EVENT_WIRED_HEADSET_PLUG = 7;
     private static final int EVENT_SIM_STATE_CHANGED = 8;
     private static final int EVENT_UPDATE_INCALL_NOTIFICATION = 9;
@@ -277,7 +277,7 @@ public class MSimPhoneApp extends PhoneApp {
             IccCard sim = phone.getIccCard();
             if (sim != null) {
                 if (VDBG) Log.v(LOG_TAG, "register for ICC status");
-                sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
+                sim.registerForPersoLocked(mHandler, EVENT_PERSO_LOCKED, null);
             }
 
             // register for MMI/USSD
@@ -513,7 +513,7 @@ public class MSimPhoneApp extends PhoneApp {
             if (DBG) Log.d(LOG_TAG, "Update registration for ICC status...");
 
             //Register all events new to the new active phone
-            sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
+            sim.registerForPersoLocked(mHandler, EVENT_PERSO_LOCKED, null);
         }
     }
 
