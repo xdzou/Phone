@@ -1607,7 +1607,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 Log.d(LOG_TAG, "Setting property " + PROPERTY_AIRPLANE_MODE_ON);
                 SystemProperties.set(PROPERTY_AIRPLANE_MODE_ON, (enabled ? "1" : "0"));
 
-                phone.setRadioPower(!enabled);
+                phone.setRadioPower(enabled);
             } else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
                 mBluetoothHeadsetState = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE,
                                                           BluetoothHeadset.STATE_DISCONNECTED);
