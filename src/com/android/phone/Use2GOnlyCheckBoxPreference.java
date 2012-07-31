@@ -29,8 +29,8 @@ import com.android.internal.telephony.Phone;
 public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     private static final String LOG_TAG = "Use2GOnlyCheckBoxPreference";
 
-    private Phone mPhone;
-    private MyHandler mHandler;
+    private static Phone mPhone;
+    private static MyHandler mHandler;
 
     public Use2GOnlyCheckBoxPreference(Context context) {
         this(context, null);
@@ -59,6 +59,12 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
         mPhone.setPreferredNetworkType(networkType, mHandler
                 .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
    }
+
+    public static void updatePhone(Phone phone) {
+        mPhone = phone;
+        mPhone.getPreferredNetworkType(
+                 mHandler.obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
+    }
 
     private class MyHandler extends Handler {
 
