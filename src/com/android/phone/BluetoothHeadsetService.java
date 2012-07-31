@@ -318,13 +318,14 @@ public class BluetoothHeadsetService extends Service {
             } else if (action.equals(BluetoothHandsfree.SLC_ESTABLISHED)) {
                 int newState = intent.getIntExtra(BluetoothHeadset.EXTRA_STATE, 0);
                 if (newState == BluetoothHeadset.STATE_CONNECTED) {
-                    if (currDevice == null || device == null) {
-                        return;
+                    if (currDevice == null || device == null ||
+                      mRemoteHeadsets.get(currDevice).mState != BluetoothHeadset.STATE_CONNECTING ||
+                      !device.equals(currDevice)) {
+                        return; // stale event
                     }
-                    if (device.equals(currDevice)) {
-                        log("SLC is up , broadcasting connected intent");
-                        setState(device, BluetoothProfile.STATE_CONNECTED);
-                    }
+                    log("SLC is up , broadcasting connected intent");
+                    setState(device, BluetoothProfile.STATE_CONNECTED);
+                    mHandler.removeMessages(MESSAGE_SLC_TIMEOUT);
                 }
             }
 
@@ -506,6 +507,11 @@ public class BluetoothHeadsetService extends Service {
                 if (uuids != null &&
                     !(BluetoothUuid.isUuidPresent(uuids, BluetoothUuid.Handsfree))) {
                     setState(device, BluetoothProfile.STATE_CONNECTED);
+                } else {
+                    log("HFP device, scheduling SLC timer");
+                    Message slc_msg = mHandler.obtainMessage(MESSAGE_SLC_TIMEOUT);
+                    slc_msg.obj = device;
+                    mHandler.sendMessageDelayed(slc_msg, 2000);
                 }
 
                 mRemoteHeadsets.get(device).mHeadset = headset;

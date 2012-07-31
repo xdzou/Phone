@@ -71,6 +71,13 @@ public class BluetoothHandsfree {
             && (SystemProperties.getInt("ro.debuggable", 0) == 1);
     private static final boolean VDBG = (PhoneApp.DBG_LEVEL >= 2);  // even more logging
 
+    private static final int VERSION_1_5 = 105;
+    private static final int VERSION_1_6 = 106;
+    private static final String PROP_VERSION_KEY = "ro.bluetooth.hfp.ver";
+    private static final String PROP_VERSION_1_6 = "1.6";
+
+    private static final int mVersion;
+
     public static final int TYPE_UNKNOWN           = 0;
     public static final int TYPE_HEADSET           = 1;
     public static final int TYPE_HANDSFREE         = 2;
@@ -107,6 +114,7 @@ public class BluetoothHandsfree {
     private boolean mPendingScoForWbs;  // waiting for wbs codec selection before establishing SCO
     private boolean mExpectingBCS = false;  // true after AG sends +BCS:<codec id>
     private boolean mA2dpSuspended;
+    private boolean mPendingA2dpResume = false;
     private boolean mUserWantsAudio;
     private WakeLock mStartCallWakeLock;  // held while waiting for the intent to start call
     private WakeLock mStartVoiceRecognitionWakeLock;  // held while waiting for voice recognition
@@ -127,6 +135,7 @@ public class BluetoothHandsfree {
     private boolean[] mClccUsed;     // Is this clcc index in use
     private boolean mWaitingForCallStart;
     private boolean mWaitingForVoiceRecognition;
+    private boolean mHfInitiatedVrDeactivation;
     // do not connect audio until service connection is established
     // for 3-way supported devices, this is after AT+CHLD
     // for non-3-way supported devices, this is after AT+CMER (see spec)
@@ -199,7 +208,20 @@ public class BluetoothHandsfree {
     // Voice Recognition - true if Voice Recognition is active, false otherwise
     private boolean mVoiceRecognitionStarted;
 
+    // is CHLD=1 command active from the remote side, as the call status
+    // updates are different here need specific hanlding.
+    private boolean mIsChld1Command;
     private HandsfreeMessageHandler mHandler;
+
+    static {
+        if (PROP_VERSION_1_6.equals(SystemProperties.get(PROP_VERSION_KEY))) {
+            mVersion = VERSION_1_6;
+            Log.d(TAG, "Version 1.6");
+        } else {
+            mVersion = VERSION_1_5;
+            Log.d(TAG, "Version 1.5");
+        }
+    }
 
     public static String typeToString(int type) {
         switch (type) {
@@ -274,11 +296,12 @@ public class BluetoothHandsfree {
         mUserWantsAudio = true;
         mVirtualCallStarted = false;
         mVoiceRecognitionStarted = false;
+        mIsChld1Command = false;
         mPhonebook = new BluetoothAtPhonebook(mContext, this);
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         cdmaSetSecondCallState(false);
 
-        if (SystemProperties.getBoolean("ro.qualcomm.bluetooth.hfp.wbs", false)) {
+        if (mVersion == VERSION_1_6) {
             if (DBG) Log.d(TAG, "BRSF_AG_CODEC_NEGOTIATION is enabled!");
             mLocalBrsf |= BRSF_AG_CODEC_NEGOTIATION;
         } else {
@@ -1007,6 +1030,11 @@ public class BluetoothHandsfree {
                             if (DBG) log("A2DP suspended, completing SCO");
                             connectScoThread(CODEC_MSBC == mRemoteCodec);
                             mPendingScoForA2dp = false;
+                         } else if (mPendingA2dpResume) {
+                             if (DBG) log("resuming A2DP stream after disconnecting SCO");
+                             mA2dp.resumeSink(mA2dpDevice);
+                             mA2dpSuspended = false;
+                             mPendingA2dpResume = false;
                          }
                      }
                  }
@@ -1192,6 +1220,13 @@ public class BluetoothHandsfree {
                 break;
             }
 
+            if (mIsChld1Command == true) {
+                if (callsetup == 1 && call ==0 && mCall ==1) {
+                    call = mCall; // expecting callsetup to go zero itself
+                } else if (callsetup == 0) {
+                    mIsChld1Command = false; // completed the process
+                }
+            }
             if (mCall != call) {
                 if (call == 1) {
                     // This means that a call has transitioned from NOT ACTIVE to ACTIVE.
@@ -1681,6 +1716,7 @@ public class BluetoothHandsfree {
 
         mA2dpSuspended = false;
         mPendingScoForA2dp = false;
+        mPendingA2dpResume = false;
         if ( mA2dpState == BluetoothA2dp.STATE_PLAYING) {
             if (DBG) log("suspending A2DP stream for SCO");
             mA2dpSuspended = mA2dp.suspendSink(mA2dpDevice);
@@ -1746,10 +1782,14 @@ public class BluetoothHandsfree {
                 ", mA2dpState: " + mA2dpState +
                 ", mA2dpSuspended: " + mA2dpSuspended);
 
-        if (mA2dpSuspended) {
-            if (DBG) log("resuming A2DP stream after disconnecting SCO");
-            mA2dp.resumeSink(mA2dpDevice);
-            mA2dpSuspended = false;
+        if (!mPendingScoForA2dp) {
+            if (mA2dpSuspended) {
+                if (DBG) log("resuming A2DP stream after disconnecting SCO");
+                mA2dp.resumeSink(mA2dpDevice);
+                mA2dpSuspended = false;
+            }
+        } else { // already suspendSink is in progress, so wait for issuing resume
+            mPendingA2dpResume = true;
         }
 
         mPendingScoForA2dp = false;
@@ -2550,6 +2590,7 @@ public class BluetoothHandsfree {
                             // Hangup active call, answer held call
                             if (PhoneUtils.answerAndEndActive(
                                     PhoneApp.getInstance().mCM, ringingCall)) {
+                                mIsChld1Command = true;
                                 return new AtCommandResult(AtCommandResult.OK);
                             } else {
                                 return new AtCommandResult(AtCommandResult.ERROR);
@@ -2558,7 +2599,6 @@ public class BluetoothHandsfree {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                     } else if (args[0].equals(2)) {
-                        sendURC("OK");
                         if (phoneType == Phone.PHONE_TYPE_CDMA) {
                             // For CDMA, the way we switch to a new incoming call is by
                             // calling PhoneUtils.answerCall(). switchAndHoldActive() won't
@@ -2567,6 +2607,7 @@ public class BluetoothHandsfree {
                             // a flash cmd by calling switchHoldingAndActive()
                             if (ringingCall.isRinging()) {
                                 log("CHLD:2 Callwaiting Answer call");
+                                sendURC("OK");
                                 PhoneUtils.answerCall(ringingCall);
                                 PhoneUtils.setMute(false);
                                 // Setting the second callers state flag to TRUE (i.e. active)
@@ -2575,39 +2616,51 @@ public class BluetoothHandsfree {
                                     .getCurrentCallState()
                                     == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
                                 log("CHLD:2 Swap Calls");
+                                sendURC("OK");
                                 PhoneUtils.switchHoldingAndActive(backgroundCall);
                                 // Toggle the second callers active state flag
                                 cdmaSwapSecondCallState();
+                            } else {
+                                return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
+                            if (!mCM.hasActiveFgCall())
+                                return new AtCommandResult(AtCommandResult.ERROR);
+                            sendURC("OK");
                             PhoneUtils.switchHoldingAndActive(backgroundCall);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                         return new AtCommandResult(AtCommandResult.UNSOLICITED);
                     } else if (args[0].equals(3)) {
-                        sendURC("OK");
                         if (phoneType == Phone.PHONE_TYPE_CDMA) {
                             CdmaPhoneCallState.PhoneCallState state =
                                 PhoneApp.getInstance().cdmaPhoneCallState.getCurrentCallState();
                             // For CDMA, we need to check if the call is in THRWAY_ACTIVE state
                             if (state == CdmaPhoneCallState.PhoneCallState.THRWAY_ACTIVE) {
                                 log("CHLD:3 Merge Calls");
+                                sendURC("OK");
                                 PhoneUtils.mergeCalls();
                             } else if (state == CdmaPhoneCallState.PhoneCallState.CONF_CALL) {
+                                sendURC("OK");
                                 // State is CONF_CALL already and we are getting a merge call
                                 // This can happen when CONF_CALL was entered from a Call Waiting
                                 mBluetoothPhoneState.updateCallHeld();
+                            } else {
+                                return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
                             if (mCM.hasActiveFgCall() && mCM.hasActiveBgCall()) {
+                                sendURC("OK");
                                 PhoneUtils.mergeCalls();
-                            }
+                            } else
+                                return new AtCommandResult(AtCommandResult.ERROR);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
                         return new AtCommandResult(AtCommandResult.UNSOLICITED);
-                    }
+                    } else
+                        return new AtCommandResult(AtCommandResult.ERROR);
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
             }
@@ -2774,12 +2827,14 @@ public class BluetoothHandsfree {
         parser.register("+NREC", new AtCommandHandler() {
             @Override
             public AtCommandResult handleSetCommand(Object[] args) {
-                if (args[0].equals(0)) {
-                    mAudioManager.setParameters(HEADSET_NREC+"=off");
-                    return new AtCommandResult(AtCommandResult.OK);
-                } else if (args[0].equals(1)) {
-                    mAudioManager.setParameters(HEADSET_NREC+"=on");
-                    return new AtCommandResult(AtCommandResult.OK);
+                if (args.length == 1 && (args[0] instanceof Integer)) {
+                    if (args[0].equals(0)) {
+                        mAudioManager.setParameters(HEADSET_NREC+"=off");
+                        return new AtCommandResult(AtCommandResult.OK);
+                    } else if (args[0].equals(1)) {
+                        mAudioManager.setParameters(HEADSET_NREC+"=on");
+                        return new AtCommandResult(AtCommandResult.OK);
+                    }
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
             }
@@ -2803,6 +2858,8 @@ public class BluetoothHandsfree {
                                 return new AtCommandResult(AtCommandResult.ERROR);
                             }
                             expectVoiceRecognition();
+                        } else {
+                            return new AtCommandResult(AtCommandResult.ERROR);
                         }
                     }
                     return new AtCommandResult(AtCommandResult.UNSOLICITED);  // send nothing yet
@@ -2810,6 +2867,7 @@ public class BluetoothHandsfree {
                     if (isVoiceRecognitionInProgress()) {
                         audioOff();
                     }
+                    mHfInitiatedVrDeactivation = true;
                     return new AtCommandResult(AtCommandResult.OK);
                 }
                 return new AtCommandResult(AtCommandResult.ERROR);
@@ -2843,6 +2901,11 @@ public class BluetoothHandsfree {
             public AtCommandResult handleSetCommand(Object[] args) {
                 // AT+VGM=<gain>    in range [0,15]
                 // Headset/Handsfree is reporting its current gain setting
+                if (args.length != 1 || !(args[0] instanceof Integer)) {
+                    return new AtCommandResult(AtCommandResult.ERROR);
+                }
+                if ((Integer) args[0] > 15) // Invalid VGM gain
+                    return new AtCommandResult(AtCommandResult.ERROR);
                 return new AtCommandResult(AtCommandResult.OK);
             }
         });
@@ -2855,6 +2918,8 @@ public class BluetoothHandsfree {
                 if (args.length != 1 || !(args[0] instanceof Integer)) {
                     return new AtCommandResult(AtCommandResult.ERROR);
                 }
+                if ((Integer) args[0] > 15) // Invalid VGS gain
+                    return new AtCommandResult(AtCommandResult.ERROR);
                 mScoGain = (Integer) args[0];
                 int flag =  mAudioManager.isBluetoothScoOn() ? AudioManager.FLAG_SHOW_UI:0;
 
@@ -2883,6 +2948,13 @@ public class BluetoothHandsfree {
             }
         });
 
+        // End of AT commands for HFP 1.5
+        if (mVersion < VERSION_1_6) {
+            mPhonebook.register(parser);
+            return;
+        }
+
+        // AT commands only for HFP 1.6 below this line
         // Codec Connection
         parser.register("+BCC", new AtCommandHandler() {
             @Override
@@ -3016,8 +3088,10 @@ public class BluetoothHandsfree {
                             mIIEnabled[ii] = true;
                         } else if ((Integer)args[ai] == 0) {
                             mIIEnabled[ii] = false;
-                        }
-                    }
+                        } else
+                            return new AtCommandResult(AtCommandResult.ERROR);
+                    } else
+                        return new AtCommandResult(AtCommandResult.ERROR);
                 }
                 return new AtCommandResult(AtCommandResult.OK);
             }
@@ -3108,9 +3182,12 @@ public class BluetoothHandsfree {
         if (!isVoiceRecognitionInProgress()) {
             return false;
         }
-
         mVoiceRecognitionStarted = false;
-
+        if (mHfInitiatedVrDeactivation == true) {
+            mHfInitiatedVrDeactivation = false;
+            //No need to send +BVRA and calling audioOff() as it is already done.
+            return false;
+        }
         sendURC("+BVRA: 0");
         audioOff();
         return true;
