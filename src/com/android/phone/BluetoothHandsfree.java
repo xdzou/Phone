@@ -106,6 +106,7 @@ public class BluetoothHandsfree {
     private IncomingScoAcceptThread mIncomingScoThread = null;
     private ScoSocketConnectThread mConnectScoThread = null;
     private SignalScoCloseThread mSignalScoCloseThread = null;
+    private ScoSocketDisconnectThread mDisconnectScoThread = null;
 
     private AudioManager mAudioManager;
     private PowerManager mPowerManager;
@@ -483,7 +484,7 @@ public class BluetoothHandsfree {
 
         // must be called with BluetoothHandsfree locked
         void shutdown() {
-            closeConnectedSco();
+            disconnectScoThread();
 
             // sync with isInterrupted() check in failedScoConnect method
             // see explanation there
@@ -492,6 +493,70 @@ public class BluetoothHandsfree {
             }
         }
     }
+
+
+     private void disconnectScoThread(){
+         // Sync with setting mConnectScoThread to null to assure the validity of
+         // the condition
+         synchronized (ScoSocketDisconnectThread.class) {
+             if (mConnectedSco == null) {
+                 if (DBG) log("SCO audio is already disconnected");
+                 return;
+             }
+
+             if (mDisconnectScoThread == null) {
+                 BluetoothDevice device = mHeadset.getRemoteDevice();
+
+                 mDisconnectScoThread = new ScoSocketDisconnectThread();
+                 mDisconnectScoThread.setName("HandsfreeScoSocketDisconnectThread");
+
+                 mDisconnectScoThread.start();
+             }
+         }
+    }
+
+
+    private class ScoSocketDisconnectThread extends Thread{
+        @Override
+        public void run() {
+            Log.e(TAG, "Before Sco disconnect");
+            if (mConnectedSco != null) {
+                try {
+                    mConnectedSco.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error when closing Sco socket");
+                }
+            }
+            Log.e(TAG, "After Sco disconnect");
+            closeConnectedSco();
+        }
+
+        private void closeConnectedSco() {
+            if (mConnectedSco != null) {
+                BluetoothDevice device = null;
+                if (mHeadset != null) {
+                    device = mHeadset.getRemoteDevice();
+                }
+                if (mAudioManager.isSpeakerphoneOn()) {
+                    // User option might be speaker as sco disconnection
+                    // is delayed setting back the speaker option.
+                    mAudioManager.setBluetoothScoOn(false);
+                    mAudioManager.setSpeakerphoneOn(true);
+                } else {
+                    mAudioManager.setBluetoothScoOn(false);
+                }
+                synchronized(BluetoothHandsfree.this) {
+                    mConnectedSco = null;
+                    setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
+                                  device);
+                }
+            }
+            synchronized (ScoSocketDisconnectThread.class) {
+                mDisconnectScoThread = null;
+            }
+        }
+    }
+
 
     /*
      * Signals when a Sco connection has been closed
@@ -535,7 +600,7 @@ public class BluetoothHandsfree {
         // must be called with BluetoothHandsfree locked
         void shutdown() {
             stopped = true;
-            closeConnectedSco();
+            disconnectScoThread();
             interrupt();
         }
     }
@@ -567,29 +632,6 @@ public class BluetoothHandsfree {
         // Sync with if (mConnectScoThread == null) check
         synchronized (ScoSocketConnectThread.class) {
             mConnectScoThread = null;
-        }
-    }
-
-    // must be called with BluetoothHandsfree locked
-    private void closeConnectedSco() {
-        if (mConnectedSco != null) {
-            try {
-                mConnectedSco.close();
-            } catch (IOException e) {
-                Log.e(TAG, "Error when closing Sco socket");
-            }
-
-            BluetoothDevice device = null;
-            if (mHeadset != null) {
-                device = mHeadset.getRemoteDevice();
-            }
-            mAudioManager.setBluetoothScoOn(false);
-            synchronized(BluetoothHandsfree.this) {
-                setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
-                              device);
-            }
-
-            mConnectedSco = null;
         }
     }
 
@@ -1787,11 +1829,13 @@ public class BluetoothHandsfree {
             }
         }
 
-        closeConnectedSco();    // Should be closed already, but just in case
+        disconnectScoThread();    // Should be closed already, but just in case
     }
 
     /* package */ boolean isAudioOn() {
-        return (mConnectedSco != null);
+        synchronized(BluetoothHandsfree.this) {
+            return (mConnectedSco != null);
+        }
     }
 
     private boolean isA2dpMultiProfile() {
