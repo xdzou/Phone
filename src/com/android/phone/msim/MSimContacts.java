@@ -57,4 +57,16 @@ public class MSimContacts extends SimContacts {
         return intent.getData();
     }
 
+    @Override
+    protected Uri getUri() {
+        mSubscription = MSimTelephonyManager.getDefault().getPreferredVoiceSubscription();
+        if (mSubscription == SUB1) {
+            return Uri.parse("content://iccmsim/adn");
+        } else if (mSubscription == SUB2) {
+            return Uri.parse("content://iccmsim/adn_sub2");
+        } else {
+            Log.d(TAG, "Invalid subcription");
+            return null;
+        }
+    }
 }
