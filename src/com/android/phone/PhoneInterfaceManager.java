@@ -276,7 +276,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         Intent intent = new Intent(TelephonyIntents.ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW);
         intent.putExtra("payload", payload);
         Log.d(LOG_TAG,"Broadcasting intent ACTION_UNSOL_RESPONSE_OEM_HOOK_RAW");
-        mApp.sendBroadcast(intent);
+        mApp.mContext.sendBroadcast(intent);
     }
 
     /**
@@ -793,13 +793,13 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     public List<CellInfo> getAllCellInfo() {
         try {
-            mApp.enforceCallingOrSelfPermission(
+            mApp.mContext.enforceCallingOrSelfPermission(
                 android.Manifest.permission.ACCESS_FINE_LOCATION, null);
         } catch (SecurityException e) {
             // If we have ACCESS_FINE_LOCATION permission, skip the check for ACCESS_COARSE_LOCATION
             // A failure should throw the SecurityException from ACCESS_COARSE_LOCATION since this
             // is the weaker precondition
-            mApp.enforceCallingOrSelfPermission(
+            mApp.mContext.enforceCallingOrSelfPermission(
                 android.Manifest.permission.ACCESS_COARSE_LOCATION, null);
         }
 
@@ -817,7 +817,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      * @throws SecurityException if the caller does not have the required permission
      */
     private void enforceReadPermission() {
-        mApp.enforceCallingOrSelfPermission(android.Manifest.permission.READ_PHONE_STATE, null);
+        mApp.mContext.enforceCallingOrSelfPermission(
+                android.Manifest.permission.READ_PHONE_STATE, null);
     }
 
     /**
