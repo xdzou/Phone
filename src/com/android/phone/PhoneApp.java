@@ -1644,7 +1644,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                 // to know if the phone is in airplane mode so that RIL can
                 // power down the ICC card.
                 Log.d(LOG_TAG, "Setting property " + PROPERTY_AIRPLANE_MODE_ON);
-                SystemProperties.set(PROPERTY_AIRPLANE_MODE_ON, (enabled ? "1" : "0"));
+                // enabled here implies airplane mode is OFF from above
+                // condition.
+                SystemProperties.set(PROPERTY_AIRPLANE_MODE_ON, (enabled ? "0" : "1"));
 
                 phone.setRadioPower(enabled);
             } else if (action.equals(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED)) {
