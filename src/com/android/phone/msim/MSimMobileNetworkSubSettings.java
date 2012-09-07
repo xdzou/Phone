@@ -153,9 +153,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
 
             //Get the networkMode from Settings.System and displays it
-            int settingsNetworkMode = android.provider.Settings.Secure.getInt(mPhone.getContext().
-                    getContentResolver(),android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                    preferredNetworkMode);
+            int settingsNetworkMode = getPreferredNetworkMode();
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
             mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
             mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mSubscription);
@@ -172,10 +170,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                             R.array.preferred_network_mode_choices_lte);
                     mButtonPreferredNetworkMode.setEntryValues(
                             R.array.preferred_network_mode_values_lte);
-                    int settingsNetworkMode = android.provider.Settings.Secure.getInt(
-                            mPhone.getContext().getContentResolver(),
-                            android.provider.Settings.Secure.PREFERRED_NETWORK_MODE,
-                            preferredNetworkMode);
+                    int settingsNetworkMode = getPreferredNetworkMode();
                     mButtonPreferredNetworkMode.setValue(
                             Integer.toString(settingsNetworkMode));
                 }
