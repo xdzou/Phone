@@ -204,6 +204,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
+        if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
     }
 
     @Override
