@@ -183,8 +183,9 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                         // CDMA: If the user presses the Power button we treat it as
                         // ending the complete call session
                         hungUp = PhoneUtils.hangupRingingAndActive(mPhone);
-                    } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                        // GSM: End the call as per the Phone state
+                    } else if ((phoneType == Phone.PHONE_TYPE_GSM) ||
+                            (phoneType == Phone.PHONE_TYPE_IMS)) {
+                        // GSM/IMS: End the call as per the Phone state
                         hungUp = PhoneUtils.hangup(mCM);
                     } else {
                         throw new IllegalStateException("Unexpected phone type: " + phoneType);
