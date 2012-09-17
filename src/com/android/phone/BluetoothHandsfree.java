@@ -2672,11 +2672,12 @@ public class BluetoothHandsfree {
                                 return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                            if (!mCM.hasActiveFgCall() || !mCM.hasActiveBgCall())
-                                return new AtCommandResult(AtCommandResult.ERROR);
-
-                            sendURC("OK");
-                            PhoneUtils.switchHoldingAndActive(backgroundCall);
+                            if (mCM.hasActiveFgCall() || mCM.hasActiveBgCall() ||
+                                (mCM.hasActiveRingingCall() && (mCM.hasActiveFgCall() ||
+                                mCM.hasActiveBgCall()))) {
+                                sendURC("OK");
+                                PhoneUtils.switchHoldingAndActive(backgroundCall);
+                            } else return new AtCommandResult(AtCommandResult.ERROR);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
