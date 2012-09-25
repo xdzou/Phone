@@ -47,6 +47,7 @@ import android.widget.TextView;
 
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 
 import static android.view.Window.PROGRESS_VISIBILITY_OFF;
 import static android.view.Window.PROGRESS_VISIBILITY_ON;
@@ -94,21 +95,11 @@ public class ExportContactsToSim extends Activity {
 
         new Thread(new Runnable() {
             public void run() {
-                //Local adnList will be empty till query the SIM contacts
-                //So unable to export phone contacts to SIM.
-                //Before export contacts to SIM need to query SIM contacts.
-                Uri uri = getUri();
-                if (uri == null)  return;
-                Cursor simContactsCur = getContentResolver().query(uri,
-                        COLUMN_NAMES, null, null, null);
-
                 Cursor contactsCursor = getContactsContentCursor();
-                for (int i=0; contactsCursor.moveToNext(); i++) {
-                    String id = getContactIdFromCursor(contactsCursor);
-                    Cursor dataCursor = getDataCursorRelatedToId(id);
-                    populateContactDataFromCursor(dataCursor );
-                    dataCursor.close();
+                for (int i = 0; contactsCursor.moveToNext(); i++) {
+                    populateContactDataFromCursor(contactsCursor );
                 }
+
                 contactsCursor.close();
                 Message message = Message.obtain(mHandler, CONTACTS_EXPORTED, (Integer)mResult);
                 mHandler.sendMessage(message);
@@ -117,28 +108,14 @@ public class ExportContactsToSim extends Activity {
     }
 
     private Cursor getContactsContentCursor() {
-        Uri phoneBookContentUri = ContactsContract.Contacts.CONTENT_URI;
-        String recordsWithPhoneNumberOnly = ContactsContract.Contacts.HAS_PHONE_NUMBER
-                + "='1'";
+        Uri phoneBookContentUri = Phone.CONTENT_URI;
+        String selection = ContactsContract.Contacts.HAS_PHONE_NUMBER +
+                "='1' AND (account_type is NULL OR account_type !=?)";
+        String[] selectionArg = new String[] {"SIM"};
 
         Cursor contactsCursor = managedQuery(phoneBookContentUri, null,
-                recordsWithPhoneNumberOnly, null, null);
+                selection, selectionArg, null);
         return contactsCursor;
-    }
-
-    private String getContactIdFromCursor(Cursor contactsCursor) {
-        String id = contactsCursor.getString(contactsCursor
-                .getColumnIndex(ContactsContract.Contacts._ID));
-        return id;
-    }
-
-    private Cursor getDataCursorRelatedToId(String id) {
-        String where = ContactsContract.Data.CONTACT_ID + " = " + id;
-
-
-        Cursor dataCursor = getContentResolver().query(
-                ContactsContract.Data.CONTENT_URI, null, where, null, null);
-        return dataCursor;
     }
 
     private void populateContactDataFromCursor(final Cursor dataCursor) {
@@ -153,22 +130,21 @@ public class ExportContactsToSim extends Activity {
         int phoneIdx = dataCursor
                 .getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
 
-        if (dataCursor.moveToFirst()) {
-            // Extract the name.
-            String name = dataCursor.getString(nameIdx);
-            // Extract the phone number.
-            String rawNumber = dataCursor.getString(phoneIdx);
-            String number = PhoneNumberUtils.normalizeNumber(rawNumber);
-            ContentValues values = new ContentValues();
-            values.put("tag", name);
-            values.put("number", number);
-            Log.d("ExportContactsToSim", "name : " + name + " number : " + number);
-            contactUri = getContentResolver().insert(uri, values);
-            if (contactUri == null) {
-                Log.e("ExportContactsToSim", "Failed to export contact to SIM for " +
-                        "name : " + name + " number : " + number);
-                mResult = 0;
-            }
+        // Extract the name.
+        String name = dataCursor.getString(nameIdx);
+        // Extract the phone number.
+        String rawNumber = dataCursor.getString(phoneIdx);
+        String number = PhoneNumberUtils.normalizeNumber(rawNumber);
+
+        ContentValues values = new ContentValues();
+        values.put("tag", name);
+        values.put("number", number);
+        Log.d("ExportContactsToSim", "name : " + name + " number : " + number);
+        contactUri = getContentResolver().insert(uri, values);
+        if (contactUri == null) {
+            Log.e("ExportContactsToSim", "Failed to export contact to SIM for " +
+                    "name : " + name + " number : " + number);
+            mResult = 0;
         }
     }
 
