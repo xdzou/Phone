@@ -482,7 +482,8 @@ public class InCallTouchUi extends FrameLayout
         }
         if (inCallControlState.canAddCall && inCallControlState.canMerge) {
             if ((phoneType == Phone.PHONE_TYPE_GSM)
-                    || (phoneType == Phone.PHONE_TYPE_SIP)) {
+                    || (phoneType == Phone.PHONE_TYPE_SIP)
+                    || (phoneType == Phone.PHONE_TYPE_IMS)) {
                 // Uh oh, the InCallControlState thinks that "Add" *and* "Merge"
                 // should both be available right now.  This *should* never
                 // happen with GSM, but if it's possible on any
