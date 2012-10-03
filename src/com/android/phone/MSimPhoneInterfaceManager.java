@@ -32,6 +32,7 @@ import android.os.ServiceManager;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
+import android.telephony.MSimTelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -685,12 +686,32 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
 
     public int enableApnType(String type) {
         enforceModifyPermission();
-        return getPhone(mApp.getDataSubscription()).enableApnType(type);
+        int result = Phone.APN_REQUEST_FAILED;
+        int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
+        int dds = (mApp).getDataSubscription();
+        for (int i = 0; i < numPhones; i++) {
+            int ret = getPhone(i).enableApnType(type);
+            if (i == dds) {
+                result = ret;
+                Log.d(LOG_TAG, "enableApnType result is " + result);
+            }
+        }
+        return result;
     }
 
     public int disableApnType(String type) {
         enforceModifyPermission();
-        return getPhone(mApp.getDataSubscription()).disableApnType(type);
+        int result = Phone.APN_REQUEST_FAILED;
+        int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
+        int dds = (mApp).getDataSubscription();
+        for (int i = 0; i < numPhones; i++) {
+            int ret = getPhone(i).disableApnType(type);
+            if (i == dds) {
+                Log.d(LOG_TAG, "disableApnType result is " + result);
+                result = ret;
+            }
+        }
+        return result;
     }
 
     public boolean disableDataConnectivity() {
