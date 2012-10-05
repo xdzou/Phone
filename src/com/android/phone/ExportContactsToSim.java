@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -25,6 +24,7 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 package com.android.phone;
@@ -50,6 +50,7 @@ import android.content.DialogInterface.OnClickListener;
 
 import static android.view.Window.PROGRESS_VISIBILITY_OFF;
 import static android.view.Window.PROGRESS_VISIBILITY_ON;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
 
@@ -57,6 +58,7 @@ public class ExportContactsToSim extends Activity {
     private static final String TAG = "ExportContactsToSim";
     private TextView mEmptyText;
     private int mResult = 1;
+    protected boolean mIsForeground = false;
 
     private static final int CONTACTS_EXPORTED = 1;
     private static final String[] COLUMN_NAMES = new String[] {
@@ -72,6 +74,18 @@ public class ExportContactsToSim extends Activity {
         setContentView(R.layout.export_contact_screen);
         mEmptyText = (TextView) findViewById(android.R.id.empty);
         doExportToSim();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mIsForeground = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mIsForeground = false;
     }
 
     private void doExportToSim() {
@@ -159,6 +173,10 @@ public class ExportContactsToSim extends Activity {
     }
 
     private void showAlertDialog(String value) {
+        if (!mIsForeground) {
+            Log.d(TAG, "The activitiy is not in foreground. Do not display dialog!!!");
+            return;
+        }
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle("Result...");
         alertDialog.setMessage(value);
@@ -195,8 +213,11 @@ public class ExportContactsToSim extends Activity {
     };
 
     private Uri getUri() {
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
         if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            int subscription = MSimTelephonyManager.getDefault().getPreferredVoiceSubscription();
+            int subscription  = extras.getInt(SUBSCRIPTION_KEY);
+            Log.d("ExportContactsToSim"," subscription : " + subscription);
             if (subscription == SUB1) {
                 return Uri.parse("content://iccmsim/adn");
             } else if (subscription == SUB2) {

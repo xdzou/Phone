@@ -22,9 +22,11 @@ package com.android.phone;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.telephony.MSimTelephonyManager;
 import android.util.Log;
 
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
 
@@ -39,7 +41,8 @@ public class MSimContacts extends SimContacts {
     @Override
     protected Uri resolveIntent() {
         Intent intent = getIntent();
-        mSubscription = MSimTelephonyManager.getDefault().getPreferredVoiceSubscription();
+        Bundle extras = intent.getExtras();
+        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
         if (mSubscription == SUB1) {
             intent.setData(Uri.parse("content://iccmsim/adn"));
         } else if (mSubscription == SUB2) {
@@ -59,7 +62,9 @@ public class MSimContacts extends SimContacts {
 
     @Override
     protected Uri getUri() {
-        mSubscription = MSimTelephonyManager.getDefault().getPreferredVoiceSubscription();
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
         if (mSubscription == SUB1) {
             return Uri.parse("content://iccmsim/adn");
         } else if (mSubscription == SUB2) {
