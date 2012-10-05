@@ -2717,7 +2717,9 @@ public class PhoneUtils {
      */
     public static boolean useShortDtmfTones(Phone phone, Context context) {
         int phoneType = phone.getPhoneType();
-        if (phoneType == Phone.PHONE_TYPE_GSM) {
+        if ((phoneType == Phone.PHONE_TYPE_GSM)
+                || (phoneType == Phone.PHONE_TYPE_SIP)
+                || (phoneType == Phone.PHONE_TYPE_IMS)) {
             return false;
         } else if (phoneType == Phone.PHONE_TYPE_CDMA) {
             int toneType = android.provider.Settings.System.getInt(
@@ -2729,8 +2731,6 @@ public class PhoneUtils {
             } else {
                 return false;
             }
-        } else if (phoneType == Phone.PHONE_TYPE_SIP) {
-            return false;
         } else {
             throw new IllegalStateException("Unexpected phone type: " + phoneType);
         }
