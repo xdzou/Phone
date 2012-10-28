@@ -45,7 +45,6 @@ import android.os.SystemProperties;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -2672,15 +2671,18 @@ public class PhoneUtils {
         return null;
     }
 
-    public static Phone getIMSPhone(CallManager cm) {
+    private static Phone getIMSPhone(CallManager cm) {
+        if (DBG) { log("Find IMS phone:"); }
         for (Phone phone : cm.getAllPhones()) {
-            if ((phone.getPhoneType() == Phone.PHONE_TYPE_IMS) &&
-                    (phone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE)) {
-                log("found IMSPhone = " + phone + ", " + phone.getClass());
+            if (phone.getPhoneType() == Phone.PHONE_TYPE_IMS) {
+                if (DBG) {
+                    log("- pickPhoneBasedOnNumber:" +
+                            "found IMSPhone! obj = " + phone + ", "
+                            + phone.getClass());
+                }
                 return phone;
             }
         }
-        if (DBG) log("IMS phone not present/IMS not registered");
         return null;
     }
 
