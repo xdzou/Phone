@@ -2665,27 +2665,26 @@ public class BluetoothHandsfree {
                         }
                     } else if (args[0].equals(1)) {
                         if (phoneType == Phone.PHONE_TYPE_CDMA) {
-                            if (ringingCall.isRinging()) {
+                            //AT+CHLD=1 should only work in three way call.
+                            if (ringingCall.isRinging()&& mCM.hasActiveFgCall()) {
                                 // Hangup the active call and then answer call waiting call.
                                 log("CHLD:1 Callwaiting Answer call");
                                 PhoneUtils.hangupRingingAndActive(phone);
-                            } else {
-                                // If there is no Call waiting then just hangup
-                                // the active call. In CDMA this mean that the complete
-                                // call session would be ended
-                                log("CHLD:1 Hangup Call");
-                                PhoneUtils.hangup(PhoneApp.getInstance().mCM);
-                            }
+                            } else return new AtCommandResult(AtCommandResult.ERROR);
+
                             return new AtCommandResult(AtCommandResult.OK);
-                        } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                            // Hangup active call, answer held call
-                            if (PhoneUtils.answerAndEndActive(
-                                    PhoneApp.getInstance().mCM, ringingCall)) {
-                                mIsChld1Command = true;
-                                return new AtCommandResult(AtCommandResult.OK);
-                            } else {
-                                return new AtCommandResult(AtCommandResult.ERROR);
-                            }
+                        } else if (phoneType == Phone.PHONE_TYPE_GSM){
+                            //AT+CHLD=1 should only work in three way call.
+                            if ((mCM.hasActiveRingingCall() || mCM.hasActiveBgCall()) && mCM.hasActiveFgCall()){
+                                // Hangup active call, answer held call
+                                if (PhoneUtils.answerAndEndActive(
+                                        PhoneApp.getInstance().mCM, ringingCall)) {
+                                    mIsChld1Command = true;
+                                    return new AtCommandResult(AtCommandResult.OK);
+                                } else {
+                                    return new AtCommandResult(AtCommandResult.ERROR);
+                                }
+                            } else return new AtCommandResult(AtCommandResult.ERROR);
                         } else {
                             throw new IllegalStateException("Unexpected phone type: " + phoneType);
                         }
@@ -2715,8 +2714,9 @@ public class BluetoothHandsfree {
                                 return new AtCommandResult(AtCommandResult.ERROR);
                             }
                         } else if (phoneType == Phone.PHONE_TYPE_GSM) {
-                            if (!mCM.hasActiveFgCall())
+                            if (!mCM.hasActiveFgCall() || !mCM.hasActiveBgCall())
                                 return new AtCommandResult(AtCommandResult.ERROR);
+
                             sendURC("OK");
                             PhoneUtils.switchHoldingAndActive(backgroundCall);
                         } else {
