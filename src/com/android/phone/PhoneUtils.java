@@ -2674,13 +2674,12 @@ public class PhoneUtils {
 
     public static Phone getIMSPhone(CallManager cm) {
         for (Phone phone : cm.getAllPhones()) {
-            if ((phone.getPhoneType() == Phone.PHONE_TYPE_IMS) &&
-                    (phone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE)) {
+            if (phone.getPhoneType() == Phone.PHONE_TYPE_IMS) {
                 log("found IMSPhone = " + phone + ", " + phone.getClass());
                 return phone;
             }
         }
-        if (DBG) log("IMS phone not present/IMS not registered");
+        if (DBG) log("IMS phone not present");
         return null;
     }
 
@@ -2910,6 +2909,40 @@ public class PhoneUtils {
      */
     public static boolean isCallOnImsEnabled() {
         return SystemProperties.getBoolean(CALLS_ON_IMS_ENABLED_PROPERTY, false);
+    }
+
+    /**
+     * If the intent is not  already the IMS intent, conert the intent to the
+     * IMS intent
+     */
+    public static void convertCallToIMS( Intent intent, int callType) {
+        Uri uri = intent.getData();
+        String scheme = uri.getScheme();
+        String number = PhoneNumberUtils.getNumberFromIntent(intent, PhoneApp.getInstance());
+        String imsNumber = PhoneNumberUtils.stripSeparators(number);
+
+        log( "Intent for IMS conversion:" + intent + "extras" + intent.getExtras());
+
+        // If it is already an IMS intent then leave the call intent as is
+        if (PhoneUtils.isIMSCallIntent(scheme, intent)) {
+            log("IMS Conversion not required ");
+        } else {
+
+            intent.setData(Uri.fromParts(Constants.SCHEME_SIP, imsNumber, null));
+            intent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE, callType);
+
+            /*
+             * If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present, set the
+             * phone number there. (That extra takes precedence over the actual
+             * number included in the intent.)
+             */
+            if (intent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
+                intent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
+                        imsNumber);
+            }
+            log("IMS Converted intent: "+ intent + "extras" + intent.getExtras());
+        }
+        return;
     }
 
     private static void log(String msg) {
