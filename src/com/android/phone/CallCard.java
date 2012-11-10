@@ -1,6 +1,9 @@
 /*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,6 +126,7 @@ public class CallCard extends LinearLayout
     private ImageView mPhoto;
     private View mPhotoDimEffect;
 
+    private VideoCallPanel mVideoCallPanel;
     private TextView mName;
     private TextView mPhoneNumber;
     private TextView mLabel;
@@ -175,6 +179,8 @@ public class CallCard extends LinearLayout
         }
     };
 
+    private boolean isVTinitialized = false;
+
     public CallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -195,6 +201,15 @@ public class CallCard extends LinearLayout
 
     /* package */ void setInCallScreenInstance(InCallScreen inCallScreen) {
         mInCallScreen = inCallScreen;
+    }
+
+    /**
+     * Called when the InCallScreen activity is being paused
+     */
+    void onPause() {
+        if (isVideoCallWidgetVisible()) {
+            mVideoCallPanel.onPause();
+        }
     }
 
     @Override
@@ -240,6 +255,9 @@ public class CallCard extends LinearLayout
 
         // Secondary info area, for the background ("on hold") call
         mSecondaryCallInfo = (ViewStub) findViewById(R.id.secondary_call_info);
+
+        // VideoCallPanel for Video Telephony calls
+        mVideoCallPanel = (VideoCallPanel) findViewById(R.id.videoCallPanel);
     }
 
     /**
@@ -518,6 +536,11 @@ public class CallCard extends LinearLayout
 
         updateCallStateWidgets(call);
 
+        // If this is a video call then update the state of the VideoCallPanel
+        if (isVideoCall(call)) {
+            updateVideoCallState(call);
+        }
+
         if (PhoneUtils.isConferenceCall(call)) {
             // Update onscreen info for a conference call.
             updateDisplayForConference(call);
@@ -661,6 +684,126 @@ public class CallCard extends LinearLayout
         // mPhoneNumber and mLabel. (Their text / color / visibility have
         // already been set correctly, by either updateDisplayForPerson()
         // or updateDisplayForConference().)
+    }
+
+    /**
+     * Check to see if the call is a video call
+     *
+     * @param call
+     * @return true if the call is a video call
+     */
+    private boolean isVideoCall(Call call) {
+        return PhoneUtils.isIMSVideoCall(call);
+    }
+
+    /**
+     * Updates the VideoCallPanel based on the current state of the call
+     *
+     * @param call
+     */
+    private void updateVideoCallState(Call call) {
+        Call.State state = call.getState();
+        if (DBG) log("  - Videocall.state: " + state);
+
+        // Null check
+        if (mVideoCallPanel == null) {
+            log("VideocallPanel is null");
+            return;
+        }
+
+        switch (state) {
+            case DIALING: // These are an intentional fall through(s)
+            case INCOMING:
+            case ALERTING:
+                initVideoCall();
+                break;
+
+            case ACTIVE:
+                // If phone app didn't receive the previous call states such as
+                // dialing and alerting, make sure that the video call is still
+                // initialized
+                initVideoCall();
+
+                // Show video call widget
+                showVideoCallWidgets();
+                break;
+
+            case DISCONNECTED:
+                isVTinitialized = false;
+                mVideoCallPanel.onCallDisconnect();
+                hideVideoCallWidgets();
+                break;
+            default:
+                hideVideoCallWidgets();
+                break;
+        }
+    }
+
+    /**
+     * If this is a video call then hide the photo widget and show the
+     * video call panel.
+     */
+    private void showVideoCallWidgets() {
+        if (DBG) log("show videocall widget");
+        mPhoto.setVisibility(View.GONE);
+        mVideoCallPanel.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Hide the video call widget and restore the photo widget
+     */
+    private void hideVideoCallWidgets() {
+        if (DBG) log("Hide videocall widget");
+        mPhoto.setVisibility(View.VISIBLE);
+        mVideoCallPanel.setVisibility(View.GONE);
+    }
+
+    /**
+     * Initializes the video call widgets if not already initialized
+     */
+    private void initVideoCall() {
+        if (!isVTinitialized) {
+            mVideoCallPanel.onCallInitiating();
+            switchInVideoCallAudio(); // Set audio to speaker by default
+            isVTinitialized = true;
+        }
+    }
+
+    /**
+     * Return true if video call panel is available and is visible
+     *
+     * @return
+     */
+    private boolean isVideoCallWidgetVisible() {
+        return ((mVideoCallPanel != null) && (mVideoCallPanel.getVisibility() == View.VISIBLE));
+    }
+
+    /**
+     * Switches the current routing of in-call audio for the video call
+     */
+    private void switchInVideoCallAudio() {
+        if (DBG) log("In switchInVideoCallAudio");
+
+        // If the wired headset is connected then the AudioService takes care of
+        // routing audio to the headset
+        if (mApplication.isHeadsetPlugged()) {
+            if (DBG) log("Wired headset connected, not routing audio to speaker");
+            return;
+        }
+
+        // If the bluetooth is available then BluetoothHandsfree class takes
+        // care of making sure that the audio is routed to Bluetooth by default.
+        // However if the audio is not connected to Bluetooth because user wanted
+        // audio off then continue to turn on the speaker
+        if (mInCallScreen.isBluetoothAvailable()
+                && mInCallScreen.isBluetoothAudioConnectedOrPending()) {
+            if (DBG) log("Bluetooth connected, not routing audio to speaker");
+            return;
+        }
+
+        // If the bluetooth headset or the wired headset is not connected then
+        // turn on speaker by default for the VT call
+        mInCallScreen.switchInCallAudio(InCallScreen.InCallAudioMode.SPEAKER);
     }
 
     protected void cancelTimer(Call call) {
@@ -1594,7 +1737,7 @@ public class CallCard extends LinearLayout
      *
      *  @return true if we were able to find the image in the cache, false otherwise.
      */
-    private static final boolean showCachedImage(ImageView view, CallerInfo ci) {
+    private boolean showCachedImage(ImageView view, CallerInfo ci) {
         if ((ci != null) && ci.isCachedPhotoCurrent) {
             if (ci.cachedPhoto != null) {
                 showImage(view, ci.cachedPhoto);
@@ -1607,27 +1750,36 @@ public class CallCard extends LinearLayout
     }
 
     /** Helper function to display the resource in the imageview AND ensure its visibility.*/
-    private static final void showImage(ImageView view, int resource) {
+    private final void showImage(ImageView view, int resource) {
         showImage(view, view.getContext().getResources().getDrawable(resource));
     }
 
-    private static final void showImage(ImageView view, Bitmap bitmap) {
+    private final void showImage(ImageView view, Bitmap bitmap) {
         showImage(view, new BitmapDrawable(view.getContext().getResources(), bitmap));
     }
 
-    /** Helper function to display the drawable in the imageview AND ensure its visibility.*/
-    private static final void showImage(ImageView view, Drawable drawable) {
+    /**
+     * Helper function to display the drawable in the imageview AND ensure its
+     * visibility. The InCallContactPhoto and VideoCallPanel are mutually
+     * exclusive. Show InCallContactPhoto view only if VideoCallPanel is not
+     * visible.
+     */
+    private final void showImage(ImageView view, Drawable drawable) {
         Resources res = view.getContext().getResources();
         Drawable current = (Drawable) view.getTag();
 
-        if (current == null) {
-            if (DBG) log("Start fade-in animation for " + view);
-            view.setImageDrawable(drawable);
-            AnimationUtils.Fade.show(view);
-            view.setTag(drawable);
+        if ((mVideoCallPanel != null) && mVideoCallPanel.getVisibility() != View.VISIBLE) {
+            if (current == null) {
+                if (DBG) log("Start fade-in animation for " + view);
+                view.setImageDrawable(drawable);
+                AnimationUtils.Fade.show(view);
+                view.setTag(drawable);
+            } else {
+                AnimationUtils.startCrossFade(view, current, drawable);
+                view.setVisibility(View.VISIBLE);
+            }
         } else {
-            AnimationUtils.startCrossFade(view, current, drawable);
-            view.setVisibility(View.VISIBLE);
+            view.setVisibility(View.INVISIBLE);
         }
     }
 
