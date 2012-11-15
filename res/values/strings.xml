@@ -732,14 +732,18 @@
     <!-- button name for direct launch of Call Feature screen for Single Sim Functionality -->
     <string name="callind">Call Feature Settings</string>
 
-    <!-- dual sub one, setting option name -->
-    <string name="subone">Subscription 1</string>
-    <!-- dual mode settings screen, setting summary text -->
-    <string name="sub_one">Manage Subscription 1</string>
-    <!-- dual sub two, setting option name -->
-    <string name="subtwo">Subscription 2</string>
-    <!-- dual mode settings screen, setting summary text -->
-    <string name="sub_two">Manage Subscription 2</string>
+    <!-- multi sub one, setting option name -->
+    <string name="sub1">Subscription 1</string>
+    <!-- multi mode settings screen, setting summary text -->
+    <string name="sub1_summary">Manage Subscription 1</string>
+    <!-- multi sub two, setting option name -->
+    <string name="sub2">Subscription 2</string>
+    <!-- multi mode settings screen, setting summary text -->
+    <string name="sub2_summary">Manage Subscription 2</string>
+    <!-- multi sub three, setting option name -->
+    <string name="sub3">Subscription 3</string>
+    <!-- multi sim settings screen, setting summary text -->
+    <string name="sub3_summary">Manage Subscription 3</string>
 
     <!-- dual prompt, setting option name -->
     <string name="prompt">Prompt</string>
@@ -1687,9 +1691,11 @@
     <!-- Set Subscription screen: set subscription option name -->
     <string name="set_subscription">Select subscriptions</string>
     <!-- Set Subscription screen: label Card 1 -->
-    <string name="card_01">Card 1</string>
+    <string name="card_01">Card 1 / SUB 1</string>
     <!-- Set Subscription screen: label Card 2 -->
-    <string name="card_02">Card 2</string>
+    <string name="card_02">Card 2 / SUB 2</string>
+    <!-- Set Subscription screen: label Card 3 -->
+    <string name="card_03">Card 3 / SUB 3</string>
 
     <!-- Set dual dialer for MultiSim -->
     <string name="place_a_call1">Subscription 1</string>
@@ -1704,6 +1710,8 @@
     <string name="sub_1">SUB 1</string>
     <!-- Set Subscription screen: label sub 2 -->
     <string name="sub_2">SUB 2</string>
+    <!-- Set Subscription screen: label sub 3 -->
+    <string name="sub_3">SUB 3</string>
     <!-- Set Subscription screen: Progress message -->
     <string name="set_uicc_subscription_progress">Set subscription in progress...</string>
     <!-- Set Subscription screen: Set subscriptio success -->
@@ -1714,6 +1722,8 @@
     <string name="set_sub_1">Subscription 1: </string>
     <!-- Set Subscription screen: Subscription 2 -->
     <string name="set_sub_2">Subscription 2: </string>
+    <!-- Set Subscription screen: Subscription 2 -->
+    <string name="set_sub_3">Subscription 3: </string>
     <!-- Set Subscription screen: Subscription activate success -->
     <string name="set_sub_activate_success">Activate success</string>
     <!-- Set Subscription screen: Subscription deactivate success -->
@@ -1733,7 +1743,7 @@
     <!-- Set Subscription screen: Configure subscription dialog title -->
     <string name="config_sub_title">Configure Subscriptions</string>
     <!-- Set Subscription screen: Deactivate both subscription not supported -->
-    <string name="deact_all_sub_not_supported">Deactivation of both the subscriptions is not supported.</string>
+    <string name="deact_all_sub_not_supported">Deactivation of All the subscriptions is not supported.</string>
     <!-- Set Subscription screen: Deactivate both subscription not supported -->
     <string name="set_sub_not_supported_phone_in_call">Activate or Deactivate subscription is not allowed while phone in call.</string>
     <!-- Label text for displaying subscription info -->

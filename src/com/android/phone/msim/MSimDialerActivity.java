@@ -206,9 +206,29 @@ public class MSimDialerActivity extends Activity {
         });
 
         Button[] callButton = new Button[mPhoneCount];
-        int[] callMark = {R.id.callmark1, R.id.callmark2};
-        int[] subString = {R.string.sub_1, R.string.sub_2};
+        int[] callMark = new int[mPhoneCount];
+        int[] subString = new int[mPhoneCount];
+
         int index = 0;
+        SubscriptionManager subManager = SubscriptionManager.getInstance();
+        for (index = 0; index < mPhoneCount; index++) {
+            if (index == 0) {
+                callMark[index] = R.id.callmark1;
+                subString[index] = R.string.sub_1;
+            } else if (index == 1) {
+                callMark[index] = R.id.callmark2;
+                subString[index] = R.string.sub_2;
+            } else {
+                callMark[index] = R.id.callmark3;
+                subString[index] = R.string.sub_3;
+            }
+
+            if (subManager.isSubActive(index)) {
+                Button button = (Button) layout.findViewById(callMark[index]);
+                button.setVisibility(View.VISIBLE);
+            }
+        }
+
         for (index = 0; index < mPhoneCount; index++) {
             callButton[index] =  (Button) layout.findViewById(callMark[index]);
             callButton[index].setText(subString[index]);
@@ -222,6 +242,9 @@ public class MSimDialerActivity extends Activity {
                     case R.id.callmark2:
                         startOutgoingCall(MSimConstants.SUB2);
                         break;
+                    case R.id.callmark3:
+                        startOutgoingCall(MSimConstants.SUB3);
+                        break;
                     }
                 }
             });
@@ -230,8 +253,13 @@ public class MSimDialerActivity extends Activity {
 
         if (MSimConstants.SUB1 == MSimPhoneFactory.getVoiceSubscription()) {
             callButton[MSimConstants.SUB1].setBackgroundResource(R.drawable.highlight_btn_call);
-        } else {
+        } else if (MSimConstants.SUB2 == MSimPhoneFactory.getVoiceSubscription()) {
             callButton[MSimConstants.SUB2].setBackgroundResource(R.drawable.highlight_btn_call);
+        } else if (MSimConstants.SUB3 == MSimPhoneFactory.getVoiceSubscription()) {
+            callButton[MSimConstants.SUB3].setBackgroundResource(R.drawable.highlight_btn_call);
+        } else {
+            Log.e(TAG, "Voice subscription " +
+                    MSimPhoneFactory.getVoiceSubscription() + " is not valid");
         }
 
         mAlertDialog.show();

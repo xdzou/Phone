@@ -24,43 +24,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <LinearLayout
-        android:id="@+id/linlayoutButtons"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="0"
-        >
-        <TextView
-            android:id="@+id/app_name"
-            android:layout_width="0sp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold"
-            >
-        </TextView>
-        <TextView
-            android:id="@+id/sub_1"
-            android:layout_width="0sp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold"
-            android:text="@string/sub_1"
-            >
-        </TextView>
-        <TextView
-            android:id="@+id/sub_2"
-            android:layout_width="0sp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textStyle="bold"
-            android:text="@string/sub_2"
-            >
-        </TextView>
-    </LinearLayout>
-
     <ListView
     android:id="@android:id/list"
         android:layout_width="fill_parent"
