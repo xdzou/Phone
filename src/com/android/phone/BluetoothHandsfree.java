@@ -806,6 +806,7 @@ public class BluetoothHandsfree {
         private static final int PRECISE_CALL_STATE_CHANGED = 2;
         private static final int RING = 3;
         private static final int PHONE_CDMA_CALL_WAITING = 4;
+        private static final int CALL_DISONNECTED = 5;
 
         private Handler mStateChangeHandler = new Handler() {
             @Override
@@ -828,6 +829,11 @@ public class BluetoothHandsfree {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
                     }
                     handlePreciseCallStateChange(sendUpdate(), connection);
+                    break;
+                case CALL_DISONNECTED:
+                    Log.d(TAG, "call disconnected");
+                    if (sendUpdate() && (mCall == 1) && (mCallheld == 0) && (mCallsetup == 0))
+                        sendURC("+CIEV: 2,0"); //Send call end notification
                     break;
                 }
             }
@@ -853,6 +859,7 @@ public class BluetoothHandsfree {
                     PRECISE_CALL_STATE_CHANGED, null);
             mCM.registerForCallWaiting(mStateChangeHandler,
                 PHONE_CDMA_CALL_WAITING, null);
+            mCM.registerForDisconnect(mStateChangeHandler, CALL_DISONNECTED, null);
 
             IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             filter.addAction(TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED);
@@ -869,6 +876,7 @@ public class BluetoothHandsfree {
             mCM.getDefaultPhone().unregisterForServiceStateChanged(mStateChangeHandler);
             mCM.unregisterForPreciseCallStateChanged(mStateChangeHandler);
             mCM.unregisterForCallWaiting(mStateChangeHandler);
+            mCM.unregisterForDisconnect(mStateChangeHandler);
 
             //Register all events new to the new active phone
             mCM.getDefaultPhone().registerForServiceStateChanged(mStateChangeHandler,
@@ -877,6 +885,7 @@ public class BluetoothHandsfree {
                     PRECISE_CALL_STATE_CHANGED, null);
             mCM.registerForCallWaiting(mStateChangeHandler,
                 PHONE_CDMA_CALL_WAITING, null);
+            mCM.registerForDisconnect(mStateChangeHandler, CALL_DISONNECTED, null);
         }
 
         private boolean sendUpdate() {
@@ -1298,7 +1307,9 @@ public class BluetoothHandsfree {
                     audioOn();
                 }
                 mCall = call;
-                if (sendUpdate) {
+                //Send only Active call notification.
+                //CALL_DISONNECTED event will be used send +CIEV: 2,0
+                if (sendUpdate && (mCall != 0)) {
                     result.addResponse("+CIEV: 2," + mCall);
                 }
             }
