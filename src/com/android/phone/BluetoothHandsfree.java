@@ -372,6 +372,7 @@ public class BluetoothHandsfree {
                 } else {
                     Log.i(TAG, "Rejecting incoming SCO connection");
                     try {
+                        mConnectedSco = null; //Makes sure that scoket is not closed twice.
                         mIncomingSco.close();
                     }catch (IOException e) {
                         Log.e(TAG, "Error when closing incoming Sco socket");
@@ -450,6 +451,7 @@ public class BluetoothHandsfree {
                 } else {
                     if (VDBG) log("Rejecting new connected outgoing SCO socket");
                     try {
+                        mConnectedSco = null; //Makes sure that scoket is not closed twice.
                         mOutgoingSco.close();
                     }catch (IOException e) {
                         Log.e(TAG, "Error when closing Sco socket");
@@ -534,24 +536,22 @@ public class BluetoothHandsfree {
         }
 
         private void closeConnectedSco() {
-            if (mConnectedSco != null) {
-                BluetoothDevice device = null;
-                if (mHeadset != null) {
-                    device = mHeadset.getRemoteDevice();
-                }
-                if (mAudioManager.isSpeakerphoneOn()) {
-                    // User option might be speaker as sco disconnection
-                    // is delayed setting back the speaker option.
-                    mAudioManager.setBluetoothScoOn(false);
-                    mAudioManager.setSpeakerphoneOn(true);
-                } else {
-                    mAudioManager.setBluetoothScoOn(false);
-                }
-                synchronized(BluetoothHandsfree.this) {
-                    mConnectedSco = null;
-                    setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
-                                  device);
-                }
+            BluetoothDevice device = null;
+            if (mHeadset != null) {
+                device = mHeadset.getRemoteDevice();
+            }
+            if (mAudioManager.isSpeakerphoneOn()) {
+                // User option might be speaker as sco disconnection
+                // is delayed setting back the speaker option.
+                mAudioManager.setBluetoothScoOn(false);
+                mAudioManager.setSpeakerphoneOn(true);
+            } else {
+                mAudioManager.setBluetoothScoOn(false);
+            }
+            synchronized(BluetoothHandsfree.this) {
+                mConnectedSco = null;
+                setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
+                              device);
             }
             synchronized (ScoSocketDisconnectThread.class) {
                 mDisconnectScoThread = null;
