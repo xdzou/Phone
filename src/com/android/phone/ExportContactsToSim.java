@@ -54,6 +54,7 @@ import static android.view.Window.PROGRESS_VISIBILITY_ON;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
+import static com.android.internal.telephony.MSimConstants.SUB3;
 
 public class ExportContactsToSim extends Activity {
     private static final String TAG = "ExportContactsToSim";
@@ -198,6 +199,8 @@ public class ExportContactsToSim extends Activity {
                 return Uri.parse("content://iccmsim/adn");
             } else if (subscription == SUB2) {
                 return Uri.parse("content://iccmsim/adn_sub2");
+            } else if (subscription == SUB3) {
+                return Uri.parse("content://iccmsim/adn_sub3");
             } else {
                 Log.e("ExportContactsToSim", "Invalid subcription");
                 return null;

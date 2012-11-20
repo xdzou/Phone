@@ -74,14 +74,14 @@ public class SimContacts extends ADNList {
 
     static final ContentValues sEmptyContentValues = new ContentValues();
 
-    private static final int MENU_IMPORT_ONE = 1;
-    private static final int MENU_IMPORT_ALL = 2;
-    private static final int MENU_DELETE_ALL = 3;
-    private static final int MENU_ADD_CONTACT = 4;
-    private static final int MENU_EDIT_CONTACT = 5;
-    private static final int MENU_SMS = 6;
-    private static final int MENU_DIAL = 7;
-    private static final int MENU_DELETE = 8;
+    protected static final int MENU_IMPORT_ONE = 1;
+    protected static final int MENU_IMPORT_ALL = 2;
+    protected static final int MENU_DELETE_ALL = 3;
+    protected static final int MENU_ADD_CONTACT = 4;
+    protected static final int MENU_EDIT_CONTACT = 5;
+    protected static final int MENU_SMS = 6;
+    protected static final int MENU_DIAL = 7;
+    protected static final int MENU_DELETE = 8;
 
     private static final int EVENT_CONTACTS_DELETED = 9;
 
@@ -278,8 +278,13 @@ public class SimContacts extends ADNList {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         menu.add(0, MENU_IMPORT_ALL, 0, R.string.importAllSimEntries);
-        menu.add(0, MENU_DELETE_ALL, 0, R.string.deleteAllSimEntries);
-        menu.add(0, MENU_ADD_CONTACT, 0, R.string.addSimEntries);
+        Uri uri = getUri();
+        if (uri != null) {
+            menu.add(0, MENU_DELETE_ALL, 0, R.string.deleteAllSimEntries);
+            menu.add(0, MENU_ADD_CONTACT, 0, R.string.addSimEntries);
+        } else {
+            Log.e(LOG_TAG, "Only import is supported");
+        }
         return true;
     }
 
@@ -580,10 +585,15 @@ public class SimContacts extends ADNList {
                 menu.setHeaderTitle(textView.getText());
             }
             menu.add(0, MENU_IMPORT_ONE, 0, R.string.importSimEntry);
-            menu.add(0, MENU_EDIT_CONTACT, 0, R.string.editContact);
-            menu.add(0, MENU_SMS, 0, R.string.sendSms);
-            menu.add(0, MENU_DIAL, 0, R.string.dial);
-            menu.add(0, MENU_DELETE, 0, R.string.delete);
+            Uri uri = getUri();
+            if (uri != null) {
+                menu.add(0, MENU_EDIT_CONTACT, 0, R.string.editContact);
+                menu.add(0, MENU_SMS, 0, R.string.sendSms);
+                menu.add(0, MENU_DIAL, 0, R.string.dial);
+                menu.add(0, MENU_DELETE, 0, R.string.delete);
+            } else {
+                Log.e(LOG_TAG, "Only import is supported");
+            }
         }
     }
 
