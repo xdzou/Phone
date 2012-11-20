@@ -1808,6 +1808,11 @@ public class BluetoothHandsfree {
             return false;
         }
 
+        if (mConnectScoThread != null) {
+            if (DBG) log("audioOn(): audio SCO started");
+            return true;
+        }
+
         if (mConnectedSco != null) {
             if (DBG) log("audioOn(): audio is already connected");
             return true;
