@@ -3228,6 +3228,9 @@ public class BluetoothHandsfree {
                             mIIEnabled[ii] = true;
                         } else if ((Integer)args[ai] == 0) {
                             mIIEnabled[ii] = false;
+                        } else if ((Integer)args[ai] == -1) {
+                            //ignore, as no change is requested for this indicator
+                            if (DBG) Log.d(TAG, "Receiving AT+BIA with comma argument");
                         } else
                             return new AtCommandResult(AtCommandResult.ERROR);
                     } else
