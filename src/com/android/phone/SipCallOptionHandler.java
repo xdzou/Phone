@@ -43,6 +43,7 @@ import android.os.Bundle;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -426,17 +427,27 @@ public class SipCallOptionHandler extends Activity implements
                     showDialog(DIALOG_START_SIP_SETTINGS);
                     return;
                 } else {
-                    // Convert the voice call intent to the IMS intent if user
-                    // requested to make an IMS call
-                    if (!convertCallToIMS()) {
-                        // User requested Ims call but Ims Call cannot be placed
-                        if (SystemProperties.getBoolean(IMS_PS_DOMAIN, true)) {
-                            // show UI error
-                            showDialog(DIALOG_NO_VOLTE);
-                            return;
-                        } else {
-                            // place call silently in CS
-                            Log.d(TAG, "IMS phone is unavailable , place CS call");
+                    if (!mUseSipPhone && isImsDefault && PhoneUtils.isCallOnImsEnabled()) {
+                        /*
+                         * Convert the voice call intent to the IMS intent as
+                         * user requested to make an IMS call
+                         */
+                        Phone phone = PhoneUtils.getIMSPhone(PhoneApp.getInstance().mCM);
+                        if (phone != null &&
+                                phone.getServiceState().getState()
+                                    == ServiceState.STATE_IN_SERVICE) {
+                            PhoneUtils.convertCallToIMS(mIntent, imsCallType);
+                        }
+                        else {
+                            // Ims Call cannot be placed
+                            if (SystemProperties.getBoolean(IMS_PS_DOMAIN, true)) {
+                                // show UI error
+                                showDialog(DIALOG_NO_VOLTE);
+                                return;
+                            } else {
+                                // place call silently in CS
+                                Log.d(TAG, "IMS phone is unavailable , place CS call");
+                            }
                         }
                     }
 
@@ -493,64 +504,5 @@ public class SipCallOptionHandler extends Activity implements
             if (p.getUriString().equals(primarySipUri)) return p;
         }
         return null;
-    }
-
-    /**
-     * If user requested to use IMS for all regular calls and the intent is not
-     * already the IMS intent and not a SIP call then covert the intent to the
-     * IMS intent
-     */
-    private boolean convertCallToIMS() {
-        Uri uri = mIntent.getData();
-        String scheme = uri.getScheme();
-        String imsNumber;
-        boolean ret = false;
-        // If it is a SIP call or user doesn't want to make an IMS call or it is
-        // already an IMS
-        // intent then leave the call intent as is
-        if (mUseSipPhone || !isImsDefault || PhoneUtils.isIMSCallIntent(scheme, mIntent))
-        {
-            Log.d(TAG, "IMS Conversion not required");
-            ret = true;
-        } else {
-
-            CallManager cm = PhoneApp.getInstance().mCM;
-            if (PhoneUtils.getIMSPhone(cm) == null) {
-                // User wants Ims Call but Ims Phone is not available
-                Log.d(TAG, "IMS phone is unavailable , cannot place IMS call");
-                ret = false;
-            } else {
-
-                // If user didn't specify the IMS server address in the IMS
-                // settings then
-                // modem would append the IMS server address the UE is
-                // registered to.
-                if (TextUtils.isEmpty(imsServerAddress)) {
-                    imsNumber = PhoneNumberUtils.stripSeparators(mNumber);
-                } else {
-                    imsNumber = PhoneNumberUtils.stripSeparators(mNumber) + "@" + imsServerAddress;
-                }
-
-                mIntent.setData(Uri.fromParts(Constants.SCHEME_SIP, imsNumber, null));
-                mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
-                        CallDetails.CALL_DOMAIN_PS);
-                mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE, imsCallType);
-
-                // If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present,
-                // set the phone number there. (That extra takes precedence over
-                // the
-                // actual number included in the intent.)
-                if (mIntent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
-                    mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
-                            imsNumber);
-                }
-
-                Log.d(TAG, "Converting regular call to IMS call");
-                if (IMS_DBG)
-                    Log.d(TAG, " IMS number: " + imsNumber);
-                ret = true;
-            }
-        }
-        return ret;
     }
 }
