@@ -459,8 +459,9 @@ public class PhoneUtils {
     static boolean hangupRingingAndActive(Phone phone) {
         boolean hungUpRingingCall = false;
         boolean hungUpFgCall = false;
-        Call ringingCall = phone.getRingingCall();
-        Call fgCall = phone.getForegroundCall();
+        CallManager cm = PhoneApp.getInstance().mCM;
+        Call ringingCall = cm.getFirstActiveRingingCall();
+        Call fgCall = cm.getActiveFgCall();
 
         // Hang up any Ringing Call
         if (!ringingCall.isIdle()) {
