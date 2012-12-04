@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2007 The Android Open Source Project
-     Copyright (c) 2012, Code Aurora Forum. All rights reserved.
-
+<!-- Copyright (c) 2012, The Linux Foundation. All rights reserved.
      Not a Contribution, Apache license notifications and license are retained
-     for attribution purposes only
+     for attribution purposes only.
+
+     Copyright (C) 2007 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -144,6 +144,23 @@
          for a text widget that lets the user enter the digits that should
          replace the "wild" character. -->
     <string name="wild_prompt_str">Replace wild character with</string>
+    <!-- In-call screen: button label on the "modify call" prompt dialog for IMS call -->
+    <string name="modify_call_prompt_yes">Yes</string>
+    <!-- In-call screen: button label on the "modify call" prompt dialog for IMS call-->
+    <string name="modify_call_prompt_no">No</string>
+    <!-- In-call screen: Modify call request failure. -->
+    <string name="modify_call_failure_str">Modify Call request failed\n</string>
+
+    <!-- In-call screen: Modify Call Options for IMS call -->
+    <string name="modify_call_option_title">Which type of call?</string>
+    <string name="modify_call_option_vt">VT</string>
+    <string name="modify_call_option_vs">Video Share</string>
+    <string name="modify_call_option_voice">Voice Only</string>
+
+    <!-- In-call screen: Incoming Modify Call for IMS call -->
+    <string name="accept_modify_call_request_prompt">Accept modify call request?</string>
+    <string name="upgrade_vt_prompt">Would you like to upgrade the call to video call?</string>
+    <string name="upgrade_vs_prompt">Would you like to upgrade the call to video share call?</string>
 
     <!-- missing voicemail number -->
     <!-- Title of the "Missing voicemail number" dialog -->
@@ -1089,6 +1106,8 @@
     <string name="onscreenHoldText">Hold</string>
     <!-- Text for the onscreen "End call" button -->
     <string name="onscreenEndCallText">End</string>
+    <!-- Text for the onscreen "Modify call" button -->
+    <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
     <!-- Text for the onscreen "Mute" button -->
