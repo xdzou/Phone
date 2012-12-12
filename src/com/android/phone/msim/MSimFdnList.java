@@ -28,6 +28,7 @@ import android.os.Bundle;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
+import static com.android.internal.telephony.MSimConstants.SUB3;
 
 /**
  * FDN List UI for the Phone app.
@@ -50,6 +51,8 @@ public class MSimFdnList extends FdnList {
             intent.setData(Uri.parse("content://iccmsim/fdn"));
         } else if (mSubscription == SUB2) {
             intent.setData(Uri.parse("content://iccmsim/fdn_sub2"));
+        } else if (mSubscription == SUB3) {
+            intent.setData(Uri.parse("content://iccmsim/fdn_sub3"));
         } else {
             // we should never reach here.
             if (DBG) log("invalid mSubscription");

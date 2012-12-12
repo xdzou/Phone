@@ -31,6 +31,7 @@ import android.text.TextUtils;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
+import static com.android.internal.telephony.MSimConstants.SUB3;
 
 /**
  * Activity to let the user add or edit an FDN contact.
@@ -63,6 +64,8 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
             return Uri.parse("content://iccmsim/fdn");
         } else if (mSubscription == SUB2) {
             return Uri.parse("content://iccmsim/fdn_sub2");
+        } else if (mSubscription == SUB3) {
+            return Uri.parse("content://iccmsim/fdn_sub3");
         } else {
             // we should never reach here.
             if (DBG) log("invalid mSubscription");
