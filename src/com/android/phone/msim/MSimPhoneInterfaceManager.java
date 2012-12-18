@@ -121,7 +121,6 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
             switch (msg.what) {
                 case CMD_HANDLE_PIN_MMI:
                     request = (MainThreadRequest) msg.obj;
-                    //TODO:Anju Check & uncomment later
                     sub = (Integer) request.argument2;
                     Phone phone = PhoneGlobals.getInstance().getPhone(sub);
                     Log.i(LOG_TAG,"CMD_HANDLE_PIN_MMI: sub :" + phone.getSubscription());
@@ -166,7 +165,6 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
                 case CMD_END_CALL:
                     request = (MainThreadRequest) msg.obj;
                     boolean hungUp = false;
-                    //TODO:Anju Check & uncomment later
                     sub = (Integer) request.argument;
                     log("Ending call on subscription =" + sub);
                     phone = mApp.getPhone(sub);
@@ -191,7 +189,6 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
 
                 case CMD_SET_DATA_SUBSCRIPTION:
                     request = (MainThreadRequest) msg.obj;
-                    //TODO-Anju - check & uncomment later
                     int subscription = (Integer) request.argument;
                     onCompleted = obtainMessage(EVENT_SET_DATA_SUBSCRIPTION_DONE, request);
                     SubscriptionManager subManager = SubscriptionManager.getInstance();
@@ -491,6 +488,11 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
     public boolean isSimPinEnabled(int subscription) {
         enforceReadPermission();
         return ((MSimPhoneGlobals)mApp).isSimPinEnabled(subscription);
+    }
+
+    public boolean isSimPukLocked(int subscription) {
+        enforceReadPermission();
+        return ((MSimPhoneGlobals)mApp).isSimPukLocked(subscription);
     }
 
     public boolean supplyPin(String pin, int subscription) {

@@ -540,6 +540,14 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 // been attempted.
                 mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,
                         intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE)));
+                String reason = intent.getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                if (IccCardConstants.INTENT_VALUE_LOCKED_ON_PUK.equals(reason)) {
+                    getMSPhone(subscription).mIsSimPukLocked = true;
+                } else {
+                    getMSPhone(subscription).mIsSimPukLocked = false;
+                }
+                Log.d(LOG_TAG, "Setting mIsSimPukLocked:"
+                        + getMSPhone(subscription).mIsSimPukLocked);
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY);
                 Log.d(LOG_TAG, "Radio technology switched. Now " + newPhone + " is active.");
@@ -681,6 +689,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             Log.w(LOG_TAG, "msPhone object is null returning default phone");
             return phone;
         }
+    }
+
+    boolean isSimPukLocked(int subscription) {
+        return getMSPhone(subscription).mIsSimPukLocked;
     }
 
     /**
