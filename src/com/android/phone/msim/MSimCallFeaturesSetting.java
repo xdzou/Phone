@@ -22,7 +22,9 @@ package com.android.phone;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
@@ -34,11 +36,16 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.provider.Settings;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.PhoneNumberUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.cdma.TtyIntent;
+import com.qualcomm.internal.telephony.SubscriptionManager;
 import com.android.phone.sip.SipSharedPreferences;
 
 /**
@@ -64,8 +71,6 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String LOG_TAG = "CallFeaturesSetting";
     private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
-    private static final String BUTTON_SELECT_SUB_KEY = "button_call_independent_serv";
-
     //Information about logical "up" Activity
     private static final String UP_ACTIVITY_PACKAGE = "com.android.contacts";
     private static final String UP_ACTIVITY_CLASS =
@@ -78,6 +83,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_RETRY_KEY       = "button_auto_retry_key";
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
+    private static final String BUTTON_SELECT_SUB_KEY  = "button_call_independent_serv";
+    private static final String BUTTON_XDIVERT_KEY     = "button_xdivert";
 
     private static final String BUTTON_SIP_CALL_OPTIONS =
             "sip_call_options_key";
@@ -116,6 +123,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private ListPreference mButtonSipCallOptions;
     private SipSharedPreferences mSipSharedPreferences;
 
+    private PreferenceScreen mButtonXDivert;
+    private int mNumPhones;
+    private SubscriptionManager mSubManager;
+
     /*
      * Click Listeners, handle click based on objects attached to UI.
      */
@@ -140,6 +151,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
             // Update HAC Value in AudioManager
             mAudioManager.setParameter(HAC_KEY, hac != 0 ? HAC_VAL_ON : HAC_VAL_OFF);
+            return true;
+        } else if (preference == mButtonXDivert) {
+            processXDivert();
             return true;
         }
         return false;
@@ -186,6 +200,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
+        mSubManager = SubscriptionManager.getInstance();
+
         // get buttons
         PreferenceScreen prefSet = getPreferenceScreen();
 
@@ -194,6 +210,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mButtonAutoRetry = (CheckBoxPreference) findPreference(BUTTON_RETRY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
+        mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
 
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(getContentResolver(),
@@ -253,6 +270,88 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     "com.android.phone.MSimCallFeaturesSubSetting");
         }
 
+        mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
+        if (mButtonXDivert != null) {
+            mButtonXDivert.setOnPreferenceChangeListener(this);
+        }
+    }
+
+    private boolean isAllSubActive() {
+        for (int i = 0; i < mNumPhones; i++) {
+            if (!mSubManager.isSubActive(i)) return false;
+        }
+        return true;
+    }
+
+    private boolean isAnySubCdma() {
+        for (int i = 0; i < mNumPhones; i++) {
+            Phone phone = MSimPhoneGlobals.getInstance().getPhone(i);
+            if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) return true;
+        }
+        return false;
+    }
+
+    private boolean isValidLine1Number(String[] line1Numbers) {
+        for (int i = 0; i < mNumPhones; i++) {
+            if (TextUtils.isEmpty(line1Numbers[i])) return false;
+        }
+        return true;
+    }
+
+    private void processXDivert() {
+        String[] line1Numbers = new String[mNumPhones];
+        for (int i = 0; i < mNumPhones; i++) {
+            Phone phone = MSimPhoneGlobals.getInstance().getPhone(i);
+            line1Numbers[i] = PhoneNumberUtils.formatNumber(phone.getLine1Number());
+            Log.d(LOG_TAG, "SUB:" + i + " phonetype = " + phone.getPhoneType()
+                    + " isSubActive = " + mSubManager.isSubActive(i)
+                    + " line1Number = " + line1Numbers[i]);
+        }
+        if (!isAllSubActive()) {
+            //Is a subscription is deactived/or only one SIM is present,
+            //dialog would be displayed stating the same.
+            displayAlertDialog(R.string.xdivert_sub_absent);
+        } else if (isAnySubCdma()) {
+            //X-Divert is not supported for CDMA phone.Hence for C+G / C+C,
+            //dialog would be displayed stating the same.
+            displayAlertDialog(R.string.xdivert_not_supported);
+        } else if (!isValidLine1Number(line1Numbers)) {
+            //SIM records does not have msisdn, hence ask user to enter
+            //the phone numbers.
+            Intent intent = new Intent();
+            intent.setClass(this, XDivertPhoneNumbers.class);
+            startActivity(intent);
+        } else {
+            //SIM records have msisdn.Hence directly process
+            //XDivert feature
+            processXDivertCheckBox(line1Numbers);
+        }
+    }
+
+    private void displayAlertDialog(int resId) {
+        new AlertDialog.Builder(this).setMessage(resId)
+            .setTitle(R.string.xdivert_title)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        Log.d(LOG_TAG, "X-Divert onClick");
+                    }
+                })
+            .show()
+            .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    public void onDismiss(DialogInterface dialog) {
+                        Log.d(LOG_TAG, "X-Divert onDismiss");
+                    }
+            });
+    }
+
+    private void processXDivertCheckBox(String[] line1Numbers) {
+        Log.d(LOG_TAG,"processXDivertCheckBox line1Numbers = "
+                + java.util.Arrays.toString(line1Numbers));
+        Intent intent = new Intent();
+        intent.setClass(this, XDivertSetting.class);
+        intent.putExtra(XDivertUtility.LINE1_NUMBERS, line1Numbers);
+        startActivity(intent);
     }
 
     private void createSipCallSettings() {
@@ -329,6 +428,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             updatePreferredTtyModeSummary(settingsTtyMode);
         }
 
+        if (mButtonXDivert != null) {
+            if (!isAllSubActive()) mButtonXDivert.setEnabled(false);
+        }
     }
 
     private boolean isAirplaneModeOn() {
