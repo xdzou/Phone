@@ -470,7 +470,7 @@ public class CallNotifier extends Handler
         // - don't ring for call waiting connections
         // - do this before showing the incoming call panel
         if (PhoneUtils.isRealIncomingCall(state)) {
-            int mAutoAnswer = SystemProperties.getInt("persist.atel.autoanswer.ms",
+            int mAutoAnswer = SystemProperties.getInt("persist.sys.tel.autoanswer.ms",
                                                                 AUTO_ANSWER_DEFAULT_MS);
 
             // Reset Auto answer timeout
