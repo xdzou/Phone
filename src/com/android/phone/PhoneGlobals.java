@@ -170,6 +170,7 @@ public class PhoneGlobals extends ContextWrapper
     IBluetoothHeadsetPhone mBluetoothPhone;
     PhoneInterfaceManager phoneMgr;
     CallManager mCM;
+    ManagedRoaming mManagedRoam;
     int mBluetoothHeadsetState = BluetoothProfile.STATE_DISCONNECTED;
     int mBluetoothHeadsetAudioState = BluetoothHeadset.STATE_AUDIO_DISCONNECTED;
     boolean mShowBluetoothIndication = false;
@@ -534,6 +535,10 @@ public class PhoneGlobals extends ContextWrapper
             // launching the incoming-call UI when an incoming call comes
             // in.)
             notifier = CallNotifier.init(this, phone, ringer, new CallLogAsync());
+
+            // Create the Managed Roaming singleton class, used to show popup
+            // to user for initiating network search when location update is rejected
+            mManagedRoam = ManagedRoaming.init(this);
 
             // register for ICC status
             IccCard sim = phone.getIccCard();
