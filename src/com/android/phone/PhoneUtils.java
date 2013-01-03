@@ -47,6 +47,7 @@ import android.os.SystemProperties;
 import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -451,8 +452,9 @@ public class PhoneUtils {
     static boolean hangupRingingAndActive(Phone phone) {
         boolean hungUpRingingCall = false;
         boolean hungUpFgCall = false;
-        Call ringingCall = phone.getRingingCall();
-        Call fgCall = phone.getForegroundCall();
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        Call ringingCall = cm.getFirstActiveRingingCall();
+        Call fgCall = cm.getActiveFgCall();
 
         // Hang up any Ringing Call
         if (!ringingCall.isIdle()) {
@@ -2675,18 +2677,15 @@ public class PhoneUtils {
         return null;
     }
 
-    private static Phone getImsPhone(CallManager cm) {
+    public static Phone getImsPhone(CallManager cm) {
         if (DBG) { log("Find IMS phone:"); }
         for (Phone phone : cm.getAllPhones()) {
             if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
-                if (DBG) {
-                    log("- pickPhoneBasedOnNumber:" +
-                            "found IMSPhone! obj = " + phone + ", "
-                            + phone.getClass());
-                }
+                log("found IMSPhone = " + phone + ", " + phone.getClass());
                 return phone;
             }
         }
+        if (DBG) log("IMS phone not present");
         return null;
     }
 
@@ -2914,6 +2913,40 @@ public class PhoneUtils {
      */
     public static boolean isCallOnImsEnabled() {
         return CallManager.isCallOnImsEnabled();
+    }
+
+    /**
+     * If the intent is not  already the IMS intent, conert the intent to the
+     * IMS intent
+     */
+    public static void convertCallToIMS( Intent intent, int callType) {
+        Uri uri = intent.getData();
+        String scheme = uri.getScheme();
+        String number = PhoneNumberUtils.getNumberFromIntent(intent, PhoneGlobals.getInstance());
+        String imsNumber = PhoneNumberUtils.stripSeparators(number);
+
+        log( "Intent for IMS conversion:" + intent + "extras" + intent.getExtras());
+
+        // If it is already an IMS intent then leave the call intent as is
+        if (isImsCallIntent(scheme, intent)) {
+            log("IMS Conversion not required ");
+        } else {
+
+            intent.setData(Uri.fromParts(Constants.SCHEME_SIP, imsNumber, null));
+            intent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE, callType);
+
+            /*
+             * If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present, set the
+             * phone number there. (That extra takes precedence over the actual
+             * number included in the intent.)
+             */
+            if (intent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
+                intent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
+                        imsNumber);
+            }
+            log("IMS Converted intent: "+ intent + "extras" + intent.getExtras());
+        }
+        return;
     }
 
     private static void log(String msg) {

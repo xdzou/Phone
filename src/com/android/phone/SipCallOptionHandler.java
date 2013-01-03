@@ -45,6 +45,7 @@ import android.os.Bundle;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -79,7 +80,8 @@ public class SipCallOptionHandler extends Activity implements
     static final int DIALOG_START_SIP_SETTINGS = 2;
     static final int DIALOG_NO_INTERNET_ERROR = 3;
     static final int DIALOG_NO_VOIP = 4;
-    static final int DIALOG_SIZE = 5;
+    static final int DIALOG_NO_VOLTE = 5;
+    static final int DIALOG_SIZE = 6;
 
     private Intent mIntent;
     private List<SipProfile> mProfileList;
@@ -96,6 +98,11 @@ public class SipCallOptionHandler extends Activity implements
     private boolean mIsImsDefault = false;
     private String mImsServerAddress;
     private int mImsCallType;
+
+    /**
+     * Specify if IMS calls should be originated with PS domain
+     */
+    private static final String IMS_PS_DOMAIN = "persist.radio.domain.ps";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -292,6 +299,14 @@ public class SipCallOptionHandler extends Activity implements
                     .setOnCancelListener(this)
                     .create();
             break;
+        case DIALOG_NO_VOLTE:
+            dialog = new AlertDialog.Builder(this)
+                    .setTitle(R.string.no_volte)
+                    .setIconAttribute(android.R.attr.alertDialogIcon)
+                    .setPositiveButton(android.R.string.ok, this)
+                    .setOnCancelListener(this)
+                    .create();
+            break;
         default:
             dialog = null;
         }
@@ -343,7 +358,8 @@ public class SipCallOptionHandler extends Activity implements
         } else if (dialog == mDialogs[DIALOG_SELECT_OUTGOING_SIP_PHONE]) {
             mOutgoingSipProfile = mProfileList.get(id);
         } else if ((dialog == mDialogs[DIALOG_NO_INTERNET_ERROR])
-                || (dialog == mDialogs[DIALOG_NO_VOIP])) {
+                || (dialog == mDialogs[DIALOG_NO_VOIP])
+                || (dialog == mDialogs[DIALOG_NO_VOLTE])) {
             finish();
             return;
         } else {
@@ -413,9 +429,28 @@ public class SipCallOptionHandler extends Activity implements
                     showDialog(DIALOG_START_SIP_SETTINGS);
                     return;
                 } else {
-                    // Convert the voice call intent to the IMS intent if user
-                    // requested to make an IMS call
-                    convertCallToIMS();
+                    if (!mUseSipPhone && mIsImsDefault && PhoneUtils.isCallOnImsEnabled()) {
+                        /*
+                         * Convert the voice call intent to the IMS intent as
+                         * user requested to make an IMS call
+                         */
+                        Phone phone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                        if (phone != null &&
+                                phone.getServiceState().getState()
+                                    == ServiceState.STATE_IN_SERVICE) {
+                            PhoneUtils.convertCallToIMS(mIntent, mImsCallType);
+                        } else {
+                            // Ims Call cannot be placed
+                            if (SystemProperties.getBoolean(IMS_PS_DOMAIN, true)) {
+                                // show UI error
+                                showDialog(DIALOG_NO_VOLTE);
+                                return;
+                            } else {
+                                // place call silently in CS
+                                Log.d(TAG, "IMS phone is unavailable , place CS call");
+                            }
+                        }
+                    }
 
                     // Woo hoo -- it's finally OK to initiate the outgoing call!
                     PhoneGlobals.getInstance().callController.placeCall(mIntent);
@@ -470,46 +505,5 @@ public class SipCallOptionHandler extends Activity implements
             if (p.getUriString().equals(primarySipUri)) return p;
         }
         return null;
-    }
-
-    /**
-     * If user requested to use IMS for all regular calls and the intent is not
-     * already the IMS intent and not a SIP call then covert the intent to the
-     * IMS intent
-     */
-    private void convertCallToIMS() {
-        Uri uri = mIntent.getData();
-        String scheme = uri.getScheme();
-        String imsNumber;
-
-        // If it is a SIP call or user doesn't want to make an IMS call or it is already an IMS
-        // intent then leave the call intent as is
-        if (mUseSipPhone || !mIsImsDefault || PhoneUtils.isImsCallIntent(scheme, mIntent)) {
-            return;
-        }
-
-        // If user didn't specify the IMS server address in the IMS settings then
-        // modem would append the IMS server address the UE is registered to.
-        if (TextUtils.isEmpty(mImsServerAddress)) {
-            imsNumber = PhoneNumberUtils.stripSeparators(mNumber);
-        } else {
-            imsNumber = PhoneNumberUtils.stripSeparators(mNumber) + "@" + mImsServerAddress;
-        }
-
-        mIntent.setData(Uri.fromParts(Constants.SCHEME_SIP, imsNumber, null));
-        mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
-                CallDetails.CALL_DOMAIN_PS);
-        mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_TYPE, mImsCallType);
-
-        // If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present,
-        // set the phone number there. (That extra takes precedence over the
-        // actual number included in the intent.)
-        if (mIntent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
-            mIntent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
-                    imsNumber);
-        }
-
-        Log.d(TAG, "Converting regular call to IMS call");
-        if (IMS_DBG) Log.d(TAG, " IMS number: " + imsNumber);
     }
 }
