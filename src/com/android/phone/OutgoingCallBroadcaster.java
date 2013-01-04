@@ -40,6 +40,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
@@ -552,6 +553,16 @@ public class OutgoingCallBroadcaster extends Activity
             // So initiate the outgoing call immediately.
 
             Log.i(TAG, "onCreate(): callNow case! Calling placeCall(): " + intent);
+
+            /*
+             * Convert the emergency call intent to the IMS intent if IMS is enabled
+             * emergency calls should go in auto domain not PS domain
+             * TODO: Pass Calltype from UI for OEMs that support video emergency calls
+             */
+            if (PhoneUtils.isCallOnImsEnabled()) {
+                Log.d(TAG, "IMS is enabled , place IMS emergency call");
+                PhoneUtils.convertCallToIMS(intent, CallDetails.CALL_TYPE_VOICE);
+            }
 
             // Initiate the outgoing call, and simultaneously launch the
             // InCallScreen to display the in-call UI:

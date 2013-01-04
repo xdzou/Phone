@@ -458,6 +458,8 @@ public class PhoneGlobals extends ContextWrapper
             mCM = CallManager.getInstance();
             mCM.registerPhone(phone);
 
+            createImsService();
+
             // Create the NotificationMgr singleton, which is used to display
             // status bar icons and control other status bar behavior.
             notificationMgr = NotificationMgr.init(this);
@@ -640,6 +642,30 @@ public class PhoneGlobals extends ContextWrapper
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
    }
+
+    public void createImsService() {
+        if (PhoneUtils.isCallOnImsEnabled()) {
+            try {
+                // send intent to start ims service n get phone from ims service
+                boolean bound = bindService(new Intent("com.qualcomm.ims.IImsService"),
+                        ImsServiceConnection, Context.BIND_AUTO_CREATE);
+                Log.d(LOG_TAG, "IMSService bound request : " + bound);
+            } catch (NoClassDefFoundError e) {
+                Log.w(LOG_TAG, "Ignoring IMS class not found exception " + e);
+            }
+        }
+    }
+
+    private static ServiceConnection ImsServiceConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(LOG_TAG,"Ims Service Connected");
+            //Get handle to IImsService.Stub.asInterface(service);
+        }
+
+        public void onServiceDisconnected(ComponentName arg0) {
+            Log.w(LOG_TAG,"Ims Service onServiceDisconnected");
+        }
+    };
 
     public void onConfigurationChanged(Configuration newConfig) {
         if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
