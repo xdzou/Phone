@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1363,7 +1367,8 @@ public class InCallScreen extends Activity
                 internalSwapCalls();
             }
         } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM)
-                || (phoneType == PhoneConstants.PHONE_TYPE_SIP)) {
+                || (phoneType == PhoneConstants.PHONE_TYPE_SIP)
+                || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
             if (hasRingingCall) {
                 // If an incoming call is ringing, the CALL button is actually
                 // handled by the PhoneWindowManager.  (We do this to make
@@ -2413,7 +2418,8 @@ public class InCallScreen extends Activity
                     showWaitPromptDialog(fgLatestConnection, postDialStr);
                 }
             } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM)
-                    || (phoneType == PhoneConstants.PHONE_TYPE_SIP)) {
+                    || (phoneType == PhoneConstants.PHONE_TYPE_SIP)
+                    || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
                 for (Connection cn : fgConnections) {
                     if ((cn != null) && (cn.getPostDialState() == Connection.PostDialState.WAIT)) {
                         postDialStr = cn.getRemainingPostDialString();
@@ -3457,16 +3463,19 @@ public class InCallScreen extends Activity
             if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                 if (DBG) log("internalAnswerCall: answering (CDMA)...");
                 if (mCM.hasActiveFgCall()
-                        && mCM.getFgPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_SIP) {
+                        && (mCM.getFgPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_SIP
+                        || mCM.getFgPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_IMS)) {
                     // The incoming call is CDMA call and the ongoing
                     // call is a SIP call. The CDMA network does not
                     // support holding an active call, so there's no
-                    // way to swap between a CDMA call and a SIP call.
+                    // way to swap between a CDMA call and a SIP or IMS call.
                     // So for now, we just don't allow a CDMA call and
-                    // a SIP call to be active at the same time.We'll
+                    // a SIP or IMS call to be active at the same time.We'll
                     // "answer incoming, end ongoing" in this case.
+                    String fgPhoneName = (mCM.getFgPhone().getPhoneType()
+                            == PhoneConstants.PHONE_TYPE_SIP) ? "SIP" : "IMS";
                     if (DBG) log("internalAnswerCall: answer "
-                            + "CDMA incoming and end SIP ongoing");
+                            + "CDMA incoming and end " + fgPhoneName + " ongoing");
                     PhoneUtils.answerAndEndActive(mCM, ringing);
                 } else {
                     PhoneUtils.answerCall(ringing);
@@ -3489,8 +3498,10 @@ public class InCallScreen extends Activity
                 } else {
                     PhoneUtils.answerCall(ringing);
                 }
-            } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
-                if (DBG) log("internalAnswerCall: answering (GSM)...");
+            } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM
+                    || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
+                String phoneName = (phoneType == PhoneConstants.PHONE_TYPE_GSM) ? "GSM" : "IMS";
+                if (DBG) log("internalAnswerCall: answering (" + phoneName +")...");
                 // GSM: this is usually just a wrapper around
                 // PhoneUtils.answerCall(), *but* we also need to do
                 // something special for the "both lines in use" case.

@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -72,6 +76,8 @@ public class OutgoingCallBroadcaster extends Activity
     public static final String EXTRA_SIP_PHONE_URI = "android.phone.extra.SIP_PHONE_URI";
     public static final String EXTRA_ACTUAL_NUMBER_TO_DIAL =
             "android.phone.extra.ACTUAL_NUMBER_TO_DIAL";
+    public static final String EXTRA_CALL_TYPE = "android.phone.extra.CALL_TYPE";
+    public static final String EXTRA_CALL_DOMAIN = "android.phone.extra.CALL_DOMAIN";
 
     /**
      * Identifier for intent extra for sending an empty Flash message for
@@ -279,6 +285,7 @@ public class OutgoingCallBroadcaster extends Activity
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
         newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
+        PhoneUtils.copyImsExtras(intent, newIntent);
 
         // Finally, launch the SipCallOptionHandler, with the copy of the
         // original CALL intent stashed away in the EXTRA_NEW_CALL_INTENT

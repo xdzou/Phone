@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1618,6 +1622,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         updateVoiceNumberField();
         mVMProviderSettingsForced = false;
         createSipCallSettings();
+        createImsSettings();
 
         mRingtoneLookupRunnable = new Runnable() {
             @Override
@@ -1678,6 +1683,12 @@ public class CallFeaturesSetting extends PreferenceActivity
                     mButtonSipCallOptions.findIndexOfValue(
                             mSipSharedPreferences.getSipCallOption()));
             mButtonSipCallOptions.setSummary(mButtonSipCallOptions.getEntry());
+        }
+    }
+
+    private void createImsSettings() {
+        if (PhoneUtils.isCallOnImsEnabled()) {
+            addPreferencesFromResource(R.xml.ims_settings_category);
         }
     }
 
