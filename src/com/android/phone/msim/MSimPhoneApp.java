@@ -606,7 +606,35 @@ public class MSimPhoneApp extends PhoneApp {
     private class MSimMediaButtonBroadcastReceiver extends PhoneApp.MediaButtonBroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            super.onReceive(context, intent);
+            KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            Log.d(LOG_TAG, "MediaButtonBroadcastReceiver.onReceive() event = " + event);
+            if ((event != null)
+                && (event.getKeyCode() == KeyEvent.KEYCODE_HEADSETHOOK)) {
+                if (VDBG) Log.d(LOG_TAG, "MediaButtonBroadcastReceiver: HEADSETHOOK");
+
+                for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+                    boolean consumed = PhoneUtils.handleHeadsetHook(getPhone(i), event);
+                    Log.d(LOG_TAG, "handleHeadsetHook(): consumed = " + consumed +
+                        " on SUB ["+i+"]");
+                    if (consumed) {
+                        // If a headset is attached and the press is consumed, also update
+                        // any UI items (such as an InCallScreen mute button) that may need to
+                        // be updated if their state changed.
+                        updateInCallScreen();  // Has no effect if the InCallScreen isn't visible
+                        abortBroadcast();
+                        break;
+                    }
+                }
+            } else {
+                if (mCM.getState() != Phone.State.IDLE) {
+                    // If the phone is anything other than completely idle,
+                    // then we consume and ignore any media key events,
+                    // Otherwise it is too easy to accidentally start
+                    // playing music while a phone call is in progress.
+                    if (VDBG) Log.d(LOG_TAG, "MediaButtonBroadcastReceiver: consumed");
+                    abortBroadcast();
+                }
+            }
         }
     }
 
