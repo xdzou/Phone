@@ -25,10 +25,16 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.telephony.MSimTelephonyManager;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.TextView;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
+import static com.android.internal.telephony.MSimConstants.SUB3;
 
 /**
  * SIM Address Book UI for the Phone app.
@@ -37,6 +43,7 @@ public class MSimContacts extends SimContacts {
     private static final String LOG_TAG = "MSimContacts";
 
     protected int mSubscription = 0;
+    private int IMPORT_FROM_ALL = 3;
 
     @Override
     protected Uri resolveIntent() {
@@ -47,6 +54,10 @@ public class MSimContacts extends SimContacts {
             intent.setData(Uri.parse("content://iccmsim/adn"));
         } else if (mSubscription == SUB2) {
             intent.setData(Uri.parse("content://iccmsim/adn_sub2"));
+        } else if (mSubscription == SUB3) {
+            intent.setData(Uri.parse("content://iccmsim/adn_sub3"));
+        } else if (mSubscription == IMPORT_FROM_ALL) {
+            intent.setData(Uri.parse("content://iccmsim/adn_all"));
         } else {
             Log.d(TAG, "resolveIntent:Invalid subcription");
         }
@@ -69,9 +80,57 @@ public class MSimContacts extends SimContacts {
             return Uri.parse("content://iccmsim/adn");
         } else if (mSubscription == SUB2) {
             return Uri.parse("content://iccmsim/adn_sub2");
+        } else if (mSubscription == SUB3) {
+            return Uri.parse("content://iccmsim/adn_sub3");
         } else {
             Log.d(TAG, "Invalid subcription");
             return null;
         }
     }
+
+    protected boolean isImportFromAllOption() {
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
+        if (mSubscription == IMPORT_FROM_ALL) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        menu.add(0, MENU_IMPORT_ALL, 0, R.string.importAllSimEntries);
+        if (!isImportFromAllOption()) {
+            menu.add(0, MENU_DELETE_ALL, 0, R.string.deleteAllSimEntries);
+            menu.add(0, MENU_ADD_CONTACT, 0, R.string.addSimEntries);
+        } else {
+            Log.e(LOG_TAG, "Only import is supported");
+        }
+        return true;
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v,
+            ContextMenu.ContextMenuInfo menuInfo) {
+        if (menuInfo instanceof AdapterView.AdapterContextMenuInfo) {
+            AdapterView.AdapterContextMenuInfo itemInfo =
+                    (AdapterView.AdapterContextMenuInfo) menuInfo;
+            TextView textView = (TextView) itemInfo.targetView.findViewById(android.R.id.text1);
+            if (textView != null) {
+                menu.setHeaderTitle(textView.getText());
+            }
+            menu.add(0, MENU_IMPORT_ONE, 0, R.string.importSimEntry);
+            if (!isImportFromAllOption()) {
+                menu.add(0, MENU_EDIT_CONTACT, 0, R.string.editContact);
+                menu.add(0, MENU_SMS, 0, R.string.sendSms);
+                menu.add(0, MENU_DIAL, 0, R.string.dial);
+                menu.add(0, MENU_DELETE, 0, R.string.delete);
+            } else {
+                Log.e(LOG_TAG, "Only import is supported");
+            }
+        }
+    }
+
 }
