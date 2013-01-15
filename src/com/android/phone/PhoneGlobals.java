@@ -181,6 +181,7 @@ public class PhoneGlobals extends ContextWrapper
     boolean mShowBluetoothIndication = false;
     static int mDockState = Intent.EXTRA_DOCK_STATE_UNDOCKED;
     static boolean sVoiceCapable = true;
+    public boolean mIsSimPukLocked;
 
     // Internal PhoneApp Call state tracker
     CdmaPhoneCallState cdmaPhoneCallState;
@@ -1527,6 +1528,13 @@ public class PhoneGlobals extends ContextWrapper
                 // been attempted.
                 mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,
                         intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE)));
+                String reason = intent.getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                if (IccCardConstants.INTENT_VALUE_LOCKED_ON_PUK.equals(reason)) {
+                    mIsSimPukLocked = true;
+                } else {
+                    mIsSimPukLocked = false;
+                }
+                Log.d(LOG_TAG, "Setting mIsSimPukLocked:" + mIsSimPukLocked);
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY);
                 Log.d(LOG_TAG, "Radio technology switched. Now " + newPhone + " is active.");
@@ -1893,6 +1901,10 @@ public class PhoneGlobals extends ContextWrapper
             mBluetoothPhone = null;
         }
     };
+
+    boolean isSimPukLocked(int subscription) {
+        return mIsSimPukLocked;
+    }
 
     /**
      * Gets the default subscription
