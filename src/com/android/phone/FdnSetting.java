@@ -1,5 +1,9 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (c) 2012 The Linux Foundation. All rights reserved.
+ *
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +20,9 @@
 
 package com.android.phone;
 
+import com.android.internal.telephony.CommandException;
+import com.android.internal.telephony.Phone;
+
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -26,12 +33,14 @@ import android.os.Message;
 import android.util.Log;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import com.android.internal.telephony.CommandException;
-import com.android.internal.telephony.Phone;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * FDN settings UI for the Phone app.
@@ -57,9 +66,11 @@ public class FdnSetting extends PreferenceActivity
     // Preference is handled solely in xml.
     private static final String BUTTON_FDN_ENABLE_KEY = "button_fdn_enable_key";
     private static final String BUTTON_CHANGE_PIN2_KEY = "button_change_pin2_key";
+    private static final String BUTTON_FDN_KEY = "button_fdn_list_key";
 
     private EditPinPreference mButtonEnableFDN;
     private EditPinPreference mButtonChangePin2;
+    private PreferenceScreen mSubscriptionPrefFDN;
 
     // State variables
     private String mOldPin;
@@ -84,6 +95,8 @@ public class FdnSetting extends PreferenceActivity
     // size limits for the pin.
     private static final int MIN_PIN_LENGTH = 4;
     private static final int MAX_PIN_LENGTH = 8;
+
+    private int mSubscription = 0;
 
     /**
      * Delegate to the respective handlers.
@@ -421,9 +434,20 @@ public class FdnSetting extends PreferenceActivity
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 
-        addPreferencesFromResource(R.xml.fdn_setting);
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            addPreferencesFromResource(R.xml.msim_fdn_setting);
+        } else {
+            addPreferencesFromResource(R.xml.fdn_setting);
+        }
 
-        mPhone = PhoneGlobals.getPhone();
+        // getting selected subscription
+        mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
+                PhoneGlobals.getInstance().getDefaultSubscription());
+        Log.d(LOG_TAG, "Getting FDNSetting subscription =" + mSubscription);
+        mPhone = PhoneGlobals.getInstance().getPhone(mSubscription);
+
+        mSubscriptionPrefFDN  = (PreferenceScreen) findPreference(BUTTON_FDN_KEY);
+        mSubscriptionPrefFDN.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -458,7 +482,7 @@ public class FdnSetting extends PreferenceActivity
     @Override
     protected void onResume() {
         super.onResume();
-        mPhone = PhoneGlobals.getPhone();
+        mPhone = PhoneGlobals.getInstance().getPhone(mSubscription);
         updateEnableFDN();
     }
 

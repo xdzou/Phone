@@ -36,6 +36,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+
 /**
  * Phone app module in charge of "call control".
  *
@@ -360,7 +362,8 @@ public class CallController extends Handler {
             // or any of combinations
             String sipPhoneUri = intent.getStringExtra(
                     OutgoingCallBroadcaster.EXTRA_SIP_PHONE_URI);
-            phone = PhoneUtils.pickPhoneBasedOnNumber(mCM, scheme, number, sipPhoneUri);
+            int sub = intent.getIntExtra(SUBSCRIPTION_KEY, mApp.getVoiceSubscription());
+            phone = PhoneUtils.pickPhoneBasedOnNumber(mCM, scheme, number, sipPhoneUri, sub);
             if (VDBG) log("- got Phone instance: " + phone + ", class = " + phone.getClass());
 
             // update okToCallStatus based on new phone

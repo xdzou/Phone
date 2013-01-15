@@ -16,7 +16,7 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 # for the 'other' dialer.
 include $(CLEAR_VARS)
 
-LOCAL_JAVA_LIBRARIES := telephony-common
+LOCAL_JAVA_LIBRARIES := telephony-common telephony-msim
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_SRC_FILES += \
         src/com/android/phone/EventLogTags.logtags \
