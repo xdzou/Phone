@@ -37,6 +37,10 @@ import android.util.Log;
  */
 public class MediaHandler extends Handler {
 
+    public static final int DPL_INIT_SUCCESSFUL = 0;
+    public static final int DPL_INIT_FAILURE = -1;
+    public static final int DPL_INIT_MULTIPLE = -2;
+
     private static final String TAG = "VideoCall_MediaHandler";
 
     private static SurfaceTexture mSurface;
@@ -73,16 +77,29 @@ public class MediaHandler extends Handler {
     /*
      * Initialize Media
      */
-    public static void init() {
-        if(!mInitCalledFlag) {
-            Log.d(TAG, "init called");
-            if (nativeInit() != 0) {
-                throw new RuntimeException("Unable to initialize Dpl");
-            } else {
-                mInitCalledFlag = true;
-                registerForMediaEvents();
+    public static int init() {
+        if (!mInitCalledFlag) {
+            int error = nativeInit();
+            Log.d(TAG, "init called error = " + error);
+            switch (error) {
+                case DPL_INIT_SUCCESSFUL:
+                    mInitCalledFlag = true;
+                    registerForMediaEvents();
+                    break;
+                case DPL_INIT_FAILURE:
+                    mInitCalledFlag = false;
+                    break;
+                case DPL_INIT_MULTIPLE:
+                    mInitCalledFlag = true;
+                    Log.e(TAG, "Dpl init is called multiple times");
+                    error = DPL_INIT_SUCCESSFUL;
+                    break;
             }
+            return error;
         }
+
+        // Dpl is already initialized. So return success
+        return DPL_INIT_SUCCESSFUL;
     }
 
     /*
@@ -117,7 +134,7 @@ public class MediaHandler extends Handler {
      * Send the SurfaceTexture to media module. This should be called only for
      * re-sending an already created surface
      */
-    private static void setSurface() {
+    public static void setSurface() {
         Log.d(TAG, "setSurface()");
         if (mSurface == null) {
             Log.e(TAG, "sSurface is null. So not passing it down");
@@ -179,13 +196,6 @@ public class MediaHandler extends Handler {
                 mNegotiatedHeight = nativeGetNegotiatedHeight();
                 mNegotiatedWidth = nativeGetNegotiatedWidth();
                 mNegotiatedFps = nativeGetNegotiatedFPS();
-
-                /*
-                 * Re-send the surface that was created before. Assumption is
-                 * that this event happens only after the initial surface
-                 * texture is created
-                 */
-                setSurface();
                 break;
             case START_READY_EVT:
                 Log.d(TAG, "Received START_READY_EVT. Camera frames can be sent now");

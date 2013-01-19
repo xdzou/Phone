@@ -728,11 +728,20 @@ public class CallCard extends LinearLayout
                 showVideoCallWidgets();
                 break;
 
+            case DISCONNECTING: // These are an intentional fall through(s)
             case DISCONNECTED:
                 mIsVTinitialized = false;
                 mVideoCallPanel.onCallDisconnect();
                 hideVideoCallWidgets();
                 break;
+
+            case HOLDING: // These are an intentional fall through(s)
+            case IDLE:
+            case WAITING:
+                mIsVTinitialized = false;
+                hideVideoCallWidgets();
+                break;
+
             default:
                 Log.e(LOG_TAG, "videocall: updateVideoCallState in bad state:" + state);
                 mIsVTinitialized = false;

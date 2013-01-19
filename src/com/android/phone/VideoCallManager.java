@@ -70,8 +70,8 @@ public class VideoCallManager {
     /**
      * Initialize the Media
      */
-    public void mediaInit() {
-        MediaHandler.init();
+    public int mediaInit() {
+        return MediaHandler.init();
     }
 
     /**
@@ -87,6 +87,13 @@ public class VideoCallManager {
      */
     public void setFarEndSurface(SurfaceTexture st) {
         MediaHandler.setSurface(st);
+    }
+
+    /**
+     * Send the SurfaceTexture to Media module
+     */
+    public void setFarEndSurface() {
+        MediaHandler.setSurface();
     }
 
     /**

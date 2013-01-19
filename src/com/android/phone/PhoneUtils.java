@@ -707,6 +707,20 @@ public class PhoneUtils {
         // After calling CallManager#dial(), getState() will return different state.
         final boolean initiallyIdle = app.mCM.getState() == PhoneConstants.State.IDLE;
 
+        // If VT/VS cal is initiated, perform dpl media init.
+        // If media init fails then make a voice call instead of VT
+        if (callType == CallDetails.CALL_TYPE_VT
+                || callType == CallDetails.CALL_TYPE_VS_TX
+                || callType == CallDetails.CALL_TYPE_VS_RX) {
+            int error = mediaInit();
+            if (error != 0) {
+                //Dpl init failed so continue with VoLTE call
+                callType = CallDetails.CALL_TYPE_VOICE;
+                Log.e(LOG_TAG, "videocall init failed. Downgrading to VoLTE call");
+                Toast.makeText(app, R.string.vt_init_fail_str, Toast.LENGTH_SHORT)
+                        .show();
+            }
+        }
         try {
             connection = app.mCM.dial(phone, numberToDial, callType, null);
         } catch (CallStateException ex) {
@@ -2106,6 +2120,16 @@ public class PhoneUtils {
         } else {
             return app.mCM.getMute();
         }
+    }
+
+    /**
+     * Do DPL initialization if the call is a VT call
+     */
+    /* package */static int mediaInit() {
+        if (DBG) Log.d(LOG_TAG, "mediaInit()...");
+        Context context = PhoneGlobals.getInstance().getApplicationContext();
+        VideoCallManager mVideoCallManager = VideoCallManager.getInstance(context);
+        return mVideoCallManager.mediaInit();
     }
 
     /* package */ static void setAudioMode() {
