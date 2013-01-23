@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -70,6 +70,8 @@ public class MSimNotificationMgr extends NotificationMgr {
     static final int VOICEMAIL_NOTIFICATION_SUB2 = 20;
     static final int CALL_FORWARD_NOTIFICATION_SUB2 = 21;
     static final int CALL_FORWARD_XDIVERT = 22;
+    static final int VOICEMAIL_NOTIFICATION_SUB3 = 23;
+    static final int CALL_FORWARD_NOTIFICATION_SUB3 = 24;
 
     /**
      * Private constructor (this is a singleton).
@@ -111,7 +113,7 @@ public class MSimNotificationMgr extends NotificationMgr {
         if (DBG) log("updateMwi(): " + visible + " Subscription: "
                 + subscription);
         int[] iconId = {R.drawable.stat_notify_voicemail_sub1,
-                    R.drawable.stat_notify_voicemail_sub2, R.drawable.stat_notify_voicemail_sub2};
+                    R.drawable.stat_notify_voicemail_sub2, R.drawable.stat_notify_voicemail_sub3};
         mPhone = phone;
         mVMResId = iconId[subscription];
         super.updateMwi(visible);
@@ -125,10 +127,12 @@ public class MSimNotificationMgr extends NotificationMgr {
     /* package */ void updateCfi(boolean visible, int subscription) {
         if (DBG) log("updateCfi(): " + visible + "Sub: " + subscription);
         int [] callfwdIcon = {R.drawable.stat_sys_phone_call_forward_sub1,
-                R.drawable.stat_sys_phone_call_forward_sub2};
+                R.drawable.stat_sys_phone_call_forward_sub2,
+                R.drawable.stat_sys_phone_call_forward_sub3};
 
         int notificationId = (subscription == 0) ? CALL_FORWARD_NOTIFICATION :
-                CALL_FORWARD_NOTIFICATION_SUB2;
+                ((subscription == 1) ?  CALL_FORWARD_NOTIFICATION_SUB2 :
+                CALL_FORWARD_NOTIFICATION_SUB3);
 
         if (visible) {
             // If Unconditional Call Forwarding (forward all calls) for VOICE
