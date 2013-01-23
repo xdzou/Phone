@@ -4,6 +4,10 @@
  * for attribution purposes only.
  *
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ *
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2260,7 +2264,7 @@ public class PhoneUtils {
      * state of the Phone.
      */
     /* package */ static boolean okToSwapCalls(CallManager cm) {
-        int phoneType = cm.getDefaultPhone().getPhoneType();
+        int phoneType = cm.getFgPhone().getPhoneType();
         if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
             // CDMA: "Swap" is enabled only when the phone reaches a *generic*.
             // state by either accepting a Call Waiting or by merging two calls
@@ -2639,12 +2643,13 @@ public class PhoneUtils {
      * @param number the phone number, or SIP address.
      */
     public static Phone pickPhoneBasedOnNumber(CallManager cm,
-            String scheme, String number, String primarySipUri) {
+            String scheme, String number, String primarySipUri, int subscription) {
         if (DBG) {
             log("pickPhoneBasedOnNumber: scheme " + scheme
                     + ", number " + toLogSafePhoneNumber(number)
                     + ", sipUri "
-                    + (primarySipUri != null ? Uri.parse(primarySipUri).toSafeString() : "null"));
+                    + (primarySipUri != null ? Uri.parse(primarySipUri).toSafeString() : "null")
+                    + ", subscription" + subscription);
         }
 
         if (primarySipUri != null) {
@@ -2659,7 +2664,7 @@ public class PhoneUtils {
             if (phone != null) return phone;
         }
 
-        return cm.getDefaultPhone();
+        return PhoneGlobals.getInstance().getPhone(subscription);
     }
 
     public static Phone getSipPhoneFromUri(CallManager cm, String target) {

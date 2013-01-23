@@ -75,6 +75,8 @@ import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
+import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+
 /**
  * Global state for the telephony subsystem when running in the primary
  * phone process.
@@ -106,7 +108,7 @@ public class PhoneGlobals extends ContextWrapper
     private static final boolean VDBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
     // Message codes; see mHandler below.
-    private static final int EVENT_SIM_NETWORK_LOCKED = 3;
+    protected static final int EVENT_SIM_NETWORK_LOCKED = 3;
     private static final int EVENT_WIRED_HEADSET_PLUG = 7;
     private static final int EVENT_SIM_STATE_CHANGED = 8;
     private static final int EVENT_UPDATE_INCALL_NOTIFICATION = 9;
@@ -179,19 +181,20 @@ public class PhoneGlobals extends ContextWrapper
     boolean mShowBluetoothIndication = false;
     static int mDockState = Intent.EXTRA_DOCK_STATE_UNDOCKED;
     static boolean sVoiceCapable = true;
+    public boolean mIsSimPukLocked;
 
     // Internal PhoneApp Call state tracker
     CdmaPhoneCallState cdmaPhoneCallState;
 
     // The InCallScreen instance (or null if the InCallScreen hasn't been
     // created yet.)
-    private InCallScreen mInCallScreen;
+    protected InCallScreen mInCallScreen;
 
     // The currently-active PUK entry activity and progress dialog.
     // Normally, these are the Emergency Dialer and the subsequent
     // progress dialog.  null if there is are no such objects in
     // the foreground.
-    private Activity mPUKEntryActivity;
+    protected Activity mPUKEntryActivity;
     private ProgressDialog mPUKEntryProgressDialog;
 
     private boolean mIsSimPinEnabled;
@@ -204,26 +207,26 @@ public class PhoneGlobals extends ContextWrapper
 
     // True if the keyboard is currently *not* hidden
     // Gets updated whenever there is a Configuration change
-    private boolean mIsHardKeyboardOpen;
+    protected boolean mIsHardKeyboardOpen;
 
     // True if we are beginning a call, but the phone state has not changed yet
     private boolean mBeginningCall;
 
     // Last phone state seen by updatePhoneState()
-    private PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
+    protected PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
 
     private WakeState mWakeState = WakeState.SLEEP;
 
-    private PowerManager mPowerManager;
-    private IPowerManager mPowerManagerService;
-    private PowerManager.WakeLock mWakeLock;
-    private PowerManager.WakeLock mPartialWakeLock;
-    private PowerManager.WakeLock mProximityWakeLock;
-    private KeyguardManager mKeyguardManager;
-    private AccelerometerListener mAccelerometerListener;
+    protected PowerManager mPowerManager;
+    protected IPowerManager mPowerManagerService;
+    protected PowerManager.WakeLock mWakeLock;
+    protected PowerManager.WakeLock mPartialWakeLock;
+    protected PowerManager.WakeLock mProximityWakeLock;
+    protected KeyguardManager mKeyguardManager;
+    protected AccelerometerListener mAccelerometerListener;
     private int mOrientation = AccelerometerListener.ORIENTATION_UNKNOWN;
 
-    private UpdateLock mUpdateLock;
+    protected UpdateLock mUpdateLock;
 
     // Broadcast receiver for various intent broadcasts (see onCreate())
     private final BroadcastReceiver mReceiver = new PhoneAppBroadcastReceiver();
@@ -232,7 +235,7 @@ public class PhoneGlobals extends ContextWrapper
     private final BroadcastReceiver mMediaButtonReceiver = new MediaButtonBroadcastReceiver();
 
     /** boolean indicating restoring mute state on InCallScreen.onResume() */
-    private boolean mShouldRestoreMuteOnInCallResume;
+    protected boolean mShouldRestoreMuteOnInCallResume;
 
     /**
      * The singleton OtaUtils instance used for OTASP calls.
@@ -255,9 +258,9 @@ public class PhoneGlobals extends ContextWrapper
     public OtaUtils.CdmaOtaInCallScreenUiState cdmaOtaInCallScreenUiState;
 
     // TTY feature enabled on this platform
-    private boolean mTtyEnabled;
+    protected boolean mTtyEnabled;
     // Current TTY operating mode selected by user
-    private int mPreferredTtyMode = Phone.TTY_MODE_OFF;
+    protected int mPreferredTtyMode = Phone.TTY_MODE_OFF;
 
     /**
      * Set the restore mute state flag. Used when we are setting the mute state
@@ -703,6 +706,12 @@ public class PhoneGlobals extends ContextWrapper
         return getInstance().phone;
     }
 
+    // gets the Phone correspoding to a subscription
+    Phone getPhone(int subscription) {
+        // PhoneGlobals: discard the subscription.
+        return phone;
+    }
+
     Ringer getRinger() {
         return ringer;
     }
@@ -780,7 +789,7 @@ public class PhoneGlobals extends ContextWrapper
         return PendingIntent.getBroadcast(context, 0, intent, 0);
     }
 
-    private static String getCallScreenClassName() {
+    protected static String getCallScreenClassName() {
         return InCallScreen.class.getName();
     }
 
@@ -1289,6 +1298,10 @@ public class PhoneGlobals extends ContextWrapper
         return mLastPhoneState;
     }
 
+    /* package */ PhoneConstants.State getPhoneState(int subscription) {
+        return mLastPhoneState;
+    }
+
     /**
      * Returns UpdateLock object.
      */
@@ -1308,7 +1321,7 @@ public class PhoneGlobals extends ContextWrapper
         return mKeyguardManager;
     }
 
-    private void onMMIComplete(AsyncResult r) {
+    protected void onMMIComplete(AsyncResult r) {
         if (VDBG) Log.d(LOG_TAG, "onMMIComplete()...");
         MmiCode mmiCode = (MmiCode) r.result;
         PhoneUtils.displayMMIComplete(phone, getInstance(), mmiCode, null, null);
@@ -1463,7 +1476,7 @@ public class PhoneGlobals extends ContextWrapper
     /**
      * Receiver for misc intent broadcasts the Phone app cares about.
      */
-    private class PhoneAppBroadcastReceiver extends BroadcastReceiver {
+    protected class PhoneAppBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -1515,6 +1528,13 @@ public class PhoneGlobals extends ContextWrapper
                 // been attempted.
                 mHandler.sendMessage(mHandler.obtainMessage(EVENT_SIM_STATE_CHANGED,
                         intent.getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE)));
+                String reason = intent.getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                if (IccCardConstants.INTENT_VALUE_LOCKED_ON_PUK.equals(reason)) {
+                    mIsSimPukLocked = true;
+                } else {
+                    mIsSimPukLocked = false;
+                }
+                Log.d(LOG_TAG, "Setting mIsSimPukLocked:" + mIsSimPukLocked);
             } else if (action.equals(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED)) {
                 String newPhone = intent.getStringExtra(PhoneConstants.PHONE_NAME_KEY);
                 Log.d(LOG_TAG, "Radio technology switched. Now " + newPhone + " is active.");
@@ -1565,7 +1585,7 @@ public class PhoneGlobals extends ContextWrapper
      * adjust its IntentFilter's priority (to make sure we get these
      * intents *before* the media player.)
      */
-    private class MediaButtonBroadcastReceiver extends BroadcastReceiver {
+    protected class MediaButtonBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             KeyEvent event = (KeyEvent) intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
@@ -1660,7 +1680,7 @@ public class PhoneGlobals extends ContextWrapper
 
         if (ss != null) {
             int state = ss.getState();
-            notificationMgr.updateNetworkSelection(state);
+            notificationMgr.updateNetworkSelection(state, phone);
         }
     }
 
@@ -1867,7 +1887,7 @@ public class PhoneGlobals extends ContextWrapper
     }
 
     /** Service connection */
-    private final ServiceConnection mBluetoothPhoneConnection = new ServiceConnection() {
+    protected final ServiceConnection mBluetoothPhoneConnection = new ServiceConnection() {
 
         /** Handle the task of binding the local object to the service */
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -1881,4 +1901,39 @@ public class PhoneGlobals extends ContextWrapper
             mBluetoothPhone = null;
         }
     };
+
+    boolean isSimPukLocked(int subscription) {
+        return mIsSimPukLocked;
+    }
+
+    /**
+     * Gets the default subscription
+     */
+    public int getDefaultSubscription() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    /**
+     * Gets User preferred Voice subscription setting
+     */
+    public int getVoiceSubscription() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    /**
+     * Get the subscription that has service
+     */
+    public int getVoiceSubscriptionInService() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
+    /**
+     * Return an Intent that can be used to bring up the in-call screen.
+     *
+     * This intent can only be used from within the Phone app, since the
+     * InCallScreen is not exported from our AndroidManifest.
+     */
+    /* package */ Intent createInCallIntent(int subscription) {
+        return PhoneGlobals.createInCallIntent();
+    }
 }

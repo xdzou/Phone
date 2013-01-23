@@ -1,5 +1,9 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ *
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +28,7 @@ import android.net.Uri;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.Phone;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.MSimTelephonyManager;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -174,8 +179,13 @@ public class SpecialCharSequenceMgr {
                 int index = Integer.parseInt(input.substring(0, len-1));
                 Intent intent = new Intent(Intent.ACTION_PICK);
 
-                intent.setClassName("com.android.phone",
-                                    "com.android.phone.SimContacts");
+                if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                    intent.setClassName("com.android.phone",
+                                        "com.android.phone.MSimContacts");
+                } else {
+                    intent.setClassName("com.android.phone",
+                                        "com.android.phone.SimContacts");
+                }
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intent.putExtra("index", index);
                 PhoneGlobals.getInstance().startActivity(intent);
@@ -194,7 +204,34 @@ public class SpecialCharSequenceMgr {
         if ((input.startsWith("**04") || input.startsWith("**05"))
                 && input.endsWith("#")) {
             PhoneGlobals app = PhoneGlobals.getInstance();
-            boolean isMMIHandled = app.phone.handlePinMmi(input);
+            Phone phone = app.phone;
+
+            if (app instanceof com.android.phone.MSimPhoneGlobals) {
+                boolean isPukRequired = false;
+                if (input.startsWith("**05")) {
+                    // Called when user tries to unblock PIN by entering the MMI code
+                    // through emergency dialer app. Send the request on the right
+                    // sub which is in PUK_REQUIRED state. Use the default subscription
+                    // when none of the subscriptions are PUK-Locked. This may be
+                    // a change PIN request
+                    int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
+                    for (int i = 0; i < numPhones; i++) {
+                        if (((com.android.phone.MSimPhoneGlobals)app).isSimPukLocked(i)) {
+                            phone = app.getPhone(i);
+                            log("Sending PUK on subscription :" + phone.getSubscription());
+                            break;
+                        }
+                    }
+                    if (phone == null) {
+                        log("No Subscription is PUK-Locked..Using default phone");
+                    }
+                } else {
+                    // Change Pin request (**04). Use voice phone.
+                    int voiceSub = app.getVoiceSubscription();
+                    phone = app.getPhone(voiceSub);
+                }
+            }
+            boolean isMMIHandled = phone.handlePinMmi(input);
 
             // if the PUK code is recognized then indicate to the
             // phone app that an attempt to unPUK the device was
