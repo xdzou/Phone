@@ -31,7 +31,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
-import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
 import static com.android.internal.telephony.MSimConstants.SUB2;
 import static com.android.internal.telephony.MSimConstants.SUB3;
@@ -41,22 +40,26 @@ import static com.android.internal.telephony.MSimConstants.SUB3;
  */
 public class MSimContacts extends SimContacts {
     private static final String LOG_TAG = "MSimContacts";
+    private static final String SIM_INDEX = "sim_index";
 
-    protected int mSubscription = 0;
-    private int IMPORT_FROM_ALL = 3;
+    protected int mSimIndex = 0;
+    //Import from all SIM's option is having the maximum index
+    //we cannot take the phoneCount as maximum index as it will conflict
+    //in DSDS and TSTS. So assigning to some constant value.
+    private static int IMPORT_FROM_ALL = 8;
 
     @Override
     protected Uri resolveIntent() {
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
-        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
-        if (mSubscription == SUB1) {
+        mSimIndex  = extras.getInt(SIM_INDEX);
+        if (mSimIndex == SUB1) {
             intent.setData(Uri.parse("content://iccmsim/adn"));
-        } else if (mSubscription == SUB2) {
+        } else if (mSimIndex == SUB2) {
             intent.setData(Uri.parse("content://iccmsim/adn_sub2"));
-        } else if (mSubscription == SUB3) {
+        } else if (mSimIndex == SUB3) {
             intent.setData(Uri.parse("content://iccmsim/adn_sub3"));
-        } else if (mSubscription == IMPORT_FROM_ALL) {
+        } else if (mSimIndex == IMPORT_FROM_ALL) {
             intent.setData(Uri.parse("content://iccmsim/adn_all"));
         } else {
             Log.d(TAG, "resolveIntent:Invalid subcription");
@@ -75,12 +78,12 @@ public class MSimContacts extends SimContacts {
     protected Uri getUri() {
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
-        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
-        if (mSubscription == SUB1) {
+        mSimIndex  = extras.getInt(SIM_INDEX);
+        if (mSimIndex == SUB1) {
             return Uri.parse("content://iccmsim/adn");
-        } else if (mSubscription == SUB2) {
+        } else if (mSimIndex == SUB2) {
             return Uri.parse("content://iccmsim/adn_sub2");
-        } else if (mSubscription == SUB3) {
+        } else if (mSimIndex == SUB3) {
             return Uri.parse("content://iccmsim/adn_sub3");
         } else {
             Log.d(TAG, "Invalid subcription");
@@ -88,11 +91,11 @@ public class MSimContacts extends SimContacts {
         }
     }
 
-    protected boolean isImportFromAllOption() {
+    protected boolean isImportFromAllSelection() {
         Intent intent = getIntent();
         Bundle extras = intent.getExtras();
-        mSubscription  = extras.getInt(SUBSCRIPTION_KEY);
-        if (mSubscription == IMPORT_FROM_ALL) {
+        mSimIndex  = extras.getInt(SIM_INDEX);
+        if (mSimIndex == IMPORT_FROM_ALL) {
             return true;
         }
         return false;
@@ -101,12 +104,10 @@ public class MSimContacts extends SimContacts {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, MENU_IMPORT_ALL, 0, R.string.importAllSimEntries);
-        if (!isImportFromAllOption()) {
-            menu.add(0, MENU_DELETE_ALL, 0, R.string.deleteAllSimEntries);
-            menu.add(0, MENU_ADD_CONTACT, 0, R.string.addSimEntries);
-        } else {
-            Log.e(LOG_TAG, "Only import is supported");
+        if (isImportFromAllSelection()) {
+            Log.i(LOG_TAG, "Only import is supported");
+            menu.removeItem(MENU_DELETE_ALL);
+            menu.removeItem(MENU_ADD_CONTACT);
         }
         return true;
     }
@@ -122,13 +123,13 @@ public class MSimContacts extends SimContacts {
                 menu.setHeaderTitle(textView.getText());
             }
             menu.add(0, MENU_IMPORT_ONE, 0, R.string.importSimEntry);
-            if (!isImportFromAllOption()) {
+            if (!isImportFromAllSelection()) {
                 menu.add(0, MENU_EDIT_CONTACT, 0, R.string.editContact);
                 menu.add(0, MENU_SMS, 0, R.string.sendSms);
                 menu.add(0, MENU_DIAL, 0, R.string.dial);
                 menu.add(0, MENU_DELETE, 0, R.string.delete);
             } else {
-                Log.e(LOG_TAG, "Only import is supported");
+                Log.i(LOG_TAG, "Only import is supported");
             }
         }
     }
