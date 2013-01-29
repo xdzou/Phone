@@ -78,6 +78,7 @@ import java.util.Map;
  * Misc utilities for the Phone app.
  */
 public class PhoneUtils {
+    private static final int IMS_MEDIA_INIT_SUCCESS = 0;
     private static final String LOG_TAG = "PhoneUtils";
     private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
@@ -686,8 +687,8 @@ public class PhoneUtils {
         if (callType == CallDetails.CALL_TYPE_VT
                 || callType == CallDetails.CALL_TYPE_VT_TX
                 || callType == CallDetails.CALL_TYPE_VT_RX) {
-            int error = mediaInit();
-            if (error != 0) {
+            int error = earlyMediaInit();
+            if (error != IMS_MEDIA_INIT_SUCCESS) {
                 //Dpl init failed so continue with VoLTE call
                 callType = CallDetails.CALL_TYPE_VOICE;
                 Log.e(LOG_TAG, "videocall init failed. Downgrading to VoLTE call");
@@ -2040,11 +2041,15 @@ public class PhoneUtils {
     /**
      * Do DPL initialization if the call is a VT call
      */
-    /* package */static int mediaInit() {
+    /* package */static int earlyMediaInit() {
         if (DBG) Log.d(LOG_TAG, "mediaInit()...");
         Context context = PhoneGlobals.getInstance().getApplicationContext();
         VideoCallManager mVideoCallManager = VideoCallManager.getInstance(context);
-        return mVideoCallManager.mediaInit();
+        int error = mVideoCallManager.mediaInit();
+        if (error == VideoCallManager.MEDIA_INIT_SUCCESS) {
+            mVideoCallManager.setFarEndSurface();
+        }
+        return error;
     }
 
     /* package */ static void setAudioMode() {
