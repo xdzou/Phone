@@ -41,17 +41,16 @@ import android.telephony.MSimTelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.DefaultPhoneNotifier;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.msim.ITelephonyMSim;
 import com.qualcomm.internal.telephony.SubscriptionManager;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
@@ -319,7 +318,7 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
         }
 
         // PENDING: should we just silently fail if phone is offhook or ringing?
-        PhoneConstants.State state = mCM.getState();
+        PhoneConstants.State state = mCM.getState(subscription);
         if (state != PhoneConstants.State.OFFHOOK && state != PhoneConstants.State.RINGING) {
             Intent  intent = new Intent(Intent.ACTION_DIAL, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

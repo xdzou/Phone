@@ -54,6 +54,7 @@ import android.os.UpdateLock;
 import android.os.UserHandle;
 import android.preference.PreferenceManager;
 import android.provider.Settings.System;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
@@ -101,7 +102,7 @@ public class PhoneGlobals extends ContextWrapper
      *
      * ***** DO NOT SUBMIT WITH DBG_LEVEL > 0 *************
      */
-    /* package */ static final int DBG_LEVEL = 0;
+    /* package */ static final int DBG_LEVEL = 2;
 
     private static final boolean DBG =
             (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
@@ -164,7 +165,7 @@ public class PhoneGlobals extends ContextWrapper
     public static final String ACTION_SEND_SMS_FROM_NOTIFICATION =
             "com.android.phone.ACTION_SEND_SMS_FROM_NOTIFICATION";
 
-    private static PhoneGlobals sMe;
+    protected static PhoneGlobals sMe;
 
     // A few important fields we expose to the rest of the package
     // directly (rather than thru set/get methods) for efficiency.
@@ -821,7 +822,11 @@ public class PhoneGlobals extends ContextWrapper
     }
 
     protected static String getCallScreenClassName() {
-        return InCallScreen.class.getName();
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            return MSimInCallScreen.class.getName();
+        } else {
+            return InCallScreen.class.getName();
+        }
     }
 
     /**
