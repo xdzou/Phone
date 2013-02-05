@@ -108,8 +108,124 @@ public class MSimNotificationMgr extends NotificationMgr {
     /* package */
     void updateMwi(boolean visible, Phone phone) {
         if (DBG) log("updateMwi(): " + visible);
-        int subscription = phone.getSubscription();
-        super.updateMwi(visible);
+
+         if (visible) {
+            int resId = android.R.drawable.stat_notify_voicemail;
+
+            // This Notification can get a lot fancier once we have more
+            // information about the current voicemail messages.
+            // (For example, the current voicemail system can't tell
+            // us the caller-id or timestamp of a message, or tell us the
+            // message count.)
+
+            // But for now, the UI is ultra-simple: if the MWI indication
+            // is supposed to be visible, just show a single generic
+            // notification.
+
+            String notificationTitle = mContext.getString(R.string.notification_voicemail_title);
+            String vmNumber = phone.getVoiceMailNumber();
+            if (DBG) log("- got vm number: '" + vmNumber + "'");
+
+            // Watch out: vmNumber may be null, for two possible reasons:
+            //
+            //   (1) This phone really has no voicemail number
+            //
+            //   (2) This phone *does* have a voicemail number, but
+            //       the SIM isn't ready yet.
+            //
+                                       //
+            // Case (2) *does* happen in practice if you have voicemail
+            // messages when the device first boots: we get an MWI
+            // notification as soon as we register on the network, but the
+            // SIM hasn't finished loading yet.
+            //
+            // So handle case (2) by retrying the lookup after a short
+            // delay.
+
+            if ((vmNumber == null) && !phone.getIccRecordsLoaded()) {
+                if (DBG) log("- Null vm number: SIM records not loaded (yet)...");
+
+                // TODO: rather than retrying after an arbitrary delay, it
+                // would be cleaner to instead just wait for a
+                // SIM_RECORDS_LOADED notification.
+                // (Unfortunately right now there's no convenient way to
+                // get that notification in phone app code.  We'd first
+                // want to add a call like registerForSimRecordsLoaded()
+                // to Phone.java and GSMPhone.java, and *then* we could
+                // listen for that in the CallNotifier class.)
+
+                // Limit the number of retries (in case the SIM is broken
+                // or missing and can *never* load successfully.)
+                if (mVmNumberRetriesRemaining-- > 0) {
+                    if (DBG) log("  - Retrying in " + VM_NUMBER_RETRY_DELAY_MILLIS + " msec...");
+                    ((MSimCallNotifier)mApp.notifier).sendMwiChangedDelayed(
+                            VM_NUMBER_RETRY_DELAY_MILLIS, phone);
+                    return;
+                } else {
+                    Log.w(LOG_TAG, "NotificationMgr.updateMwi: getVoiceMailNumber() failed after "
+                          + MAX_VM_NUMBER_RETRIES + " retries; giving up.");
+                    // ...and continue with vmNumber==null, just as if the
+                    // phone had no VM number set up in the first place.
+                }
+            }
+
+            if (TelephonyCapabilities.supportsVoiceMessageCount(phone)) {
+                int vmCount = phone.getVoiceMessageCount();
+                String titleFormat = mContext.getString(R.string.notification_voicemail_title_count);
+                notificationTitle = String.format(titleFormat, vmCount);
+            }
+
+            String notificationText;
+            if (TextUtils.isEmpty(vmNumber)) {
+                notificationText = mContext.getString(
+                        R.string.notification_voicemail_no_vm_number);
+            } else {
+                notificationText = String.format(
+                        mContext.getString(R.string.notification_voicemail_text_format),
+                        PhoneNumberUtils.formatNumber(vmNumber));
+            }
+
+            Intent intent = new Intent(Intent.ACTION_CALL,
+                    Uri.fromParts(Constants.SCHEME_VOICEMAIL, "", null));
+            PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, 0);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+            Uri ringtoneUri;
+
+            String uriString = prefs.getString(
+                    CallFeaturesSetting.BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY, null);
+            if (!TextUtils.isEmpty(uriString)) {
+                ringtoneUri = Uri.parse(uriString);
+            } else {
+                ringtoneUri = Settings.System.DEFAULT_NOTIFICATION_URI;
+            }
+
+            Notification.Builder builder = new Notification.Builder(mContext);
+            builder.setSmallIcon(resId)
+                    .setWhen(System.currentTimeMillis())
+                    .setContentTitle(notificationTitle)
+                    .setContentText(notificationText)
+                    .setContentIntent(pendingIntent)
+                    .setSound(ringtoneUri);
+            Notification notification = builder.getNotification();
+
+            String vibrateWhen = prefs.getString(
+                    CallFeaturesSetting.BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_WHEN_KEY, "never");
+            boolean vibrateAlways = vibrateWhen.equals("always");
+            boolean vibrateSilent = vibrateWhen.equals("silent");
+            AudioManager audioManager =
+                    (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+            boolean nowSilent = audioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE;
+            if (vibrateAlways || (vibrateSilent && nowSilent)) {
+                notification.defaults |= Notification.DEFAULT_VIBRATE;
+            }
+
+            notification.flags |= Notification.FLAG_NO_CLEAR;
+            configureLedNotification(notification);
+            mNotificationManager.notify(VOICEMAIL_NOTIFICATION, notification);
+        } else {
+            mNotificationManager.cancel(VOICEMAIL_NOTIFICATION);
+        }
     }
 
     /**

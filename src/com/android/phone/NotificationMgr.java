@@ -95,7 +95,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     /** The singleton NotificationMgr instance. */
     protected static NotificationMgr sInstance;
 
-    private PhoneGlobals mApp;
+    protected PhoneGlobals mApp;
     private Phone mPhone;
     private CallManager mCM;
 
