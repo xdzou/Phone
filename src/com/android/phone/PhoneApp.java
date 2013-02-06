@@ -625,6 +625,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
             intentFilter.addAction(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
             intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
             intentFilter.addAction(Intent.ACTION_SCREEN_ON);
+            intentFilter.addAction(TelephonyIntents.ACTION_ENABLE_ENGINEER_MODE);
 
             if (mTtyEnabled) {
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
@@ -1785,6 +1786,9 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
                       mAccelerometerListener.enable(mLastPhoneState == Phone.State.OFFHOOK &&
                               action.equals(Intent.ACTION_SCREEN_ON));
                   }
+            } else if (action.equals(TelephonyIntents.ACTION_ENABLE_ENGINEER_MODE)) {
+                Log.d(LOG_TAG, "Enable Engineer Mode: " + intent.getIntExtra("engineer_mode_enable", 0));
+                mCM.enableEngineerMode(getPhone(), intent.getIntExtra("engineer_mode_enable", 0));
             }
         }
     }
