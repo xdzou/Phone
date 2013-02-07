@@ -1849,12 +1849,17 @@ public class PhoneGlobals extends ContextWrapper
     }
 
     /**
-     * Handle call state changes for IMS video calls
+     * Handle call state changes for IMS calls
      */
     private void handleCallStateChanged() {
         if (mCM.isImsPhoneActive()) {
-            mVideoCallManager.mediaInit();
-            mIsMediaInitialized = true;
+            int error = mVideoCallManager.mediaInit();
+            if (error == 0) {
+                mIsMediaInitialized = true;
+                mVideoCallManager.setFarEndSurface();
+            } else {
+                Log.e(LOG_TAG, "videocall: Media init failed");
+            }
         } else if (mIsMediaInitialized && mCM.isImsPhoneIdle()) {
             // Call mediaDeInit only for IMS phones
             mVideoCallManager.mediaDeInit();
