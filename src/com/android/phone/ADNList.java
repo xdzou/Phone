@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -22,13 +22,13 @@ package com.android.phone;
 
 import static android.view.Window.PROGRESS_VISIBILITY_OFF;
 import static android.view.Window.PROGRESS_VISIBILITY_ON;
-import static com.android.internal.telephony.MSimConstants.SUB1;
-import static com.android.internal.telephony.MSimConstants.SUB2;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.AsyncQueryHandler;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -103,21 +103,8 @@ public class ADNList extends ListActivity {
 
     protected Uri resolveIntent() {
         Intent intent = getIntent();
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            mSubscription = MSimTelephonyManager.getDefault().getPreferredVoiceSubscription();
-            if (intent.getData() == null) {
-                if (mSubscription == SUB1) {
-                    intent.setData(Uri.parse("content://iccmsim/adn"));
-                } else if (mSubscription == SUB2) {
-                    intent.setData(Uri.parse("content://iccmsim/adn_sub2"));
-                } else {
-                    if (DBG) log("resolveIntent: invalid subscription");
-                }
-            }
-        } else {
-            if (intent.getData() == null) {
-                intent.setData(Uri.parse("content://icc/adn"));
-            }
+        if (intent.getData() == null) {
+            intent.setData(Uri.parse("content://icc/adn"));
         }
 
         return intent.getData();
@@ -131,7 +118,7 @@ public class ADNList extends ListActivity {
         displayProgress(true);
     }
 
-    private void reQuery() {
+    protected void reQuery() {
         query();
     }
 
@@ -181,7 +168,7 @@ public class ADNList extends ListActivity {
                     mCursor, COLUMN_NAMES, VIEW_NAMES);
     }
 
-    private void displayProgress(boolean loading) {
+    protected void displayProgress(boolean loading) {
         if (DBG) log("displayProgress: " + loading);
 
         mEmptyText.setText(loading ? R.string.simContacts_emptyLoading:
@@ -197,7 +184,7 @@ public class ADNList extends ListActivity {
                 Settings.System.AIRPLANE_MODE_ON, 0) != 0;
     }
 
-    private class QueryHandler extends AsyncQueryHandler {
+    protected class QueryHandler extends AsyncQueryHandler {
         public QueryHandler(ContentResolver cr) {
             super(cr);
         }
@@ -216,20 +203,50 @@ public class ADNList extends ListActivity {
         @Override
         protected void onInsertComplete(int token, Object cookie, Uri uri) {
             if (DBG) log("onInsertComplete: requery");
+            displayProgress(false);
+            if (uri != null) {
+                showAlertDialog(getString(R.string.contactAddSuccess));
+            } else {
+                showAlertDialog(getString(R.string.contactAddFailed));
+            }
             reQuery();
         }
 
         @Override
         protected void onUpdateComplete(int token, Object cookie, int result) {
             if (DBG) log("onUpdateComplete: requery");
+            displayProgress(false);
+            if (result == 1) {
+                showAlertDialog(getString(R.string.contactUpdateSuccess));
+            } else {
+                showAlertDialog(getString(R.string.contactUpdateFailed));
+            }
             reQuery();
         }
 
         @Override
         protected void onDeleteComplete(int token, Object cookie, int result) {
             if (DBG) log("onDeleteComplete: requery");
+            displayProgress(false);
+            if (result == 1) {
+                showAlertDialog(getString(R.string.contactdeleteSuccess));
+            } else {
+                showAlertDialog(getString(R.string.contactdeleteFailed));
+            }
             reQuery();
         }
+    }
+
+    protected void showAlertDialog(String value) {
+        AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle("Result...");
+        alertDialog.setMessage(value);
+        alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                //Just to provide information to user no need to do anything.
+            }
+        });
+        alertDialog.show();
     }
 
     protected void log(String msg) {
