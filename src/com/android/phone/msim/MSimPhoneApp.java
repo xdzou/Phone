@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -533,14 +533,16 @@ public class MSimPhoneApp extends PhoneApp {
             //gets the subscription information ( "0" or "1")
             int subscription = intent.getIntExtra(SUBSCRIPTION_KEY, getDefaultSubscription());
             if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
-                // When airplane mode is selected/deselected from settings
-                // AirplaneModeEnabler sets the value of extra "state" to
-                // true if airplane mode is enabled and false if it is
-                // disabled and broadcasts the intent. setRadioPower uses
-                // true if airplane mode is disabled and false if enabled.
-                boolean enabled = intent.getBooleanExtra("state",false);
+                boolean enabled = System.getInt(getContentResolver(),
+                        System.AIRPLANE_MODE_ON, 0) == 0;
+                // Set the airplane mode property for RIL to read on boot up
+                // to know if the phone is in airplane mode so that RIL can
+                // power down the ICC card.
+                Log.d(LOG_TAG, "Setting property " + PROPERTY_AIRPLANE_MODE_ON);
+                // enabled here implies airplane mode is OFF from above condition.
+                SystemProperties.set(PROPERTY_AIRPLANE_MODE_ON, (enabled ? "0" : "1"));
                 for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
-                    getPhone(i).setRadioPower(!enabled);
+                    getPhone(i).setRadioPower(enabled);
                 }
 
             } else if ((action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) &&
