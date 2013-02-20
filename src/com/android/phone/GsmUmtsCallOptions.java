@@ -38,7 +38,8 @@ public class GsmUmtsCallOptions extends PreferenceActivity {
 
     private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
     private static final String BUTTON_MORE_EXPAND_KEY = "button_more_expand_key";
-
+    private static final String BUTTON_CB_EXPAND_KEY = "button_callbarring_expand_key";// add call barring
+    
     private PreferenceScreen subscriptionPrefCFE;
 
     private int mSubscription = 0;
@@ -60,6 +61,12 @@ public class GsmUmtsCallOptions extends PreferenceActivity {
         PreferenceScreen subscriptionPrefAdditionSettings =
                 (PreferenceScreen) findPreference(BUTTON_MORE_EXPAND_KEY);
         subscriptionPrefAdditionSettings.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
+
+        // add call barring 
+        // setting selected subscription for GsmUmtsAdditionalCallOptions.java
+        PreferenceScreen subscriptionPrefCBSettings =
+                (PreferenceScreen) findPreference(BUTTON_CB_EXPAND_KEY);
+        subscriptionPrefCBSettings.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
 
         Log.d(LOG_TAG, "Getting GsmUmtsCallOptions subscription =" + mSubscription);
 
