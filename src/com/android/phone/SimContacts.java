@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
- * Copyright (c) 2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -84,6 +84,7 @@ public class SimContacts extends ADNList {
     private static final int MENU_DELETE = 8;
 
     private static final int EVENT_CONTACTS_DELETED = 9;
+    protected boolean mIsForeground = false;
 
     private ProgressDialog mProgressDialog;
 
@@ -256,6 +257,18 @@ public class SimContacts extends ADNList {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        mIsForeground = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mIsForeground = false;
+    }
+
+    @Override
     protected CursorAdapter newAdapter() {
         return new SimpleCursorAdapter(this, R.layout.sim_import_list_entry, mCursor,
                 new String[] { "name" }, new int[] { android.R.id.text1 });
@@ -319,6 +332,7 @@ public class SimContacts extends ADNList {
                 mProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE,
                         getString(R.string.cancel), deleteThread);
                 mProgressDialog.show();
+                mProgressDialog.setCancelable(false);
                 deleteThread.start();
                 return true;
             case MENU_ADD_CONTACT:
@@ -419,7 +433,6 @@ public class SimContacts extends ADNList {
             implements OnCancelListener, OnClickListener {
 
         boolean mCanceled = false;
-
         public deleteAllSimContactsThread() {
             super("deleteAllSimContactsThread");
         }
@@ -434,6 +447,7 @@ public class SimContacts extends ADNList {
             }
 
             mProgressDialog.dismiss();
+            if (mCanceled) result = 2;
             Message message = Message.obtain(mHandler, EVENT_CONTACTS_DELETED, (Integer)result);
             mHandler.sendMessage(message);
         }
@@ -445,7 +459,6 @@ public class SimContacts extends ADNList {
         public void onClick(DialogInterface dialog, int which) {
             if (which == DialogInterface.BUTTON_NEGATIVE) {
                 mCanceled = true;
-                mProgressDialog.dismiss();
             } else {
                 Log.e(LOG_TAG, "Unknown button event has come: " + dialog.toString());
             }
@@ -557,6 +570,10 @@ public class SimContacts extends ADNList {
     }
 
     private void showAlertDialog(String value) {
+        if (!mIsForeground) {
+            Log.d(TAG, "The activitiy is not in foreground. Do not display dialog!!!");
+            return;
+        }
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle("Result...");
         alertDialog.setMessage(value);
@@ -624,6 +641,8 @@ public class SimContacts extends ADNList {
                     int result = (Integer)msg.obj;
                     if (result == 1) {
                         showAlertDialog(getString(R.string.allContactdeleteSuccess));
+                    } else if (result == 2) {
+                        showAlertDialog(getString(R.string.allContactdeleteCanceled));
                     } else {
                         showAlertDialog(getString(R.string.allContactdeleteFailed));
                     }
