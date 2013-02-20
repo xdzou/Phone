@@ -224,6 +224,10 @@ public class MobileNetworkSettings extends PreferenceActivity
         mButtonDataUsage = prefSet.findPreference(BUTTON_DATA_USAGE_KEY);
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
 
+        if (SystemProperties.getBoolean("persist.radio.tdscdma_present", false) == true) {
+            mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_tdscdma);
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
