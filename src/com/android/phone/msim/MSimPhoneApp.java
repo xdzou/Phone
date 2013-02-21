@@ -533,7 +533,7 @@ public class MSimPhoneApp extends PhoneApp {
             //gets the subscription information ( "0" or "1")
             int subscription = intent.getIntExtra(SUBSCRIPTION_KEY, getDefaultSubscription());
             if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
-                boolean enabled = System.getInt(getContentResolver(),
+                boolean enabled = System.getInt(mContext.getContentResolver(),
                         System.AIRPLANE_MODE_ON, 0) == 0;
                 // Set the airplane mode property for RIL to read on boot up
                 // to know if the phone is in airplane mode so that RIL can
