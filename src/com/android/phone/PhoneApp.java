@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -99,7 +99,7 @@ public class PhoneApp extends Application implements AccelerometerListener.Orien
     private static final boolean DBG =
             (PhoneApp.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
     private static final boolean VDBG = (PhoneApp.DBG_LEVEL >= 2);
-    private static final String PROPERTY_AIRPLANE_MODE_ON = "persist.radio.airplane_mode_on";
+    protected static final String PROPERTY_AIRPLANE_MODE_ON = "persist.radio.airplane_mode_on";
 
     // Message codes; see mHandler below.
     private static final int EVENT_PERSO_LOCKED = 3;
