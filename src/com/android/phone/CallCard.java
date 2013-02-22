@@ -32,7 +32,10 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract.Contacts;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
+
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
@@ -1032,7 +1035,26 @@ public class CallCard extends LinearLayout
 
         if (!TextUtils.isEmpty(callStateLabel)) {
             mCallStateLabel.setVisibility(View.VISIBLE);
-            mCallStateLabel.setText(callStateLabel);
+            if (TelephonyManager.isMultiSimEnabled()){
+                // Get the subscription from current call object.
+                int subscription = call.getPhone().getSubscription();
+                // String subInfo = Settings.System.getString(mContext.getContentResolver(),
+                //         Settings.System.MULTI_SIM_NAME[subscription]);
+                
+                // Settings should add MULTI_SIM_NAME
+                String subInfo = "CDMA";
+                if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                    subInfo = "GSM";
+                }
+                
+                if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {
+                    mCallStateLabel.setText(callStateLabel);
+                } else {
+                    mCallStateLabel.setText(subInfo + "  " + callStateLabel);
+                }
+            }else{
+                mCallStateLabel.setText(callStateLabel);
+            }            
 
             // ...and display the icon too if necessary.
             if (bluetoothIconId != 0) {
