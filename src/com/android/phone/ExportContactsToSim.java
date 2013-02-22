@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -135,6 +135,10 @@ public class ExportContactsToSim extends Activity {
         // Extract the phone number.
         String rawNumber = dataCursor.getString(phoneIdx);
         String number = PhoneNumberUtils.normalizeNumber(rawNumber);
+        if (name.contains("=")) {
+            Log.w(TAG,"ignore Export Contacts To Sim name : " + name);
+            return;
+        }
 
         ContentValues values = new ContentValues();
         values.put("tag", name);
