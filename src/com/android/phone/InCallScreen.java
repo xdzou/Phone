@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only.
+ * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Copyright (C) 2006 The Android Open Source Project
  * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
@@ -201,6 +200,27 @@ public class InCallScreen extends Activity
         PHONE_NOT_IN_USE
     }
 
+    /**
+     * This table is for deciding whether consent is
+     * required while upgrade/downgrade from one calltype
+     * to other
+     * Read calltype transition from row to column
+     * 1 => Consent of user is required
+     * 0 => No consent required
+     * eg. from VOLTE to VT-TX, consent is needed so
+     * row 0, col 1 is set to 1
+     *
+     *         VOLTE     VT-TX      VT-RX      VT
+     * VOLTE |   0    |    1   |     0   |     1
+     * VT-TX |   0    |    0   |     0   |     0
+     * VT-RX |   0    |    0   |     0   |     0
+     * VT    |   0    |    0   |     0   |     0
+     */
+
+    private int[][] mVideoConsentTable = {{0, 1, 0, 1},
+                                          {0, 0, 0, 0},
+                                          {0, 0, 0, 0},
+                                          {0, 0, 0, 0}};
     private boolean mRegisteredForPhoneStates;
 
     protected PhoneGlobals mApp;
@@ -3057,10 +3077,16 @@ public class InCallScreen extends Activity
         switch (id) {
             // Actions while an incoming call is ringing:
             case R.id.incomingCallAnswer:
-                internalAnswerCall();
-                break;
-            case R.id.incomingCallAnswerVoiceOnly:
                 internalAnswerCall(CallDetails.CALL_TYPE_VOICE);
+                break;
+            case R.id.incomingCallAnswerVideo:
+                internalAnswerCall(CallDetails.CALL_TYPE_VT);
+                break;
+            case R.id.incomingCallAnswerTxVideo:
+                internalAnswerCall(CallDetails.CALL_TYPE_VT_TX);
+                break;
+            case R.id.incomingCallAnswerRxVideo:
+                internalAnswerCall(CallDetails.CALL_TYPE_VT_RX);
                 break;
             case R.id.incomingCallReject:
                 hangupRingingCall();
@@ -3580,13 +3606,14 @@ public class InCallScreen extends Activity
      * ringing or waiting call.
      */
     private void internalAnswerCall(int answerCallType) {
-        if (DBG) log("internalAnswerCall()...");
+        if (DBG) log("internalAnswerCall()..." + answerCallType);
         // if (DBG) PhoneUtils.dumpCallState(mPhone);
 
         final boolean hasRingingCall = mCM.hasActiveRingingCall();
 
         if (hasRingingCall) {
             Phone phone = mCM.getRingingPhone();
+            if (DBG) log(" Ringing Phone" + phone);
             Call ringing = mCM.getFirstActiveRingingCall();
             int phoneType = phone.getPhoneType();
             if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
@@ -3625,7 +3652,7 @@ public class InCallScreen extends Activity
                             + "SIP incoming and end CDMA ongoing");
                     PhoneUtils.answerAndEndActive(mCM, ringing);
                 } else {
-                    PhoneUtils.answerCall(ringing);
+                    PhoneUtils.answerCall(ringing,answerCallType);
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM
                     || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
@@ -3650,8 +3677,9 @@ public class InCallScreen extends Activity
                     // here to end the on-hold call instead.
                 } else {
                     if (DBG) log("internalAnswerCall: answering...");
-                    PhoneUtils.answerCall(ringing);  // Automatically holds the current active call,
-                                                    // if there is one
+                    PhoneUtils.answerCall(ringing,answerCallType);  // Automatically holds
+                                                                    //the current active call,
+                                                                    // if there is one
                 }
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
@@ -4182,12 +4210,15 @@ public class InCallScreen extends Activity
     }
 
     private void onModifyCall() {
+        //Order in which UI options appear
         final int VT = 0;
-        final int VS = 1;
-        final int VOICE = 2;
+        final int VT_TX = 1;
+        final int VT_RX = 2;
+        final int VOICE = 3;
         final CharSequence[] items = {
                 (CharSequence) getResources().getText(R.string.modify_call_option_vt),
-                (CharSequence) getResources().getText(R.string.modify_call_option_vs),
+                (CharSequence) getResources().getText(R.string.modify_call_option_vt_tx),
+                (CharSequence) getResources().getText(R.string.modify_call_option_vt_rx),
                 (CharSequence) getResources().getText(R.string.modify_call_option_voice)
         };
 
@@ -4213,12 +4244,16 @@ public class InCallScreen extends Activity
                                         CallDetails.CALL_TYPE_VT, null);
                                 break;
 
-                            case VS:
-                                // NO-OP
-                                Log.d("videocall", "ModifyCall called: upgrade to Video Share");
-                                Toast.makeText(mApp, "Video Share not supported",
-                                        Toast.LENGTH_SHORT)
-                                        .show();
+                            case VT_TX:
+                                Log.d("videocall", "ModifyCall called: upgrade to VT TX");
+                                phone.changeConnectionType(msg, conn,
+                                        CallDetails.CALL_TYPE_VT_TX, null);
+                                break;
+
+                            case VT_RX:
+                                Log.d("videocall", "ModifyCall called: upgrade to VT RX");
+                                phone.changeConnectionType(msg, conn,
+                                        CallDetails.CALL_TYPE_VT_RX, null);
                                 break;
 
                             case VOICE:
@@ -4240,14 +4275,20 @@ public class InCallScreen extends Activity
             try {
                 int callType = phone.getCallType(mCM.getActiveFgCall());
                 int index = -1;
-                if (callType == CallDetails.CALL_TYPE_VT)
-                    index = VT;
-                else if (callType == CallDetails.CALL_TYPE_VOICE)
-                    index = VOICE;
-                else if (callType == CallDetails.CALL_TYPE_VS_RX
-                        || callType == CallDetails.CALL_TYPE_VS_TX)
-                    index = VS;
-
+                switch(callType) {
+                    case CallDetails.CALL_TYPE_VT:
+                        index = VT;
+                        break;
+                    case CallDetails.CALL_TYPE_VT_TX:
+                        index = VT_TX;
+                        break;
+                    case CallDetails.CALL_TYPE_VT_RX:
+                        index = VT_RX;
+                        break;
+                    case CallDetails.CALL_TYPE_VOICE:
+                        index = VOICE;
+                        break;
+                }
                 builder.setSingleChoiceItems(items, index, listener);
                 alert = builder.create();
                 alert.show();
@@ -4837,19 +4878,20 @@ public class InCallScreen extends Activity
             final Phone phone = conn.getCall().getPhone();
             if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
                 int callType = phone.getProposedConnectionType(conn);
+                int prevCallType = phone.getCallType(mCM.getActiveFgCall());
                 log("videocall handleModifyCallRequest: connection = " + conn + " calltype = "
                         + callType);
 
-                boolean isCallVTOrVS = false;
+                boolean isConsentRequired = false;
+                isConsentRequired = isUserConsentRequired(callType, prevCallType);
                 if (callType == CallDetails.CALL_TYPE_VT) {
                     str = getResources().getString(R.string.upgrade_vt_prompt);
-                    isCallVTOrVS = true;
-                } else if (callType == CallDetails.CALL_TYPE_VS_RX) {
-                    str = getResources().getString(R.string.upgrade_vs_prompt);
-                    isCallVTOrVS = true;
+                } else if (callType == CallDetails.CALL_TYPE_VT_TX) {
+                    str = getResources().getString(R.string.upgrade_vt_tx_prompt);
+                } else if (callType == CallDetails.CALL_TYPE_VT_RX) {
+                    str = getResources().getString(R.string.upgrade_vt_rx_prompt);
                 }
-
-                if (isCallVTOrVS) {
+                if (isConsentRequired) {
                     mModifyCallPromptDialog = new AlertDialog.Builder(this)
                             .setMessage(str)
                             .setPositiveButton(R.string.modify_call_prompt_yes,
@@ -4891,6 +4933,12 @@ public class InCallScreen extends Activity
         } catch (CallStateException e) {
             Log.e(LOG_TAG, "videocall CallStateException " + e);
         }
+    }
+
+    private boolean isUserConsentRequired(int callType, int prevCallType) {
+        boolean isConsentRequired;
+        isConsentRequired = mVideoConsentTable[prevCallType][callType] == 1;
+        return isConsentRequired;
     }
 
     private void log(String msg) {
