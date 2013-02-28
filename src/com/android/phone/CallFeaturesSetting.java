@@ -1843,6 +1843,19 @@ public class CallFeaturesSetting extends PreferenceActivity
                 Settings.System.VIBRATE_WHEN_RINGING, 0) != 0;
     }
 
+    public static boolean getVibrateWhenRinging(Context context, int subscription) {
+        Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return false;
+        }
+        if (1 == subscription) {
+            return Settings.System.getInt(context.getContentResolver(),
+                    Settings.System.VIBRATE_WHEN_RINGING2, 0) != 0;
+        }
+        return Settings.System.getInt(context.getContentResolver(),
+                Settings.System.VIBRATE_WHEN_RINGING, 0) != 0;
+    }
+
     /**
      * Lookups ringtone name asynchronously and updates the relevant Preference.
      */

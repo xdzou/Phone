@@ -25,9 +25,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.ActivityInfo;
@@ -54,6 +56,7 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.MSimTelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
@@ -67,6 +70,7 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.cdma.TtyIntent;
+import com.android.internal.telephony.TelephonyIntents;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -177,6 +181,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private Intent mContactListIntent;
 
+    private int[] mRingtones = {
+            RingtoneManager.TYPE_RINGTONE, RingtoneManager.TYPE_RINGTONE_2
+    };
+
     /** Event for Async voicemail change call */
     private static final int EVENT_VOICEMAIL_CHANGED        = 500;
     private static final int EVENT_FORWARDING_CHANGED       = 501;
@@ -233,13 +241,39 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         }
     };
 
-    private Preference mRingtonePreference;
+    // Cast to correct type to use API : setRingtoneType()
+    private DefaultRingtonePreference mRingtonePreference;
     private CheckBoxPreference mVibrateWhenRinging;
     private ListPreference mVoicemailProviders;
     private PreferenceScreen mVoicemailSettings;
     private ListPreference mVoicemailNotificationVibrateWhen;
 
     private int mSubscription = 0;
+
+    // Add SIM_STATE_CHANGED and ACTION_AIRPLANE_MODE_CHANGED listener to change
+    // current ui.
+    private IntentFilter mIntentFilter = new IntentFilter(
+            TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+
+    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (TelephonyIntents.ACTION_SIM_STATE_CHANGED.equals(action)
+                    || Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(action)) {
+                if (isAirplaneModeOn()) {
+                    // In airplan mode we need disable the PreferenceScreen.
+                    getPreferenceScreen().setEnabled(false);
+                } else {
+                    // Set the preferences enable if the sim state can be
+                    // recognized or deactivate.
+                    getPreferenceScreen().setEnabled(
+                            MSimTelephonyManager.getDefault().isValidSimState(
+                                    mSubscription));
+                }
+            }
+        }
+    };
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -427,6 +461,12 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         mForeground = false;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
+    }
+
     /**
      * We have to pull current settings from the network for all kinds of
      * voicemail providers so we can tell whether we have to update them,
@@ -517,8 +557,13 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         }
         if (preference == mVibrateWhenRinging) {
             boolean doVibrate = (Boolean) objValue;
-            Settings.System.putInt(mPhone.getContext().getContentResolver(),
-                    Settings.System.VIBRATE_WHEN_RINGING, doVibrate ? 1 : 0);
+            if (mSubscription == 1 ) {
+                Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                        Settings.System.VIBRATE_WHEN_RINGING2, doVibrate ? 1 : 0);
+            } else {
+                Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                        Settings.System.VIBRATE_WHEN_RINGING, doVibrate ? 1 : 0);
+            }
         } else if (preference == mVoicemailProviders) {
             final String newProviderKey = (String) objValue;
             if (DBG) {
@@ -1500,7 +1545,9 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             mSubMenuVoicemailSettings.setDialogTitle(R.string.voicemail_settings_number_label);
         }
 
-        mRingtonePreference = findPreference(BUTTON_RINGTONE_KEY);
+        mRingtonePreference = (DefaultRingtonePreference) findPreference(BUTTON_RINGTONE_KEY);
+        // Set the type whose default sound should be set.
+        mRingtonePreference.setRingtoneType(mRingtones[mSubscription]);
         mVibrateWhenRinging = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_ON_RING);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
@@ -1577,7 +1624,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             @Override
             public void run() {
                 if (mRingtonePreference != null) {
-                    updateRingtoneName(RingtoneManager.TYPE_RINGTONE, mRingtonePreference,
+                    updateRingtoneName(mRingtones[mSubscription], mRingtonePreference,
                             MSG_UPDATE_RINGTONE_SUMMARY);
                 }
             }
@@ -1588,6 +1635,11 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+
+        mIntentFilter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        registerReceiver(mReceiver, mIntentFilter);
+        // Set the preferences disabled if the sim state can not be recognized or deactivate.
+        this.getPreferenceScreen().setEnabled(MSimTelephonyManager.getDefault().isValidSimState(mSubscription));
     }
 
     /**
@@ -1634,9 +1686,22 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             return;
         }
         if (mVibrateWhenRinging != null) {
-            mVibrateWhenRinging.setChecked(getVibrateWhenRinging(this));
+            mVibrateWhenRinging.setChecked(getVibrateWhenRinging(this, mSubscription));
         }
         lookupRingtoneName();
+	}
+
+    private boolean getVibrateWhenRinging(Context context, int subscription) {
+        Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (vibrator == null || !vibrator.hasVibrator()) {
+            return false;
+        }
+        if (mSubscription == 1) {
+            return Settings.System.getInt(context.getContentResolver(),
+                    Settings.System.VIBRATE_WHEN_RINGING2, 0) != 0;
+        }
+        return Settings.System.getInt(context.getContentResolver(),
+                Settings.System.VIBRATE_WHEN_RINGING, 0) != 0;
     }
 
     /**
