@@ -20,7 +20,7 @@
     <string name="phoneAppLabel" product="default" msgid="906161039445636857">"Teléfono"</string>
     <string name="emergencyDialerIconLabel" msgid="7812140032168171053">"Marcador de emergencia"</string>
     <string name="phoneIconLabel" msgid="2331230813161304895">"Teléfono"</string>
-    <string name="fdnListLabel" msgid="8630418672279521003">"Lista de NMF"</string>
+    <string name="fdnListLabel" msgid="8630418672279521003">"Lista de FDN"</string>
     <string name="unknown" msgid="6878797917991465859">"Desconocida"</string>
     <string name="private_num" msgid="6713286113000232309">"Número privado"</string>
     <string name="payphone" msgid="1931775086311769314">"Teléfono pago"</string>
@@ -37,8 +37,8 @@
     <string name="callFailed_limitExceeded" msgid="4958065157970101491">"Se excedió el límite de ACM"</string>
     <string name="callFailed_powerOff" msgid="2766035859391549713">"Radio apagada"</string>
     <string name="callFailed_simError" msgid="4476360200030635828">"No se encuentra la tarjeta SIM o se produjo un error relacionado con ella."</string>
-    <string name="callFailed_outOfService" msgid="4825791466557236225">"Área fuera de servicio"</string>
-    <string name="callFailed_fdn_only" msgid="2850204579765430641">"Las llamadas salientes están restringidas por NMF."</string>
+    <string name="callFailed_outOfService" msgid="4825791466557236225">"fuera del area de servicio"</string>
+    <string name="callFailed_fdn_only" msgid="2850204579765430641">"Las llamadas salientes están restringidas por FDN."</string>
     <string name="callFailed_cb_enabled" msgid="3686963693629739680">"No puedes realizar llamadas salientes cuando la restricción de llamadas está activa."</string>
     <string name="callFailed_dsac_restricted" msgid="2180223622768522345">"Todas las llamadas están restringidas por control de acceso."</string>
     <string name="callFailed_dsac_restricted_emergency" msgid="4353654268813314466">"Las llamadas de emergencia están restringidas por control de acceso."</string>
@@ -72,7 +72,7 @@
     <string name="requesting_unlock" msgid="6412629401033249351">"Solicitando desbloqueo de red..."</string>
     <string name="unlock_failed" msgid="6490531697031504225">"Solicitud de desbloqueo de red incorrecta."</string>
     <string name="unlock_success" msgid="6770085622238180152">"Desbloqueo de red correcto."</string>
-    <string name="labelGSMMore" msgid="5930842194056092106">"Config. de llam. GSM"</string>
+    <string name="labelGSMMore" msgid="5930842194056092106">"Configuración de llamada GSM"</string>
     <string name="labelCDMAMore" msgid="1630676740428229339">"Configuración de llamadas de CDMA"</string>
     <string name="apn_settings" msgid="9043423184895642077">"Nombres de puntos de acceso"</string>
     <string name="settings_label" msgid="3876743539816984008">"Configuración de red"</string>
@@ -81,7 +81,7 @@
     <string name="networks" msgid="8873030692174541976">"Operadores de red"</string>
     <string name="call_settings" msgid="6112441768261754562">"Configuración de llamada"</string>
     <string name="additional_gsm_call_settings" msgid="1391795981938800617">"Configuración adicional"</string>
-    <string name="sum_gsm_call_settings" msgid="4076647190996778012">"Configuración de llamadas de GSM adicionales únicamente"</string>
+    <string name="sum_gsm_call_settings" msgid="4076647190996778012">"Configuración de llamadas de GSM adicionales"</string>
     <string name="additional_cdma_call_settings" msgid="8628958775721886909">"Configuración de llamadas de CDMA adicionales"</string>
     <string name="sum_cdma_call_settings" msgid="284753265979035549">"Configuración de llamadas de CDMA adicionales únicamente"</string>
     <string name="labelNwService" msgid="4699970172021870983">"Configuración de servicios de red"</string>
@@ -98,15 +98,15 @@
     <string name="labelCFU" msgid="8147177368148660600">"Reenviar siempre"</string>
     <string name="messageCFU" msgid="3560082430662923687">"Usar siempre este número"</string>
     <string name="sum_cfu_enabled_indicator" msgid="4014187342724130197">"Reenviar todas las llamadas"</string>
-    <string name="sum_cfu_enabled" msgid="2450052502198827927">"Reenviar todas las llamadas a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
+    <string name="sum_cfu_enabled" msgid="2450052502198827927">"Remitir todas las llamadas a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
     <string name="sum_cfu_enabled_no_number" msgid="6591985777096823616">"El número no está disponible"</string>
     <string name="sum_cfu_disabled" msgid="3698472522160364904">"Desactivado"</string>
-    <string name="labelCFB" msgid="218938523102207587">"Reenviar si está ocup."</string>
+    <string name="labelCFB" msgid="218938523102207587">"Remitir si está ocup."</string>
     <string name="messageCFB" msgid="3711089705936187129">"Número cuando está ocupado"</string>
-    <string name="sum_cfb_enabled" msgid="5984198104833116690">"Reenviar a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
+    <string name="sum_cfb_enabled" msgid="5984198104833116690">"Remitir a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
     <string name="sum_cfb_disabled" msgid="227440009979537651">"Desactivado"</string>
     <string name="disable_cfb_forbidden" msgid="3506984333877998061">"Tu proveedor no admite la inhabilitación del desvío de llamadas cuando tu teléfono está ocupado."</string>
-    <string name="labelCFNRy" msgid="3646316323834351390">"Reenviar si no contesta"</string>
+    <string name="labelCFNRy" msgid="3646316323834351390">"Remitir si no contesta"</string>
     <string name="messageCFNRy" msgid="672317899884380374">"Número cuando no contesta"</string>
     <string name="sum_cfnry_enabled" msgid="6955775691317662910">"Reenviar a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
     <string name="sum_cfnry_disabled" msgid="8422350929957344729">"Deshabilitado"</string>
@@ -116,7 +116,7 @@
     <string name="sum_cfnrc_enabled" msgid="7010898346095497421">"Reenviar a <xliff:g id="PHONENUMBER">{0}</xliff:g>"</string>
     <string name="sum_cfnrc_disabled" msgid="7222141261321276464">"Desactivado"</string>
     <string name="disable_cfnrc_forbidden" msgid="5646361343094064333">"Tu proveedor no admite la inhabilitación del desvío de llamadas cuando no se puede acceder a tu teléfono."</string>
-    <string name="updating_title" msgid="6146755386174019046">"Config. de llamada"</string>
+    <string name="updating_title" msgid="6146755386174019046">"Configuración de llamada"</string>
     <string name="error_updating_title" msgid="7970259216988931777">"Error en configuración de llamada"</string>
     <string name="reading_settings" msgid="1920291699287055284">"Leyendo configuración..."</string>
     <string name="updating_settings" msgid="8171225533884883252">"Actualizando configuración..."</string>
@@ -201,11 +201,11 @@
     <string name="throttle_data_rate_reduced_subtext" msgid="7492763592720107737">"<xliff:g id="USED_0">%1$s</xliff:g>máximo excedido"\n"La velocidad de la transferencia de datos se redujo a <xliff:g id="USED_1">%2$d</xliff:g> kb/seg."</string>
     <string name="throttle_time_frame_subtext" msgid="7732763021560399960">"<xliff:g id="USED_0">%1$d</xliff:g>% del ciclo transcurrido"\n"El siguiente período comienza en <xliff:g id="USED_1">%2$d</xliff:g> días (<xliff:g id="USED_2">%3$s</xliff:g>)."</string>
     <string name="throttle_rate_subtext" msgid="2149102656120726855">"La velocidad de la transferencia de datos se reduce a <xliff:g id="USED">%1$d</xliff:g> Kb/seg. si se excede el límite de utilización de datos."</string>
-    <string name="throttle_help_subtext" msgid="5217706521499010816">"Más información acerca de la política de utilización de datos de la red móvil de tu proveedor de servicios de telefonía móvil"</string>
-    <string name="cell_broadcast_sms" msgid="5584192824053625842">"SMS de emisión celular"</string>
+    <string name="throttle_help_subtext" msgid="5217706521499010816">"Más informaciones acerca de la política de utilización de datos de la red móvil de tu proveedor de servicios de telefonía móvil"</string>
+    <string name="cell_broadcast_sms" msgid="5584192824053625842">"SMS de emisión de celula"</string>
     <string name="enable_disable_cell_bc_sms" msgid="4851147873691392255">"SMS de emisión celular"</string>
     <string name="cell_bc_sms_enable" msgid="6441688565738921084">"SMS de emisión celular activado"</string>
-    <string name="cell_bc_sms_disable" msgid="3398365088309408749">"SMS de emisión celular activado"</string>
+    <string name="cell_bc_sms_disable" msgid="3398365088309408749">"SMS de emisión de celula inhabilitado"</string>
     <string name="cb_sms_settings" msgid="651715019785107312">"Configuración de SMS de emisión celular"</string>
     <string name="enable_disable_emergency_broadcast" msgid="2157014609041245335">"Emisión de emergencia"</string>
     <string name="emergency_broadcast_enable" msgid="2645980025414010211">"Emisión de emergencia activada"</string>
@@ -274,9 +274,9 @@
     <string name="enable_disable_advertisements" msgid="5999495926176182128">"Anuncios"</string>
     <string name="advertisements_enable" msgid="2050305021264683786">"Anuncios activados"</string>
     <string name="advertisements_disable" msgid="8350985908788707935">"Anuncios desactivados"</string>
-    <string name="enable_disable_stock_quotes" msgid="6397810445293533603">"Stock Quotes"</string>
-    <string name="stock_quotes_enable" msgid="4384802470887170543">"Stock Quotes activado"</string>
-    <string name="stock_quotes_disable" msgid="4781450084565594998">"Stock Quotes desactivado"</string>
+    <string name="enable_disable_stock_quotes" msgid="6397810445293533603">"Cotizaciones de Acciones"</string>
+    <string name="stock_quotes_enable" msgid="4384802470887170543">"Cotizaciones de Acciones activadas"</string>
+    <string name="stock_quotes_disable" msgid="4781450084565594998">"Cotizaciones de bolsa desactivadas"</string>
     <string name="enable_disable_eo" msgid="4863043263443942494">"Oportunidades de empleo"</string>
     <string name="eo_enable" msgid="8623559062015685813">"Oportunidades de empleo activadas"</string>
     <string name="eo_disable" msgid="3863812478090907609">"Oportunidades de empleo desactivadas"</string>
@@ -294,10 +294,10 @@
     <string name="cdma_system_select_title" msgid="5757657769327732833">"Sistema seleccionado"</string>
     <string name="cdma_system_select_summary" msgid="60460043745797517">"Cambiar el modo itinerancia CDMA"</string>
     <string name="cdma_system_select_dialogtitle" msgid="6083355415165359075">"Sistema seleccionado"</string>
-  <string-array name="cdma_system_select_choices">
+   <string-array name="cdma_system_select_choices">
     <item msgid="176474317493999285">"Página principal solamente"</item>
     <item msgid="1205664026446156265">"Automático"</item>
-  </string-array>
+   </string-array>
     <string name="cdma_subscription_title" msgid="1162564010076763284">"Suscripción CDMA"</string>
     <string name="cdma_subscription_summary" msgid="2530890766115781140">"Cambiar entre RUIM/SIM y NV"</string>
     <string name="cdma_subscription_dialogtitle" msgid="2699527950523333110">"suscripción"</string>
@@ -311,18 +311,18 @@
   </string-array>
     <string name="cdma_activate_device" msgid="3793805892364814518">"Activar dispositivo"</string>
     <string name="cdma_lte_data_service" msgid="4255018217292548962">"Configurar servicio de datos"</string>
-    <string name="fdn" msgid="7878832555095183202">"Números de marc. fijos"</string>
-    <string name="manage_fdn_list" msgid="8777755791892122369">"Lista de NMF"</string>
-    <string name="fdn_activation" msgid="2156479741307463576">"Activación de NMF"</string>
+    <string name="fdn" msgid="7878832555095183202">"Números de marcación fijos"</string>
+    <string name="manage_fdn_list" msgid="8777755791892122369">"Lista de FDN"</string>
+    <string name="fdn_activation" msgid="2156479741307463576">"Activación de FDN"</string>
     <string name="fdn_enabled" msgid="5238109009915521240">"Los números de marcación fija están activados"</string>
-    <string name="fdn_disabled" msgid="4700049736675368279">"Los números de marcación fija (NMF) están desactivados"</string>
-    <string name="enable_fdn" msgid="3740191529180493851">"Activar NMF"</string>
-    <string name="disable_fdn" msgid="7944020890722540616">"Desactivar NMF"</string>
+    <string name="fdn_disabled" msgid="4700049736675368279">"Los números de marcación fija (FDN) están desactivados"</string>
+    <string name="enable_fdn" msgid="3740191529180493851">"Activar FDN"</string>
+    <string name="disable_fdn" msgid="7944020890722540616">"Desactivar FDN"</string>
     <string name="change_pin2" msgid="2153563695382176676">"Cambiar PIN2"</string>
-    <string name="enable_fdn_ok" msgid="7215588870329688132">"Desactivar NMF"</string>
-    <string name="disable_fdn_ok" msgid="5727046928930740173">"Activar NMF"</string>
+    <string name="enable_fdn_ok" msgid="7215588870329688132">"Desactivar FDN"</string>
+    <string name="disable_fdn_ok" msgid="5727046928930740173">"Activar FDN"</string>
     <string name="sum_fdn" msgid="1959399454900272878">"Administrar números de marcación fija"</string>
-    <string name="sum_fdn_change_pin" msgid="6666549734792827932">"Cambiar PIN para acceso de NMF"</string>
+    <string name="sum_fdn_change_pin" msgid="6666549734792827932">"Cambiar PIN para acceso de FDN"</string>
     <string name="sum_fdn_manage_list" msgid="8431088265332628316">"Administrar lista de números de teléfono"</string>
     <string name="voice_privacy" msgid="3776841382844614716">"Privacidad de voz"</string>
     <string name="voice_privacy_summary" msgid="3159383389833516214">"Activar modo de privacidad mejorada"</string>
@@ -337,7 +337,7 @@
     <string name="name" msgid="7329028332786872378">"Nombre"</string>
     <string name="number" msgid="7905950798349903858">"Número"</string>
     <string name="save" msgid="4094274636321939086">"Guardar"</string>
-    <string name="add_fdn_contact" msgid="2481915899633353976">"Agregar número de marcación fija"</string>
+    <string name="add_fdn_contact" msgid="2481915899633353976">"Agregar número de llamada fija"</string>
     <string name="adding_fdn_contact" msgid="7627379633721940991">"Agregando número de marcación fija..."</string>
     <string name="fdn_contact_added" msgid="7458335758501736665">"Número de marcación fija agregado"</string>
     <string name="edit_fdn_contact" msgid="7976936035587081480">"Editar número de marcación fija"</string>
@@ -345,7 +345,7 @@
     <string name="fdn_contact_updated" msgid="5497828782609005017">"Número de marcación fija actualizado"</string>
     <string name="delete_fdn_contact" msgid="6668958073074151717">"Eliminar número de marcación fija"</string>
     <string name="deleting_fdn_contact" msgid="5669163206349319969">"Eliminando número de marcación fija..."</string>
-    <string name="fdn_contact_deleted" msgid="7154162327112259569">"Número de marcación fija eliminado"</string>
+    <string name="fdn_contact_deleted" msgid="7154162327112259569">"Número de llamada fija eliminado"</string>
     <string name="pin2_invalid" msgid="5470854099230755944">"No se actualizó el FDN porque ingresaste un PIN incorrecto."</string>
     <string name="fdn_invalid_number" msgid="1494755047900009147">"No se actualizó el FDN porque el número no puede superar los 20 dígitos."</string>
     <string name="pin2_or_fdn_invalid" msgid="6025144083384701197">"No se actualizó el FDN. El PIN2 era incorrecto o se rechazó el número de teléfono."</string>
@@ -360,7 +360,7 @@
     <string name="newPinLabel" msgid="207488227285336897">"PIN nuevo"</string>
     <string name="confirmPinLabel" msgid="257597715098070206">"Confirmar PIN nuevo"</string>
     <string name="badPin" msgid="8955102849303984935">"El antiguo PIN que ingresaste es incorrecto. Vuelve a intentarlo."</string>
-    <string name="mismatchPin" msgid="5923253370683071889">"Los PIN que ingresaste no coinciden. Vuelve a intentarlo."</string>
+    <string name="mismatchPin" msgid="5923253370683071889">"Los PINs que ingresaste no coinciden. Vuelve a intentarlo."</string>
     <string name="invalidPin" msgid="5981171102258684792">"Escribe un PIN que tenga de 4 a 8 números."</string>
     <string name="disable_sim_pin" msgid="3992926931620188855">"Desactivar PIN de tarjeta SIM"</string>
     <string name="enable_sim_pin" msgid="5803702443844458831">"Activar PIN de tarjeta SIM"</string>
@@ -381,11 +381,11 @@
     <string name="invalidPuk2" msgid="1290977391033057871">"Escribe un PUK2 de 8 cifras."</string>
     <string name="pin2_changed" msgid="1639666438836544393">"El PIN2 se modificó correctamente."</string>
     <string name="label_puk2_code" msgid="302845876240219560">"Escribir código PUK2"</string>
-    <string name="fdn_enable_puk2_requested" msgid="4262894949634885773">"Contraseña incorrecta. Cambia el PIN2 y vuelve a intentarlo."</string>
+    <string name="fdn_enable_puk2_requested" msgid="4262894949634885773">"Contraseña incorrecta. PIN2 bloqueado! Cambia el PIN2 y vuelve a intentarlo."</string>
     <string name="puk2_requested" msgid="8909278021238716877">"Contraseña incorrecta, se bloqueó la tarjeta SIM. Se solicita el PUK2."</string>
     <string name="doneButton" msgid="2859593360997984240">"Finalizado"</string>
     <string name="caller_manage_header" msgid="3231519674734638786">"Llamada en conferencia <xliff:g id="CONF_CALL_TIME">%s</xliff:g>"</string>
-    <string name="voicemail_settings_number_label" msgid="8524164258691887790">"Núm. de correo de voz"</string>
+    <string name="voicemail_settings_number_label" msgid="8524164258691887790">"Número de correo de voz"</string>
     <string name="card_title_dialing" msgid="5769417478498348054">"Marcando"</string>
     <string name="card_title_redialing" msgid="4831412164303596395">"Intentando nuevamente"</string>
     <string name="card_title_conf_call" msgid="1162980346189744501">"Llamada en conferencia"</string>
@@ -412,22 +412,22 @@
     <string name="notification_missedCall_call_back" msgid="2684890353590890187">"Devolver llamada"</string>
     <string name="notification_missedCall_message" msgid="3049928912736917988">"Mensaje"</string>
     <string name="incall_error_power_off" msgid="6550191216405193368">"Para realizar una llamada, primero debes desactivar el modo de avión."</string>
-    <string name="incall_error_emergency_only" msgid="4678640422710818317">"No registrado en la red."</string>
+    <string name="incall_error_emergency_only" msgid="4678640422710818317">"No esta registrado en la red."</string>
     <string name="incall_error_out_of_service" msgid="8587993036435080418">"La red móvil no está disponible."</string>
     <string name="incall_error_no_phone_number_supplied" msgid="4197432103471807739">"Llamada no enviada. No se ingresó un número válido."</string>
     <string name="incall_error_call_failed" msgid="4313552620858880999">"Llamada no enviada."</string>
     <string name="incall_status_dialed_mmi" msgid="3672498861336189563">"Iniciar la secuencia de MMI"</string>
-    <string name="incall_error_supp_service_unknown" msgid="2991054870745666038">"Servicio no admitido."</string>
+    <string name="incall_error_supp_service_unknown" msgid="2991054870745666038">"Servicio no soportado."</string>
     <string name="incall_error_supp_service_switch" msgid="3503552565745872241">"No es posible cambiar llamadas."</string>
     <string name="incall_error_supp_service_separate" msgid="914362338192301746">"No es posible separar la llamada."</string>
     <string name="incall_error_supp_service_transfer" msgid="2509871374644921632">"No es posible transferir la llamada."</string>
     <string name="incall_error_supp_service_conference" msgid="2505727299596357312">"No es posible realizar llamadas en conferencia."</string>
     <string name="incall_error_supp_service_reject" msgid="7055164130563826216">"No es posible rechazar la llamada."</string>
-    <string name="incall_error_supp_service_hangup" msgid="7417583238334762737">"No es posible publicar la(s) llamada(s)."</string>
+    <string name="incall_error_supp_service_hangup" msgid="7417583238334762737">"No es posible liberar la(s) llamada(s)."</string>
     <string name="incall_call_type_label_sip" msgid="2310958283037924371">"llamada por Internet"</string>
     <string name="emergency_enable_radio_dialog_title" msgid="4627849966634578257">"Llamada de emergencia"</string>
     <string name="emergency_enable_radio_dialog_message" msgid="207613549344420291">"Encendiendo radio..."</string>
-    <string name="emergency_enable_radio_dialog_retry" msgid="3724423402363063736">"Área fuera de servicio. Intentando nuevamente..."</string>
+    <string name="emergency_enable_radio_dialog_retry" msgid="3724423402363063736">"Fuera de area de servicio. Intentando nuevamente..."</string>
     <string name="dial_emergency_error" msgid="7969515493359619960">"No se realizó la llamada. <xliff:g id="NON_EMERGENCY_NUMBER">%s</xliff:g> no es un número de emergencia."</string>
     <string name="dial_emergency_empty_error" msgid="5556166819619323893">"No se realizó la llamada. Marca un número de emergencia."</string>
     <string name="dialerKeyboardHintText" msgid="9192914825413747792">"Utilizar teclado para marcar"</string>
@@ -435,7 +435,7 @@
     <string name="onscreenEndCallText" msgid="4403855834875398585">"Finalizar"</string>
     <string name="onscreenShowDialpadText" msgid="8561805492659639893">"Teclado telefónico"</string>
     <string name="onscreenMuteText" msgid="5011369181754261374">"Silenciar"</string>
-    <string name="onscreenAddCallText" msgid="5140385634712287403">"Agreg. Llam."</string>
+    <string name="onscreenAddCallText" msgid="5140385634712287403">"Agregar Llamada"</string>
     <string name="onscreenMergeCallsText" msgid="6640195098064538950">"Combinar llamadas"</string>
     <string name="onscreenSwapCallsText" msgid="1602990689244030047">"Cambiar"</string>
     <string name="onscreenManageCallsText" msgid="5473231160123254154">"Administrar llamadas"</string>
@@ -473,8 +473,8 @@
     <string name="ota_progress" msgid="3420314892609254729">"Aguarda mientras se programa el teléfono."</string>
     <string name="ota_failure" msgid="4311299546379674378">"Programación incorrecta"</string>
     <string name="ota_successful" msgid="1880780692887077407">"Ahora tu teléfono se encuentra activado. Puede tomar hasta unos 15 minutos para que comience el servicio."</string>
-    <string name="ota_unsuccessful" msgid="8072141612635635357">"No se activó tu teléfono. "\n"Puede que tengas que trasladarte hasta un área con mejor cobertura (cerca de una ventana o afuera). "\n\n"Vuelve a intentarlo o llama al servicio de atención al cliente para más opciones."</string>
-    <string name="ota_spc_failure" msgid="3909983542575030796">"ERROR EN SPC EN EXCESO"</string>
+    <string name="ota_unsuccessful" msgid="8072141612635635357">"No se activó tu teléfono. "\n"Es posible que necesite trasladarte hasta un área con mejor cobertura (cerca de una ventana o afuera). "\n\n"Vuelve a intentarlo o llama al servicio de atención al cliente para más opciones."</string>
+    <string name="ota_spc_failure" msgid="3909983542575030796">"ERROR SPC EN EXCESO"</string>
     <string name="ota_call_end" msgid="4537279738134612388">"Atrás"</string>
     <string name="ota_try_again" msgid="7685477206465902290">"Vuelve a intentarlo"</string>
     <string name="ota_next" msgid="3904945374358235910">"Siguiente"</string>
@@ -509,7 +509,7 @@
     <string name="selectContact" msgid="781975788478987237">"seleccionar contacto"</string>
     <string name="sip_settings" msgid="6699045718560859691">"Configuraciones de llamada de Internet"</string>
     <string name="sip_accounts" msgid="2097054001288457163">"Cuentas para llamadas por Internet (SIP)"</string>
-    <string name="sip_accounts_title" msgid="1212889069281054570">"Cuentas"</string>
+    <string name="sip_accounts_title" msgid="1212889069281054570">"Cuentas SIP"</string>
     <string name="sip_receive_calls" msgid="5635685570889971559">"Recibir llamadas entrantes"</string>
     <string name="sip_receive_calls_summary" msgid="8403613238633679184">"Reduce la vida útil de la batería"</string>
     <string name="sip_call_options_title" msgid="27433718808839672">"Usar la llamada por Internet"</string>
@@ -601,7 +601,7 @@
     <string name="description_image_button_nine" msgid="5568534122590597040">"nueve"</string>
     <string name="description_image_button_star" msgid="1976280813017254462">"estrella"</string>
     <string name="description_image_button_zero" msgid="4211255756866893605">"cero"</string>
-    <string name="description_image_button_pound" msgid="1716041284529917866">"numeral"</string>
+    <string name="description_image_button_pound" msgid="1716041284529917866">"libra"</string>
     <string name="description_dial_button" msgid="7459705245418435351">"marcar"</string>
     <string name="description_delete_button" msgid="4015842181592283903">"retroceso"</string>
     <string name="accessibility_speakerphone_enabled" msgid="1988512040421036359">"Altavoz habilitado"</string>
@@ -621,4 +621,181 @@
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"Vibrar al sonar"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"Tonos táctiles del teclado de marcado"</string>
     <string name="preference_category_ringtone" msgid="9007490591910078324">"Tono de llamada"</string>
+    <string name="rhrpd_unlock_success" >Desbloqueo de RUIM Hrpd con éxito</string>
+    <string name="corporate_unlock_success" >Desbloqueo de SIM Corporativo exitoso</string>
+    <string name="preferred_network_mode_lte_cdma_evdo_summary" >Modo de red preferido: CDMA+LTE/EVDO</string>
+    <string name="preferred_network_mode_cdma_evdo_gsm_wcdma_summary" >Modo de red preferido: CDMA/EvDo/GSM/WCDMA</string>
+    <string name="card_title_forwardcheckreceived" >Verificación adelante recibida</string>
+    <string name="sim_unlock_failed" >Solicitación de desbloqueo SIM SIM sin éxito</string>
+    <string name="call_ind_services" >Llamar servicios independientes</string>
+    <string name="allContactdeleteSuccess" >Exitosamente eliminado todos los contactos de la SIM</string>
+    <string name="card_title_cugcall" >Llamar CUG</string>
+    <string name="puk_unlock_success" >Éxito de desbloquee de PUK.</string>
+    <string name="allContactdeleteFailed" >No se ha podido eliminar todos los contactos de la SIM!</string>
+    <string name="network_settings_sel_sub" >Seleccionar subscripción</string>
+    <string name="label_puk" >Ingrese PUK</string>
+    <string name="callFailed_dialToUssd" >Solicitud DIAL modificada a la petición de USSD.</string>
+    <string name="sum_xdivert_enabled" >X-Divert inactivo</string>
+    <string name="dial" >Llamar</string>
+    <string name="sp_unlock_success" >Solicitación de desbloqueo del Proveedor de Servicios SIM con éxito</string>
+    <string name="xdivert_not_active" >Sin actividad</string>
+    <string name="mobile_network_setting" >Configuración de red móvil</string>
+    <string name="requesting_nw_unlock" >Solicitación de desbloqueo de red SIM\u2026</string>
+    <string name="contactdeleteFailed" >No se pudo eliminar el contacto de la tarjeta SIM!</string>
+    <string name="sp_unlock_failed" >Solicitación de desbloqueo del Proveedor de Servicios SIM sin éxito</string>
+    <string name="proceed" >Proceder</string>
+    <string name="requesting_puk_unlock" >Solicitación de desbloqueo de PUK\u2026</string>
+    <string name="label_rcdp" >RUIM corporativo desbloqueo de PIN</string>
+    <string name="nw_subset_unlock_success" >Subconjunto de red SIM desbloqueado con éxito</string>
+    <string name="ExportContactScreen" >Exportar contactos del teléfono a la tarjeta SIM</string>
+    <string name="set_sub_activate_success" >Éxito en activación</string>
+    <string name="callFailed_dialToSs" >Solicitud DIAL modificada a la petición de SS.</string>
+    <string name="contactUpdateSuccess" >Exitosamente actualizado contacto en SIM</string>
+    <string name="call_type_title" >Tipo de llamada IMS</string>
+    <string name="set_sub_deactivate_failed" >Falla en desactivar</string>
+    <string name="sendSms" >Enviar SMS</string>
+    <string name="ruim_unlock_success" >Desbloqueo RUIM RUIM con éxito</string>
+    <string name="fdn_unavailable" >Servicios FDN no están disponibles</string>
+    <string name="call_number" >Para:</string>
+    <string name="contactdeleteSuccess" >Exitosamente eliminado contacto de SIM</string>
+    <string name="sub1LineNumber" >Numero Sub1</string>
+    <string name="xdivert_sub_absent" >Ambas suscripciones se debe activar para procesar X-Divert</string>
+    <string name="requesting_sp_unlock" >Solicitación de desbloqueo de proveedor de servicio SIM\u2026</string>
+    <string name="count_down" >Segundos</string>
+    <string name="preferred_network_mode_lte_summary" >Modo de red preferido: LTE</string>
+    <string name="card_title_outgoing_barred" >Llamadas salientes Barradas</string>
+    <string name="label_rn2dp" >Red2 RUIM desbloqueo PIN</string>
+    <string name="sum_xdivert_disabled" >X-Divert inactivo</string>
+    <string name="cursorError" >Cursor no tiene datos adecuados!</string>
+    <string name="requesting_rc_unlock" >Solicitando desbloqueo corporativo RUIM\u2026</string>
+    <string name="label_spdp" >PIN de desbloqueo de SIM</string>
+    <string name="stk_cc_ss_to_dial_error" >Solicitud SS modificado para solicitud DIAL.</string>
+    <string name="card_title_callretrieved" >Llamada obtenida</string>
+    <string name="ruim_unlock_failed" >Solicitud de desbloqueo RUIM RUIM sin éxito.</string>
+    <string name="set_sub_success" >Exito en configurar la suscripción</string>
+    <string name="set_sub_no_change" >Ningún cambio en la suscripción</string>
+    <string name="corporate_unlock_failed" >Solicitud de desbloqueo SIM sin éxito.</string>
+    <string name="callind_multi_sim" >Seleccione Suscripción</string>
+    <string name="exportAllcontatsSuccess" >Exportación de todos los contactos a la tarjeta SIM com succeso</string>
+    <string name="set_subscription" >Seleccione las suscripciones</string>
+    <string name="nw_subset_unlock_failed" >Solicitud de desbloqueo de red de subconjunto SIM sin éxito.</string>
+    <string name="deact_all_sub_not_supported" >La desactivación de ambas las suscripciones no es compatible.</string>
+    <string name="enterName" >Introducir nombre:</string>
+    <string name="sub_2" >SUB 2</string>
+    <string name="sub_1" >SUB 1</string>
+    <string name="set_sub_activate_failed" >Activar falló</string>
+    <string name="xdivert_title" >X-Desviar</string>
+    <string name="new_cards_available" >Disponible la tarjeta nueva. Por favor, configure las suscripciones.</string>
+    <string name="xdivert_summary" >Configuración CFNRc</string>
+    <string name="label_rhrpd" >Desbloqueo PIN RUIM hrpd</string>
+    <string name="callUnanswered_forwarded" >Llamada no contestada, y ha remitido</string>
+    <string name="card_title_callonhold" >Puesta en espera</string>
+    <string name="rc_unlock_failed" >Solicitud de desbloqueo corporativo RUIM sin éxito.</string>
+    <string name="rhrpd_unlock_failed" >Solicitud de desbloqueo RUIM HRPD sin éxito.</string>
+    <string name="pin2_attempts" >Intentos restantes:</string>
+    <string name="summary_manage_subscriptions" >Administrar la configuración de red de cada suscripciones</string>
+    <string name="xdivert_status" >Estado X-desviar</string>
+    <string name="sim_unlock_success" >Desbloqueo SIM SIM sin éxito</string>
+    <string name="no_volte" >No es posible realizar llamadas IMS</string>
+    <string name="requesting_sim_unlock" >Solicitando desbloqueo de SIM SIM \ u2026</string>
+    <string name="network_manage_settings" >Configuración de red</string>
+    <string name="card_title_clir_suppression_rejected" >Supresión CLIR Rechazado</string>
+    <string name="prompt_user" >Preguntar al usuario</string>
+    <string name="card_title_unconditionalCF" >Desvío de llamadas incondicional está activado</string>
+    <string name="set_sub_deactivate_success" >Desactivado con succeso</string>
+    <string name="card_title_conditionalCF" >Call Forward condicional está habilitado</string>
+    <string name="card_title_MOcall_forwarding" >Desvio de llamada</string>
+    <string name="xdivert_button" >Establecer X-desviar</string>
+    <string name="preferred_network_mode_global_summary" >Modo de red preferido: Global</string>
+    <string name="deleteSimContacts" >Eliminando contactos de la SIM</string>
+    <string name="label_rspdp" >PIN de desbloqueo de proveedor de servicios RUIM</string>
+    <string name="stk_cc_ss_to_ussd_error" >Solicitud SS modificada a petición USSD.</string>
+    <string name="rnw2_unlock_failed" >Solicitud de desbloqueo de red2 RUIM sin éxito.</string>
+    <string name="ims_domain_address_title" >Servidor IMS</string>
+    <string name="pin2_unblocked" >PIN2 desbloqueado</string>
+    <string name="requesting_rhrpd_unlock" >Solicitando desbloqueo RUIM HRPD \ u2026</string>
+    <string name="label_rn1dp" >Red1 RUIM desbloqueo PIN</string>
+    <string name="xdivert_setting" >X-desvío de llamadas</string>
+    <string name="ims_menu_save" >Salvar</string>
+    <string name="xdivert_enternumber_error" >Introduzca el número de teléfono para las suscripciones</string>
+    <string name="contactUpdateFailed" >Error al actualizar el contacto en SIM!</string>
+    <string name="preferred_network_mode_lte_wcdma_summary" >Modo de red preferido: LTE / WCDMA</string>
+    <string name="label_nsdp" >PIN de desbloqueo de subconjunto de red SIM</string>
+    <string name="contactAddFailed" >No se pudo agregar el contacto a la tarjeta SIM!</string>
+    <string name="label_rdp" >Desbloqueo PIN RUIM RUIM</string>
+    <string name="callind" >Configuración de funciones de llamada</string>
+    <string name="exportAllcontatsFailed" >Error al exportar todos los contactos a la SIM!</string>
+    <string name="rnw1_unlock_failed" >Requición de desbloqueo de RUIM Network1 sin succeso</string>
+    <string name="enterNumber" >Introduzca el número de teléfono</string>
+    <string name="card_title_call_deflected" >Llamada desviada</string>
+    <string name="requesting_corporate_unlock" >Requisitando desbloqueo corporativo de SIM\u2026</string>
+    <string name="rnw1_unlock_success" >Desbloqueo de red1 RUIM con éxito.</string>
+    <string name="remove_ims_account" >Eliminar cuenta</string>
+    <string name="set_sub_deactivate_not_supported" >No se admite desactivar</string>
+    <string name="rc_unlock_success" >Desbloqueo corporativo RUIM con éxito.</string>
+    <string name="label_subscription" >Por Suscripción</string>
+    <string name="set_sub_failed" >Establecer suscripción falló</string>
+    <string name="label_cdp" >PIN corporativo para desbloqueo de SIM</string>
+    <string name="subtwo" >Suscripción 2</string>
+    <string name="sub2LineNumber" >Sub2 Número:</string>
+    <string name="label_sdp" >PIN de Desbloqueo SIM SIM</string>
+    <string name="subone" >Suscripción 1</string>
+    <string name="nw_unlock_success" >Desbloqueo de red SIM con éxito.</string>
+    <string name="card_title_callconnectedect" >Llamar  ECT conectada</string>
+    <string name="use_ims_default_title" >Usar IMS siempre</string>
+    <string name="requesting_rnw2_unlock" >Solicitando desbloqueo de red2 RUIM\ u2026</string>
+    <string name="addSimEntries" >Añadir un contacto en el SIM</string>
+    <string name="nw_unlock_failed" >Solicitud de desbloqueo SIM sin éxito.</string>
+    <string name="set_uicc_subscription_progress" >Establecer suscripción en curso ...</string>
+    <string name="cancel_call" >Cancelar</string>
+    <string name="contactAddSuccess" >Contacto añadido correctamente a SIM</string>
+    <string name="card_title_callonhold_released" >Llamada liberada</string>
+    <string name="puk_unlock_failed" >Desbloqueo PUK sin éxito</string>
+    <string name="xdivert_imsi_not_read" >Ocurriendo la inicialización SIM. Por favor, inténtelo después de algún tiempo.</string>
+    <string name="use_ims_default_summary" >Utilice IMS para todas las llamadas de voz</string>
+    <string name="place_a_call1" >Suscripción 1</string>
+    <string name="place_a_call2" >Suscripción 2</string>
+    <string name="prompt" >Aviso</string>
+    <string name="set_sub_activate_not_supported" >Activar no está soportado</string>
+    <string name="card_title_in_progress" >Llamada actual</string>
+    <string name="rnw2_unlock_success" >Desbloqueo red2 RUIM con éxito.</string>
+    <string name="sub_one" >Administrar suscripción 1</string>
+    <string name="set_sub_2" >Suscripción 2</string>
+    <string name="set_sub_1" >Suscripción 1</string>
+    <string name="xdivert_not_supported" >X-desatibar no es soportado en CDMA</string>
+    <string name="card_title_forwarded_MTcall" >Llamadas entrantes remitidas</string>
+    <string name="title_data_settings" >Configuración de datos</string>
+    <string name="card_title_callconnectingect" >Llamar ECT Conectada</string>
+    <string name="card_title_calliswaiting" >Llamada en espera</string>
+    <string name="set_subscription_error_atleast_one" >Seleccione al menos una suscripción</string>
+    <string name="requesting_rsp_unlock" >Solicitando desbloqueo de Proveedor de servicio RUIM \ u2026</string>
+    <string name="rsp_unlock_failed" >Solicitud de desbloqueo de proveedor de servicio RUIM sin éxito</string>
+    <string name="ims_menu_discard" >Descartar</string>
+    <string name="card_title_MTcall_forwarding" >Llamada de entrada es remitida</string>
+    <string name="preferred_network_mode_lte_gsm_wcdma_summary" >Modo de red preferido: GSM / WCDMA / LTE</string>
+    <string name="card_02" >Tarjeta 2</string>
+    <string name="card_01" >Tarjeta 1</string>
+    <string name="card_title_deflectedcall" >Llamada desviada</string>
+    <string name="rsp_unlock_success" >Desbloqueo de proveedor de servicio RUIM con éxito.</string>
+    <string name="deleteAllSimEntries" >  Borrar todos los contactos SIM</string>
+    <string name="phone_numbers" >Introducir números de teléfono</string>
+    <string name="config_sub_title" >Configurar Suscripciones</string>
+    <string name="exportContacts" >Exportar contactos a la tarjeta SIM \ u2026</string>
+    <string name="xdivert_active" >Activo</string>
+    <string name="callFailed_dialToDial" >Solicitud DIAL modificada para DIAL con un número diferente.</string>
+    <string name="sub_two" >Administrar la suscripción 2</string>
+    <string name="ims_edit_title" >Detalles de la cuenta IMS</string>
+    <string name="delete" >Borrar</string>
+    <string name="editContact" >Editar</string>
+    <string name="card_title_incoming_barred" >Llamadas de entrada prohibidas</string>
+    <string name="xdivert_partial_set" >XDivert se ha establecido únicamente para primera suscripción</string>
+    <string name="card_title_multipartycall" >Multiconferencia</string>
+    <string name="fdn_failed" >Operación FDN se ha fallado.</string>
+    <string name="ims_accounts_title" >Cuenta IMS</string>
+    <string name="requesting_nw_subset_unlock" >Solicitando desbloqueo de subconjunto de rede SIM\u2026</string>
+    <string name="stk_cc_ss_to_ss_error" >Solicitud SS modificado para nueva solicitud SS.</string>
+    <string name="requesting_rnw1_unlock" >Solicitando desbloqueo RUIM red1 \ u2026</string>
+    <string name="requesting_ruim_unlock" >Solicitando desbloqueo RUIM RUIM \ u2026</string>
+    <string name="ContactScreen" >Agregar / Editar contacto SIM</string>
+    <string name="puk2_blocked" >PUK2 está bloqueado permanentemente.</string>
 </resources>
