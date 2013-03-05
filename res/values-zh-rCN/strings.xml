@@ -172,6 +172,11 @@
     <string name="preferred_network_mode_tdscdma_only_summary" msgid="2836897236221063413">"首选网络模式：仅限 TDS-CDMA"</string>
   <string-array name="preferred_network_mode_choices">
     <item msgid="5543794538185064048">"LTE/CDMA"</item>
+    <item>LTE</item>
+    <item>全球模式</item>
+    <item>GSM/WCDMA/LTE</item>
+    <item>CDMA + LTE/EvDo</item>
+    <item>CDMA/EvDo/GSM/WCDMA</item>
     <item msgid="3273348576277144124">"仅 EvDo"</item>
     <item msgid="454610224530856274">"CDMA，无 EvDo 功能"</item>
     <item msgid="648505122852496166">"CDMA/EvDo 自动选择"</item>
@@ -184,6 +189,12 @@
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>
   </string-array>
+  <string-array name="preferred_network_mode_choices_tdscdma">
+    <item>仅 TDS-CDMA</item>
+    <item>仅 GSM</item>
+    <item>首选 GSM/TDS-CDMA</item>
+  </string-array>
+
     <string name="data_enabled" msgid="5972538663568715366">"启用数据网络"</string>
     <string name="data_enable_summary" msgid="5022018967714633874">"允许通过移动网络存取数据"</string>
     <string name="roaming" msgid="8871412572928323707">"移动数据网络漫游"</string>
