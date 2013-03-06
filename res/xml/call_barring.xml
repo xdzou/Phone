@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+*
+*    DESCRIPTION: 
+*    AUTHOR:  Helgan
+*    HISTORY: 1.0
+*    DATE:    20100118
+*
+-->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:phone="http://schemas.android.com/apk/res/com.android.phone"
+        >
+
+    <ListPreference
+        android:key="button_call_barring_outgoing_key" 
+        android:title="@string/call_barring_outgoing"
+        android:persistent="false"
+        android:defaultValue="DEFAULT"
+        android:entries="@array/call_barring_outgoing_display_values"
+        android:entryValues="@array/call_barring_outgoing_values"
+        android:dialogTitle="@string/call_barring_outgoing" />
+
+    <ListPreference
+        android:key="button_call_barring_incoming_key" 
+        android:title="@string/call_barring_incoming"
+        android:persistent="false"
+        android:defaultValue="DEFAULT"
+        android:entries="@array/call_barring_incoming_display_values"
+        android:entryValues="@array/call_barring_incoming_values"
+        android:dialogTitle="@string/call_barring_incoming" />
+
+    <com.android.phone.EditPinPreference 
+        android:key="button_cb_cancel_all_key" 
+        android:persistent="false"
+        android:dialogMessage="@string/input_password"
+        android:title="@string/labelCbCancelAll"/>
+
+    <com.android.phone.EditPinPreference 
+        android:key="button_cb_change_password_key" 
+        android:persistent="false"
+        android:dialogMessage="@string/psw_enter_old"
+        android:title="@string/labelCbChangePassword"/>
+    
+</PreferenceScreen>

@@ -399,6 +399,15 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="CallBarring"
+                android:label="@string/call_barring"
+                android:configChanges="orientation|screenSize|keyboardHidden"
+                android:theme="@android:style/Theme.Holo.DialogWhenLarge">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
         <activity android:name="CellBroadcastSms"
             android:label="@string/cell_broadcast_sms"
             android:theme="@android:style/Theme.Holo.DialogWhenLarge">
