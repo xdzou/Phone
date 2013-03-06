@@ -623,4 +623,5 @@
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"响铃时振动"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
+    <string name="unknown_network">未知网络</string>
 </resources>

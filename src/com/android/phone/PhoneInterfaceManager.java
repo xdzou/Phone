@@ -48,6 +48,9 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.PhoneConstants;
+import android.provider.SpnProvider;
+import android.telephony.cdma.CdmaCellLocation;
+import android.telephony.TelephonyManager;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -876,4 +879,44 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return mPhone.getIccCard().getIccPin1RetryCount();
     }
 
+    public String getNetworkName() {
+        String networkName = null;
+        ServiceState serviceState = mPhone.getServiceState();
+        if (serviceState != null && serviceState.getState() == ServiceState.STATE_IN_SERVICE) {
+            String operatorNumeric = serviceState.getOperatorNumeric();
+            boolean isNumericValid = operatorNumeric != null && operatorNumeric.length() > 3
+                                     && !("00000".equals(operatorNumeric));
+            //init the network name is "unknown network"
+            networkName = (String)mApp.getResources().getString(R.string.unknown_network);
+
+            Log.d(LOG_TAG, " operatorNumeric: " + operatorNumeric);
+
+            if (isNumericValid) {
+                networkName = (String)SpnProvider.getSPNByMCCMNC(mApp, operatorNumeric);
+                //if cannot get name by mcc,mnc, use mcc+mnc
+                if (TextUtils.isEmpty(networkName))
+                    return operatorNumeric;
+            } else {
+                int phoneType = getActivePhoneType();
+                if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
+                    //if mcc+mnc is invalid, for cdma, get system network id.
+                    CdmaCellLocation cdmaCellLocation = (CdmaCellLocation)TelephonyManager.getDefault().getCellLocation();
+                    if (cdmaCellLocation != null) {
+                        int sid = cdmaCellLocation.getSystemId();
+                        int nid = cdmaCellLocation.getNetworkId();
+                        //if sid is valid, show sid
+                        if (sid > 0 && nid > 0) {
+                           networkName = Integer.toString(sid) + "," + Integer.toString(nid);
+                        } else if (sid > 0) {
+                           networkName = Integer.toString(sid);
+                        } else if (nid > 0) {
+                           networkName = Integer.toString(nid);
+                        }
+                    }
+                }
+            }
+        }
+
+        return networkName;
+    }
 }
