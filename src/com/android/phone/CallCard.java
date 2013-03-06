@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
+ * Not a Contribution.
  *
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -47,7 +46,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
@@ -632,13 +633,28 @@ public class CallCard extends LinearLayout
                     if (DBG) log("- displayMainCallStatus: using data we already have...");
                     if (o instanceof CallerInfo) {
                         CallerInfo ci = (CallerInfo) o;
+                        // In case of emergency and voice mail numbers, ci.phoneNumber is
+                        // updated with "Emergency Number" text and voice mail tag respectively.
+                        // So, ci.phoneNumber will not match connection address.
+                        String connAddress = conn.getAddress();
+                        String number = PhoneNumberUtils.stripSeparators(ci.phoneNumber);
+                        if (!(ci.isEmergencyNumber() || ci.isVoiceMailNumber()) &&
+                            (connAddress != null && !connAddress.equals(number))) {
+                            log("- displayMainCallStatus: Phone number modified!!");
+                            CallerInfo newCi = CallerInfo.getCallerInfo(getContext(), connAddress);
+                            if (newCi != null) {
+                                ci = newCi;
+                                conn.setUserData(ci);
+                            }
+                        }
                         // Update CNAP information if Phone state change occurred
                         ci.cnapName = conn.getCnapName();
                         ci.numberPresentation = conn.getNumberPresentation();
                         ci.namePresentation = conn.getCnapNamePresentation();
                         if (DBG) log("- displayMainCallStatus: CNAP data from Connection: "
                                 + "CNAP name=" + ci.cnapName
-                                + ", Number/Name Presentation=" + ci.numberPresentation);
+                                + ", Number/Name Presentation=" + ci.numberPresentation
+                                + ", Number=" + ci.phoneNumber);
                         if (DBG) log("   ==> Got CallerInfo; updating display: ci = " + ci);
                         updateDisplayForPerson(ci, presentation, false, call, conn);
                     } else if (o instanceof PhoneUtils.CallerInfoToken){
@@ -696,6 +712,17 @@ public class CallCard extends LinearLayout
         return PhoneUtils.isImsVideoCall(call);
     }
 
+    private int getVideoCallType(Call call) {
+        int callType = CallDetails.CALL_TYPE_UNKNOWN;
+        Phone phone = call.getPhone();
+        try {
+            callType = phone.getCallType(call);
+        } catch (CallStateException ex) {
+            Log.e(LOG_TAG, "getVideoCallType: caught " + ex);
+        }
+        return callType;
+    }
+
     /**
      * Updates the VideoCallPanel based on the current state of the call
      *
@@ -710,22 +737,22 @@ public class CallCard extends LinearLayout
             loge("VideocallPanel is null");
             return;
         }
-
+        int callType = getVideoCallType(call);
         switch (state) {
             case DIALING: // These are an intentional fall through(s)
             case INCOMING:
             case ALERTING:
-                initVideoCall();
+                initVideoCall(callType);
                 break;
 
             case ACTIVE:
                 // If phone app didn't receive the previous call states such as
                 // dialing and alerting, make sure that the video call is still
                 // initialized
-                initVideoCall();
+                initVideoCall(callType);
 
                 // Show video call widget
-                showVideoCallWidgets();
+                showVideoCallWidgets(callType);
                 break;
 
             case DISCONNECTING: // These are an intentional fall through(s)
@@ -754,13 +781,14 @@ public class CallCard extends LinearLayout
      * If this is a video call then hide the photo widget and show the
      * video call panel.
      */
-    private void showVideoCallWidgets() {
+    private void showVideoCallWidgets(int callType) {
         if (isPhotoVisible()) {
             if (DBG) log("show videocall widget");
-
             mPhoto.setVisibility(View.GONE);
-            mVideoCallPanel.setVisibility(View.VISIBLE);
         }
+
+        mVideoCallPanel.setVisibility(View.VISIBLE);
+        mVideoCallPanel.setPanelElementsVisibility(callType);
     }
 
     /**
@@ -772,15 +800,17 @@ public class CallCard extends LinearLayout
 
             mPhoto.setVisibility(View.VISIBLE);
             mVideoCallPanel.setVisibility(View.GONE);
+            mVideoCallPanel.setCameraNeeded(false);
         }
     }
 
     /**
      * Initializes the video call widgets if not already initialized
      */
-    private void initVideoCall() {
+    private void initVideoCall(int callType) {
         if (!mIsVTinitialized) {
-            mVideoCallPanel.onCallInitiating();
+            //Choose camera direction based on call type
+            mVideoCallPanel.onCallInitiating(callType);
             switchInVideoCallAudio(); // Set audio to speaker by default
             mIsVTinitialized = true;
         }

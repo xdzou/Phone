@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -43,6 +43,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.android.internal.telephony.CallDetails;
 import com.android.phone.CameraHandler.CameraState;
 
 import java.io.IOException;
@@ -84,6 +85,10 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
     // Property used to indicate that the Media running in loopback mode
     private boolean mIsMediaLoopback = false;
+
+    // Flag to indicate if camera is needed for a certain call type.
+    // For eg. VT_RX call will not need camera
+    private boolean mCameraNeeded = false;
 
     /**
     * This class implements the zoom listener for zoomControl
@@ -140,7 +145,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         mVideoCallManager = VideoCallManager.getInstance(mContext);
         mBackCameraId = mVideoCallManager.getBackCameraId();
         mFrontCameraId = mVideoCallManager.getFrontCameraId();
-        resetCameraDirection();
+        chooseCamera(true);
 
         // Check if camera supports dual cameras
         mNumberOfCameras = mVideoCallManager.getNumberOfCameras();
@@ -151,14 +156,29 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         }
     }
 
+    public void setCameraNeeded(boolean mCameraNeeded) {
+        this.mCameraNeeded = mCameraNeeded;
+    }
+
     /**
      * Call is either is either being originated or an MT call is received.
      */
-    public void onCallInitiating() {
+    public void onCallInitiating(int callType) {
         if (DBG) log("onCallInitiating");
 
-        // Reset camera to front camera if the front camera is available
-        resetCameraDirection();
+        // Only for VT TX it is required to default to back camera
+        boolean chooseFrontCamera = true;
+        if (callType == CallDetails.CALL_TYPE_VT_TX) {
+            chooseFrontCamera = false;
+        }
+
+        chooseCamera(chooseFrontCamera);
+
+        if (callType == CallDetails.CALL_TYPE_VT || callType == CallDetails.CALL_TYPE_VT_TX) {
+            mCameraNeeded = true;
+        } else {
+            mCameraNeeded = false;
+        }
     }
 
     /**
@@ -203,7 +223,12 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
      * This method opens the camera and starts the camera preview
      */
     private void initializeCamera() {
-        if (DBG) log("Initializing camera");
+        if (DBG) log("Initializing camera id=" + mCameraId);
+
+        if (mCameraId == CAMERA_UNKNOWN) {
+            loge("initializeCamera: Not initializing camera as mCameraId is unknown");
+            return;
+        }
 
         // Open camera if not already open
         if (false == openCamera(mCameraId)) {
@@ -267,7 +292,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         if (surface.equals(mCameraPreview.getSurfaceTexture())) {
             if (DBG) log("Camera surface texture created");
             mCameraSurface = surface;
-            if (mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
+            if (mCameraNeeded && mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
                 initializeCamera();
             } else {
                 // Set preview display if the surface is being created and preview
@@ -330,7 +355,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
                 break;
             case View.VISIBLE:
                 if (DBG) log("VideoCallPanel View is VISIBLE");
-                if (mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
+                if (mCameraNeeded
+                        && mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
                     initializeCamera();
                 }
                 break;
@@ -422,6 +448,39 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         } catch (RuntimeException e) {
             log("Error setting Camera preview size/fps exception=" + e);
             log("Supported Preview sizes = " + mParameters.getSupportedPreviewSizes());
+        }
+    }
+
+    public void setPanelElementsVisibility(int callType) {
+        log("setPanelElementsVisibility: callType= " + callType);
+        switch (callType) {
+            case CallDetails.CALL_TYPE_VT:
+                mCameraPreview.setVisibility(VISIBLE);
+                mFarEndView.setVisibility(VISIBLE);
+                log("setPanelElementsVisibility: VT: mCameraPreview:VISIBLE, mFarEndView:VISIBLE");
+                break;
+            case CallDetails.CALL_TYPE_VT_TX:
+                mCameraPreview.setVisibility(View.VISIBLE);
+                // Not setting mFarEndView to GONE as receiver side did not get the frames
+                log("setPanelElementsVisibility VT_TX: mCameraPreview:VISIBLE");
+                break;
+            case CallDetails.CALL_TYPE_VT_RX:
+                mFarEndView.setVisibility(View.VISIBLE);
+                // Stop the preview and close the camera now because other
+                // activities may need to use it
+                if (mVideoCallManager.getCameraState() != CameraState.CAMERA_CLOSED) {
+                    stopPreview();
+                    closeCamera();
+                }
+                mCameraPreview.setVisibility(View.GONE);
+                log("setPanelElementsVisibility VT_RX: mCameraPreview:GONE mFarEndView:VISIBLE");
+                break;
+            default:
+                log("setPanelElementsVisibility: Default: "
+                        + "VideoCallPanel is " + mVideoCallPanel.getVisibility()
+                        + "mCameraPreview is " + mCameraPreview.getVisibility()
+                        + "mFarEndView is " + mFarEndView.getVisibility());
+                break;
         }
     }
 
@@ -523,14 +582,17 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     }
 
     /**
-     * Reset the camera direction to the front camera if it is available. Else
+     * Choose the camera direction to the front camera if it is available. Else
      * set the camera direction to the rear facing
      */
-    private void resetCameraDirection() {
-        if (mFrontCameraId != CAMERA_UNKNOWN) {
+    private void chooseCamera(boolean chooseFrontCamera) {
+        if (mFrontCameraId != CAMERA_UNKNOWN && chooseFrontCamera) {
             mCameraId = mFrontCameraId;
-        } else {
+        } else if (mBackCameraId != CAMERA_UNKNOWN) {
             mCameraId = mBackCameraId;
+        } else {
+            loge("chooseCamera " + chooseFrontCamera + " Both camera ids unknown");
+            mCameraId = CAMERA_UNKNOWN;
         }
     }
 
