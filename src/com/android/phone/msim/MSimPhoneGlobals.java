@@ -35,7 +35,9 @@ import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Handler;
 import android.os.IPowerManager;
+import android.os.Message;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -65,6 +67,7 @@ import com.android.internal.telephony.PhoneConstants;
 import java.util.ArrayList;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * Top-level Application class for the Phone app.
@@ -106,6 +109,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     private static final int EVENT_TTY_MODE_GET = 15;
     private static final int EVENT_TTY_MODE_SET = 16;
     private static final int EVENT_START_SIP_SERVICE = 17;
+    private static final int EVENT_SET_DATA_SUBSCRIPTION_DONE = 1;
 
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
@@ -665,6 +669,76 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         if (ss != null) {
             int state = ss.getState();
             notificationMgr.updateNetworkSelection(state, phone);
+
+            // if feature restrict slot2 data open & preferred data channel is
+            // sub1
+            // we need fall back it to sub0 when in China Mainland and Macau.
+            Log.d(LOG_TAG,"state is:" + state);
+
+            if(state == ServiceState.STATE_IN_SERVICE){
+                // anyway need change preferred data to sub0 in China or Macau.
+                boolean inChina = false;
+                String operatorNumber = ss.getOperatorNumeric();
+                Log.d(LOG_TAG, "operatorNumber is:" + operatorNumber);
+                if (null != operatorNumber && operatorNumber.length() >= 3) {
+                    String mcc = (String) operatorNumber.subSequence(0, 3);
+                    // China mainland and Macau
+                    Log.d(LOG_TAG, "mcc is:" + mcc);
+                    if (mcc.equals("460") || mcc.equals("455")) {
+                        inChina = true;
+                    }
+                }
+
+                setSelectedApnKey(inChina);
+
+                if (FeatureQuery.FEATURE_RESTRICT_SLOT2_DATA_SERVICE) {
+                    // if in China , change preferred data to sub0
+                    // if two sim , current dds sub1 , change data to sub0
+                    if (inChina) {
+                        int userPref = MSimPhoneFactory.getUserPreferredDDS();
+                        if (userPref != 0) {
+                            Handler setDDSHandler = new Handler() {
+                                public void handleMessage(Message msg) {
+                                    AsyncResult ar;
+                                    switch (msg.what) {
+                                    case EVENT_SET_DATA_SUBSCRIPTION_DONE:
+                                        Log.d(LOG_TAG,"set dds done");
+                                        ar = (AsyncResult) msg.obj;
+                                        if (ar.exception != null) {
+                                            // exception occur
+                                            Log.d(LOG_TAG, "exception occur");
+                                            break;
+                                        }
+                                        boolean result = (Boolean) ar.result;
+                                        if (result) {
+                                            //change preferred dds to sub0
+                                            if (msg.arg1 == 0) {
+                                                Log.d(LOG_TAG, "dds to sub0");
+                                                MSimPhoneFactory
+                                                        .setDataSubscription(msg.arg1);
+                                            }
+                                        }
+                                    }
+                                }
+                            };
+                            Message setDdsMsg = Message.obtain(setDDSHandler,
+                                    EVENT_SET_DATA_SUBSCRIPTION_DONE, 0, 0);
+                            // MSimPhoneFactory.setDataSubscription(0);
+                            // sub0 active,if current dds is not sub0 switch to sub0
+                            // in case mms will switch sub0 to sub1, can only switch
+                            // back first time.
+                            SubscriptionManager subManager = SubscriptionManager
+                                    .getInstance();
+                            Log.d(LOG_TAG, "getDataSubscription:"
+                                    + getDataSubscription());
+                            if (subManager != null && subManager.isSubActive(0)
+                                    && getDataSubscription() != 0) {
+                                subManager.setDataSubscription(0, setDdsMsg);
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

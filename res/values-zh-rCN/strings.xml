@@ -690,4 +690,5 @@
     <string name="preferred_duration_title">挂机显示通话时长</string>
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
     <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
+    
 </resources>

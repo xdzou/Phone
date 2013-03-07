@@ -248,6 +248,7 @@ public class InCallScreen extends Activity
     private AlertDialog mPausePromptDialog;
     private AlertDialog mExitingECMDialog;
     private AlertDialog mModifyCallPromptDialog;
+    private AlertDialog mDurationDialog;
     // NOTE: if you add a new dialog here, be sure to add it to dismissAllDialogs() also.
 
     // ProgressDialog created by showProgressIndication()
@@ -3099,6 +3100,9 @@ public class InCallScreen extends Activity
                 // Show the Manage Conference panel.
                 setInCallScreenMode(InCallScreenMode.MANAGE_CONFERENCE);
                 requestUpdateScreen();
+                break;            
+            case R.id.recorderButton:
+                mApp.startRecord();
                 break;
 
             default:
@@ -3479,6 +3483,11 @@ public class InCallScreen extends Activity
             if (DBG) log("- DISMISSING mModifyCallPromptDialog.");
             mModifyCallPromptDialog.dismiss();
             mModifyCallPromptDialog = null;
+        }
+        if (mDurationDialog != null) {
+            if (DBG) log("- DISMISSING mDurationDialog.");
+            mDurationDialog.dismiss();
+            mDurationDialog = null;
         }
     }
 
@@ -4917,5 +4926,56 @@ public class InCallScreen extends Activity
      */
     public boolean isQuickResponseDialogShowing() {
         return mRespondViaSmsManager != null && mRespondViaSmsManager.isShowingPopup();
+    }
+
+    public boolean callRecorderReady(){
+        return mApp.isRecordReady();
+	}
+    
+    public boolean callRecorderEnabled(){
+		int phoneType = mCM.getFgPhone().getPhoneType();
+        return mApp.isRecordEnabled() && phoneType != PhoneConstants.PHONE_TYPE_SIP;
+	}
+
+	public boolean callRecorderRecording(){
+	    return mApp.isRecording();
+	}
+
+    /**
+     * show call duration dialog when diconnect
+     */
+    void showDurationDialog(long duration) {
+        if (mDurationDialog != null) {
+            if (DBG)
+                log("- DISMISSING mDurationDialog.");
+            mDurationDialog.dismiss(); // safe even if already dismissed
+            mDurationDialog = null;
+        }
+
+        duration = duration / 1000;
+        long minutes = 0;
+        long seconds = 0;
+
+        if (duration >= 60) {
+            minutes = duration / 60;
+            duration -= minutes * 60;
+        }
+        seconds = duration;
+
+        mDurationDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.title_dialog_duration)
+                .setMessage(getString(R.string.duration_format, minutes, seconds))
+                .create();
+
+        mDurationDialog.show();
+        new Handler().postDelayed(new Runnable(){
+            public void run(){
+                if (mDurationDialog != null) {
+                    if (DBG) log("- DISMISSING mDurationDialog.");
+                    mDurationDialog.dismiss();
+                    mDurationDialog = null;
+                }
+            }
+        }, 1000);
     }
 }

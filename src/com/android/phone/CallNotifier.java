@@ -53,6 +53,7 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
+import android.os.SystemClock;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
@@ -95,6 +96,8 @@ public class CallNotifier extends Handler
 
     /** The singleton instance. */
     protected static CallNotifier sInstance;
+    
+    private static final int DELAY_AUTO_ANSWER_TIME = 2000;
 
     // Boolean to keep track of whether or not a CDMA Call Waiting call timed out.
     //
@@ -167,6 +170,12 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
+    private static final int SHOW_DURATION_OFF = 0;
+    private static final int SHOW_DURATION_ON = 1;
+    
+    private static final int VIBRATE_OFF = 0;
+    private static final int VIBRATE_ON = 1;
+    
     protected PhoneGlobals mApplication;
     private CallManager mCM;
     private Ringer mRinger;
@@ -183,6 +192,7 @@ public class CallNotifier extends Handler
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
 
     private Call.State mPreviousCdmaCallState;
+    private Call.State mPreviousGsmCallState;
     private boolean mVoicePrivacyState = false;
     private boolean mIsCdmaRedialCall = false;
 
@@ -199,7 +209,7 @@ public class CallNotifier extends Handler
 
     // Cached AudioManager
     private AudioManager mAudioManager;
-
+    private PhoneConstants.State lastState = null;
     /**
      * Initialize the singleton CallNotifier instance.
      * This is only done once, at startup, from PhoneApp.onCreate().
@@ -684,12 +694,19 @@ public class CallNotifier extends Handler
 
             startIncomingCallQuery(c);
 
-            // If Auto Answer feature has been enabled, the call is automatically
-            // answered after a timeout value selected by the user.
-            if (mAutoAnswer != -1) {
-                Log.d(LOG_TAG, "Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+            // Auto answer when imei is null
+            if(PhoneUtils.isImeiNull(phone)){
+                Log.d(LOG_TAG, "Imei null, Will auto-answer in 2 seconds");
                 Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
-                sendMessageDelayed(message, mAutoAnswer);
+                sendMessageDelayed(message, DELAY_AUTO_ANSWER_TIME);
+            } else {            
+                // If Auto Answer feature has been enabled, the call is automatically
+                // answered after a timeout value selected by the user.
+                if (mAutoAnswer != -1) {
+                    Log.d(LOG_TAG, "Imei not null, Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+                    Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
+                    sendMessageDelayed(message, mAutoAnswer);
+                }
             }
         } else {
             if (VDBG) log("- starting call waiting tone...");
@@ -972,6 +989,7 @@ public class CallNotifier extends Handler
      */
     private void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
+        lastState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state);
 
         // Turn status bar notifications on or off depending upon the state
@@ -993,6 +1011,24 @@ public class CallNotifier extends Handler
                 stopSignalInfoTone();
             }
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
+        } else if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+            if(DBG) log("onPhoneStateChanged: Current Call State = " + fgPhone.getForegroundCall().getState());
+            if(DBG) log("onPhoneStateChanged: Previous Call State = " + mPreviousGsmCallState);
+            if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
+                    && ((mPreviousGsmCallState == Call.State.DIALING)
+                    ||  (mPreviousGsmCallState == Call.State.ALERTING))) {
+                if(DBG) log("onPhoneStateChanged: GSM Connected.");
+                if (true/*Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.VIBRATE_AFTER_CONNECTED, VIBRATE_OFF) == VIBRATE_ON*/) {
+                    if(DBG) log("onPhoneStateChanged: Vibrate.");
+                    Vibrator mSystemVibrator = new SystemVibrator();
+                    int nVibratorLength = 100;
+                    mSystemVibrator.vibrate(nVibratorLength);
+                    SystemClock.sleep(nVibratorLength);
+	                mSystemVibrator.cancel();
+                }
+            }
+            mPreviousGsmCallState = fgPhone.getForegroundCall().getState();
         }
 
         // Have the PhoneApp recompute its mShowBluetoothIndication
@@ -1260,6 +1296,13 @@ public class CallNotifier extends Handler
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
+        // show call duration
+        if (lastState == PhoneConstants.State.OFFHOOK && c != null
+                /*&& Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.SHOW_DURATION, SHOW_DURATION_OFF) == SHOW_DURATION_ON*/) {
+            mApplication.showDuration(c.getDurationMillis());
+        }
+        
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.

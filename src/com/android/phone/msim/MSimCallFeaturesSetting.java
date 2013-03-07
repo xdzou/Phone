@@ -95,6 +95,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String SHOW_DURATION_KEY = "duration_enable_key";
     // preferred TTY mode
     // Phone.TTY_MODE_xxx
     static final int preferredTtyMode = Phone.TTY_MODE_OFF;
@@ -129,6 +130,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private PreferenceScreen mButtonXDivert;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
+    private CheckBoxPreference showDurationCheckBox;
 
     /*
      * Click Listeners, handle click based on objects attached to UI.
@@ -305,6 +307,25 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
+        }
+		
+        showDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
+        showDurationCheckBox.setChecked(Settings.System.getInt(getContentResolver(),
+                Settings.System.SHOW_DURATION, 0) == 1);
+        showDurationCheckBox
+                .setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                    @Override
+                    public boolean onPreferenceChange(Preference preference, Object newValue) {
+                        int flag = (Boolean) newValue == true ? 1 : 0;
+                        if (Settings.System.putInt(getContentResolver(),
+                                Settings.System.SHOW_DURATION, flag)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+        if (!FeatureQuery.FEATURE_SHOW_DURATION_AFTER_CALL) {
+            getPreferenceScreen().removePreference(findPreference(SHOW_DURATION_KEY));
         }
     }
 
@@ -553,7 +574,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
      * This is useful for implementing "HomeAsUp" capability for second-level Settings.
      */
     public static void goUpToTopLevelSetting(Activity activity) {
-        Intent intent = new Intent(activity, CallFeaturesSetting.class);
+        // Make the intent the same as the intent in the dialer when click the upper left corner.
+        Intent intent = new Intent(activity, MSimCallFeaturesSetting.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         activity.startActivity(intent);

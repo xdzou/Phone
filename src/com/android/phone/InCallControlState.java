@@ -79,6 +79,9 @@ public class InCallControlState {
     //
     public boolean speakerEnabled;
     public boolean speakerOn;
+    //    
+    public boolean canRecord;
+    public boolean recordIndicatorOn;
     //
     public boolean canMute;
     public boolean muteIndicatorOn;
@@ -158,6 +161,10 @@ public class InCallControlState {
         speakerEnabled = (state != PhoneConstants.State.IDLE);
         speakerOn = PhoneUtils.isSpeakerOn(mInCallScreen);
 
+        // "Recorder":       
+        canRecord = mInCallScreen.callRecorderEnabled();
+        recordIndicatorOn = mInCallScreen.callRecorderRecording();
+        
         // "Mute": only enabled when the foreground call is ACTIVE.
         // (It's meaningless while on hold, or while DIALING/ALERTING.)
         // It's also explicitly disabled during emergency calls or if
@@ -244,7 +251,9 @@ public class InCallControlState {
         log("  speakerEnabled: " + speakerEnabled);
         log("  speakerOn: " + speakerOn);
         log("  canMute: " + canMute);
-        log("  muteIndicatorOn: " + muteIndicatorOn);
+        log("  muteIndicatorOn: " + muteIndicatorOn);        
+        log("  canRecord: " + canRecord);
+        log("  recordIndicatorOn: " + recordIndicatorOn);
         log("  dialpadEnabled: " + dialpadEnabled);
         log("  dialpadVisible: " + dialpadVisible);
         log("  onHold: " + onHold);

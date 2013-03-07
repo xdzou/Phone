@@ -32,7 +32,10 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract.Contacts;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
+
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
@@ -132,6 +135,7 @@ public class CallCard extends LinearLayout
     private TextView mPhoneNumber;
     private TextView mLabel;
     private TextView mCallTypeLabel;
+    private TextView mCityName;
     // private TextView mSocialStatus;
 
     /**
@@ -251,6 +255,7 @@ public class CallCard extends LinearLayout
         mName = (TextView) findViewById(R.id.name);
         mPhoneNumber = (TextView) findViewById(R.id.phoneNumber);
         mLabel = (TextView) findViewById(R.id.label);
+		mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
         mCallTypeLabel = (TextView) findViewById(R.id.callTypeLabel);
         // mSocialStatus = (TextView) findViewById(R.id.socialStatus);
 
@@ -1032,7 +1037,26 @@ public class CallCard extends LinearLayout
 
         if (!TextUtils.isEmpty(callStateLabel)) {
             mCallStateLabel.setVisibility(View.VISIBLE);
-            mCallStateLabel.setText(callStateLabel);
+            if (TelephonyManager.isMultiSimEnabled()){
+                // Get the subscription from current call object.
+                int subscription = call.getPhone().getSubscription();
+                // String subInfo = Settings.System.getString(mContext.getContentResolver(),
+                //         Settings.System.MULTI_SIM_NAME[subscription]);
+                
+                // Settings should add MULTI_SIM_NAME
+                String subInfo = "CDMA";
+                if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                    subInfo = "GSM";
+                }
+                
+                if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {
+                    mCallStateLabel.setText(callStateLabel);
+                } else {
+                    mCallStateLabel.setText(subInfo + "  " + callStateLabel);
+                }
+            }else{
+                mCallStateLabel.setText(callStateLabel);
+            }            
 
             // ...and display the icon too if necessary.
             if (bluetoothIconId != 0) {
@@ -1381,6 +1405,7 @@ public class CallCard extends LinearLayout
         String displayName;
         String displayNumber = null;
         String label = null;
+        String cityName = null;
         Uri personUri = null;
         // String socialStatusText = null;
         // Drawable socialStatusBadge = null;
@@ -1413,6 +1438,9 @@ public class CallCard extends LinearLayout
                 number = number.substring(4);
             }
 
+            if (DBG)log("==>info.phoneNumber: "+info.phoneNumber+" info.name: "+info.name
+							+" info.geoDescription:"+info.geoDescription);
+            
             if (TextUtils.isEmpty(info.name)) {
                 // No valid "name" in the CallerInfo, so fall back to
                 // something else.
@@ -1423,18 +1451,21 @@ public class CallCard extends LinearLayout
                     // No name *or* number!  Display a generic "unknown" string
                     // (or potentially some other default based on the presentation.)
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+                    cityName = displayName; /*No number, no city name*/
                     if (DBG) log("  ==> no name *or* number! displayName = " + displayName);
                 } else if (presentation != PhoneConstants.PRESENTATION_ALLOWED) {
                     // This case should never happen since the network should never send a phone #
                     // AND a restricted presentation. However we leave it here in case of weird
                     // network behavior
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+                    cityName = displayName;	
                     if (DBG) log("  ==> presentation not allowed! displayName = " + displayName);
                 } else if (!TextUtils.isEmpty(info.cnapName)) {
                     // No name, but we do have a valid CNAP name, so use that.
                     displayName = info.cnapName;
                     info.name = info.cnapName;
                     displayNumber = number;
+                    cityName = info.geoDescription;
                     if (DBG) log("  ==> cnapName available: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
                 } else {
@@ -1447,14 +1478,19 @@ public class CallCard extends LinearLayout
                     displayName = number;
                     displayNameIsNumber = true;
 
+                    // We display the geographical description all the time except for EMCC,
+                    // forther more,the geo info comes from local AreaSearch instead of QCM's 
+                    // original design(reference CallerInfo.java).
+                    cityName = info.geoDescription;
+                    
                     // ...and use the "number" slot for a geographical description
                     // string if available (but only for incoming calls.)
-                    if ((conn != null) && (conn.isIncoming())) {
-                        // TODO (CallerInfoAsyncQuery cleanup): Fix the CallerInfo
-                        // query to only do the geoDescription lookup in the first
-                        // place for incoming calls.
-                        displayNumber = info.geoDescription;  // may be null
-                    }
+                    //if ((conn != null) && (conn.isIncoming())) {
+                    //    // TODO (CallerInfoAsyncQuery cleanup): Fix the CallerInfo
+                    //    // query to only do the geoDescription lookup in the first
+                    //    // place for incoming calls.
+                    //    displayNumber = info.geoDescription;  // may be null
+                    //}
 
                     if (DBG) log("  ==>  no name; falling back to number: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
@@ -1467,11 +1503,13 @@ public class CallCard extends LinearLayout
                     // AND a restricted presentation. However we leave it here in case of weird
                     // network behavior
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+                    cityName = displayName;
                     if (DBG) log("  ==> valid name, but presentation not allowed!"
                                  + " displayName = " + displayName);
                 } else {
                     displayName = info.name;
                     displayNumber = number;
+                    cityName = info.geoDescription;	
                     label = info.phoneLabel;
                     if (DBG) log("  ==>  name is present in CallerInfo: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
@@ -1482,6 +1520,7 @@ public class CallCard extends LinearLayout
                          + "', based on info.person_id: " + info.person_id);
         } else {
             displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+			cityName = displayName;	
         }
 
         boolean updateNameAndNumber = true;
@@ -1584,6 +1623,13 @@ public class CallCard extends LinearLayout
             AnimationUtils.Fade.hide(mPhotoDimEffect, View.GONE);
         }
 
+        if (cityName != null && !call.isGeneric()){
+            log("cityName: "+cityName);					
+            mCityName.setText(cityName);
+            mCityName.setVisibility(View.VISIBLE);
+        } else {
+            mCityName.setVisibility(View.GONE);
+        }
         // Other text fields:
         updateCallTypeLabel(call);
         // updateSocialStatus(socialStatusText, socialStatusBadge, call);  // Currently unused
@@ -1631,6 +1677,10 @@ public class CallCard extends LinearLayout
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
 
+        // to hide the cityname for the conference menbers 
+        // may come from different cities.
+		 mCityName.setVisibility(View.GONE);
+        
         // Other text fields:
         updateCallTypeLabel(call);
         // updateSocialStatus(null, null, null);  // socialStatus is never visible in this state
