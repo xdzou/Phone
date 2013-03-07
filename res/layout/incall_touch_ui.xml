@@ -118,6 +118,18 @@
                 <!-- Separator between 1st and 2nd button -->
                 <View style="@style/VerticalSeparator" />
 
+                <!--Call recorder -->
+                <!-- This is a "compound button": it has checked and unchecked states.
+                          Add this button in the buttom instead of the pop menu in original design.-->
+                <ToggleButton android:id="@+id/recorderButton"
+                    style="@style/InCallCompoundButton"
+                    android:background="@drawable/btn_compound_recorder"
+                    android:contentDescription="@string/onscreenRecorderText"
+                    />
+
+                <!-- Separator between 2st and 3nd button -->
+                <View style="@style/VerticalSeparator" />
+                
                 <!-- "Audio mode" -->
                 <!-- This is a multi-mode button that can behave either like a
                      simple "compound button" with two states *or* like an
@@ -130,7 +142,7 @@
                     android:contentDescription="@string/onscreenAudioText"
                     />
 
-                <!-- Separator between 2nd and 3rd button -->
+                <!-- Separator between 3nd and 4rd button -->
                 <View style="@style/VerticalSeparator" />
 
                 <!-- "Mute" -->
@@ -141,7 +153,7 @@
                     android:contentDescription="@string/onscreenMuteText"
                     />
 
-                <!-- Separator between 3rd and 4th button -->
+                <!-- Separator between 4rd and 5th button -->
                 <View style="@style/VerticalSeparator" />
 
                 <!-- This slot is either "Hold" or "Swap", depending on
@@ -161,7 +173,7 @@
                     android:contentDescription="@string/onscreenSwapCallsText"
                     />
 
-                <!-- Separator between 4th and 5th button (if 5th exists) -->
+                <!-- Separator between 5th and 6th button (if 5th exists) -->
                 <View android:id="@+id/holdSwapSpacer"
                       style="@style/VerticalSeparator" />
 
@@ -184,7 +196,7 @@
                     android:contentDescription="@string/onscreenMergeCallsText"
                     />
 
-                <!-- Separator between 4th (or 5th) button and right padding -->
+                <!-- Separator between 5th (or 6th) button and right padding -->
                 <View style="@style/VerticalSeparator" />
 
                 <Button android:id="@+id/modifyCallButton"
@@ -193,7 +205,7 @@
                     android:contentDescription="@string/onscreenModifyCallText"
                     />
 
-                <!-- Separator between 4th (or 5th) button and right padding -->
+                <!-- Separator between 5th (or 6th) button and right padding -->
                 <View style="@style/VerticalSeparator" />
 
             </LinearLayout>

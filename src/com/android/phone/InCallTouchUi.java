@@ -100,7 +100,8 @@ public class InCallTouchUi extends FrameLayout
     private ImageButton mEndButton;
     private Button mModifyCallButton;
     private CompoundButton mDialpadButton;
-    private CompoundButton mMuteButton;
+    private CompoundButton mMuteButton;    
+	private CompoundButton mRecorderButton;
     private CompoundButton mAudioButton;
     private CompoundButton mHoldButton;
     private ImageButton mSwapButton;
@@ -202,7 +203,10 @@ public class InCallTouchUi extends FrameLayout
         mDialpadButton.setOnLongClickListener(this);
         mMuteButton = (CompoundButton) mInCallControls.findViewById(R.id.muteButton);
         mMuteButton.setOnClickListener(this);
-        mMuteButton.setOnLongClickListener(this);
+        mMuteButton.setOnLongClickListener(this);        
+		mRecorderButton = (CompoundButton) mInCallControls.findViewById(R.id.recorderButton);
+		mRecorderButton.setOnClickListener(this);
+		mRecorderButton.setOnLongClickListener(this);
         mAudioButton = (CompoundButton) mInCallControls.findViewById(R.id.audioButton);
         mAudioButton.setOnClickListener(this);
         mAudioButton.setOnLongClickListener(this);
@@ -417,7 +421,8 @@ public class InCallTouchUi extends FrameLayout
             case R.id.mergeButton:
             case R.id.endButton:
             case R.id.modifyCallButton:
-            case R.id.dialpadButton:
+            case R.id.dialpadButton:            
+            case R.id.recorderButton:
             case R.id.muteButton:
             case R.id.holdButton:
             case R.id.swapButton:
@@ -569,6 +574,10 @@ public class InCallTouchUi extends FrameLayout
         // "Mute"
         mMuteButton.setEnabled(inCallControlState.canMute);
         mMuteButton.setChecked(inCallControlState.muteIndicatorOn);
+
+        // "Recorder"
+        mRecorderButton.setEnabled(inCallControlState.canRecord); 
+        mRecorderButton.setChecked(inCallControlState.recordIndicatorOn); 
 
         // "Audio"
         updateAudioButton(inCallControlState);
