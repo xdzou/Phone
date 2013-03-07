@@ -1018,8 +1018,8 @@ public class CallNotifier extends Handler
                     && ((mPreviousGsmCallState == Call.State.DIALING)
                     ||  (mPreviousGsmCallState == Call.State.ALERTING))) {
                 if(DBG) log("onPhoneStateChanged: GSM Connected.");
-                if (true/*Settings.System.getInt(mApplication.getContentResolver(),
-                        Settings.System.VIBRATE_AFTER_CONNECTED, VIBRATE_OFF) == VIBRATE_ON*/) {
+                if (Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.VIBRATE_AFTER_CONNECTED, VIBRATE_OFF) == VIBRATE_ON) {
                     if(DBG) log("onPhoneStateChanged: Vibrate.");
                     Vibrator mSystemVibrator = new SystemVibrator();
                     int nVibratorLength = 100;
@@ -1298,8 +1298,8 @@ public class CallNotifier extends Handler
 
         // show call duration
         if (lastState == PhoneConstants.State.OFFHOOK && c != null
-                /*&& Settings.System.getInt(mApplication.getContentResolver(),
-                        Settings.System.SHOW_DURATION, SHOW_DURATION_OFF) == SHOW_DURATION_ON*/) {
+                && Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.SHOW_DURATION, SHOW_DURATION_OFF) == SHOW_DURATION_ON) {
             mApplication.showDuration(c.getDurationMillis());
         }
         
