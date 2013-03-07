@@ -281,6 +281,21 @@ public class CallNotifier extends Handler
         switch (msg.what) {
             case PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
+//lirenfeng add for firewall 2013.03.01 start
+                AsyncResult r = (AsyncResult) msg.obj;
+                Connection c = (Connection) r.result;
+                Phone mPhone =	c.getCall().getPhone();
+
+                if (c != null && c.isRinging()) {
+                    String number = c.getAddress();
+                    if(PhoneUtils.IsInBlackList(mPhone,number)){
+                        //if(mPhone.getPhoneType() == Phone.PHONE_TYPE_GSM){
+                        if (VDBG) log("Reject the blacklist number:"+number);
+                        PhoneUtils.hangupRingingCall(c.getCall());
+                        return;
+                    }
+                }
+//lirenfeng add for firewall 2013.03.01 end
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
                 break;
