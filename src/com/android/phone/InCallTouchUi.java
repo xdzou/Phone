@@ -89,6 +89,7 @@ public class InCallTouchUi extends FrameLayout
     private GlowPadView mIncomingCallWidget;  // UI used for an incoming call
     private boolean mIncomingCallWidgetIsFadingOut;
     private boolean mIncomingCallWidgetShouldBeReset = true;
+    private boolean mShowIncomingCallControls = false;
 
     /** UI elements while on a regular call (bottom buttons, DTMF dialpad) */
     private View mInCallControls;
@@ -259,7 +260,7 @@ public class InCallTouchUi extends FrameLayout
         PhoneConstants.State state = cm.getState();  // IDLE, RINGING, or OFFHOOK
         if (DBG) log("updateState: current state = " + state);
 
-        boolean showIncomingCallControls = false;
+        mShowIncomingCallControls = false;
         boolean showInCallControls = false;
 
         final Call ringingCall = cm.getFirstActiveRingingCall();
@@ -280,7 +281,7 @@ public class InCallTouchUi extends FrameLayout
             // the incoming call controls.)
             if (ringingCall.getState().isAlive()) {
                 if (DBG) log("- updateState: RINGING!  Showing incoming call controls...");
-                showIncomingCallControls = true;
+                mShowIncomingCallControls = true;
             }
 
             // Ugly hack to cover up slow response from the radio:
@@ -295,7 +296,7 @@ public class InCallTouchUi extends FrameLayout
             long now = SystemClock.uptimeMillis();
             if (now < mLastIncomingCallActionTime + 500) {
                 log("updateState: Too soon after last action; not drawing!");
-                showIncomingCallControls = false;
+                mShowIncomingCallControls = false;
             }
 
             // b/6765896
@@ -313,7 +314,7 @@ public class InCallTouchUi extends FrameLayout
             // citizen in a new state machine.
             if (mInCallScreen.isQuickResponseDialogShowing()) {
                 log("updateState: quickResponse visible. Cancel showing incoming call controls.");
-                showIncomingCallControls = false;
+                mShowIncomingCallControls = false;
             }
         } else {
             // Ok, show the regular in-call touch UI (with some exceptions):
@@ -328,7 +329,7 @@ public class InCallTouchUi extends FrameLayout
         //
         // There's one exception: if this call is during fading-out animation for the incoming
         // call controls, we need to show both for smoother transition.
-        if (showIncomingCallControls && showInCallControls) {
+        if (mShowIncomingCallControls && showInCallControls) {
             throw new IllegalStateException(
                 "'Incoming' and 'in-call' touch controls visible at the same time!");
         }
@@ -352,7 +353,7 @@ public class InCallTouchUi extends FrameLayout
             mInCallControls.setVisibility(View.GONE);
         }
 
-        if (showIncomingCallControls) {
+        if (mShowIncomingCallControls) {
             if (DBG) log("- updateState: showing incoming call widget...");
             showIncomingCallWidget(ringingCall);
 
@@ -1032,6 +1033,11 @@ public class InCallTouchUi extends FrameLayout
         return height;
     }
 
+
+    // UX_Enhance_Dialer
+    public boolean showIncomingCallControls() {
+        return mShowIncomingCallControls;
+    }
 
     //
     // GlowPadView.OnTriggerListener implementation
