@@ -77,6 +77,10 @@ import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+//xiaohong add 2013/2/21
+import android.content.Context;
+import android.provider.RecentCallsPreferences;
+//xiaohong add end 
 import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
@@ -280,7 +284,7 @@ public class PhoneGlobals extends ContextWrapper
 
     // Video Call related
     private VideoCallManager mVideoCallManager;
-
+    Context mContext;//xiaohong add 2013/2/21
     /**
      * Set the restore mute state flag. Used when we are setting the mute state
      * OUTSIDE of user interaction {@link PhoneUtils#startNewCall(Phone)}
@@ -457,7 +461,11 @@ public class PhoneGlobals extends ContextWrapper
 
     public void onCreate() {
         if (VDBG) Log.v(LOG_TAG, "onCreate()...");
-
+       	mContext = this;//xiaohong add
+		//xiaohong add 2013/2/21
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(mContext);
+        //xiaohong add end  
         ContentResolver resolver = getContentResolver();
 
         // Cache the "voice capable" flag.
@@ -2054,4 +2062,18 @@ public class PhoneGlobals extends ContextWrapper
     /* package */ Intent createInCallIntent(int subscription) {
         return PhoneGlobals.createInCallIntent();
     }
+	//xiaohong add 2013/2/21
+	public long getCallsDuration(String key) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        return mprefs.getLong(key);
+    }
+
+    public void setCallsDuration(String key, long value) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        mprefs.setLong(key, value);
+	    return;
+    }      
+   //xiaohong add end 
 }

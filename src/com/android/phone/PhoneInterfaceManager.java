@@ -879,6 +879,16 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
         return mPhone.getIccCard().getIccPin1RetryCount();
     }
 
+  //xiaohong add 2013/2/21
+	public long getCallsDuration(String key) {
+        return mApp.getCallsDuration(key);
+    }
+
+    public void setCallsDuration(String key, long value) {
+        mApp.setCallsDuration(key, value);
+        return;
+    }
+  //xiaohong add end 
     public String getNetworkName() {
         String networkName = null;
         ServiceState serviceState = mPhone.getServiceState();
