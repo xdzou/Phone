@@ -24,12 +24,12 @@
     <!-- target class is com.android.phone.MultiSimSetting -->
     <PreferenceScreen
         android:key="button_call_independent_serv"
-        android:title="@string/callind_multi_sim"
+        android:title="@string/call_settings"
         android:persistent="false">
 
         <intent android:action="android.intent.action.MAIN"
-            android:targetPackage="com.android.phone"
-            android:targetClass="com.android.phone.SelectSubscription" />
+            android:targetPackage="com.android.settings"
+            android:targetClass="com.android.settings.multisimsettings.MultiSimSettingTab" />
 
     </PreferenceScreen>
 
@@ -48,6 +48,12 @@
         android:title="@string/auto_retry_mode_title"
         android:persistent="false"
         android:summary="@string/auto_retry_mode_summary"/>
+
+    <CheckBoxPreference
+        android:key="button_proximity_key"
+        android:title="@string/proximity_mode_title"
+        android:persistent="false"
+        android:summary="@string/proximity_on_summary"/>
 
     <ListPreference
         android:key="button_tty_mode_key"
@@ -76,4 +82,11 @@
         android:summary="@string/xdivert_summary"
         android:persistent="false">
     </PreferenceScreen>
+
+    <CheckBoxPreference
+        android:key="duration_enable_key"
+        android:persistent="false"
+        android:title="@string/preferred_duration_title"
+        android:summaryOn="@string/duration_enable_summary"
+        android:summaryOff="@string/duration_disable_summary" />
 </PreferenceScreen>

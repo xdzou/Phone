@@ -176,6 +176,8 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private static final String BUTTON_GSM_UMTS_OPTIONS = "button_gsm_more_expand_key";
     private static final String BUTTON_CDMA_OPTIONS = "button_cdma_more_expand_key";
+    private static final String BUTTON_CF_EXPAND_KEY = "button_cf_expand_key";
+    private static final String BUTTON_MORE_EXPAND_KEY = "button_more_expand_key";
 
     private static final String VM_NUMBERS_SHARED_PREFERENCES_NAME = "vm_numbers";
 
@@ -1588,6 +1590,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                 }
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 addPreferencesFromResource(R.xml.gsm_umts_call_options);
+                initGsmUmtsCallWaitingPref(mSubscription);
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
             }
@@ -2021,5 +2024,15 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         activity.startActivity(intent);
         activity.finish();
+    }
+
+    private void initGsmUmtsCallWaitingPref(int subscription) {
+        // setting selected subscription for GsmUmtsCallForwardOptions.java
+        PreferenceScreen subscriptionPrefCFE  = (PreferenceScreen) findPreference(BUTTON_CF_EXPAND_KEY);
+        subscriptionPrefCFE.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
+
+        // setting selected subscription for GsmUmtsAdditionalCallOptions.java
+        PreferenceScreen subscriptionPrefAdditionSettings = (PreferenceScreen) findPreference(BUTTON_MORE_EXPAND_KEY);
+        subscriptionPrefAdditionSettings.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
     }
 }
