@@ -169,6 +169,8 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
+    private static final int SHOW_DURATION_OFF = 0;
+    private static final int SHOW_DURATION_ON = 1;
     protected PhoneGlobals mApplication;
     private CallManager mCM;
     private Ringer mRinger;
@@ -201,7 +203,7 @@ public class CallNotifier extends Handler
 
     // Cached AudioManager
     private AudioManager mAudioManager;
-
+    private PhoneConstants.State lastState = null;
     /**
      * Initialize the singleton CallNotifier instance.
      * This is only done once, at startup, from PhoneApp.onCreate().
@@ -981,6 +983,7 @@ public class CallNotifier extends Handler
      */
     private void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
+        lastState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state);
 
         // Turn status bar notifications on or off depending upon the state
@@ -1269,6 +1272,13 @@ public class CallNotifier extends Handler
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
+        // show call duration
+        if (lastState == PhoneConstants.State.OFFHOOK && c != null
+                && Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.SHOW_DURATION, SHOW_DURATION_OFF) == SHOW_DURATION_ON) {
+            mApplication.showDuration(c.getDurationMillis());
+        }
+        
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.

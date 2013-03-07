@@ -1743,6 +1743,9 @@
         <item><xliff:g>4</xliff:g></item>
         <item><xliff:g>3</xliff:g></item>
     </string-array>
+    <!-- Call duration dialog title -->
+    <string name="title_dialog_duration">Duration</string>
+    <string name="duration_format"><xliff:g id="minutes" example="42">%s</xliff:g> mins <xliff:g id="seconds" example="28">%s</xliff:g> secs</string>
     <string name="input_password">Input password</string>
     <string name="labelCbCancelAll">Cancal all callbarring</string>
     <string name="psw_enter_old">Old password</string>

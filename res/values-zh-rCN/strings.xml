@@ -648,4 +648,7 @@
     <string name="no_call_barring">没有设置呼叫限制</string>
     <string name="cb_psw_dont_match">密码不匹配！</string>
     <string name="operation_successfully">操作成功！</string>
+    <!--Call duration dialog title-->
+    <string name="title_dialog_duration">通话时长</string>
+    <string name="duration_format">"<xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒"</string>
 </resources>
