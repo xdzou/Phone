@@ -47,6 +47,7 @@ import android.telephony.ServiceState;
 import android.util.Log;
 import android.view.KeyEvent;
 
+import android.telephony.TelephonyManager;
 import android.telephony.MSimTelephonyManager;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
@@ -700,44 +701,34 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     }
 
     /**
-     * Get the subscription that has service
-     * Following are the conditions applicable when deciding the subscription for dial
-     * 1. If both subs are provisioned (activated) and both are in_service  -
-     *    choose default voice preferred sub for placing E911 call
-     * 2. If both subs are provisioned (activated) and only one sub is in_service  -
-     *    choose the sub, which is in_service
-     * 3. If both subs are provisioned (activated) and both are out_of_service  -
-     *    choose first phone to place E911 call
-     * 4. If both subs are deactivated or slots are absent i.e. No SIMs -
-     *    choose first phone to place E911 call
-     * 5. If one sub is deactivated/slot empty i.e. No SIM and the second sub is provisioned -
-     *    no matter whether that sub is in_service, place E911 call on that sub.
-     */
+      * Get the subscription that has service
+      * Following are the conditions applicable when deciding the subscription for dial
+      * 1. If both subs are activated, ir-respective of the service status of sub1 and sub2
+      *    choose default voice preferred sub for placing E911 call.
+      * 2. If one sub is activated and other sub is not activated(i.e NO SIM/PIN/PUK lock state)
+      *    then choose the activated sub to place E911 calls, even if it is out of service.
+      * 3. If both subs are not activated(i.e NO SIM/PIN/PUK lock state) then choose
+      *    the first sub by default for placing E911 call.
+      */
     @Override
     public int getVoiceSubscriptionInService() {
         int voiceSub = getVoiceSubscription();
         //Emergency Call should always go on 1st sub .i.e.0
         //when both the subscriptions are out of service
         int sub = 0;
-        int count = MSimTelephonyManager.getDefault().getPhoneCount();
+        MSimTelephonyManager tm = MSimTelephonyManager.getDefault();
+        int count = tm.getPhoneCount();
         SubscriptionManager subManager = SubscriptionManager.getInstance();
 
-        if (subManager.getActiveSubscriptionsCount() == 1) {
-            for (int i = 0; i < count; i++) {
-                if (subManager.isSubActive(i)) {
-                    sub = i;
-                    break;
-                }
-            }
-        } else {
-            for (int i = 0; i < count; i++) {
-                Phone phone = getPhone(i);
-                int ss = phone.getServiceState().getState();
-                if ((ss == ServiceState.STATE_IN_SERVICE)
-                        || (ss == ServiceState.STATE_EMERGENCY_ONLY)) {
-                    sub = i;
-                    if (sub == voiceSub) break;
-                }
+        for (int i = 0; i < count; i++) {
+            Phone phone = getPhone(i);
+            int ss = phone.getServiceState().getState();
+            if ((ss == ServiceState.STATE_IN_SERVICE)
+                    || (phone.getServiceState().isEmergencyOnly())
+                    || ((ss == ServiceState.STATE_OUT_OF_SERVICE)
+                    && (tm.getSimState(i) == TelephonyManager.SIM_STATE_READY))) {
+                sub = i;
+                if (sub == voiceSub) break;
             }
         }
         return sub;
