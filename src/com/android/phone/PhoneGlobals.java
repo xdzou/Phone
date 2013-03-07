@@ -34,6 +34,7 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -76,6 +77,7 @@ import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * Global state for the telephony subsystem when running in the primary
@@ -127,6 +129,16 @@ public class PhoneGlobals extends ContextWrapper
     public static final int MMI_INITIATE = 51;
     public static final int MMI_COMPLETE = 52;
     public static final int MMI_CANCEL = 53;
+
+    private static final String PREFERRED_APN_URI =
+        "content://telephony/carriers/preferapn";
+    private static final Uri PREFERAPN_URI = Uri.parse(PREFERRED_APN_URI);
+    private static final String APN_ID = "apn_id";
+
+    //record several apn status
+    private boolean mbAPNRestored = false;
+    private boolean mbAPNCleared  = false;
+
     // Don't use message codes larger than 99 here; those are reserved for
     // the individual Activities of the Phone UI.
 
@@ -1711,6 +1723,46 @@ public class PhoneGlobals extends ContextWrapper
             Intent clearIntent = new Intent(context, ClearMissedCallsService.class);
             clearIntent.setAction(ClearMissedCallsService.ACTION_CLEAR_MISSED_CALLS);
             context.startService(clearIntent);
+        }
+    }
+
+    //set selected apn key when  roam for CT
+    void setSelectedApnKey(boolean inChina) {
+        if(!FeatureQuery.FEATURE_SETTINGS_APN_AUTOSELECT_CTNET)
+            return;
+        if(null == mContext){
+            Log.e(LOG_TAG, "setSelectedApnKey,null context");
+            return;
+        }
+
+        Log.i(LOG_TAG,"begin setSelectedApnKey");
+        ContentResolver resolver = mContext.getContentResolver();
+        if(null == resolver){
+            Log.e(LOG_TAG, "setSelectedApnKey,null resolver");
+            return;
+        }
+        ContentValues values = new ContentValues();
+
+        //need set preferred apn id when service changed;
+        //first judge if has cleared or restored before,not to always set here
+        if(inChina&&!mbAPNRestored){
+            Log.d(LOG_TAG,"setSelectedApnKey begin to restore");
+            //use -2 to let telephony know it is roam set prefeeapn;
+            values.put(APN_ID, -2);
+            resolver.update(PREFERAPN_URI, values, null, null);
+
+            mbAPNRestored = true;
+            mbAPNCleared = false;
+        }else if(!inChina && !mbAPNCleared){
+            Log.d(LOG_TAG,"setSelectedApnKey begin to clear");
+            //use -2 to let telephony know it is roam set prefeeapn;
+            values.put(APN_ID, -2);
+            resolver.update(PREFERAPN_URI, values, null, null);
+
+            mbAPNRestored = false;
+            mbAPNCleared = true;
+        }else{
+            Log.d(LOG_TAG,"setSelectedApnKey not to restore or clear");
         }
     }
 

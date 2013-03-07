@@ -338,6 +338,12 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"設定 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自動重試"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"啟用自動重試模式"</string>
+
+    <!-- add for proximity sensor -->
+    <string name="proximity_mode_title">打開距離傳感器</string>
+    <string name="proximity_on_summary">接聽電話時，屏幕會關閉，從而節省電量</string>
+    <string name="proximity_off_summary">接聽電話時，屏幕保持開啟狀態</string>
+
     <string name="menu_add" msgid="1882023737425114762">"新增聯絡人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"編輯聯絡人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"刪除聯絡人"</string>
@@ -618,6 +624,14 @@
     <string name="description_target_answer" msgid="7205604197797472471">"解答"</string>
     <string name="description_target_send_sms" msgid="2098326025587950144">"傳送簡訊"</string>
     <string name="description_target_decline" msgid="4789834364389731957">"拒絕"</string>
+    
+    <!-- IP call related strings -->
+    <string name="ipcall">"IP電話設置"</string>
+    <string name="ipcall_sub_title">"IP電話設置"</string>
+    <string name="ipcall_sub_summery">"修改IP電話前綴"</string>
+    <string name="ipcall_dialog_title">"IP電話設置"</string>
+    <string name="ipcall_dialog_edit_hint">"請輸入IP電話前綴"</string>
+    
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"震動"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"震動"</string>
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"音效"</string>
@@ -631,4 +645,7 @@
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"鈴響時震動"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"撥號鍵盤觸控音效"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"鈴聲與震動"</string>
+    <string name="preferred_duration_title">"挂機顯示通話時長"</string>
+    <string name="duration_enable_summary">"挂機顯示通話時長已開啟"</string>
+    <string name="duration_disable_summary">"挂機顯示通話時長已關閉"</string>
 </resources>

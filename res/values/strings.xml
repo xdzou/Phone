@@ -749,6 +749,12 @@
     <string name="auto_retry_mode_title">Auto-retry</string>
     <string name="auto_retry_mode_summary">Enable Auto-retry mode</string>
 
+    <!-- add for proximity sensor -->
+    <string name="proximity_mode_title">Turn on proximity sensor</string>
+    <string name="proximity_on_summary">When you answer a call, the screen will be turned off to save power.</string>
+    <string name="proximity_off_summary">When you answer a call, the screen will be turned on always.</string>
+
+
     <!-- FDN list screen: menu item label -->
     <string name="menu_add">Add contact</string>
     <!-- FDN list screen: menu item label -->
@@ -1781,6 +1787,24 @@
         <item><xliff:g>4</xliff:g></item>
         <item><xliff:g>3</xliff:g></item>
     </string-array>
+
+    <!-- IP call related strings -->
+    <!-- Call settings screen, setting option name -->
+    <string name="ipcall">IP call setting</string>
+    <!-- Call settings screen, subscription title -->
+    <string name="ipcall_sub_title">IP call setting</string>
+    <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
+    <!-- Call settings screen, IP call setting dialog title -->
+    <string name="ipcall_dialog_title">IP call setting</string>
+    <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
+    <!-- add for call setting vibrating after connected-->
+    <string name="vibrate_after_connected_title">Vibrating after connected</string>
+    <string name="vibrate_after_connected_summary">Vibrate when answers</string>
+    <!-- Call duration dialog title -->
+    <string name="title_dialog_duration">Duration</string>
+    <string name="duration_format"><xliff:g id="minutes" example="42">%s</xliff:g> mins <xliff:g id="seconds" example="28">%s</xliff:g> secs</string>
+
+    <string name="count_down_timer">Second:</string>
     <string name="input_password">Input password</string>
     <string name="labelCbCancelAll">Cancal all callbarring</string>
     <string name="psw_enter_old">Old password</string>
@@ -1814,4 +1838,8 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+
+    <string name="preferred_duration_title">Display duration</string>
+    <string name="duration_enable_summary">Display duration is ON</string>
+    <string name="duration_disable_summary">Display duration is OFF</string>
 </resources>

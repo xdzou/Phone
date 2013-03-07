@@ -77,6 +77,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import android.view.View;
+import android.widget.EditText;
+
+import com.qrd.plugin.feature_query.FeatureQuery;
+
 /**
  * Top level "Call settings" UI; see res/xml/call_feature_setting.xml
  *
@@ -173,6 +178,9 @@ public class CallFeaturesSetting extends PreferenceActivity
             "button_voicemail_notification_ringtone_key";
     private static final String BUTTON_FDN_KEY   = "button_fdn_key";
     private static final String BUTTON_RESPOND_VIA_SMS_KEY   = "button_respond_via_sms_key";
+    private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key"; // add for feature: IP call setting
+    private static final String BUTTON_PROXIMITY_KEY = "button_proximity_key";    // add for new feature: proximity sensor
+    private static final String BUTTON_VIBRATE_CONNECTED_KEY = "button_vibrate_after_connected";  //add for new feature:vibrate after connected
 
     private static final String BUTTON_RINGTONE_KEY    = "button_ringtone_key";
     private static final String BUTTON_VIBRATE_ON_RING = "button_vibrate_on_ring";
@@ -282,6 +290,9 @@ public class CallFeaturesSetting extends PreferenceActivity
     private Preference mVoicemailNotificationRingtone;
     private CheckBoxPreference mVoicemailNotificationVibrate;
     private SipSharedPreferences mSipSharedPreferences;
+    private PreferenceScreen mIPPrefix;    // add for new feature: IP call prefix
+    private CheckBoxPreference mButtonProximity;    // add for new feature: proximity sensor
+    private CheckBoxPreference mVibrateAfterConnected;  //add for new feature:vibrate after connected
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -484,7 +495,35 @@ public class CallFeaturesSetting extends PreferenceActivity
     // Click listener for all toggle events
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-        if (preference == mSubMenuVoicemailSettings) {
+        if (preference == mIPPrefix) {// add for feature: IP call setting
+            View v = getLayoutInflater().inflate(R.layout.ip_prefix, null);
+            final EditText edit = (EditText) v.findViewById(R.id.ip_prefix_dialog_edit);
+            String ip_prefix = Settings.System.getString(getContentResolver(), Settings.System.IPCALL_PREFIX[0]);
+            edit.setText(ip_prefix);
+
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.ipcall_dialog_title)
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setView(v)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String ip_prefix = edit.getText().toString();
+                                    Settings.System.putString(
+                                                    getContentResolver(),
+                                                    Settings.System.IPCALL_PREFIX[0],
+                                                    ip_prefix);
+                                    if (TextUtils.isEmpty(ip_prefix)) {
+                                        mIPPrefix.setSummary(R.string.ipcall_sub_summery);
+                                    } else {
+                                        mIPPrefix.setSummary(edit.getText());
+                                    }
+                                    onResume();
+                                }
+                            }).setNegativeButton(android.R.string.cancel, null)
+                    .show();
+            return true;
+        } else if (preference == mSubMenuVoicemailSettings) {
             return true;
         } else if (preference == mPlayDtmfTone) {
             Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
@@ -532,6 +571,19 @@ public class CallFeaturesSetting extends PreferenceActivity
                 // This should let the preference use default behavior in the xml.
                 return false;
             }
+        }else if (preference == mButtonProximity) { // add for new feature: proximity sensor
+        	boolean checked = mButtonProximity.isChecked();
+        	Settings.System.putInt(mPhone.getContext().getContentResolver(),
+        			android.provider.Settings.System.PROXIMITY_SENSOR,
+        			checked ? 1 : 0);
+        	mButtonProximity.setSummary(checked ? R.string.proximity_on_summary : R.string.proximity_off_summary);
+        	return true;
+        }else if (preference == mVibrateAfterConnected) { // add for new feature: vibrate after connected
+        	boolean checked = mVibrateAfterConnected.isChecked();
+        	Settings.System.putInt(mPhone.getContext().getContentResolver(),
+        			android.provider.Settings.System.VIBRATE_AFTER_CONNECTED,
+        			checked ? 1 : 0);
+        	return true;
         }
         return false;
     }
@@ -595,6 +647,16 @@ public class CallFeaturesSetting extends PreferenceActivity
             }
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        }else if (preference == mButtonProximity) {   // add for new feature: proximity sensor
+            boolean checked = mButtonProximity.isChecked();
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.PROXIMITY_SENSOR, checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
+        }else if (preference == mVibrateAfterConnected) {   // add for new feature: vibrate after connected
+            boolean checked = mVibrateAfterConnected.isChecked();
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.VIBRATE_AFTER_CONNECTED, checked ? 1 : 0);
         }
         // always let the preference setting proceed.
         return true;
@@ -1515,9 +1577,12 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         mRingtonePreference = findPreference(BUTTON_RINGTONE_KEY);
         mVibrateWhenRinging = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_ON_RING);
+        mIPPrefix = (PreferenceScreen) findPreference(BUTTON_IPPREFIX_KEY);    // add for new feature: IP call prefix
+        mVibrateAfterConnected = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_CONNECTED_KEY);  //add for new feature: vibrate after connected
         mPlayDtmfTone = (CheckBoxPreference) findPreference(BUTTON_PLAY_DTMF_TONE);
         mButtonDTMF = (ListPreference) findPreference(BUTTON_DTMF_KEY);
         mButtonAutoRetry = (CheckBoxPreference) findPreference(BUTTON_RETRY_KEY);
+        mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);    // add for new feature: proximity sensor
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
@@ -1541,6 +1606,31 @@ public class CallFeaturesSetting extends PreferenceActivity
             }
         }
 
+        // add for new feature: IP call prefix
+        if (mIPPrefix != null) {
+            if (FeatureQuery.FEATURE_PHONE_SET_IPPREFIX) { 
+                String ip_prefix = Settings.System.getString(getContentResolver(), Settings.System.IPCALL_PREFIX[0]);
+                if (TextUtils.isEmpty(ip_prefix)) {
+                    mIPPrefix.setSummary(R.string.ipcall_sub_summery);
+                } else {
+                    mIPPrefix.setSummary(ip_prefix);
+                }
+            } else {
+                getPreferenceScreen().removePreference(mIPPrefix);
+                mIPPrefix = null;
+            }
+        }
+
+        // add for new feature: vibrate after connected
+        if (mVibrateAfterConnected != null) {
+            if (FeatureQuery.FEATURE_PHONE_SET_VIBRATE_AFTER_CONNECTED) {
+                mVibrateAfterConnected.setOnPreferenceChangeListener(this);
+            } else {
+                prefSet.removePreference(mVibrateAfterConnected);
+                mVibrateAfterConnected = null;
+            }
+        }
+
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(getContentResolver(),
                     Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
@@ -1561,6 +1651,16 @@ public class CallFeaturesSetting extends PreferenceActivity
             } else {
                 prefSet.removePreference(mButtonAutoRetry);
                 mButtonAutoRetry = null;
+            }
+        }
+
+        // add for new feature: proximity sensor
+        if (mButtonProximity != null) {
+            if (FeatureQuery.FEATURE_PHONE_SET_PROXIMITYMODE) {
+                mButtonProximity.setOnPreferenceChangeListener(this);
+            } else {
+                prefSet.removePreference(mButtonProximity);
+                mButtonProximity = null;
             }
         }
 
@@ -1632,7 +1732,9 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
         updateVoiceNumberField();
         mVMProviderSettingsForced = false;
-        createSipCallSettings();
+        if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP) {
+            createSipCallSettings();
+        }
         createImsSettings();
 
         mRingtoneLookupRunnable = new Runnable() {
@@ -1774,6 +1876,13 @@ public class CallFeaturesSetting extends PreferenceActivity
             mVibrateWhenRinging.setChecked(getVibrateWhenRinging(this));
         }
 
+        // add for new feature: vibrate after connected
+        if (mVibrateAfterConnected != null) {
+            int vibrate = Settings.System.getInt(getContentResolver(), Settings.System.VIBRATE_AFTER_CONNECTED, 1);
+            boolean checked = (vibrate == 1);
+            mVibrateAfterConnected.setChecked(checked);
+        }
+
         if (mButtonDTMF != null) {
             int dtmf = Settings.System.getInt(getContentResolver(),
                     Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, DTMF_TONE_TYPE_NORMAL);
@@ -1784,6 +1893,14 @@ public class CallFeaturesSetting extends PreferenceActivity
             int autoretry = Settings.Global.getInt(getContentResolver(),
                     Settings.Global.CALL_AUTO_RETRY, 0);
             mButtonAutoRetry.setChecked(autoretry != 0);
+        }
+
+        // add for new feature: proximity sensor
+        if (mButtonProximity != null) {
+            int proximity = Settings.System.getInt(getContentResolver(), Settings.System.PROXIMITY_SENSOR, 1);
+            boolean checked = (proximity == 1);
+            mButtonProximity.setChecked(checked);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary : R.string.proximity_off_summary);
         }
 
         if (mButtonHAC != null) {
