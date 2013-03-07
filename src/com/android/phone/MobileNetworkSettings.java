@@ -26,6 +26,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.net.ConnectivityManager;
 import android.net.ThrottleManager;
 import android.net.Uri;
@@ -97,7 +99,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     CdmaOptions mCdmaOptions;
 
     private Preference mClickedPreference;
-
+    private NetworkStatusChangeIntentReceiver mReceiver;
 
     //This is a method implemented for DialogInterface.OnClickListener.
     //  Used to dismiss the dialogs when they come up.
@@ -222,6 +224,11 @@ public class MobileNetworkSettings extends PreferenceActivity
         mButtonDataUsage = prefSet.findPreference(BUTTON_DATA_USAGE_KEY);
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
 
+        if (SystemProperties.getInt("persist.radio.tdscdma_present", 0) == 2) {
+            mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_tdscdma);
+            mButtonPreferredNetworkMode.setEntryValues(R.array.preferred_network_mode_values_tdscdma);
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
@@ -304,12 +311,21 @@ public class MobileNetworkSettings extends PreferenceActivity
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
         mDataUsageListener.resume();
+
+        // Register a broadcast receiver to listen the mobile connectivity
+        // changed.
+        mReceiver = new NetworkStatusChangeIntentReceiver();
+        IntentFilter filter = new IntentFilter(
+                ConnectivityManager.MOBILE_CONNECTIVITY_ACTION);
+        this.registerReceiver(mReceiver, filter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mDataUsageListener.pause();
+        // Unregister the broadcast receiver when the activity is out of foreground.
+        this.unregisterReceiver(mReceiver);
     }
 
     /**
@@ -474,16 +490,26 @@ public class MobileNetworkSettings extends PreferenceActivity
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
-                mButtonPreferredNetworkMode.setSummary(
+                if (SystemProperties.getInt("persist.radio.tdscdma_present", 0) == 2) {
+                    mButtonPreferredNetworkMode.setSummary(
+                        R.string.preferred_network_mode_tdscdma_perf_summary);
+                }else{
+                    mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_wcdma_perf_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_gsm_only_summary);
                 break;
             case Phone.NT_MODE_WCDMA_ONLY:
-                mButtonPreferredNetworkMode.setSummary(
+                if (SystemProperties.getInt("persist.radio.tdscdma_present", 0) == 2) {
+                    mButtonPreferredNetworkMode.setSummary(
+                        R.string.preferred_network_mode_tdscdma_only_summary);
+                }else{
+                    mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_wcdma_only_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_UMTS:
                 mButtonPreferredNetworkMode.setSummary(
@@ -582,5 +608,20 @@ public class MobileNetworkSettings extends PreferenceActivity
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    /**
+     * Receives notifications when enable/disable mobile data.
+     */
+    private class NetworkStatusChangeIntentReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String actionStr = intent.getAction();
+            if (ConnectivityManager.MOBILE_CONNECTIVITY_ACTION
+                    .equals(actionStr)) {
+                // Make the DataEnabled button to correct state.
+                boolean enabled = intent.getBooleanExtra(ConnectivityManager.EXTRA_ENABLED, false);
+                mButtonDataEnabled.setChecked(enabled);
+            }
+        }
     }
 }

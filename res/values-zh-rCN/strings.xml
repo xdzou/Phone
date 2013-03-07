@@ -168,8 +168,15 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"首选网络模式：仅限 CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"首选网络模式：仅限 EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"首选网络模式：LTE/CDMA"</string>
+    <string name="preferred_network_mode_tdscdma_perf_summary" msgid="8521677230113533809">"首选网络模式：首选 TDS-CDMA"</string>
+    <string name="preferred_network_mode_tdscdma_only_summary" msgid="2836897236221063413">"首选网络模式：仅限 TDS-CDMA"</string>
   <string-array name="preferred_network_mode_choices">
     <item msgid="5543794538185064048">"LTE/CDMA"</item>
+    <item>LTE</item>
+    <item>全球模式</item>
+    <item>GSM/WCDMA/LTE</item>
+    <item>CDMA + LTE/EvDo</item>
+    <item>CDMA/EvDo/GSM/WCDMA</item>
     <item msgid="3273348576277144124">"仅 EvDo"</item>
     <item msgid="454610224530856274">"CDMA，无 EvDo 功能"</item>
     <item msgid="648505122852496166">"CDMA/EvDo 自动选择"</item>
@@ -182,6 +189,12 @@
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>
   </string-array>
+  <string-array name="preferred_network_mode_choices_tdscdma">
+    <item>仅 TDS-CDMA</item>
+    <item>仅 GSM</item>
+    <item>首选 GSM/TDS-CDMA</item>
+  </string-array>
+
     <string name="data_enabled" msgid="5972538663568715366">"启用数据网络"</string>
     <string name="data_enable_summary" msgid="5022018967714633874">"允许通过移动网络存取数据"</string>
     <string name="roaming" msgid="8871412572928323707">"移动数据网络漫游"</string>
@@ -330,6 +343,12 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"设置 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自动重拨"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"启用自动重拨模式"</string>
+    
+    <!-- add for proximity sensor -->
+    <string name="proximity_mode_title">打开距离传感器</string>
+    <string name="proximity_on_summary">接听电话时，屏幕会关闭，从而节省电量</string>
+    <string name="proximity_off_summary">接听电话时，屏幕保持开启状态</string>
+    
     <string name="menu_add" msgid="1882023737425114762">"添加联系人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"编辑联系人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"删除联系人"</string>
@@ -610,6 +629,20 @@
     <string name="description_target_answer" msgid="7205604197797472471">"接听"</string>
     <string name="description_target_send_sms" msgid="2098326025587950144">"发送短信"</string>
     <string name="description_target_decline" msgid="4789834364389731957">"拒绝"</string>
+
+    <!-- IP call related strings -->
+    <!-- Call settings screen, setting option name -->
+    <string name="ipcall">IP电话设置</string>
+    <!-- Call settings screen, subscription title -->
+    <string name="ipcall_sub_title">IP电话设置</string>
+    <string name="ipcall_sub_summery">修改IP电话前缀</string>
+    <!-- Call settings screen, IP call setting dialog title -->
+    <string name="ipcall_dialog_title">IP电话设置</string>
+    <string name="ipcall_dialog_edit_hint">请输入IP电话前缀</string>
+    <!-- add for call setting vibrating after connected-->
+    <string name="vibrate_after_connected_title">接通振动提示</string>
+    <string name="vibrate_after_connected_summary">对方接通时振动</string>
+    
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"振动"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"振动"</string>
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"提示音"</string>
@@ -648,7 +681,14 @@
     <string name="no_call_barring">没有设置呼叫限制</string>
     <string name="cb_psw_dont_match">密码不匹配！</string>
     <string name="operation_successfully">操作成功！</string>
+
     <!--Call duration dialog title-->
     <string name="title_dialog_duration">通话时长</string>
     <string name="duration_format">"<xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒"</string>
+
+    <string name="count_down_timer">计时:</string>
+    <string name="preferred_duration_title">挂机显示通话时长</string>
+    <string name="duration_enable_summary">挂机显示通话时长已开启</string>
+    <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
+    
 </resources>

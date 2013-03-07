@@ -406,6 +406,11 @@
     <string name="preferred_network_mode_global_summary">Preferred network mode: Global</string>
     <!-- Mobile network settings, summary for preferred network mode LTE / WCDMA[CHAR LIMIT=100] -->
     <string name="preferred_network_mode_lte_wcdma_summary">Preferred network mode: LTE / WCDMA</string>
+    <!-- Mobile network settings, summary for preferred network mode WCDMA preferred[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_tdscdma_perf_summary">Preferred network mode: TDS-CDMA preferred</string>
+    <!-- Mobile network settings, summary for preferred network mode WCDMA only [CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_tdscdma_only_summary">Preferred network mode: TDS-CDMA only</string>
+    <string name="preferred_network_mode_gsm_summary">Preferred network mode: GSM</string>
 
 
     <string-array name="preferred_network_mode_choices">
@@ -438,6 +443,17 @@
         <item>"1"</item>
         <item>"0"</item>
     </string-array>
+    <string-array name="preferred_network_mode_choices_tdscdma">
+        <item>TDS-CDMA only</item>
+        <item>GSM only</item>
+        <item>GSM/TDS-CDMA preferred</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_tdscdma"  translatable="false">
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
+
     <!-- Mobile network settings, network mode choices for a device supporting CDMA and LTE [CHAR LIMIT=25] -->
     <string-array name="preferred_network_mode_choices_lte">
         <item>LTE/CDMA</item>
@@ -446,6 +462,30 @@
     <string-array name="preferred_network_mode_values_lte" translatable="false">
         <item>"7"</item>
         <item>"4"</item>
+    </string-array>
+    <!-- Mobile network mode select for global mode -->
+    <string-array name="preferred_network_mode_choices_global_mode">
+        <item>GLOBAL MODE</item>
+        <item>CDMA</item>
+        <item>GSM</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_global_mode" translatable="false">
+        <item>"7"</item>
+        <item>"4"</item>
+        <item>"1"</item>
+    </string-array>
+
+    <string-array name="preferred_network_mode_choices_cdma">
+        <item>CDMA</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_cdma" translatable="false">
+        <item>"4"</item>
+    </string-array>
+    <string-array name="preferred_network_mode_choices_gsm">
+        <item>GSM</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_gsm" translatable="false">
+        <item>"1"</item>
     </string-array>
     <!-- Mobile network settings screen, data enabling checkbox name -->
     <string name="data_enabled">Data enabled</string>
@@ -708,6 +748,12 @@
     <string name="tty_mode_option_summary">Set TTY mode</string>
     <string name="auto_retry_mode_title">Auto-retry</string>
     <string name="auto_retry_mode_summary">Enable Auto-retry mode</string>
+
+    <!-- add for proximity sensor -->
+    <string name="proximity_mode_title">Turn on proximity sensor</string>
+    <string name="proximity_on_summary">When you answer a call, the screen will be turned off to save power.</string>
+    <string name="proximity_off_summary">When you answer a call, the screen will be turned on always.</string>
+
 
     <!-- FDN list screen: menu item label -->
     <string name="menu_add">Add contact</string>
@@ -1743,9 +1789,24 @@
         <item><xliff:g>4</xliff:g></item>
         <item><xliff:g>3</xliff:g></item>
     </string-array>
+
+    <!-- IP call related strings -->
+    <!-- Call settings screen, setting option name -->
+    <string name="ipcall">IP call setting</string>
+    <!-- Call settings screen, subscription title -->
+    <string name="ipcall_sub_title">IP call setting</string>
+    <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
+    <!-- Call settings screen, IP call setting dialog title -->
+    <string name="ipcall_dialog_title">IP call setting</string>
+    <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
+    <!-- add for call setting vibrating after connected-->
+    <string name="vibrate_after_connected_title">Vibrating after connected</string>
+    <string name="vibrate_after_connected_summary">Vibrate when answers</string>
     <!-- Call duration dialog title -->
     <string name="title_dialog_duration">Duration</string>
     <string name="duration_format"><xliff:g id="minutes" example="42">%s</xliff:g> mins <xliff:g id="seconds" example="28">%s</xliff:g> secs</string>
+
+    <string name="count_down_timer">Second:</string>
     <string name="input_password">Input password</string>
     <string name="labelCbCancelAll">Cancal all callbarring</string>
     <string name="psw_enter_old">Old password</string>
@@ -1779,4 +1840,8 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+
+    <string name="preferred_duration_title">Display duration</string>
+    <string name="duration_enable_summary">Display duration is ON</string>
+    <string name="duration_disable_summary">Display duration is OFF</string>
 </resources>
