@@ -297,7 +297,7 @@ public class ManageConferenceUtils {
                 }
             } else {
                 callerNumber = ci.phoneNumber;
-                callerNumberType = ci.phoneLabel;
+                callerNumberType = ci.getPhoneLabel(mInCallScreen);
             }
         }
 
