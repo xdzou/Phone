@@ -168,16 +168,14 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"Bevorzugter Netzwerkmodus: nur CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"Bevorzugter Netzwerkmodus: nur EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"Bevorzugter Netzwerkmodus: LTE/CDMA"</string>
-  <string-array name="preferred_network_mode_choices">
-    <item msgid="5543794538185064048">"LTE/CDMA"</item>
-    <item msgid="3273348576277144124">"Nur EvDo"</item>
-    <item msgid="454610224530856274">"CDMA ohne EvDo"</item>
-    <item msgid="648505122852496166">"CDMA/EvDo (automatisch)"</item>
-    <item msgid="7148247646407324800">"GSM/WCDMA (automatisch)"</item>
-    <item msgid="5189164180446264504">"Nur WCDMA"</item>
-    <item msgid="5714714953966979187">"Nur GSM"</item>
-    <item msgid="8508331239546115206">"GSM/WCDMA bevorzugt"</item>
-  </string-array>
+    <string name="preferred_network_mode_lte_wcdma">"LTE/CDMA"</string>
+    <string name="preferred_network_mode_evdo">"Nur EvDo"</string>
+    <string name="preferred_network_mode_cdma_wo_dvdo">"CDMA ohne EvDo"</string>
+    <string name="preferred_network_mode_cdma_evdo_auto">"CDMA/EvDo (automatisch)"</string>
+    <string name="preferred_network_mode_gsm_wcdma_auto">"GSM/WCDMA (automatisch)"</string>
+    <string name="preferred_network_mode_wcdma">"Nur WCDMA"</string>
+    <string name="preferred_network_mode_gsm">"Nur GSM"</string>
+    <string name="preferred_network_mode_gsm_wcdma">"GSM/WCDMA bevorzugt"</string>
   <string-array name="preferred_network_mode_choices_lte">
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>

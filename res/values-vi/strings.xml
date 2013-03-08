@@ -168,16 +168,14 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"Chế độ mạng được ưa thích: chỉ CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"Chế độ mạng được ưa thích: chỉ EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"Chế độ mạng được ưa thích: LTE / CDMA"</string>
-  <string-array name="preferred_network_mode_choices">
-    <item msgid="5543794538185064048">"LTE/CDMA"</item>
-    <item msgid="3273348576277144124">"Chỉ EvDo"</item>
-    <item msgid="454610224530856274">"CDMA không có EvDo"</item>
-    <item msgid="648505122852496166">"CDMA/EvDo tự động"</item>
-    <item msgid="7148247646407324800">"GSM/WCDMA tự động"</item>
-    <item msgid="5189164180446264504">"Chỉ WCDMA"</item>
-    <item msgid="5714714953966979187">"Chỉ GSM"</item>
-    <item msgid="8508331239546115206">"GSM/WCDMA được ưa thích"</item>
-  </string-array>
+    <string name="preferred_network_mode_lte_wcdma">"LTE/CDMA"</string>
+    <string name="preferred_network_mode_evdo">"Chỉ EvDo"</string>
+    <string name="preferred_network_mode_cdma_wo_dvdo">"CDMA không có EvDo"</string>
+    <string name="preferred_network_mode_cdma_evdo_auto">"CDMA/EvDo tự động"</string>
+    <string name="preferred_network_mode_gsm_wcdma_auto">"GSM/WCDMA tự động"</string>
+    <string name="preferred_network_mode_wcdma">"Chỉ WCDMA"</string>
+    <string name="preferred_network_mode_gsm">"Chỉ GSM"</string>
+    <string name="preferred_network_mode_gsm_wcdma">"GSM/WCDMA được ưa thích"</string>
   <string-array name="preferred_network_mode_choices_lte">
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>
