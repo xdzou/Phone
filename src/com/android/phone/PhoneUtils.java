@@ -240,7 +240,7 @@ public class PhoneUtils {
      * @see #answerAndEndActive(CallManager, Call)
      */
     /* package */ static boolean answerCall(Call ringingCall, int answerCallType) {
-        log("answerCall(" + ringingCall + ")...");
+        log("answerCall(" + ringingCall + ")..." + "calltype:" + answerCallType);
         final PhoneGlobals app = PhoneGlobals.getInstance();
         final CallNotifier notifier = app.notifier;
 
@@ -682,8 +682,8 @@ public class PhoneUtils {
         // If VT/VS cal is initiated, perform dpl media init.
         // If media init fails then make a voice call instead of VT
         if (callType == CallDetails.CALL_TYPE_VT
-                || callType == CallDetails.CALL_TYPE_VS_TX
-                || callType == CallDetails.CALL_TYPE_VS_RX) {
+                || callType == CallDetails.CALL_TYPE_VT_TX
+                || callType == CallDetails.CALL_TYPE_VT_RX) {
             int error = mediaInit();
             if (error != 0) {
                 //Dpl init failed so continue with VoLTE call
@@ -2739,8 +2739,8 @@ public class PhoneUtils {
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
             try {
                 int callType = phone.getCallType(call);
-                if (callType == CallDetails.CALL_TYPE_VT || callType == CallDetails.CALL_TYPE_VS_RX
-                        || callType == CallDetails.CALL_TYPE_VS_TX) {
+                if (callType == CallDetails.CALL_TYPE_VT || callType == CallDetails.CALL_TYPE_VT_RX
+                        || callType == CallDetails.CALL_TYPE_VT_TX) {
                     return true;
                 }
             } catch (CallStateException ex) {
