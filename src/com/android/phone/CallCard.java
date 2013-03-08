@@ -58,6 +58,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
 import java.util.List;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 
 /**
@@ -94,14 +95,14 @@ public class CallCard extends LinearLayout
      * null if we haven't been initialized yet *or* after the InCallScreen
      * activity has been destroyed.
      */
-    private InCallScreen mInCallScreen;
+    protected InCallScreen mInCallScreen;
 
     // Phone app instance
     private PhoneGlobals mApplication;
 
     // Top-level subviews of the CallCard
     /** Container for info about the current call(s) */
-    private ViewGroup mCallInfoContainer;
+    protected ViewGroup mCallInfoContainer;
     /** Primary "call info" block (the foreground or ringing call) */
     protected ViewGroup mPrimaryCallInfo;
     /** "Call banner" for the primary call */
@@ -235,44 +236,61 @@ public class CallCard extends LinearLayout
         if (DBG) log("CallCard onFinishInflate(this = " + this + ")...");
 
         mCallInfoContainer = (ViewGroup) findViewById(R.id.call_info_container);
-        mPrimaryCallInfo = (ViewGroup) findViewById(R.id.primary_call_info);
-        mPrimaryCallBanner = (ViewGroup) findViewById(R.id.primary_call_banner);
-
-        mSecondaryInfoContainer = (ViewGroup) findViewById(R.id.secondary_info_container);
-        mProviderInfo = (ViewGroup) findViewById(R.id.providerInfo);
-        mProviderLabel = (TextView) findViewById(R.id.providerLabel);
-        mProviderAddress = (TextView) findViewById(R.id.providerAddress);
-        mCallStateLabel = (TextView) findViewById(R.id.callStateLabel);
-        mElapsedTime = (TextView) findViewById(R.id.elapsedTime);
-
         // Text colors
         mTextColorCallTypeSip = getResources().getColor(R.color.incall_callTypeSip);
-
-        // "Caller info" area, including photo / name / phone numbers / etc
-        mPhoto = (ImageView) findViewById(R.id.photo);
-        mPhotoDimEffect = findViewById(R.id.dim_effect_for_primary_photo);
-
-        mName = (TextView) findViewById(R.id.name);
-        mPhoneNumber = (TextView) findViewById(R.id.phoneNumber);
-        mLabel = (TextView) findViewById(R.id.label);
-		mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
-        mCallTypeLabel = (TextView) findViewById(R.id.callTypeLabel);
-        // mSocialStatus = (TextView) findViewById(R.id.socialStatus);
-
         // Secondary info area, for the background ("on hold") call
         mSecondaryCallInfo = (ViewStub) findViewById(R.id.secondary_call_info);
-
-        // VideoCallPanel for Video Telephony calls
-        mVideoCallPanel = (VideoCallPanel) findViewById(R.id.videoCallPanel);
     }
+
+    // UX_Enhance_Dialer
+    private void setWidget() {
+			mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
+			
+			mSecondaryInfoContainer = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.secondary_info_container);
+			mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
+			mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
+			mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
+			mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
+			mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
+			
+			// "Caller info" area, including photo / name / phone numbers / etc
+			mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
+			mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
+			
+			mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
+			mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
+			mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
+			mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
+			mCallTypeLabel = (TextView)mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
+			// mSocialStatus = (TextView) findViewById(R.id.socialStatus);
+			
+			// VideoCallPanel for Video Telephony calls
+			mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
+	}
 
     /**
      * Updates the state of all UI elements on the CallCard, based on the
      * current state of the phone.
      */
     /* package */ void updateState(CallManager cm) {
-        if (DBG) log("updateState(" + cm + ")...");
+			if (DBG) log("updateState(" + cm + ")...");
+			
+			//UX_Enhance_Dialer
+			/*To display new style of incoming call */
+			if (FeatureQuery.FEATURE_UX_DIALER_INCOMINGCALL && mInCallScreen.getInCallTouchUi().showIncomingCallControls()) {
+					mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info);
+					((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info)).setVisibility(View.GONE);
+			} else {
+					mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info);
+					((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info)).setVisibility(View.GONE);
+			}
+			doUpdate(cm);
+    }
+		
+    protected void doUpdate(CallManager cm) {
 
+        setWidget();
+        mPrimaryCallInfo.setVisibility(View.VISIBLE);
         // Update the onscreen UI based on the current state of the phone.
 
         PhoneConstants.State state = cm.getState();  // IDLE, RINGING, or OFFHOOK

@@ -30,9 +30,12 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.PhoneConstants;
+import com.android.phone.R;
 
 import java.util.List;
-
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * "Call card" UI element: the in-call screen contains a tiled layout of call
@@ -58,8 +61,58 @@ public class MSimCallCard extends CallCard {
         super.onFinishInflate();
 
         if (DBG) log("CallCard onFinishInflate(this = " + this + ")...");
-        mPrimaryCallInfo = (ViewGroup) findViewById(R.id.msim_primary_call_info);
-        mSubInfo = (TextView) findViewById(R.id.subInfo);
+    }
+
+    /**
+     * The SLOT Information content, refresh the display when enter InCallScreen interface
+     */
+    @Override
+    protected void updateState(CallManager cm) {
+        // UX_Enhance_Dialer
+        if (FeatureQuery.FEATURE_UX_DIALER_INCOMINGCALL && mInCallScreen.getInCallTouchUi().showIncomingCallControls()) {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.msim_primary_incoming_call_info);
+            ((ViewGroup) mCallInfoContainer.findViewById(R.id.msim_primary_call_info)).setVisibility(View.GONE);
+        } else {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.msim_primary_call_info);
+            ((ViewGroup) mCallInfoContainer.findViewById(R.id.msim_primary_incoming_call_info)).setVisibility(View.GONE);
+        }
+        mSubInfo = (TextView) mPrimaryCallInfo.findViewById(R.id.subInfo);
+        doUpdate(cm);
+        PhoneConstants.State phoneState = cm.getState();
+        Call call;
+        // Active forground call will be null when an incoming call is ringing,
+        // so get the first active ringing call at this time, otherwise get the
+        // active forground call.
+        if (phoneState == PhoneConstants.State.RINGING) {
+            call = cm.getFirstActiveRingingCall();
+        } else {
+            call = cm.getActiveFgCall();
+        }
+
+        // If the call is null, that not show the sub information.
+        if (null == call) {
+            return;
+        }
+
+        Call.State state = call.getState();
+        // When the call at dial-up status, calling status, incoming call and can't reply status,
+        // hold call state, and so on, update the information of slot.
+        /* discard for UX_Dialer
+        if (state == Call.State.DIALING || state == Call.State.ALERTING
+                || state == Call.State.INCOMING || state == Call.State.WAITING
+                || state == Call.State.ACTIVE) {
+            if (mSubInfo != null) {
+                // Get the subscription from current call object.
+                int subscription = call.getPhone().getSubscription();
+                String subInfo = getMultiSimName(subscription);
+                if (DBG) log( "Setting subinfo: " + subInfo);
+                mSubInfo.setText(subInfo);
+                mSubInfo.setVisibility(View.VISIBLE);
+            }
+        } else {
+            if (DBG) log(" - call.state: " + call.getState());
+        }
+        */
     }
 
     @Override
@@ -100,6 +153,15 @@ public class MSimCallCard extends CallCard {
         return true;
     }
 
+    protected void dispatchPopulateAccessibilityEvent(AccessibilityEvent event, View view) {
+        List<CharSequence> eventText = event.getText();
+        int size = eventText.size();
+        view.dispatchPopulateAccessibilityEvent(event);
+        // if no text added write null to keep relative position
+        if (size == eventText.size()) {
+            eventText.add(null);
+        }
+    }
 
     // Debugging / testing code
 

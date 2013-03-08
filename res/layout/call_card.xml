@@ -43,6 +43,11 @@
     <include android:id="@+id/primary_call_info"
          layout="@layout/primary_call_info" />
 
+    <!-- UX_Enhance_Dialer -->
+    <include android:id="@+id/primary_incoming_call_info"
+         layout="@layout/primary_incoming_call_info"
+         android:visibility="gone" />
+
     <!-- Secondary "Call info" block , for the background ("on hold") call. -->
     <ViewStub android:id="@+id/secondary_call_info"
          android:layout="@layout/secondary_call_info"
