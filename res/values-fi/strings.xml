@@ -168,16 +168,14 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"Ensisijainen verkkotila: vain CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"Ensisijainen verkkotila: vain EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"Ensisijainen verkkotila: LTE/CDMA"</string>
-  <string-array name="preferred_network_mode_choices">
-    <item msgid="5543794538185064048">"LTE/CDMA"</item>
-    <item msgid="3273348576277144124">"Vain EvDo"</item>
-    <item msgid="454610224530856274">"CDMA ilman EvDo"</item>
-    <item msgid="648505122852496166">"Automaattinen CDMA/EvDo"</item>
-    <item msgid="7148247646407324800">"Automaattinen GSM/WCDMA"</item>
-    <item msgid="5189164180446264504">"Vain WCDMA"</item>
-    <item msgid="5714714953966979187">"Vain GSM"</item>
-    <item msgid="8508331239546115206">"Ensisijaisesti GSM/WCDMA"</item>
-  </string-array>
+    <string name="preferred_network_mode_lte_wcdma">"LTE/CDMA"</string>
+    <string name="preferred_network_mode_evdo">"Vain EvDo"</string>
+    <string name="preferred_network_mode_cdma_wo_dvdo">"CDMA ilman EvDo"</string>
+    <string name="preferred_network_mode_cdma_evdo_auto">"Automaattinen CDMA/EvDo"</string>
+    <string name="preferred_network_mode_gsm_wcdma_auto">"Automaattinen GSM/WCDMA"</string>
+    <string name="preferred_network_mode_wcdma">"Vain WCDMA"</string>
+    <string name="preferred_network_mode_gsm">"Vain GSM"</string>
+    <string name="preferred_network_mode_gsm_wcdma">"Ensisijaisesti GSM/WCDMA"</string>
   <string-array name="preferred_network_mode_choices_lte">
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>

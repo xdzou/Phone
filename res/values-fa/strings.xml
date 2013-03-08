@@ -168,16 +168,14 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"حالت شبکه برگزیده: فقط CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"حالت شبکه برگزیده: فقط EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"حالت شبکه برگزیده: LTE / CDMA"</string>
-  <string-array name="preferred_network_mode_choices">
-    <item msgid="5543794538185064048">"LTE/CDMA"</item>
-    <item msgid="3273348576277144124">"فقط EvDo"</item>
-    <item msgid="454610224530856274">"CDMA بدون EvDo"</item>
-    <item msgid="648505122852496166">"CDMA/EvDo خودکار"</item>
-    <item msgid="7148247646407324800">"GSM/WCDMA خودکار"</item>
-    <item msgid="5189164180446264504">"فقط WCDMA"</item>
-    <item msgid="5714714953966979187">"فقط GSM"</item>
-    <item msgid="8508331239546115206">"GSM/WCDMA برگزیده"</item>
-  </string-array>
+    <string name="preferred_network_mode_lte_wcdma">"LTE/CDMA"</string>
+    <string name="preferred_network_mode_evdo">"فقط EvDo"</string>
+    <string name="preferred_network_mode_cdma_wo_dvdo">"CDMA بدون EvDo"</string>
+    <string name="preferred_network_mode_cdma_evdo_auto">"CDMA/EvDo خودکار"</string>
+    <string name="preferred_network_mode_gsm_wcdma_auto">"GSM/WCDMA خودکار"</string>
+    <string name="preferred_network_mode_wcdma">"فقط WCDMA"</string>
+    <string name="preferred_network_mode_gsm">"فقط GSM"</string>
+    <string name="preferred_network_mode_gsm_wcdma">"GSM/WCDMA برگزیده"</string>
   <string-array name="preferred_network_mode_choices_lte">
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>
