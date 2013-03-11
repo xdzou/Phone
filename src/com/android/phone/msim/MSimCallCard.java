@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
+import android.provider.Settings;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
@@ -48,6 +49,7 @@ public class MSimCallCard extends CallCard {
 
     //Display subscription info for incoming call.
     private TextView mSubInfo;
+    private TextView mOutgoingSlot;
     public MSimCallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -77,6 +79,21 @@ public class MSimCallCard extends CallCard {
             ((ViewGroup) mCallInfoContainer.findViewById(R.id.msim_primary_incoming_call_info)).setVisibility(View.GONE);
         }
         mSubInfo = (TextView) mPrimaryCallInfo.findViewById(R.id.subInfo);
+        
+        mOutgoingSlot = (TextView) mPrimaryCallInfo.findViewById(R.id.outgoingSlot);
+        Call fgCall = cm.getActiveFgCall();
+        if (fgCall != null && fgCall.getState() == Call.State.ACTIVE) {
+            // Get the subscription from current call object.
+            int subscription = fgCall.getPhone().getSubscription();
+            String subInfo = Settings.System.getString(mContext.getContentResolver(),
+                    Settings.System.MULTI_SIM_NAME[subscription]);
+            mOutgoingSlot.setText(subInfo);
+            mOutgoingSlot.setVisibility(View.VISIBLE);
+        } else {
+            if (mOutgoingSlot != null)
+                mOutgoingSlot.setVisibility(View.INVISIBLE);
+        }
+        
         doUpdate(cm);
         PhoneConstants.State phoneState = cm.getState();
         Call call;

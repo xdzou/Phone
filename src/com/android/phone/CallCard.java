@@ -25,12 +25,14 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.Contacts;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
@@ -1400,6 +1402,22 @@ public class CallCard extends LinearLayout
     }
 
     /**
+     * get account name of the contactId
+     */
+    private String getContactAccountName(long contactId){
+        String accountName = "PHONE";
+        Cursor cursor = this.getContext().getContentResolver().query(RawContacts.CONTENT_URI,
+                new String[]{RawContacts.ACCOUNT_NAME}, RawContacts.CONTACT_ID + "=" + contactId, null, null);
+        if (null != cursor && cursor.moveToFirst()){
+            accountName = cursor.getString(cursor.getColumnIndex(RawContacts.ACCOUNT_NAME));
+        }
+        if (null != cursor){
+            cursor.close();
+        }
+        return accountName;
+    }
+
+    /**
      * Updates the name / photo / number / label fields on the CallCard
      * based on the specified CallerInfo.
      *
@@ -1610,6 +1628,10 @@ public class CallCard extends LinearLayout
                     log("The requested Uri (" + personUri + ") is being loaded already."
                             + " Ignoret the duplicate load request.");
                 }
+            } else if ("SIM1".equalsIgnoreCase(getContactAccountName(info.person_id))){
+                showImage(mPhoto, R.drawable.ic_contact_sim1);
+            } else if ("SIM2".equalsIgnoreCase(getContactAccountName(info.person_id))){
+                showImage(mPhoto, R.drawable.ic_contact_sim2);
             } else {
                 // Remember which person's photo is being loaded right now so that we won't issue
                 // unnecessary load request multiple times, which will mess up animation around
