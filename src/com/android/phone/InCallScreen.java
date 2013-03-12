@@ -2278,6 +2278,9 @@ public class InCallScreen extends Activity
         mWaitPromptDialog.getWindow().addFlags(
                 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
+        mWaitPromptDialog.setCanceledOnTouchOutside(false);
+        mWaitPromptDialog.setCancelable(false); 
+
         mWaitPromptDialog.show();
     }
 
