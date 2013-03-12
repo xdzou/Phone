@@ -283,15 +283,15 @@ public class MSimMobileNetworkSettings extends PreferenceActivity
    * Receives notifications when enable/disable mobile data.
    */
   private class NetworkStatusChangeIntentReceiver extends BroadcastReceiver {
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		String actionStr = intent.getAction();
-		if (ConnectivityManager.MOBILE_CONNECTIVITY_ACTION
-				.equals(actionStr)) {
-			// Make the DataEnabled button to correct state.
-			boolean enabled = intent.getBooleanExtra(ConnectivityManager.EXTRA_ENABLED, false);
-			mButtonDataEnabled.setChecked(enabled);
-		}
-	  }
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        String actionStr = intent.getAction();
+        if (ConnectivityManager.MOBILE_CONNECTIVITY_ACTION
+            .equals(actionStr)) {
+            // Make the DataEnabled button to correct state.
+            boolean enabled = intent.getBooleanExtra(ConnectivityManager.EXTRA_ENABLED, false);
+            mButtonDataEnabled.setChecked(enabled);
+        }
+      }
     }
 }
