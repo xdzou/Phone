@@ -1,12 +1,8 @@
 /*
  * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
- * Not a Contribution.
+ * Not a Contribution
  *
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
- *
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1344,8 +1340,12 @@ public class InCallScreen extends Activity
         // Helper class to keep track of enabledness/state of UI controls
         mInCallControlState = new InCallControlState(this, mCM);
 
-        // Helper class to run the "Manage conference" UI
-        mManageConferenceUtils = new ManageConferenceUtils(this, mCM);
+        if (PhoneUtils.isCallOnImsEnabled()) {
+            mManageConferenceUtils = new ImsManageConferenceUtils(this, mCM);
+        } else {
+            // Helper class to run the "Manage conference" UI
+            mManageConferenceUtils = new ManageConferenceUtils(this, mCM);
+        }
 
         // The DTMF Dialpad.
         ViewStub stub = (ViewStub) findViewById(R.id.dtmf_twelve_key_dialer_stub);
@@ -3872,16 +3872,10 @@ public class InCallScreen extends Activity
                     return;
                 }
                 List<Connection> connections = mCM.getFgCallConnections();
-                // There almost certainly will be > 1 connection,
+
+                // There almost certainly will be > 1 connection for GSM
                 // since isConferenceCall() just returned true.
-                if ((connections == null) || (connections.size() <= 1)) {
-                    Log.w(LOG_TAG,
-                          "MANAGE_CONFERENCE: Bogus TRUE from isConferenceCall(); connections = "
-                          + connections);
-                    // Hide the Manage Conference panel, return to NORMAL mode.
-                    setInCallScreenMode(InCallScreenMode.NORMAL);
-                    return;
-                }
+                // For IMS conference calls there may be only one connection
 
                 // TODO: Don't do this here. The call to
                 // initManageConferencePanel() should instead happen
