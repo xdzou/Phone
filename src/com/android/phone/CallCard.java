@@ -246,29 +246,29 @@ public class CallCard extends LinearLayout
 
     // UX_Enhance_Dialer
     private void setWidget() {
-			mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
-			
-			mSecondaryInfoContainer = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.secondary_info_container);
-			mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
-			mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
-			mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
-			mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
-			mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
-			
-			// "Caller info" area, including photo / name / phone numbers / etc
-			mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
-			mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
-			
-			mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
-			mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
-			mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
-			mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
-			mCallTypeLabel = (TextView)mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
-			// mSocialStatus = (TextView) findViewById(R.id.socialStatus);
-			
-			// VideoCallPanel for Video Telephony calls
-			mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
-	}
+            mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
+
+            mSecondaryInfoContainer = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.secondary_info_container);
+            mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
+            mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
+            mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
+            mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
+            mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
+
+            // "Caller info" area, including photo / name / phone numbers / etc
+            mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
+            mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
+
+            mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
+            mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
+            mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
+            mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
+            mCallTypeLabel = (TextView)mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
+            // mSocialStatus = (TextView) findViewById(R.id.socialStatus);
+            
+            // VideoCallPanel for Video Telephony calls
+            mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
+    }
 
     /**
      * Updates the state of all UI elements on the CallCard, based on the
@@ -1664,7 +1664,7 @@ public class CallCard extends LinearLayout
         }
 
         if (cityName != null && !call.isGeneric()){
-            log("cityName: "+cityName);					
+            log("cityName: "+cityName);
             mCityName.setText(cityName);
             mCityName.setVisibility(View.VISIBLE);
         } else {
@@ -1719,7 +1719,7 @@ public class CallCard extends LinearLayout
 
         // to hide the cityname for the conference menbers 
         // may come from different cities.
-		 mCityName.setVisibility(View.GONE);
+        mCityName.setVisibility(View.GONE);
         
         // Other text fields:
         updateCallTypeLabel(call);
