@@ -264,6 +264,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                 }
 
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                if (SystemProperties.getInt("persist.radio.tdscdma_present", 0) == 2) {
+                    mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+                }
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet);
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
