@@ -137,10 +137,20 @@
 
         </LinearLayout>
 
+        <!-- Slot info indication for a call in which slot. -->
+        <TextView android:id="@+id/outgoingSlot"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="15sp"
+            android:textColor="@color/incall_call_banner_text_color"
+            android:singleLine="true"
+            android:visibility="invisible" />
+
         <!-- Elapsed time indication for a call in progress. -->
         <TextView android:id="@+id/elapsedTime"
+            android:layout_below="@id/outgoingSlot"
             android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
