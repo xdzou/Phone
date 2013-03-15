@@ -45,6 +45,7 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * "Mobile network settings" screen.  This preference screen lets you
@@ -360,9 +361,13 @@ public class MobileNetworkSettings extends PreferenceActivity
 
                 UpdatePreferredNetworkModeSummary(buttonNetworkMode);
 
-                android.provider.Settings.Global.putInt(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                        buttonNetworkMode );
+                //Preferred network mode is set everytime power on for cmcc                        
+                //So we don't change settingsprovider that it is always default value.
+                if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+                    android.provider.Settings.Global.putInt(mPhone.getContext().getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                            buttonNetworkMode );
+                }
                 //Set the modem network mode
                 mPhone.setPreferredNetworkType(modemNetworkMode, mHandler
                         .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
@@ -444,11 +449,15 @@ public class MobileNetworkSettings extends PreferenceActivity
                                 "settingsNetworkMode = " + settingsNetworkMode);
                         }
 
-                        //changes the Settings.System accordingly to modemNetworkMode
-                        android.provider.Settings.Global.putInt(
-                                mPhone.getContext().getContentResolver(),
-                                android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                                settingsNetworkMode );
+                        //Preferred network mode is set everytime power on for cmcc                        
+                        //So we don't change settingsprovider that it is always default value.
+                        if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+                            //changes the Settings.System accordingly to modemNetworkMode
+                            android.provider.Settings.Global.putInt(
+                                    mPhone.getContext().getContentResolver(),
+                                    android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                                    settingsNetworkMode );
+                        }
                     }
 
                     UpdatePreferredNetworkModeSummary(modemNetworkMode);
@@ -465,11 +474,15 @@ public class MobileNetworkSettings extends PreferenceActivity
             AsyncResult ar = (AsyncResult) msg.obj;
 
             if (ar.exception == null) {
-                int networkMode = Integer.valueOf(
-                        mButtonPreferredNetworkMode.getValue()).intValue();
-                android.provider.Settings.Global.putInt(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                        networkMode );
+                //Preferred network mode is set everytime power on for cmcc
+                //So we don't change settingsprovider that it is always default value.
+                if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+                    int networkMode = Integer.valueOf(
+                            mButtonPreferredNetworkMode.getValue()).intValue();
+                    android.provider.Settings.Global.putInt(mPhone.getContext().getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                            networkMode );
+                }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
