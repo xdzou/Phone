@@ -208,15 +208,15 @@ public class InCallScreen extends Activity
      * row 0, col 1 is set to 1
      *
      *         VOLTE     VT-TX      VT-RX      VT
-     * VOLTE |   0    |    1   |     0   |     1
+     * VOLTE |   0    |    0   |     1   |     1
      * VT-TX |   0    |    0   |     0   |     0
-     * VT-RX |   0    |    0   |     0   |     0
+     * VT-RX |   0    |    0   |     0   |     1
      * VT    |   0    |    0   |     0   |     0
      */
 
-    private int[][] mVideoConsentTable = {{0, 1, 0, 1},
+    private int[][] mVideoConsentTable = {{0, 0, 1, 1},
                                           {0, 0, 0, 0},
-                                          {0, 0, 0, 0},
+                                          {0, 0, 0, 1},
                                           {0, 0, 0, 0}};
     private boolean mRegisteredForPhoneStates;
 
