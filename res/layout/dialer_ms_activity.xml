@@ -21,10 +21,10 @@
         android:id="@+id/layout_root"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:gravity="center_vertical"
                 >
-     <!--<LinearLayout android:layout_weight="0.8"
+     <LinearLayout android:layout_weight="0.8"
                       android:layout_width="fill_parent"
                       android:layout_height="0dp"
                       android:layout_alignParentBottom="true"
@@ -95,34 +95,6 @@
                     android:soundEffectsEnabled="false"
                     android:focusableInTouchMode="false"
                     />
-        </LinearLayout> -->
-        
-            <Button android:id="@+id/callmark1"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableLeft="@drawable/call_slot1"
-                    android:paddingLeft="24dp"
-                    android:soundEffectsEnabled="false"
-                    android:focusableInTouchMode="false"
-                    />
-
-            <View
-                  android:layout_width="0.1dip"
-                  android:layout_height="match_parent"
-                  android:background="#505050"
-            />
-
-            <Button android:id="@+id/callmark2"
-                    style="?android:attr/borderlessButtonStyle"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableLeft="@drawable/call_slot2"
-                    android:paddingLeft="24dp"
-                    android:soundEffectsEnabled="false"
-                    android:focusableInTouchMode="false"
-            />
-        
+        </LinearLayout>        
 </LinearLayout>
+

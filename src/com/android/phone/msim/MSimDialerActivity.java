@@ -150,7 +150,7 @@ public class MSimDialerActivity extends Activity {
 
         LayoutInflater inflater = (LayoutInflater) mContext.
                 getSystemService(LAYOUT_INFLATER_SERVICE);
-        View layout = inflater.inflate(R.layout.dialer_ms,
+        View layout = inflater.inflate(R.layout.dialer_ms_activity,
                 (ViewGroup) findViewById(R.id.layout_root));
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MSimDialerActivity.this);
