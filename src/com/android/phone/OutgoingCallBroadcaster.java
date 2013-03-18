@@ -27,22 +27,32 @@ package com.android.phone;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
+import android.os.Vibrator;
 import android.os.UserHandle;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
+
 import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.android.internal.telephony.CallDetails;
@@ -54,6 +64,7 @@ import com.qualcomm.internal.telephony.SubscriptionManager;
 import com.qualcomm.internal.telephony.MSimPhoneFactory;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * OutgoingCallBroadcaster receives CALL and CALL_PRIVILEGED Intents, and
@@ -94,6 +105,10 @@ public class OutgoingCallBroadcaster extends Activity
     public static final String BLUETOOTH = "Bluetooth";
 
     private boolean mIPCall;
+    // Save the SIP phone setting state
+    private static final String SIP_TYPE_INDEX = "sip_type_index";
+    // For all calls when data network is available
+    private static final int SIP_TYPE_ALL = 0;
     /**
      * Identifier for intent extra for sending an empty Flash message for
      * CDMA networks. This message is used by the network to simulate a
@@ -109,12 +124,17 @@ public class OutgoingCallBroadcaster extends Activity
 
     // Dialog IDs
     private static final int DIALOG_NOT_VOICE_CAPABLE = 1;
+    private static final int INDEX_MULTI_SIM_DIALOG = 2;
 
     /** Note message codes < 100 are reserved for the PhoneApp. */
     private static final int EVENT_OUTGOING_CALL_TIMEOUT = 101;
     private static final int OUTGOING_CALL_TIMEOUT_THRESHOLD = 2000; // msec
 
+    public static final int INVALID_SUB = 99;
+    public static final int ALWAYS_ASK = 2;
+    private int mPhoneCount = 0;
     private int mSubscription;
+    private View multiDialerlayout;
 
     /**
      * ProgressBar object with "spinner" style, which will be shown if we take more than
@@ -450,6 +470,10 @@ public class OutgoingCallBroadcaster extends Activity
         }
 
         mIPCall = intent.getBooleanExtra(MSimConstants.IS_IP_CALL, false);
+
+        // Get the SIP phone setting state
+        SharedPreferences sp = getSharedPreferences(SIP_TYPE_INDEX, MODE_WORLD_READABLE);
+        int index = sp.getInt("sip_index", 1);
         /*
          * Clean up any undismissed ota dialogs. If ota call is active outgoing
          * calls will be blocked in OutgoingCallReceiver
@@ -458,23 +482,63 @@ public class OutgoingCallBroadcaster extends Activity
 
         boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && promptEnabled &&
-               (activeSubCount() > 1) && (!isIntentFromBluetooth(intent)) &&
-                       (!isSIPCall(number, intent))) {
+        boolean isEccNum = (number != null) && PhoneNumberUtils.isEmergencyNumber(number);
+        // Treat bluetooth redial as normal call.
+        if (!isEccNum && MSimTelephonyManager.getDefault().isMultiSimEnabled() && /**promptEnabled &&**/
+               (activeSubCount() > 1) && (!isSIPCall(number, intent))
+               && (!isCdmaSuppCall(intent)) && index != SIP_TYPE_ALL) {
             Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
-            Intent intentMSim = new Intent(this, MSimDialerActivity.class);
-            intentMSim.setData(intent.getData());
-            intentMSim.setAction(intent.getAction());
-            int requestCode = 1;
-            startActivityForResult(intentMSim, requestCode);
-        } else {
-            mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
-                    PhoneGlobals.getInstance().getVoiceSubscription());
-            Log.d(TAG, "subscription when there is (from Extra):" + mSubscription);
+
+            // set subscription for call back
+            int subscription = intent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY, -1);
+
+            // If number is null, we're probably trying to call a non-existent voicemail number,
+            // send an empty flash or something else is fishy.  Whatever the problem, there's no
+            // number, so there's no point in allowing apps to modify the number.
+            if (TextUtils.isEmpty(number) && (subscription == 0)) {
+                if (intent.getBooleanExtra(EXTRA_SEND_EMPTY_FLASH, false)) {
+                    if (DBG) {
+                        Log.i(TAG, "SEND_EMPTY_FLASH...");
+                    }
+                    PhoneUtils.sendEmptyFlash(PhoneGlobals.getInstance().getPhone());
+                    finish();
+                    return;
+                }
+            }
+
+            launchMSDialerOrNot(number,intent);
+        } else if (isCdmaSuppCall(intent)) {
+            //if the call is cdma supp call, use sub0 to call out, because cdma card can only insert slot1.
+            mSubscription = intent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY,
+                            PhoneGlobals.getInstance().getVoiceSubscription());
+            processMSimIntent(intent);
+        }else {
+            // if this call is initiated from the bluetooth handset to redial
+            // last call log, we will try to get
+            // the original subscription info to MO call
+            if (!isEccNum && MSimTelephonyManager.getDefault().isMultiSimEnabled() && activeSubCount() > 1
+                    && isCallbackPriorityEnabled()) {
+                mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
+                        PhoneGlobals.getInstance().getVoiceSubscription());
+                Log.d(TAG, "active sub count > 1 and use original SLOT:" + mSubscription);
+            } else {
+                mSubscription = getSubscriptionForEmergencyCall();
+                Log.d(TAG, "use default voice sub to call out:" + mSubscription);
+            }
             processMSimIntent(intent);
         }
     }
 
+    private boolean isCallbackPriorityEnabled() {
+        int enabled;
+        try {
+            enabled = Settings.System.getInt(getContentResolver(),
+                    Settings.System.CALLBACK_PRIORITY_ENABLED);
+        } catch (SettingNotFoundException snfe) {
+            enabled = 1;
+        }
+        return (enabled == 1);
+    }
     private void processMSimIntent(Intent intent) {
         String action = intent.getAction();
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
@@ -731,7 +795,7 @@ public class OutgoingCallBroadcaster extends Activity
         // Note it's safe to call removeDialog() even if there's no dialog
         // associated with that ID.
         removeDialog(DIALOG_NOT_VOICE_CAPABLE);
-
+        removeDialog(INDEX_MULTI_SIM_DIALOG);
         super.onStop();
     }
 
@@ -790,12 +854,217 @@ public class OutgoingCallBroadcaster extends Activity
                         .setOnCancelListener(this)
                         .create();
                 break;
+            case INDEX_MULTI_SIM_DIALOG:
+                LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+                multiDialerlayout = inflater.inflate(R.layout.dialer_ms,
+                        (ViewGroup) findViewById(R.id.layout_root));
+
+                String vm = "";
+                String title = "";
+                Intent intent  = getIntent();
+                if (intent != null && intent.getData() != null)
+                    vm = intent.getData().getScheme();
+
+                String mCallNumber = getResources().getString(R.string.call_number);
+                String number = PhoneNumberUtils.getNumberFromIntent(getIntent(), this);
+                if (number != null) {
+                    number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+                    number = PhoneNumberUtils.stripSeparators(number);
+                }
+                if ((vm != null) && (vm.equals("voicemail"))) {
+                    title = mCallNumber + "VoiceMail";
+                    Log.d(TAG, "its voicemail!!!");
+                } else {
+                    title = mCallNumber + number;
+                }
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(OutgoingCallBroadcaster.this);
+                builder.setView(multiDialerlayout).setCancelable(false);
+                builder.setTitle(title).setNegativeButton(R.string.cancel_call, new DialogInterface.OnClickListener(){
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startOutgoingCall(INVALID_SUB);
+                    }
+                });
+                builder.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        Log.d(TAG, "key code is :" + keyCode);
+                        switch (keyCode) {
+                            case KeyEvent.KEYCODE_BACK: {
+                                startOutgoingCall(INVALID_SUB);
+                                return true;
+                            }
+                            case KeyEvent.KEYCODE_CALL: {
+                                Log.d(TAG, "event is" + event.getAction());
+                                if (event.getAction() == KeyEvent.ACTION_UP) {
+                                    return true;
+                                } else {
+                                    startOutgoingCall(getVoiceSubscription());
+                                    return true;
+                                }
+                            }
+                            case KeyEvent.KEYCODE_SEARCH:
+                                return true;
+                            default:
+                                return false;
+                        }
+                    }
+                });
+                return builder.create();
             default:
                 Log.w(TAG, "onCreateDialog: unexpected ID " + id);
                 dialog = null;
                 break;
         }
         return dialog;
+    }
+
+    @Override
+    protected void onPrepareDialog(int id, Dialog dialog) {
+        switch (id) {
+            case INDEX_MULTI_SIM_DIALOG:
+
+                Button[] callButton = new Button[mPhoneCount];
+                int[] callMark = {
+                        R.id.callmark1, R.id.callmark2
+                };
+                // int[] subString = {R.string.sub_1, R.string.sub_2};
+                int index = 0;
+                for (index = 0; index < mPhoneCount; index++) {
+                    callButton[index] = (Button) multiDialerlayout.findViewById(callMark[index]);
+                    callButton[index].setText(getMultiSimName(index));
+                    callButton[index].setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            switch (v.getId()) {
+                                case R.id.callmark1:
+                                    startOutgoingCall(MSimConstants.SUB1);
+                                    break;
+                                case R.id.callmark2:
+                                    startOutgoingCall(MSimConstants.SUB2);
+                                    break;
+                            }
+                        }
+                    });
+                }
+                break;
+        }
+    }
+
+    private int getVoiceSubscription() {
+        int voiceSub = MSimPhoneFactory.getVoiceSubscription();
+
+        if (isCallbackPriorityEnabled()) {
+            voiceSub = getIntent().getIntExtra(MSimConstants.SUBSCRIPTION_KEY, voiceSub);
+            Log.i(TAG, "Preferred callback enabled");
+            if (DBG) Log.v(TAG, "getVoiceSubscription return:" + getIntent().getExtra(MSimConstants.SUBSCRIPTION_KEY));
+        }
+        return voiceSub;
+    }
+    private int getSubscriptionForEmergencyCall(){
+        Log.d(TAG,"emergency call, getVoiceSubscriptionInService");
+        int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+        return sub;
+    }
+    private String getMultiSimName(int subscription) {
+        return Settings.System.getString(getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[subscription]);
+    }
+
+    private void launchMSDialer(String number) {
+        if (DBG) Log.v(TAG, "number " + number);
+        if (number != null) {
+            number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+            number = PhoneNumberUtils.stripSeparators(number);
+        }
+        boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(number);
+        if (isEmergency) {
+            Log.d(TAG,"emergency call");
+            startOutgoingCall(getSubscriptionForEmergencyCall());
+            return;
+        }
+
+        Vibrator mCalloutNotify = (Vibrator)getApplication().getSystemService(Service.VIBRATOR_SERVICE);
+        mCalloutNotify.vibrate(1000);
+        showDialog(INDEX_MULTI_SIM_DIALOG);
+    }
+
+    private boolean isAlwaysAsk() {
+        boolean mAlwaysAsk = false;
+        try {
+            int mSubscription = Settings.System.getInt(getContentResolver(),Settings.Global.MULTI_SIM_VOICE_CALL_SUBSCRIPTION);
+            if (mSubscription == ALWAYS_ASK) mAlwaysAsk = true;
+        } catch (SettingNotFoundException snfe) {
+            Log.d(TAG, Settings.Global.MULTI_SIM_VOICE_CALL_SUBSCRIPTION + " setting does not exist");
+        }
+        return mAlwaysAsk;
+    }
+
+    boolean isInCall(Phone phone) {
+        if (phone != null) {
+            if ((phone.getForegroundCall().getState().isAlive()) ||
+                   (phone.getBackgroundCall().getState().isAlive()) ||
+                   (phone.getRingingCall().getState().isAlive()))
+                return true;
+        }
+        return false;
+    }
+
+    private void startOutgoingCall(int subscription) {
+        if (DBG)
+        Log.v(TAG, "startOutgoingCall for sub " + subscription + " from intent: " + getIntent());
+        if (subscription < mPhoneCount) {
+            //setResult(RESULT_OK, mIntent);
+            mSubscription = subscription;
+            Log.d(TAG, "subscription selected from multiSimDialer" + mSubscription);
+            processMSimIntent(getIntent());
+        } else {
+            //setResult(RESULT_CANCELED, mIntent);
+            Log.d(TAG, "call cancelled");
+            Log.d(TAG, "activity cancelled or backkey pressed ");
+            finish();
+        }
+    }
+    private void launchMSDialerOrNot(String number, Intent intent){
+        mPhoneCount = MSimTelephonyManager.getDefault().getPhoneCount();
+        Phone phone = null;
+        boolean phoneInCall = false;
+        //checking if any of the phones are in use
+        for (int i = 0; i < mPhoneCount; i++) {
+             phone = MSimPhoneFactory.getPhone(i);
+             boolean inCall = isInCall(phone);
+             if ((phone != null) && (inCall)) {
+                 phoneInCall = true;
+                 break;
+             }
+        }
+        if (phoneInCall) {
+            if (DBG) Log.v(TAG, "subs [" + phone.getSubscription() + "] is in call");
+            // use the sub which is already in call
+            startOutgoingCall(phone.getSubscription());
+        } else {
+            if (DBG) Log.v(TAG, "launch dsdsdialer");
+            int subDialer;
+            if (FeatureQuery.FEATURE_UX_DIALER_DIALBUTTON){
+                //add this case: intent from dialer widget switch(for UX dialer), should not launchMSDialer().
+                subDialer = intent.getIntExtra("dial_widget_switched",-1);
+            }else{
+                subDialer = -1;
+            }
+            if (subDialer != -1){
+                startOutgoingCall(subDialer);
+            }else{
+                if(!isCallbackPriorityEnabled() && isAlwaysAsk() ){
+                    launchMSDialer(number);
+                }else{
+                    int voiceSub = getVoiceSubscription();
+                    if(voiceSub == ALWAYS_ASK){
+                        launchMSDialer(number);
+                    }else{
+                        startOutgoingCall(voiceSub);
+                    }
+                }
+            }
+        }
     }
 
     /** DialogInterface.OnClickListener implementation */
@@ -871,5 +1140,18 @@ public class OutgoingCallBroadcaster extends Activity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         if (DBG) Log.v(TAG, "onConfigurationChanged: newConfig = " + newConfig);
+    }
+
+    private boolean isCdmaSuppCall(Intent intent) {
+        if (intent == null)
+            return false;
+
+        Bundle extras = intent.getExtras();
+        boolean isCdmaSupp = false;
+        if (extras != null) {
+            isCdmaSupp = extras.getBoolean("Cdma_Supp", false);
+            Log.d(TAG, "isCdmaSuppCall " + isCdmaSupp);
+        }
+        return isCdmaSupp;
     }
 }

@@ -82,11 +82,10 @@ public class MSimCallCard extends CallCard {
         
         mOutgoingSlot = (TextView) mPrimaryCallInfo.findViewById(R.id.outgoingSlot);
         Call fgCall = cm.getActiveFgCall();
-        if (fgCall != null && fgCall.getState() == Call.State.ACTIVE) {
+        if (fgCall != null && fgCall.getState() == Call.State.ACTIVE && mOutgoingSlot != null) {
             // Get the subscription from current call object.
             int subscription = fgCall.getPhone().getSubscription();
-            String subInfo = Settings.System.getString(mContext.getContentResolver(),
-                    Settings.System.MULTI_SIM_NAME[subscription]);
+            String subInfo = getMultiSimName(subscription);
             mOutgoingSlot.setText(subInfo);
             mOutgoingSlot.setVisibility(View.VISIBLE);
         } else {
@@ -132,6 +131,11 @@ public class MSimCallCard extends CallCard {
         */
     }
 
+    private String getMultiSimName(int subscription) {
+        return Settings.System.getString(mContext.getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[subscription]);
+    }
+    
     @Override
     protected void cancelTimer(Call call) {
         Call.State state = call.getState();

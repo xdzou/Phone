@@ -275,20 +275,20 @@ public class CallCard extends LinearLayout
      * current state of the phone.
      */
     /* package */ void updateState(CallManager cm) {
-			if (DBG) log("updateState(" + cm + ")...");
-			
-			//UX_Enhance_Dialer
-			/*To display new style of incoming call */
-			if (FeatureQuery.FEATURE_UX_DIALER_INCOMINGCALL && mInCallScreen.getInCallTouchUi().showIncomingCallControls()) {
-					mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info);
-					((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info)).setVisibility(View.GONE);
-			} else {
-					mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info);
-					((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info)).setVisibility(View.GONE);
-			}
-			doUpdate(cm);
+        if (DBG) log("updateState(" + cm + ")...");
+
+        //UX_Enhance_Dialer
+        /*To display new style of incoming call */
+        if (FeatureQuery.FEATURE_UX_DIALER_INCOMINGCALL && mInCallScreen.getInCallTouchUi().showIncomingCallControls()) {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info);
+            ((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info)).setVisibility(View.GONE);
+        } else {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer.findViewById(R.id.primary_call_info);
+            ((ViewGroup) mCallInfoContainer.findViewById(R.id.primary_incoming_call_info)).setVisibility(View.GONE);
+        }
+        doUpdate(cm);
     }
-		
+
     protected void doUpdate(CallManager cm) {
 
         setWidget();
@@ -1060,15 +1060,8 @@ public class CallCard extends LinearLayout
             if (TelephonyManager.isMultiSimEnabled()){
                 // Get the subscription from current call object.
                 int subscription = call.getPhone().getSubscription();
-                // String subInfo = Settings.System.getString(mContext.getContentResolver(),
-                //         Settings.System.MULTI_SIM_NAME[subscription]);
-                
-                // Settings should add MULTI_SIM_NAME
-                String subInfo = "CDMA";
-                if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
-                    subInfo = "GSM";
-                }
-                
+                String subInfo = Settings.System.getString(mContext.getContentResolver(),
+                        Settings.System.MULTI_SIM_NAME[subscription]);                                
                 if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {
                     mCallStateLabel.setText(callStateLabel);
                 } else {
@@ -1475,7 +1468,7 @@ public class CallCard extends LinearLayout
             }
 
             if (DBG)log("==>info.phoneNumber: "+info.phoneNumber+" info.name: "+info.name
-							+" info.geoDescription:"+info.geoDescription);
+                    +" info.geoDescription:"+info.geoDescription);
             
             if (TextUtils.isEmpty(info.name)) {
                 // No valid "name" in the CallerInfo, so fall back to
@@ -1556,7 +1549,7 @@ public class CallCard extends LinearLayout
                          + "', based on info.person_id: " + info.person_id);
         } else {
             displayName = PhoneUtils.getPresentationString(getContext(), presentation);
-			cityName = displayName;	
+            cityName = displayName;	
         }
 
         boolean updateNameAndNumber = true;
