@@ -64,6 +64,8 @@ import android.util.EventLog;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.qrd.plugin.feature_query.FeatureQuery;
+
 /**
  * Phone app module that listens for phone state changes and various other
  * events from the telephony layer, and triggers any resulting UI behavior
@@ -840,8 +842,9 @@ public class CallNotifier extends Handler
             }
         }
         if (shouldStartQuery) {
-            // Reset the ringtone to the default first.
-            mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
+            // create a custom ringer using the default ringer first
+            Phone phone = c.getCall().getPhone();
+            mRinger.setCustomRingtoneUri(phone.getSubscription() == 0 ? Settings.System.DEFAULT_RINGTONE_URI : Settings.System.DEFAULT_RINGTONE_URI_2);
 
             // query the callerinfo to try to get the ringer.
             PhoneUtils.CallerInfoToken cit = PhoneUtils.startGetCallerInfo(
@@ -1026,7 +1029,8 @@ public class CallNotifier extends Handler
                 stopSignalInfoTone();
             }
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
-        } else if (fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+        } else if (FeatureQuery.FEATURE_PHONE_SET_VIBRATE_AFTER_CONNECTED && 
+                fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             if(DBG) log("onPhoneStateChanged: Current Call State = " + fgPhone.getForegroundCall().getState());
             if(DBG) log("onPhoneStateChanged: Previous Call State = " + mPreviousGsmCallState);
             if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
@@ -1040,7 +1044,7 @@ public class CallNotifier extends Handler
                     int nVibratorLength = 100;
                     mSystemVibrator.vibrate(nVibratorLength);
                     SystemClock.sleep(nVibratorLength);
-	                mSystemVibrator.cancel();
+                    mSystemVibrator.cancel();
                 }
             }
             mPreviousGsmCallState = fgPhone.getForegroundCall().getState();

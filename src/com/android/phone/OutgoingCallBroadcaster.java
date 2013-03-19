@@ -966,8 +966,12 @@ public class OutgoingCallBroadcaster extends Activity
         return sub;
     }
     private String getMultiSimName(int subscription) {
-        return Settings.System.getString(getContentResolver(),
+        String name = Settings.System.getString(getContentResolver(),
                 Settings.System.MULTI_SIM_NAME[subscription]);
+        if(name == null){
+            name = getResources().getStringArray(R.array.select_slot_items)[subscription];
+        }
+        return name;
     }
 
     private void launchMSDialer(String number) {
