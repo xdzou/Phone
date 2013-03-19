@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008, 2011 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -67,7 +67,7 @@ public class GsmUmtsOptions {
         mPrefActivity.addPreferencesFromResource(R.xml.gsm_umts_options);
         mButtonAPNExpand = (PreferenceScreen) mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY);
         mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
-        mButtonOperatorSelectionExpand = 
+        mButtonOperatorSelectionExpand =
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonOperatorSelectionExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mButtonPrefer2g = (CheckBoxPreference) mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY);
@@ -75,26 +75,36 @@ public class GsmUmtsOptions {
         enableScreen();
     }
 
+    public void onResume() {
+        updateOperatorSelectionVisibility();
+    }
+
     public void enableScreen() {
         if (mPhone.getPhoneType() != PhoneConstants.PHONE_TYPE_GSM) {
-            log("Not a GSM phone");
+            log("Not a GSM phone, disabling GSM preferences (apn, use2g, select operator)");
             mButtonAPNExpand.setEnabled(false);
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
         }
-        if (mButtonOperatorSelectionExpand != null) {
-            if (mPhone.getPhoneType() != PhoneConstants.PHONE_TYPE_GSM) {
+        updateOperatorSelectionVisibility();
+    }
+
+    private void updateOperatorSelectionVisibility() {
+        log("updateOperatorSelectionVisibility.");
+        if (mButtonOperatorSelectionExpand == null) {
+            android.util.Log.e(LOG_TAG, "mButtonOperatorSelectionExpand is null");
+            return;
+        }
+        if (!mPhone.isManualNetSelAllowed()) {
+            log("Manual network selection not allowed.Disabling Operator Selection menu.");
+            mButtonOperatorSelectionExpand.setEnabled(false);
+        } else if (mPrefActivity.getResources().getBoolean(R.bool.csp_enabled)) {
+            if (mPhone.isCspPlmnEnabled()) {
+                log("[CSP] Enabling Operator Selection menu.");
+                mButtonOperatorSelectionExpand.setEnabled(true);
+            } else {
+                log("[CSP] Disabling Operator Selection menu.");
                 mButtonOperatorSelectionExpand.setEnabled(false);
-            //} else if (!mPhone.isManualNetSelAllowed()) {  --msim-todo--: TODO
-            //    mButtonOperatorSelectionExpand.setEnabled(false);
-            } else if (mPrefActivity.getResources().getBoolean(R.bool.csp_enabled)) {
-                if (mPhone.isCspPlmnEnabled()) {
-                    log("[CSP] Enabling Operator Selection menu.");
-                    mButtonOperatorSelectionExpand.setEnabled(true);
-                } else {
-                    log("[CSP] Disabling Operator Selection menu.");
-                    mButtonOperatorSelectionExpand.setEnabled(false);
-                }
             }
         }
     }
