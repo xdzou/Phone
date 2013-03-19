@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only.
+ * Not a Contribution
  *
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -75,6 +74,7 @@ import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
+import com.qualcomm.ims.IImsService;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 
 /**
@@ -186,6 +186,8 @@ public class PhoneGlobals extends ContextWrapper
     static boolean sVoiceCapable = true;
     public boolean mIsSimPukLocked;
     private boolean mIsMediaInitialized = false;
+
+    public static IImsService mImsService;
 
     // Internal PhoneApp Call state tracker
     CdmaPhoneCallState cdmaPhoneCallState;
@@ -687,8 +689,9 @@ public class PhoneGlobals extends ContextWrapper
 
     private static ServiceConnection ImsServiceConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(LOG_TAG,"Ims Service Connected");
             //Get handle to IImsService.Stub.asInterface(service);
+            mImsService = IImsService.Stub.asInterface(service);
+            Log.d(LOG_TAG,"Ims Service Connected" + mImsService);
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
