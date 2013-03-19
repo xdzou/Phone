@@ -243,7 +243,7 @@ public class CallNotifier extends Handler
                 getSystemService(Context.TELEPHONY_SERVICE);
         telephonyManager.listen(mPhoneStateListener,
                 PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
-                | PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR);
+                /*| PhoneStateListener.LISTEN_CALL_FORWARDING_INDICATOR*/);
     }
 
     @Override
