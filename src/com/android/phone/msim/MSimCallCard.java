@@ -130,15 +130,6 @@ public class MSimCallCard extends CallCard {
         }
         */
     }
-
-    private String getMultiSimName(int subscription) {
-        String name = Settings.System.getString(mContext.getContentResolver(),
-                Settings.System.MULTI_SIM_NAME[subscription]);
-        if(name == null){
-            name = getResources().getStringArray(R.array.select_slot_items)[subscription];
-        }
-        return name;
-    }
     
     @Override
     protected void cancelTimer(Call call) {

@@ -1060,8 +1060,7 @@ public class CallCard extends LinearLayout
             if (TelephonyManager.isMultiSimEnabled()){
                 // Get the subscription from current call object.
                 int subscription = call.getPhone().getSubscription();
-                String subInfo = Settings.System.getString(mContext.getContentResolver(),
-                        Settings.System.MULTI_SIM_NAME[subscription]);                                
+                String subInfo = getMultiSimName(subscription);                               
                 if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {
                     mCallStateLabel.setText(callStateLabel);
                 } else {
@@ -2041,8 +2040,14 @@ public class CallCard extends LinearLayout
         }
     }
 
-
-
+    private String getMultiSimName(int subscription) {
+        String name = Settings.System.getString(mContext.getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[subscription]);
+        if(name == null){
+            name = getResources().getStringArray(R.array.select_slot_items)[subscription];
+        }
+        return name;
+    }
 
     // Debugging / testing code
 
