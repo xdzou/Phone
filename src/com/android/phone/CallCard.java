@@ -2040,7 +2040,7 @@ public class CallCard extends LinearLayout
         }
     }
 
-    private String getMultiSimName(int subscription) {
+    protected String getMultiSimName(int subscription) {
         String name = Settings.System.getString(mContext.getContentResolver(),
                 Settings.System.MULTI_SIM_NAME[subscription]);
         if(name == null){
