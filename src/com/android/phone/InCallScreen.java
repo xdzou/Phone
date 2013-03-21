@@ -176,6 +176,7 @@ public class InCallScreen extends Activity
     private static final int PHONE_NEW_RINGING_CONNECTION = 124;
     private static final int PHONE_INCOMING_MODIFY_CALL_REQUEST = 125;
     private static final int PHONE_MODIFY_CALL_EVENT = 126;
+    private static final int PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE = 127;
 
     // When InCallScreenMode is UNDEFINED set the default action
     // to ACTION_UNDEFINED so if we are resumed the activity will
@@ -448,13 +449,22 @@ public class InCallScreen extends Activity
                     break;
 
                 case PHONE_MODIFY_CALL_EVENT:
-                    if (((AsyncResult) msg.obj).exception != null) {
-                        Log.e(LOG_TAG, "videocall modify call request failed");
+                    Throwable ex = ((AsyncResult) msg.obj).exception;
+                    if (ex != null) {
+                        String errorStr = ex.getMessage();
+                        Log.e(LOG_TAG, "videocall modify call request failed " + errorStr);
                         Toast.makeText(mApp, R.string.modify_call_failure_str, Toast.LENGTH_SHORT)
                                 .show();
                     } else {
                         log("videocall: IMS Modify call request to RIL returned without exception");
                     }
+                    break;
+
+                case PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE:
+                    String errorStr = (String) ((AsyncResult) msg.obj).result;
+                    Log.e(LOG_TAG, "videocall modify call request failed + errorStr=" + errorStr);
+                    Toast.makeText(mApp, R.string.modify_call_failure_str, Toast.LENGTH_SHORT)
+                            .show();
                     break;
 
                 default:
@@ -1132,6 +1142,8 @@ public class InCallScreen extends Activity
                 try {
                     phone.registerForModifyCallRequest(mHandler,
                             PHONE_INCOMING_MODIFY_CALL_REQUEST, null);
+                    phone.registerForAvpUpgradeFailure(mHandler,
+                            PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE, null);
                 } catch (CallStateException e) {
                     Log.e(LOG_TAG, "registerForModifyCallRequest failed for phone: " + phone);
                 }
@@ -1157,6 +1169,7 @@ public class InCallScreen extends Activity
         try {
             if (phone != null) {
                 phone.unregisterForModifyCallRequest(mHandler);
+                phone.unregisterForAvpUpgradeFailure(mHandler);
             }
         } catch (CallStateException e) {
             Log.e(LOG_TAG, "unregisterForModifyCallRequest failed for phone: " + phone);
@@ -4877,7 +4890,7 @@ public class InCallScreen extends Activity
         log("videocall handleModifyCallRequest");
         if (mModifyCallPromptDialog != null) {
             if (DBG)
-                log("- DISMISSING mModifyCallPromptDialog.");
+                log("videocall: - DISMISSING mModifyCallPromptDialog.");
             mModifyCallPromptDialog.dismiss(); // safe even if already dismissed
             mModifyCallPromptDialog = null;
         }
@@ -4888,8 +4901,9 @@ public class InCallScreen extends Activity
             if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
                 int callType = phone.getProposedConnectionType(conn);
                 int prevCallType = phone.getCallType(mCM.getActiveFgCall());
-                log("videocall handleModifyCallRequest: connection = " + conn + " calltype = "
-                        + callType);
+                log("videocall handleModifyCallRequest: connection = " + conn
+                        + " prevCallType= " + prevCallType
+                        + " calltype = " + callType);
 
                 boolean isConsentRequired = false;
                 isConsentRequired = isUserConsentRequired(callType, prevCallType);
@@ -4907,13 +4921,12 @@ public class InCallScreen extends Activity
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog,
                                                 int whichButton) {
-                                            log("handle MODIFY_CALL_PROMPT_CONFIRMED, proceed...");
+                                            log("videocall: MODIFY_CALL_PROMPT_CONFIRMED, proceed");
                                             try {
                                                 phone.acceptConnectionTypeChange(conn, null);
                                             } catch (CallStateException e) {
-                                                Log.e(LOG_TAG,
-                                                        "Exception acceptConnectionTypeChange "
-                                                                + e);
+                                                Log.e(LOG_TAG, "videocall: Exception "
+                                                        + "acceptConnectionTypeChange " + e);
                                             }
                                         }
                                     })
@@ -4922,13 +4935,12 @@ public class InCallScreen extends Activity
 
                                         public void onClick(DialogInterface dialog,
                                                 int whichButton) {
-                                            log("handle MODIFY_CALL_PROMPT_CANCELED!");
+                                            log("videocall: MODIFY_CALL_PROMPT_CANCELED!");
                                             try {
                                                 phone.rejectConnectionTypeChange(conn);
                                             } catch (CallStateException e) {
-                                                Log.e(LOG_TAG,
-                                                        "Exception acceptConnectionTypeChange "
-                                                                + e);
+                                                Log.e(LOG_TAG, "videocall: Exception "
+                                                        + "acceptConnectionTypeChange " + e);
                                             }
                                         }
                                     })
