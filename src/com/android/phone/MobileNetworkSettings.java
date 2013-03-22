@@ -43,6 +43,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
+
 /**
  * "Mobile network settings" screen.  This preference screen lets you
  * enable/disable mobile data, and control data roaming and other
@@ -257,6 +259,31 @@ public class MobileNetworkSettings extends PreferenceActivity
 
             } else if (phoneType == Phone.PHONE_TYPE_GSM) {
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet);
+
+                // Pick up last 3 items related to GSM/WCDMA
+                CharSequence[] entries = mButtonPreferredNetworkMode.getEntries();
+                CharSequence[] entryValues = mButtonPreferredNetworkMode.getEntryValues();
+
+                ArrayList gsmEntries =  new ArrayList();
+                ArrayList gsmEntryValues =  new ArrayList();
+
+                for (int i=entries.length-3; i<entries.length; i++) {
+                    gsmEntries.add(entries[i]);
+                    gsmEntryValues.add(entryValues[i]);
+                }
+
+                entries = (CharSequence[])gsmEntries.toArray(new CharSequence[gsmEntries.size()]);
+                entryValues = (CharSequence[])gsmEntryValues.toArray(new CharSequence[gsmEntryValues.size()]);
+
+                //for (int j=0; j<entries.length; j++) {
+                //    log("item[" + j + "]=" + entries[j]+ ", " + entryValues[j]);
+                //}
+
+                mButtonPreferredNetworkMode.setEntries(entries);
+                mButtonPreferredNetworkMode.setEntryValues(entryValues);
+
+                mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
             }
@@ -330,6 +357,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             int settingsNetworkMode = android.provider.Settings.Secure.getInt(
                     mPhone.getContext().getContentResolver(),
                     android.provider.Settings.Secure.PREFERRED_NETWORK_MODE, preferredNetworkMode);
+
             if (buttonNetworkMode != settingsNetworkMode) {
                 int modemNetworkMode = buttonNetworkMode;
                 // if new mode is invalid set mode to default preferred
@@ -472,6 +500,16 @@ public class MobileNetworkSettings extends PreferenceActivity
     }
 
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
+        // Use the same description as the menu.
+        if (NetworkMode < Phone.NT_MODE_WCDMA_PREF
+            || NetworkMode > Phone.NT_MODE_LTE_WCDMA) {
+            mButtonPreferredNetworkMode.setSummary(
+                    R.string.preferred_network_mode_global_summary);
+        } else {
+            mButtonPreferredNetworkMode.setSummary(mButtonPreferredNetworkMode.getEntry());
+        }
+
+        /*
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
                 mButtonPreferredNetworkMode.setSummary(
@@ -538,6 +576,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_global_summary);
         }
+        */
     }
 
     @Override
