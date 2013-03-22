@@ -17,6 +17,7 @@ include $(BUILD_STATIC_JAVA_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_JAVA_LIBRARIES := telephony-common telephony-msim
+LOCAL_JAVA_LIBRARIES += com.qrd.plugin.feature_query
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 LOCAL_SRC_FILES += \
         src/com/android/phone/EventLogTags.logtags \

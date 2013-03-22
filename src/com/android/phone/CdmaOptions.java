@@ -30,6 +30,8 @@ import android.text.TextUtils;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyProperties;
+import com.qualcomm.internal.telephony.MSimPhoneFactory;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * List of Phone-specific settings screens.
@@ -37,9 +39,11 @@ import com.android.internal.telephony.TelephonyProperties;
 public class CdmaOptions {
     private static final String LOG_TAG = "CdmaOptions";
 
+    private PreferenceScreen mButtonAPNExpand;
     private CdmaSystemSelectListPreference mButtonCdmaSystemSelect;
     private CdmaSubscriptionListPreference mButtonCdmaSubscription;
 
+    private static final String BUTTON_APN_EXPAND_KEY = "button_apn_key";
     private static final String BUTTON_CDMA_SYSTEM_SELECT_KEY = "cdma_system_select_key";
     private static final String BUTTON_CDMA_SUBSCRIPTION_KEY = "cdma_subscription_key";
     private static final String BUTTON_CDMA_ACTIVATE_DEVICE_KEY = "cdma_activate_device_key";
@@ -47,16 +51,29 @@ public class CdmaOptions {
     private PreferenceActivity mPrefActivity;
     private PreferenceScreen mPrefScreen;
     private Phone mPhone;
+    private int mSubscription = 0;
 
     public CdmaOptions(PreferenceActivity prefActivity, PreferenceScreen prefScreen, Phone phone) {
         mPrefActivity = prefActivity;
         mPrefScreen = prefScreen;
         mPhone = phone;
+        mSubscription = 0;
+        create();
+    }
+
+    public CdmaOptions(PreferenceActivity prefActivity, PreferenceScreen prefScreen, Phone phone, int subscription) {
+        mPrefActivity = prefActivity;
+        mPrefScreen = prefScreen;
+        mPhone = phone;
+        mSubscription = subscription;
         create();
     }
 
     protected void create() {
         mPrefActivity.addPreferencesFromResource(R.xml.cdma_options);
+
+        mButtonAPNExpand = (PreferenceScreen) mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY);
+        mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
 
         mButtonCdmaSystemSelect = (CdmaSystemSelectListPreference)mPrefScreen
                 .findPreference(BUTTON_CDMA_SYSTEM_SELECT_KEY);
@@ -64,14 +81,18 @@ public class CdmaOptions {
         mButtonCdmaSubscription = (CdmaSubscriptionListPreference)mPrefScreen
                 .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY);
 
-        mButtonCdmaSystemSelect.setEnabled(true);
-        if(deviceSupportsNvAndRuim()) {
-            log("Both NV and Ruim supported, ENABLE subscription type selection");
-            mButtonCdmaSubscription.setEnabled(true);
-        } else {
-            log("Both NV and Ruim NOT supported, REMOVE subscription type selection");
-            mPrefScreen.removePreference(mPrefScreen
+        if (mButtonCdmaSystemSelect != null)
+            mButtonCdmaSystemSelect.setEnabled(true);
+
+        if (mButtonCdmaSubscription != null) {
+            if(deviceSupportsNvAndRuim()) {
+                log("Both NV and Ruim supported, ENABLE subscription type selection");
+                mButtonCdmaSubscription.setEnabled(true);
+            } else {
+                log("Both NV and Ruim NOT supported, REMOVE subscription type selection");
+                mPrefScreen.removePreference(mPrefScreen
                                 .findPreference(BUTTON_CDMA_SUBSCRIPTION_KEY));
+            }
         }
 
         final boolean voiceCapable = mPrefActivity.getResources().getBoolean(
@@ -83,6 +104,11 @@ public class CdmaOptions {
             mPrefScreen.removePreference(
                     mPrefScreen.findPreference(BUTTON_CDMA_ACTIVATE_DEVICE_KEY));
         }
+    }
+
+    public void removeCDMAOptions() {
+        mPrefScreen.removePreference(
+                mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY));
     }
 
     private boolean deviceSupportsNvAndRuim() {
@@ -124,14 +150,23 @@ public class CdmaOptions {
     }
 
     public void showDialog(Preference preference) {
-        if (preference.getKey().equals(BUTTON_CDMA_SYSTEM_SELECT_KEY)) {
+        if (preference.getKey().equals(BUTTON_CDMA_SYSTEM_SELECT_KEY) &&
+            mButtonCdmaSystemSelect != null) {
             mButtonCdmaSystemSelect.showDialog(null);
-        } else if (preference.getKey().equals(BUTTON_CDMA_SUBSCRIPTION_KEY)) {
+        } else if (preference.getKey().equals(BUTTON_CDMA_SUBSCRIPTION_KEY) &&
+            mButtonCdmaSubscription != null) {
             mButtonCdmaSubscription.showDialog(null);
         }
     }
 
     protected void log(String s) {
         android.util.Log.d(LOG_TAG, s);
+    }
+
+    //change apn item status when apn property change
+    public void setApnItemStatus(boolean recordLoaded){
+        if( null != mButtonAPNExpand ){
+            mButtonAPNExpand.setEnabled(recordLoaded);
+        }
     }
 }

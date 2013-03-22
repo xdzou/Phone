@@ -25,6 +25,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import com.android.internal.telephony.Phone;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     private static final String LOG_TAG = "Use2GOnlyCheckBoxPreference";
@@ -91,11 +92,20 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
 
             if (ar.exception == null) {
                 int type = ((int[])ar.result)[0];
+                if (type != Phone.NT_MODE_GSM_ONLY) {
+                    // Allow only NT_MODE_GSM_ONLY or NT_MODE_WCDMA_PREF
+                    type = Phone.NT_MODE_WCDMA_PREF;
+                }
                 Log.i(LOG_TAG, "get preferred network type="+type);
                 setChecked(type == Phone.NT_MODE_GSM_ONLY);
-                android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
-                        android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                        mPhone.getSubscription(), type);
+                
+                //Preferred network mode is set everytime power on for cmcc
+                //So we don't change settingsprovider that it is always default value.
+                if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+                    android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                            mPhone.getSubscription(), type);
+                }
             } else {
                 // Weird state, disable the setting
                 Log.i(LOG_TAG, "get preferred network type, exception="+ar.exception);
