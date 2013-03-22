@@ -423,6 +423,8 @@ public class CallController extends Handler {
             && ((okToCallStatus == CallStatusCode.EMERGENCY_ONLY)
                 || (okToCallStatus == CallStatusCode.OUT_OF_SERVICE))) {
             if (DBG) log("placeCall: Emergency number detected with status = " + okToCallStatus);
+            int sub = mApp.getVoiceSubscriptionInService();
+            phone = mApp.getPhone(sub);
             okToCallStatus = CallStatusCode.SUCCESS;
             if (DBG) log("==> UPDATING status to: " + okToCallStatus);
         }
