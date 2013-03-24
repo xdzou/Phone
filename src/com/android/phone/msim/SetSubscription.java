@@ -44,8 +44,13 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.preference.PreferenceCategory;
+import android.provider.Settings;
 import android.widget.LinearLayout.LayoutParams;
+import android.content.BroadcastReceiver;
 import android.content.DialogInterface;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.app.Dialog;
@@ -128,7 +133,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                 Log.d(TAG, "onCreate: Card info not available: mCardSubscrInfo == NULL");
             }
 
-            // TODO: registerForSimStateChanged
+            mCardSubscriptionManager.registerForSimStateChanged(mHandler,
+                    EVENT_SIM_STATE_CHANGED, null);
             if (mSubscriptionManager.isSetSubscriptionInProgress()) {
                 Log.d(TAG, "onCreate: SetSubscription is in progress when started this activity");
                 showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
@@ -136,11 +142,36 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
             }
         }
+        IntentFilter intentFilter =
+                    new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        registerReceiver(new AirplaneModeBroadcastReceiver(), intentFilter);
+    }
+
+    /**
+     * Receiver for Airplane mode changed intent broadcasts.
+     */
+    private class AirplaneModeBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action.equals(Intent.ACTION_AIRPLANE_MODE_CHANGED)) {
+                Log.d(TAG, "Airplane mode is: " + isAirplaneModeOn());
+                if (isAirplaneModeOn()) {
+                    finish();
+                }
+            }
+        }
     }
 
     protected void onDestroy () {
         super.onDestroy();
+        mCardSubscriptionManager.unRegisterForSimStateChanged(mHandler);
         mSubscriptionManager.unRegisterForSetSubscriptionCompleted(mHandler);
+    }
+
+    private boolean isAirplaneModeOn() {
+        return Settings.System.getInt(getContentResolver(),
+                Settings.System.AIRPLANE_MODE_ON, 0) != 0;
     }
 
     private void notifyNewCardAvailable() {
@@ -468,6 +499,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         if (subGroup != null) {
                             subGroup.removeAll();
                         }
+                    }
+                    for (int i = 0; i < MAX_SUBSCRIPTIONS; i++) {
+                        mCardSubscrInfo[i] = mCardSubscriptionManager.getCardSubscriptions(i);
                     }
                     prefParent.removeAll();
                     populateList();
