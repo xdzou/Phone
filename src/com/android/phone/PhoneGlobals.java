@@ -75,6 +75,7 @@ import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
+import com.qualcomm.recorder.ICallRecorder;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 import android.content.Context;
@@ -188,7 +189,8 @@ public class PhoneGlobals extends ContextWrapper
     CallNotifier notifier;
     NotificationMgr notificationMgr;
     Ringer ringer;
-    IBluetoothHeadsetPhone mBluetoothPhone;
+    IBluetoothHeadsetPhone mBluetoothPhone;    
+    private ICallRecorder mCallRecorder;
     PhoneInterfaceManager phoneMgr;
     CallManager mCM;
     ManagedRoaming mManagedRoam;
@@ -513,6 +515,9 @@ public class PhoneGlobals extends ContextWrapper
                 // Device is not bluetooth capable
                 mBluetoothPhone = null;
             }
+
+            // bind call record service when phone process startup
+            bindRecorder(this);
 
             ringer = Ringer.init(this);
 
@@ -2054,5 +2059,106 @@ public class PhoneGlobals extends ContextWrapper
      */
     /* package */ Intent createInCallIntent(int subscription) {
         return PhoneGlobals.createInCallIntent();
+    }
+    // Call recorder connection
+    private ServiceConnection mCallRecorderConnection = new ServiceConnection() {
+        
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mCallRecorder = ICallRecorder.Stub.asInterface(service);
+            Log.d(LOG_TAG, "bind call record service:" + mCallRecorder);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(LOG_TAG, "call record service is unbind");
+            mCallRecorder = null;
+        }
+    };
+    
+	//xiaohong add 2013/2/21
+	public long getCallsDuration(String key) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        return mprefs.getLong(key);
+    }
+
+    public void setCallsDuration(String key, long value) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        mprefs.setLong(key, value);
+	    return;
+    }      
+   //xiaohong add end 
+    /**
+     * bind call record service
+     * 
+     * @param context
+     */
+    private void bindRecorder(Context context) {
+        if (mCallRecorder == null) {
+            final Intent intent = new Intent("com.qualcomm.action.CALL_RECORD");
+            try {
+                context.bindService(intent, mCallRecorderConnection, BIND_AUTO_CREATE);
+            } catch (Exception e) {
+            }
+        }
+    }
+    
+    /**
+     * start record
+     */
+    public void startRecord() {
+        if (mCallRecorder != null) {
+            try {
+                mCallRecorder.startOrShowRecord();
+            } catch (RemoteException e) {
+                mCallRecorder = null;
+                Log.w(LOG_TAG, "start recorder error:" + e);
+            }
+        }
+    }
+    
+    /**
+     * check is the feature for call recorder enable
+     * 
+     * @return
+     */
+    public boolean isRecordReady() {
+        return mCallRecorder != null;
+    }
+    
+    /**
+     * when phone state is not offhook, the record is not enbaled
+     * 
+     * @return
+     */
+    public boolean isRecordEnabled() {
+        if (mCallRecorder != null) {
+            try {
+                return mCallRecorder.isEnabled();
+            } catch (RemoteException e) {
+                mCallRecorder = null;
+                Log.w(LOG_TAG, "get recorder status error:" + e);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * check if mCallRecorder is recording
+     * 
+     * @return
+     */
+    public boolean isRecording() {
+        if (mCallRecorder != null) {
+            try {
+                return mCallRecorder.isRecording();
+            } catch (RemoteException e) {
+                mCallRecorder = null;
+                Log.w(LOG_TAG, "get recorder status error:" + e);
+            }
+        }
+        return false;
     }
 }

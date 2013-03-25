@@ -1079,6 +1079,8 @@
     <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
+    <!-- Text for the onscreen "Show Recorder" button -->
+    <string name="onscreenRecorderText">Record</string>
     <!-- Text for the onscreen "Mute" button -->
     <string name="onscreenMuteText">Mute</string>
     <!-- Text for the onscreen "Add call" button -->
