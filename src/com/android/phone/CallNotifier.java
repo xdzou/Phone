@@ -53,6 +53,7 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
+import android.os.SystemClock;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
@@ -171,6 +172,10 @@ public class CallNotifier extends Handler
 
     private static final int SHOW_DURATION_OFF = 0;
     private static final int SHOW_DURATION_ON = 1;
+    
+    private static final int VIBRATE_OFF = 0;
+    private static final int VIBRATE_ON = 1;
+    
     protected PhoneGlobals mApplication;
     private CallManager mCM;
     private Ringer mRinger;
@@ -187,6 +192,7 @@ public class CallNotifier extends Handler
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
 
     private Call.State mPreviousCdmaCallState;
+    private Call.State mPreviousGsmCallState;
     private boolean mVoicePrivacyState = false;
     private boolean mIsCdmaRedialCall = false;
 
@@ -1005,6 +1011,25 @@ public class CallNotifier extends Handler
                 stopSignalInfoTone();
             }
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
+        } else if (FeatureQuery.FEATURE_PHONE_SET_VIBRATE_AFTER_CONNECTED && 
+                fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+            if(DBG) log("onPhoneStateChanged: Current Call State = " + fgPhone.getForegroundCall().getState());
+            if(DBG) log("onPhoneStateChanged: Previous Call State = " + mPreviousGsmCallState);
+            if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
+                    && ((mPreviousGsmCallState == Call.State.DIALING)
+                    ||  (mPreviousGsmCallState == Call.State.ALERTING))) {
+                if(DBG) log("onPhoneStateChanged: GSM Connected.");
+                if (Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.VIBRATE_AFTER_CONNECTED, VIBRATE_OFF) == VIBRATE_ON) {
+                    if(DBG) log("onPhoneStateChanged: Vibrate.");
+                    Vibrator mSystemVibrator = new SystemVibrator();
+                    int nVibratorLength = 100;
+                    mSystemVibrator.vibrate(nVibratorLength);
+                    SystemClock.sleep(nVibratorLength);
+                    mSystemVibrator.cancel();
+                }
+            }
+            mPreviousGsmCallState = fgPhone.getForegroundCall().getState();
         }
 
         // Have the PhoneApp recompute its mShowBluetoothIndication
