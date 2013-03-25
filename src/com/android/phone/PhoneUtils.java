@@ -797,6 +797,11 @@ public class PhoneUtils {
             return number;
         }
 
+        if(TextUtils.isEmpty(number)){
+            Log.d(LOG_TAG, "the number is empty!!");
+            return number;
+        }
+        
         // Do exactly same thing as Uri#toSafeString() does, which will enable us to compare
         // sanitized phone numbers.
         StringBuilder builder = new StringBuilder();
