@@ -2076,20 +2076,6 @@ public class PhoneGlobals extends ContextWrapper
         }
     };
     
-	//xiaohong add 2013/2/21
-	public long getCallsDuration(String key) {
-        RecentCallsPreferences mprefs;
-        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
-        return mprefs.getLong(key);
-    }
-
-    public void setCallsDuration(String key, long value) {
-        RecentCallsPreferences mprefs;
-        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
-        mprefs.setLong(key, value);
-	    return;
-    }      
-   //xiaohong add end 
     /**
      * bind call record service
      * 
