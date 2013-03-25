@@ -210,7 +210,7 @@ public class OutgoingCallBroadcaster extends Activity
             // NEW_OUTGOING_CALL broadcast.  But we need to do it again here
             // too, since the number might have been modified/rewritten during
             // the broadcast (and may now contain letters or separators again.)
-            number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+            number = PhoneNumberUtils.convertKeypadLettersToDigitsExt(number);
             number = PhoneNumberUtils.stripSeparators(number);
 
             if (DBG) Log.v(TAG, "doReceive: proceeding with call...");
@@ -486,7 +486,7 @@ public class OutgoingCallBroadcaster extends Activity
         // TODO put uriNumber under PhoneNumberUtils
         if (number != null) {
             if (!PhoneNumberUtils.isUriNumber(number)) {
-                number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+                number = PhoneNumberUtils.convertKeypadLettersToDigitsExt(number);
                 number = PhoneNumberUtils.stripSeparators(number);
             }
         } else {
