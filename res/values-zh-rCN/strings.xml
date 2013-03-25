@@ -168,8 +168,18 @@
     <string name="preferred_network_mode_cdma_only_summary" msgid="1309770926198634150">"首选网络模式：仅限 CDMA"</string>
     <string name="preferred_network_mode_evdo_only_summary" msgid="8472220691721269155">"首选网络模式：仅限 EvDo"</string>
     <string name="preferred_network_mode_lte_cdma_summary" msgid="3722647806454528426">"首选网络模式：LTE/CDMA"</string>
+    <string name="preferred_network_mode_cdma_evdo_gsm_wcdma_summary" msgid="5242955428104102867">首选网络模式：CDMA/EvDo/GSM/WCDMA</string>
+    <string name="preferred_network_mode_lte_summary" msgid="8650253065325703580">首选网络模式：仅限 LTE </string>
+    <string name="preferred_network_mode_lte_gsm_wcdma_summary" msgid="7156440725909578607">首选网络模式：GSM/WCDMA/LTE</string>
+    <string name="preferred_network_mode_lte_cdma_evdo_summary" msgid="8209856915462203788">首选网络模式：CDMA+LTE/EVDO</string>
+    <string name="preferred_network_mode_global_summary" msgid="2805064161662132715">首选网络模式：Global</string>
   <string-array name="preferred_network_mode_choices">
     <item msgid="5543794538185064048">"LTE/CDMA"</item>
+    <item msgid="1791696124550789935">仅 LTE</item>
+    <item msgid="8710870614106078224">Global</item>
+    <item msgid="8292821318730650255">GSM/WCDMA/LTE 自动选择</item>
+    <item msgid="5618227834870218091">CDMA + LTE/EvDo 自动选择</item>
+    <item msgid="5009391296710354107">CDMA/EvDo/GSM/WCDMA 自动选择</item>
     <item msgid="3273348576277144124">"仅 EvDo"</item>
     <item msgid="454610224530856274">"CDMA，无 EvDo 功能"</item>
     <item msgid="648505122852496166">"CDMA/EvDo 自动选择"</item>

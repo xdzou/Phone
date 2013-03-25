@@ -1,12 +1,8 @@
 /*
  * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
- * Not a Contribution.
+ * Not a Contribution
  *
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
- *
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -176,6 +172,7 @@ public class InCallScreen extends Activity
     private static final int PHONE_NEW_RINGING_CONNECTION = 124;
     private static final int PHONE_INCOMING_MODIFY_CALL_REQUEST = 125;
     private static final int PHONE_MODIFY_CALL_EVENT = 126;
+    private static final int PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE = 127;
 
     // When InCallScreenMode is UNDEFINED set the default action
     // to ACTION_UNDEFINED so if we are resumed the activity will
@@ -448,13 +445,22 @@ public class InCallScreen extends Activity
                     break;
 
                 case PHONE_MODIFY_CALL_EVENT:
-                    if (((AsyncResult) msg.obj).exception != null) {
-                        Log.e(LOG_TAG, "videocall modify call request failed");
+                    Throwable ex = ((AsyncResult) msg.obj).exception;
+                    if (ex != null) {
+                        String errorStr = ex.getMessage();
+                        Log.e(LOG_TAG, "videocall modify call request failed " + errorStr);
                         Toast.makeText(mApp, R.string.modify_call_failure_str, Toast.LENGTH_SHORT)
                                 .show();
                     } else {
                         log("videocall: IMS Modify call request to RIL returned without exception");
                     }
+                    break;
+
+                case PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE:
+                    String errorStr = (String) ((AsyncResult) msg.obj).result;
+                    Log.e(LOG_TAG, "videocall modify call request failed + errorStr=" + errorStr);
+                    Toast.makeText(mApp, R.string.modify_call_failure_str, Toast.LENGTH_SHORT)
+                            .show();
                     break;
 
                 default:
@@ -1132,6 +1138,8 @@ public class InCallScreen extends Activity
                 try {
                     phone.registerForModifyCallRequest(mHandler,
                             PHONE_INCOMING_MODIFY_CALL_REQUEST, null);
+                    phone.registerForAvpUpgradeFailure(mHandler,
+                            PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE, null);
                 } catch (CallStateException e) {
                     Log.e(LOG_TAG, "registerForModifyCallRequest failed for phone: " + phone);
                 }
@@ -1157,6 +1165,7 @@ public class InCallScreen extends Activity
         try {
             if (phone != null) {
                 phone.unregisterForModifyCallRequest(mHandler);
+                phone.unregisterForAvpUpgradeFailure(mHandler);
             }
         } catch (CallStateException e) {
             Log.e(LOG_TAG, "unregisterForModifyCallRequest failed for phone: " + phone);
@@ -1344,8 +1353,12 @@ public class InCallScreen extends Activity
         // Helper class to keep track of enabledness/state of UI controls
         mInCallControlState = new InCallControlState(this, mCM);
 
-        // Helper class to run the "Manage conference" UI
-        mManageConferenceUtils = new ManageConferenceUtils(this, mCM);
+        if (PhoneUtils.isCallOnImsEnabled()) {
+            mManageConferenceUtils = new ImsManageConferenceUtils(this, mCM);
+        } else {
+            // Helper class to run the "Manage conference" UI
+            mManageConferenceUtils = new ManageConferenceUtils(this, mCM);
+        }
 
         // The DTMF Dialpad.
         ViewStub stub = (ViewStub) findViewById(R.id.dtmf_twelve_key_dialer_stub);
@@ -3872,16 +3885,10 @@ public class InCallScreen extends Activity
                     return;
                 }
                 List<Connection> connections = mCM.getFgCallConnections();
-                // There almost certainly will be > 1 connection,
+
+                // There almost certainly will be > 1 connection for GSM
                 // since isConferenceCall() just returned true.
-                if ((connections == null) || (connections.size() <= 1)) {
-                    Log.w(LOG_TAG,
-                          "MANAGE_CONFERENCE: Bogus TRUE from isConferenceCall(); connections = "
-                          + connections);
-                    // Hide the Manage Conference panel, return to NORMAL mode.
-                    setInCallScreenMode(InCallScreenMode.NORMAL);
-                    return;
-                }
+                // For IMS conference calls there may be only one connection
 
                 // TODO: Don't do this here. The call to
                 // initManageConferencePanel() should instead happen
@@ -4881,7 +4888,7 @@ public class InCallScreen extends Activity
         log("videocall handleModifyCallRequest");
         if (mModifyCallPromptDialog != null) {
             if (DBG)
-                log("- DISMISSING mModifyCallPromptDialog.");
+                log("videocall: - DISMISSING mModifyCallPromptDialog.");
             mModifyCallPromptDialog.dismiss(); // safe even if already dismissed
             mModifyCallPromptDialog = null;
         }
@@ -4892,8 +4899,9 @@ public class InCallScreen extends Activity
             if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
                 int callType = phone.getProposedConnectionType(conn);
                 int prevCallType = phone.getCallType(mCM.getActiveFgCall());
-                log("videocall handleModifyCallRequest: connection = " + conn + " calltype = "
-                        + callType);
+                log("videocall handleModifyCallRequest: connection = " + conn
+                        + " prevCallType= " + prevCallType
+                        + " calltype = " + callType);
 
                 boolean isConsentRequired = false;
                 isConsentRequired = isUserConsentRequired(callType, prevCallType);
@@ -4911,13 +4919,12 @@ public class InCallScreen extends Activity
                                     new DialogInterface.OnClickListener() {
                                         public void onClick(DialogInterface dialog,
                                                 int whichButton) {
-                                            log("handle MODIFY_CALL_PROMPT_CONFIRMED, proceed...");
+                                            log("videocall: MODIFY_CALL_PROMPT_CONFIRMED, proceed");
                                             try {
                                                 phone.acceptConnectionTypeChange(conn, null);
                                             } catch (CallStateException e) {
-                                                Log.e(LOG_TAG,
-                                                        "Exception acceptConnectionTypeChange "
-                                                                + e);
+                                                Log.e(LOG_TAG, "videocall: Exception "
+                                                        + "acceptConnectionTypeChange " + e);
                                             }
                                         }
                                     })
@@ -4926,13 +4933,12 @@ public class InCallScreen extends Activity
 
                                         public void onClick(DialogInterface dialog,
                                                 int whichButton) {
-                                            log("handle MODIFY_CALL_PROMPT_CANCELED!");
+                                            log("videocall: MODIFY_CALL_PROMPT_CANCELED!");
                                             try {
                                                 phone.rejectConnectionTypeChange(conn);
                                             } catch (CallStateException e) {
-                                                Log.e(LOG_TAG,
-                                                        "Exception acceptConnectionTypeChange "
-                                                                + e);
+                                                Log.e(LOG_TAG, "videocall: Exception "
+                                                        + "acceptConnectionTypeChange " + e);
                                             }
                                         }
                                     })
