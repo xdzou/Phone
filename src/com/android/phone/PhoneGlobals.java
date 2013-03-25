@@ -78,6 +78,10 @@ import com.android.server.sip.SipService;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 import android.content.Context;
+
+import android.content.Context;
+import android.provider.RecentCallsPreferences;
+
 import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
@@ -459,6 +463,10 @@ public class PhoneGlobals extends ContextWrapper
     public void onCreate() {
         if (VDBG) Log.v(LOG_TAG, "onCreate()...");
         mContext = this;
+      
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(mContext);
+      
         ContentResolver resolver = getContentResolver();
 
         // Cache the "voice capable" flag.
@@ -2055,4 +2063,17 @@ public class PhoneGlobals extends ContextWrapper
     /* package */ Intent createInCallIntent(int subscription) {
         return PhoneGlobals.createInCallIntent();
     }
+ // add query call duration for call log
+    public long getCallsDuration(String key) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        return mprefs.getLong(key);
+    }
+  //add set call duration for call log
+    public void setCallsDuration(String key, long value) {
+        RecentCallsPreferences mprefs;
+        mprefs =  RecentCallsPreferences.getPreferences(getInstance());
+        mprefs.setLong(key, value);
+        return;
+    }      
 }
