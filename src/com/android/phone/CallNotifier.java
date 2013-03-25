@@ -64,6 +64,8 @@ import android.util.EventLog;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.qrd.plugin.feature_query.FeatureQuery;
+
 /**
  * Phone app module that listens for phone state changes and various other
  * events from the telephony layer, and triggers any resulting UI behavior
@@ -138,6 +140,7 @@ public class CallNotifier extends Handler
 
     // Event used to indicate a query timeout.
     private static final int RINGER_CUSTOM_RINGTONE_QUERY_TIMEOUT = 100;
+    private static final int RINGER_WAIT_FOR_QUERY = 101;
 
     // Events from the Phone object:
     private static final int PHONE_STATE_CHANGED = 1;
@@ -279,6 +282,10 @@ public class CallNotifier extends Handler
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
+            case RINGER_WAIT_FOR_QUERY:
+                int subscription = mCM.getRingingPhone().getSubscription();
+                mRinger.ring(subscription);
+                break;
             case PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
                 onNewRingingConnection((AsyncResult) msg.obj);
@@ -294,7 +301,7 @@ public class CallNotifier extends Handler
                     if ((pb.getState() == PhoneConstants.State.RINGING)
                             && (mSilentRingerRequested == false)) {
                         if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
-                        mRinger.ring();
+                        sendEmptyMessageDelayed(RINGER_WAIT_FOR_QUERY, RINGTONE_QUERY_WAIT_TIME);
                     } else {
                         if (DBG) log("RING before NEW_RING, skipping");
                     }
@@ -825,8 +832,9 @@ public class CallNotifier extends Handler
             }
         }
         if (shouldStartQuery) {
-            // Reset the ringtone to the default first.
-            mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
+            // create a custom ringer using the default ringer first
+            Phone phone = c.getCall().getPhone();
+            mRinger.setCustomRingtoneUri(phone.getSubscription() == 0 ? Settings.System.DEFAULT_RINGTONE_URI : Settings.System.DEFAULT_RINGTONE_URI_2);
 
             // query the callerinfo to try to get the ringer.
             PhoneUtils.CallerInfoToken cit = PhoneUtils.startGetCallerInfo(
@@ -856,7 +864,8 @@ public class CallNotifier extends Handler
 
             // In this case, just log the request and ring.
             if (VDBG) log("RINGING... (request to ring arrived while query is running)");
-            mRinger.ring();
+            int subscription = mCM.getRingingPhone().getSubscription();
+            mRinger.ring(subscription);
 
             // in this case, just fall through like before, and call
             // showIncomingCall().
@@ -918,7 +927,8 @@ public class CallNotifier extends Handler
 
         // Ring, either with the queried ringtone or default one.
         if (VDBG) log("RINGING... (onCustomRingQueryComplete)");
-        mRinger.ring();
+        int subscription = mCM.getRingingPhone().getSubscription();
+        mRinger.ring(subscription);
 
         // ...and display the incoming call to the user:
         if (DBG) log("- showing incoming call (custom ring query complete)...");
@@ -1067,6 +1077,7 @@ public class CallNotifier extends Handler
             // TODO: Confirm that this call really *is* unnecessary, and if so,
             // remove it!
             if (DBG) log("stopRing()... (OFFHOOK state)");
+            removeMessages(RINGER_WAIT_FOR_QUERY);
             mRinger.stopRing();
 
             // Post a request to update the "in-call" status bar icon.
@@ -1344,10 +1355,12 @@ public class CallNotifier extends Handler
                 mApplication.notificationMgr.cancelCallInProgressNotifications();
             } else {
                 if (DBG) log("stopRing()... (onDisconnect)");
+                removeMessages(RINGER_WAIT_FOR_QUERY);
                 mRinger.stopRing();
             }
         } else { // GSM
             if (DBG) log("stopRing()... (onDisconnect)");
+            removeMessages(RINGER_WAIT_FOR_QUERY);
             mRinger.stopRing();
         }
 
@@ -1614,6 +1627,7 @@ public class CallNotifier extends Handler
     void silenceRinger() {
         mSilentRingerRequested = true;
         if (DBG) log("stopRing()... (silenceRinger)");
+        removeMessages(RINGER_WAIT_FOR_QUERY);
         mRinger.stopRing();
     }
 
@@ -1633,7 +1647,8 @@ public class CallNotifier extends Handler
         // regular INCOMING calls.
         if (DBG) log("- ringingCall state: " + ringingCall.getState());
         if (ringingCall.getState() == Call.State.INCOMING) {
-            mRinger.ring();
+            int subscription = mCM.getRingingPhone().getSubscription();
+            mRinger.ring(subscription);
         }
     }
 

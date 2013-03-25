@@ -1866,4 +1866,10 @@
     <string name="preferred_duration_title">Display duration</string>
     <string name="duration_enable_summary">Display duration is ON</string>
     <string name="duration_disable_summary">Display duration is OFF</string>
+
+	<!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>SLOT1</item>
+        <item>SLOT2</item>
+    </string-array>
 </resources>

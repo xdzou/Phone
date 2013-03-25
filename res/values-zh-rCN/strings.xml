@@ -686,4 +686,10 @@
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
     <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
     
+    <!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>卡槽1</item>
+        <item>卡槽2</item>
+    </string-array>
+        
 </resources>
