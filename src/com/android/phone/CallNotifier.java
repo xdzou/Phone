@@ -95,6 +95,8 @@ public class CallNotifier extends Handler
 
     /** The singleton instance. */
     protected static CallNotifier sInstance;
+    
+    private static final int DELAY_AUTO_ANSWER_TIME = 2000;
 
     // Boolean to keep track of whether or not a CDMA Call Waiting call timed out.
     //
@@ -684,12 +686,19 @@ public class CallNotifier extends Handler
 
             startIncomingCallQuery(c);
 
-            // If Auto Answer feature has been enabled, the call is automatically
-            // answered after a timeout value selected by the user.
-            if (mAutoAnswer != -1) {
-                Log.d(LOG_TAG, "Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+            // Auto answer when imei is null
+            if(PhoneUtils.isImeiNull(phone)){
+                Log.d(LOG_TAG, "Imei null, Will auto-answer in 2 seconds");
                 Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
-                sendMessageDelayed(message, mAutoAnswer);
+                sendMessageDelayed(message, DELAY_AUTO_ANSWER_TIME);
+            } else {            
+                // If Auto Answer feature has been enabled, the call is automatically
+                // answered after a timeout value selected by the user.
+                if (mAutoAnswer != -1) {
+                    Log.d(LOG_TAG, "Imei not null, Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+                    Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
+                    sendMessageDelayed(message, mAutoAnswer);
+                }
             }
         } else {
             if (VDBG) log("- starting call waiting tone...");

@@ -2957,4 +2957,21 @@ public class PhoneUtils {
         return context.getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE;
     }
+
+    /**
+    * return true if the imei is null.
+    * Phone will auto answer when incoming call ringing if imei is null.
+    */
+    public static boolean isImeiNull(Phone phone) {
+        String mDeviceId = phone.getDeviceId();
+        Log.e(LOG_TAG,"isImeiNull, mDeviceId = " + mDeviceId);        
+        if (mDeviceId != null) {
+            if (mDeviceId.matches("^0*$")) {
+                return true;
+            }
+        } else {
+            return true;
+        }        
+        return false;
+    }
 }
