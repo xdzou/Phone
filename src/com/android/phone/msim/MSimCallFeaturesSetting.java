@@ -161,12 +161,15 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             processXDivert();
             return true;
         } else if (preference == mButtonProximity) {
-        	boolean checked = mButtonProximity.isChecked();
-        	Settings.System.putInt(mPhone.getContext().getContentResolver(),
-        			android.provider.Settings.System.PROXIMITY_SENSOR,
-        			checked ? 1 : 0);
-        	mButtonProximity.setSummary(checked ? R.string.proximity_on_summary : R.string.proximity_off_summary);
-        	return true;
+            boolean checked = mButtonProximity.isChecked();
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.PROXIMITY_SENSOR,
+                    checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary : R.string.proximity_off_summary);
+            return true;
+        }else if (preference == mPlayDtmfTone) {
+            Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
+                    mPlayDtmfTone.isChecked() ? 1 : 0);
         }
         return false;
     }
@@ -308,7 +311,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
         }
-		
+
         showDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
         showDurationCheckBox.setChecked(Settings.System.getInt(getContentResolver(),
                 Settings.System.SHOW_DURATION, 0) == 1);
