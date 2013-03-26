@@ -350,7 +350,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             int settingsNetworkMode = android.provider.Settings.Global.getInt(
                     mPhone.getContext().getContentResolver(),
                     android.provider.Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
-            if (buttonNetworkMode != settingsNetworkMode) {
+            if (FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC || buttonNetworkMode != settingsNetworkMode) {
                 int modemNetworkMode = buttonNetworkMode;
                 // if new mode is invalid set mode to default preferred
                 if ((modemNetworkMode < Phone.NT_MODE_WCDMA_PREF)
