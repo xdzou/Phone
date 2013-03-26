@@ -1079,6 +1079,8 @@
     <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
+    <!-- Text for the onscreen "Show Recorder" button -->
+    <string name="onscreenRecorderText">Record</string>
     <!-- Text for the onscreen "Mute" button -->
     <string name="onscreenMuteText">Mute</string>
     <!-- Text for the onscreen "Add call" button -->
@@ -1864,4 +1866,10 @@
     <string name="preferred_duration_title">Display duration</string>
     <string name="duration_enable_summary">Display duration is ON</string>
     <string name="duration_disable_summary">Display duration is OFF</string>
+
+	<!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>SLOT1</item>
+        <item>SLOT2</item>
+    </string-array>
 </resources>
