@@ -131,6 +131,9 @@ public class MobileNetworkSettings extends PreferenceActivity
         /** TODO: Refactor and get rid of the if's using subclasses */
         if (mGsmUmtsOptions != null &&
                 mGsmUmtsOptions.preferenceTreeClick(preference) == true) {
+            //update the preferred network mode summary
+            mPhone.getPreferredNetworkType(mHandler.obtainMessage(
+                    MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             return true;
         } else if (mCdmaOptions != null &&
                    mCdmaOptions.preferenceTreeClick(preference) == true) {
@@ -146,11 +149,9 @@ public class MobileNetworkSettings extends PreferenceActivity
             }
             return true;
         } else if (preference == mButtonPreferredNetworkMode) {
-            //displays the value taken from the Settings.System
-            int settingsNetworkMode = android.provider.Settings.Global.getInt(mPhone.getContext().
-                    getContentResolver(), android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                    preferredNetworkMode);
-            mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
+            //update the preferred network mode summary
+            mPhone.getPreferredNetworkType(mHandler.obtainMessage(
+                    MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             return true;
         } else if (preference == mButtonDataRoam) {
             if (DBG) log("onPreferenceTreeClick: preference == mButtonDataRoam.");
