@@ -246,28 +246,28 @@ public class CallCard extends LinearLayout
     }
     // UX_Enhance_Dialer
     private void setWidget() {
-		mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
+        mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
 
-		mSecondaryInfoContainer = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.secondary_info_container);
-		mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
-		mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
-		mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
-		mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
-		mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
+        mSecondaryInfoContainer = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.secondary_info_container);
+        mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
+        mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
+        mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
+        mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
+        mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
 
-		// "Caller info" area, including photo / name / phone numbers / etc
-		mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
-		mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
+        // "Caller info" area, including photo / name / phone numbers / etc
+        mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
+        mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
 
-		mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
-		mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
-		mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
-		mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
-		mCallTypeLabel = (TextView)mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
-		// mSocialStatus = (TextView) findViewById(R.id.socialStatus);
+        mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
+        mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
+        mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
+        mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
+        mCallTypeLabel = (TextView)mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
+        // mSocialStatus = (TextView) findViewById(R.id.socialStatus);
             
-		// VideoCallPanel for Video Telephony calls
-		mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
+        // VideoCallPanel for Video Telephony calls
+        mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
     }
 
     /**
