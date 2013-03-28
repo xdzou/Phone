@@ -55,11 +55,9 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
 
         int networkType = isChecked() ? Phone.NT_MODE_GSM_ONLY : Phone.NT_MODE_WCDMA_PREF;
         Log.i(LOG_TAG, "set preferred network type="+networkType);
-        if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
-            android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
-                    android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                    mPhone.getSubscription(), networkType);
-        }
+        android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
+                android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                mPhone.getSubscription(), networkType);
         mPhone.setPreferredNetworkType(networkType, mHandler
                 .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
    }
@@ -101,13 +99,9 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
                 Log.i(LOG_TAG, "get preferred network type="+type);
                 setChecked(type == Phone.NT_MODE_GSM_ONLY);
                 
-                //Preferred network mode is set everytime power on for cmcc
-                //So we don't change settingsprovider that it is always default value.
-                if(!FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
-                    android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
-                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
-                            mPhone.getSubscription(), type);
-                }
+                android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
+                        android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
+                        mPhone.getSubscription(), type);
             } else {
                 // Weird state, disable the setting
                 Log.i(LOG_TAG, "get preferred network type, exception="+ar.exception);
