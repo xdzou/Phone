@@ -120,24 +120,23 @@
                 android:layout_marginLeft="6dp" />
             <!-- phone number attribute -->
             <TextView android:id="@+id/cityName"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:textSize="12sp"
-                android:textColor="@color/incall_call_banner_text_color"
-                android:singleLine="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:singleLine="true"                
                 android:layout_marginLeft="3dp"
                 android:layout_marginRight="3dp"
                 />
             <!-- Subscription info that is displayed for the incoming call. -->
             <TextView android:id="@+id/subInfo"
-                      android:textAppearance="?android:attr/textAppearanceMedium"
-                      android:textSize="14sp"
-                      android:singleLine="true"
-                      android:layout_width="wrap_content"
-                      android:layout_height="wrap_content"
-                      android:layout_marginTop="-2dip"
-                      />
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textSize="14sp"
+                android:singleLine="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="-2dip"
+                />
 
         </LinearLayout>
 
