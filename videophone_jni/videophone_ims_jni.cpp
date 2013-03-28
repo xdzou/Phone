@@ -38,6 +38,7 @@
 
 extern JavaVM *jvmPtr;
 static VtImplApis *vt_apis = NULL;
+static jobject mediaHandlerObject = NULL;
 
 static jint dpl_init(JNIEnv *e, jobject o) {
     ALOGD("%s", __func__);
@@ -126,13 +127,13 @@ static void onMediaEvent(uint16_t eventId) {
     }
 
     if(gClassMediaHandler) {
-        jmethodID mid = e->GetStaticMethodID(gClassMediaHandler, "onMediaEvent", "(I)V");
+        jmethodID mid = e->GetMethodID(gClassMediaHandler, "onMediaEvent", "(I)V");
         if (mid == 0) {
-            ALOGE("videocall callback: GetStaticMethodID error");
+            ALOGE("videocall callback: GetMethodID error");
             return;
         }
 
-        e->CallStaticVoidMethod(gClassMediaHandler, mid, (int) eventId);
+        e->CallVoidMethod(mediaHandlerObject, mid, (int) eventId);
     }
     else {
         ALOGE("Error: gClassMediaHandler is null.");
@@ -144,11 +145,14 @@ static void onMediaEvent(uint16_t eventId) {
     }
 }
 
-static void dpl_registerForImsEvent(JNIEnv *e, jobject o) {
+static void dpl_registerForImsEvent(JNIEnv *e, jobject o, jobject objMediaHandler) {
     ALOGD("%s", __func__);
     if (vt_apis && vt_apis->registerAppEventCallback) {
         vt_apis->registerAppEventCallback(&onMediaEvent);
     }
+
+    //Cache the MediaHandler instance
+    mediaHandlerObject = (jclass) e->NewGlobalRef(objMediaHandler);
 }
 
 static JNINativeMethod sMethods[] =
@@ -160,7 +164,8 @@ static JNINativeMethod sMethods[] =
     {"nativeGetNegotiatedFPS", "()S", (void *)dpl_getNegotiatedFPS},
     {"nativeGetNegotiatedHeight", "()I", (void *)dpl_getNegotiatedHeight},
     {"nativeGetNegotiatedWidth", "()I", (void *)dpl_getNegotiatedWidth},
-    {"nativeRegisterForMediaEvents", "()V", (void *)dpl_registerForImsEvent}
+    {"nativeRegisterForMediaEvents", "(Lcom/android/phone/MediaHandler;)V"
+        , (void *)dpl_registerForImsEvent}
 };
 
 #define DEFAULT_IMPL_LIB_PATH "/system/lib/lib-imsvt.so"
