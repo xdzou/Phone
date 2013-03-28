@@ -54,7 +54,7 @@ public class MediaHandler extends Handler {
     private static native short nativeGetNegotiatedFPS();
     private static native int nativeGetNegotiatedHeight();
     private static native int nativeGetNegotiatedWidth();
-    private static native void nativeRegisterForMediaEvents();
+    private static native void nativeRegisterForMediaEvents(MediaHandler instance);
 
     public static final int PARAM_READY_EVT = 1;
     public static final int START_READY_EVT = 2;
@@ -68,7 +68,13 @@ public class MediaHandler extends Handler {
     private static int mNegotiatedWidth = 320;
     private static short mNegotiatedFps = 20;
 
+    private MediaEventListener mMediaEventListener;
+
     private static boolean mIsReadyToReceivePreview = false;
+
+    public interface MediaEventListener {
+        void onParamReadyEvent();
+    }
 
     static {
         System.loadLibrary("vt_jni");
@@ -77,14 +83,14 @@ public class MediaHandler extends Handler {
     /*
      * Initialize Media
      */
-    public static int init() {
+    public int init() {
         if (!mInitCalledFlag) {
             int error = nativeInit();
             Log.d(TAG, "init called error = " + error);
             switch (error) {
                 case DPL_INIT_SUCCESSFUL:
                     mInitCalledFlag = true;
-                    registerForMediaEvents();
+                    registerForMediaEvents(this);
                     break;
                 case DPL_INIT_FAILURE:
                     mInitCalledFlag = false;
@@ -180,15 +186,19 @@ public class MediaHandler extends Handler {
      * Register for event that will invoke
      * {@link MediaHandler#onMediaEvent(int)}
      */
-    private static void registerForMediaEvents() {
+    private static void registerForMediaEvents(MediaHandler instance) {
         Log.d(TAG, "Registering for Media Callback Events");
-        nativeRegisterForMediaEvents();
+        nativeRegisterForMediaEvents(instance);
+    }
+
+    public void setMediaEventListener(MediaEventListener listener) {
+        mMediaEventListener = listener;
     }
 
     /**
      * Callback method that is invoked when Media events occur
      */
-    public static void onMediaEvent(int eventId) {
+    public void onMediaEvent(int eventId) {
         Log.d(TAG, "onMediaEvent eventId = " + eventId);
         switch (eventId) {
             case PARAM_READY_EVT:
@@ -196,6 +206,9 @@ public class MediaHandler extends Handler {
                 mNegotiatedHeight = nativeGetNegotiatedHeight();
                 mNegotiatedWidth = nativeGetNegotiatedWidth();
                 mNegotiatedFps = nativeGetNegotiatedFPS();
+                if (mMediaEventListener != null) {
+                    mMediaEventListener.onParamReadyEvent();
+                }
                 break;
             case START_READY_EVT:
                 Log.d(TAG, "Received START_READY_EVT. Camera frames can be sent now");
