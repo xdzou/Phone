@@ -220,7 +220,7 @@
     <string name="respond_via_sms_setting_title_2" >Editar respostas rápidas</string>
     <string name="general_news_settings" >Notícias gerais</string>
     <string name="onscreenManageCallsText" >Gerenciar chamadas</string>
-    <string name="exportAllcontatsSuccess" >Exportado com sucesso todos os contatos para o SIM</string>
+    <string name="exportAllcontatsSuccess" >"Resultado. Contato exportado para o SIM."</string>
     <string name="set_subscription" >Selecione assinaturas</string>
     <string name="nw_subset_unlock_failed" >Pedido de desbloqueio da rede mal sucedido</string>
     <string name="fw_change_failed" >Não foi possível alterar o número de encaminhamento."\n"Entre em contato com sua operadora se o problema persistir.</string>
