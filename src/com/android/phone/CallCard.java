@@ -1577,7 +1577,7 @@ public class CallCard extends LinearLayout
                          + "', based on info.person_id: " + info.person_id);
         } else {
             displayName = PhoneUtils.getPresentationString(getContext(), presentation);
-            cityName = displayName;	
+            cityName = displayName;
         }
 
         boolean updateNameAndNumber = true;
