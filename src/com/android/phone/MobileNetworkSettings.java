@@ -230,7 +230,7 @@ public class MobileNetworkSettings extends PreferenceActivity
             mButtonPreferredNetworkMode.setEntryValues(R.array.preferred_network_mode_values_tdscdma);
         }
 
-        if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+        if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC && SystemProperties.getInt("ro.cmcc.protocol.test", 0) == 0){
             prefSet.removePreference(mButtonPreferredNetworkMode);
         }
 
@@ -269,9 +269,7 @@ public class MobileNetworkSettings extends PreferenceActivity
                 }
 
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
-                if (SystemProperties.getInt("persist.radio.tdscdma_present", 0) == 2) {
-                    mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
-                }
+                mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet);
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);

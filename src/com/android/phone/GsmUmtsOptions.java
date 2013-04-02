@@ -36,6 +36,7 @@ import com.qualcomm.internal.telephony.SubscriptionManager;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import com.qrd.plugin.feature_query.FeatureQuery;
 import android.util.Log;
+import android.os.SystemProperties;
 
 /**
  * List of Network-specific settings screens.
@@ -103,7 +104,7 @@ public class GsmUmtsOptions {
         mButtonOperatorSelectionExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mButtonPrefer2g = (CheckBoxPreference) mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY);
         Use2GOnlyCheckBoxPreference.updatePhone(mPhone);
-        if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC){
+        if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC && SystemProperties.getInt("ro.cmcc.protocol.test", 0) == 0){
             mPrefScreen.removePreference(mButtonPrefer2g);
         }
         enableScreen();
