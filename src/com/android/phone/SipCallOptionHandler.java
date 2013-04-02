@@ -180,7 +180,9 @@ public class SipCallOptionHandler extends Activity implements
                 || Constants.SCHEME_SIP.equals(scheme);
         boolean isRegularCall = (Constants.SCHEME_TEL.equals(scheme)
                 && !PhoneNumberUtils.isUriNumber(mNumber))
-                || PhoneUtils.isImsCallIntent(scheme, mIntent);
+                || PhoneUtils.isImsCallIntent(scheme, mIntent)
+                || mIntent.getBooleanExtra(
+                        OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
 
         // Bypass the handler if the call scheme is not sip or tel.
         if (!isKnownCallScheme) {
@@ -429,6 +431,10 @@ public class SipCallOptionHandler extends Activity implements
                     showDialog(DIALOG_START_SIP_SETTINGS);
                     return;
                 } else {
+                    // Check if this is dial conference
+                    boolean isConferenceUri = mIntent.getBooleanExtra(
+                            OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
+                    // mIsImsDefault is UI preference to use ims call
                     if (!mUseSipPhone && mIsImsDefault && PhoneUtils.isCallOnImsEnabled()) {
                         /*
                          * Convert the voice call intent to the IMS intent as

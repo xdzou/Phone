@@ -105,6 +105,9 @@ public class OutgoingCallBroadcaster extends Activity
     public static final String EXTRA_SEND_EMPTY_FLASH =
             "com.android.phone.extra.SEND_EMPTY_FLASH";
 
+    public static final String EXTRA_DIAL_CONFERENCE_URI =
+            "com.android.phone.extra.DIAL_CONFERENCE_URI";
+
     // Dialog IDs
     private static final int DIALOG_NOT_VOICE_CAPABLE = 1;
 
@@ -695,6 +698,9 @@ public class OutgoingCallBroadcaster extends Activity
         broadcastIntent.putExtra(EXTRA_ALREADY_CALLED, callNow);
         broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
         broadcastIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        broadcastIntent.putExtra(EXTRA_DIAL_CONFERENCE_URI,
+                intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
+
         // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
         // to intercept the outgoing call.
         broadcastIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
