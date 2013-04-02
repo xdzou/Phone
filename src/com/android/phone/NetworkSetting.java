@@ -422,6 +422,7 @@ public class NetworkSetting extends PreferenceActivity
                     Preference carrier = new Preference(this, null);
 
                     String rat = " (3G) ";
+                    String niState = "";
 
                     if (ni.getRadioTech().equals("2")) {        // RADIO_TECH_EDGE
                         rat = " (2G) ";
@@ -429,11 +430,16 @@ public class NetworkSetting extends PreferenceActivity
                         rat = " ";
                     }
 
-                    carrier.setTitle(getNetworkTitle(ni) + rat +
-                                     "(" + ni.getState().toString().toLowerCase() + ")");
-
-                    if (ni.getState() == OperatorInfo.State.FORBIDDEN)
+                    if (ni.getState() == OperatorInfo.State.AVAILABLE) {
+                        niState = getString(R.string.network_available);
+                    } else if (ni.getState() == OperatorInfo.State.CURRENT) {
+                        niState = getString(R.string.network_current);
+                    } else if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
+                        niState = getString(R.string.network_forbidden);
                         carrier.setEnabled(false);
+                    }
+
+                    carrier.setTitle(getNetworkTitle(ni) + rat + niState);
 
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
