@@ -146,6 +146,9 @@
     <string name="load_networks_progress" msgid="5230707536168902952">"Pesquisando..."</string>
     <string name="empty_networks_list" msgid="4249426905018815316">"Nenhuma rede encontrada."</string>
     <string name="search_networks" msgid="1601136049300882441">"Pesquisar redes"</string>
+    <string name="network_current">(atual)</string>
+    <string name="network_available">(disponível)</string>
+    <string name="network_forbidden">(indisponível)</string>
     <string name="network_query_error" msgid="6828516148953325006">"Erro ao pesquisar redes."</string>
     <string name="register_on_network" msgid="9055203954040805084">"Registrando na <xliff:g id="NETWORK">%s</xliff:g>…"</string>
     <string name="not_allowed" msgid="5613353860205691579">"Seu cartão SIM não permite uma conexão com esta rede."</string>

@@ -429,6 +429,10 @@
     <string name="empty_networks_list">No networks found.</string>
     <!-- Available networks screen, setting option name -->
     <string name="search_networks">Search networks</string>
+    <!-- Available networks screen, network state in search result -->
+    <string name="network_current">(current)</string>
+    <string name="network_available">(available)</string>
+    <string name="network_forbidden">(forbidden)</string>
     <!-- Available networks screen, toast when an error is encountered when searching for networks -->
     <string name="network_query_error">Error while searching for networks.</string>
     <!-- Available networks screen, toast when registering on a specific network -->
