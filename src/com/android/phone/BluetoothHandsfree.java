@@ -112,6 +112,8 @@ public class BluetoothHandsfree {
     private AudioManager mAudioManager;
     private PowerManager mPowerManager;
 
+    private boolean mPendingCievForA2dp;
+
     private boolean mPendingScoForA2dp;  // waiting for a2dp sink to suspend before establishing SCO
     private boolean mPendingScoForWbs;  // waiting for wbs codec selection before establishing SCO
     private boolean mExpectingBCS = false;  // true after AG sends +BCS:<codec id>
@@ -548,6 +550,17 @@ public class BluetoothHandsfree {
             } else {
                 mAudioManager.setBluetoothScoOn(false);
             }
+            if (!mPendingScoForA2dp && mBluetoothPhoneState.mCall == 0
+                && mBluetoothPhoneState.mCallsetup == 0) {
+                if (mA2dpSuspended) {
+                    if (DBG) log("resuming A2DP stream after disconnecting SCO");
+                    mA2dp.resumeSink(mA2dpDevice);
+                    mA2dpSuspended = false;
+                }
+            } else { // already suspendSink is in progress, so wait for issuing resume
+                mPendingA2dpResume = true;
+            }
+            mPendingScoForA2dp = false;
             synchronized(BluetoothHandsfree.this) {
                 mConnectedSco = null;
                 setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED,
@@ -1068,6 +1081,21 @@ public class BluetoothHandsfree {
                 if (oldState == BluetoothA2dp.STATE_PLAYING &&
                     mA2dpState == BluetoothProfile.STATE_CONNECTED) {
                     if (mA2dpSuspended) {
+                        if (mPendingCievForA2dp) {
+                            if (DBG) Log.d(TAG, "send ciev pending" + mCallsetup);
+                            mPendingCievForA2dp = false;
+                            sendURC("+CIEV: 3," + mCallsetup);
+                            if (mCallsetup == 1) {
+                                AtCommandResult result = new AtCommandResult(
+                                                          AtCommandResult.UNSOLICITED);
+                                Log.d(TAG, "send Ring to Headset");
+                                result.addResult(ring());
+                                sendURC(result.toString());
+                            }
+                            if (mCallsetup == 3)
+                                audioOn(); //Open Audio now
+                            return; //No need for further processing
+                        }
                         if (mPendingScoForA2dp) {
                             mHandler.removeMessages(MESSAGE_CHECK_PENDING_SCO);
                             if (DBG) log("A2DP suspended, completing SCO");
@@ -1245,9 +1273,7 @@ public class BluetoothHandsfree {
                 break;
             case ALERTING:
                 callsetup = 3;
-                // Open the SCO channel for the outgoing call.
                 mCallStartTime = System.currentTimeMillis();
-                audioOn();
                 mAudioPossible = true;
                 break;
             case DISCONNECTING:
@@ -1310,6 +1336,14 @@ public class BluetoothHandsfree {
                 mCall = call;
                 if (sendUpdate) {
                     result.addResponse("+CIEV: 2," + mCall);
+                    // Make Sure SCO is disconnected
+                    if (DBG) log("mA2dpSuspended" + mA2dpSuspended + "mCall"
+                                   + mCall + "isAudioOn" + isAudioOn() );
+                    if (mA2dpSuspended && mCall == 0 && !isAudioOn()) {
+                        log("resuming A2DP stream after Call ends");
+                        mA2dp.resumeSink(mA2dpDevice);
+                        mA2dpSuspended = false ;
+                    }
                 }
             }
             if (mCallsetup != callsetup) {
@@ -1323,7 +1357,35 @@ public class BluetoothHandsfree {
                     // if 3 way is supported
                     if (mCall != 1 || mCallsetup == 0 ||
                         mCallsetup != 1 && (mRemoteBrsf & BRSF_HF_CW_THREE_WAY_CALLING) != 0x0) {
-                        result.addResponse("+CIEV: 3," + mCallsetup);
+                          if (mA2dpState == BluetoothA2dp.STATE_PLAYING) {
+                              if (DBG) log("suspending A2DP stream for call state: " + mCallsetup);
+                              mA2dpSuspended = mA2dp.suspendSink(mA2dpDevice);
+                              if (mA2dpSuspended) {
+                                  mPendingCievForA2dp = true;
+                              } else {
+                                      sendURC("+CIEV: 3," + mCallsetup);
+                                      if (mCallsetup == 1) {
+                                          Log.d(TAG, "send Ring to Headset");
+                                          result.addResult(ring());
+                                          sendURC(result.toString());
+                                     }
+                                     if (mCallsetup == 3)
+                                         audioOn(); //Open Audio now
+                              }
+                          } else {
+                              result.addResponse("+CIEV: 3," + mCallsetup);
+                              if (mCallsetup == 3)
+                                  audioOn();
+                              if (mCallsetup == 0  && mA2dpSuspended == true && mCall != 1) {
+                                  log("A2dp resume");
+                                  sendURC(result.toString());
+                                  mA2dp.resumeSink(mA2dpDevice);
+                                  mA2dpSuspended = false ;
+                                  mPendingCievForA2dp = false ;
+                                  return ;
+                              }
+                          }
+
                     }
                 }
             }
@@ -1447,7 +1509,8 @@ public class BluetoothHandsfree {
                         mCallStartTime = System.currentTimeMillis();
                         audioOn();
                     }
-                    result.addResult(ring());
+                    if (!mPendingCievForA2dp)
+                        result.addResult(ring());
                 }
             }
             sendURC(result.toString());
@@ -1817,7 +1880,6 @@ public class BluetoothHandsfree {
             return true;
         }
 
-        mA2dpSuspended = false;
         mPendingScoForA2dp = false;
         mPendingA2dpResume = false;
         if ( mA2dpState == BluetoothA2dp.STATE_PLAYING) {
@@ -1898,17 +1960,6 @@ public class BluetoothHandsfree {
                 ", mA2dpState: " + mA2dpState +
                 ", mA2dpSuspended: " + mA2dpSuspended);
 
-        if (!mPendingScoForA2dp) {
-            if (mA2dpSuspended) {
-                if (DBG) log("resuming A2DP stream after disconnecting SCO");
-                mA2dp.resumeSink(mA2dpDevice);
-                mA2dpSuspended = false;
-            }
-        } else { // already suspendSink is in progress, so wait for issuing resume
-            mPendingA2dpResume = true;
-        }
-
-        mPendingScoForA2dp = false;
         mPendingScoForWbs = false;
 
         if (mSignalScoCloseThread != null) {
