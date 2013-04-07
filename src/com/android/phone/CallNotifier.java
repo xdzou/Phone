@@ -1474,8 +1474,7 @@ public class CallNotifier extends Handler
             final int callLogType;
             if (c.isIncoming()) {
                 if(PhoneUtils.IsInBlackList(phone,number)){ 
-                    //callLogType = PhoneCalls.REJECTED_TYPE;
-                    callLogType = Calls.OUTGOING_TYPE;                    
+                    callLogType = Calls.MISSED_TYPE;              
                 }else
                 {
                 callLogType = (cause == Connection.DisconnectCause.INCOMING_MISSED ?
@@ -1536,7 +1535,7 @@ public class CallNotifier extends Handler
                 }
             }
 
-            if (callLogType == Calls.MISSED_TYPE) {
+            if (callLogType == Calls.MISSED_TYPE && !PhoneUtils.IsInBlackList(phone,number)) {
                 // Show the "Missed call" notification.
                 // (Note we *don't* do this if this was an incoming call that
                 // the user deliberately rejected.)
