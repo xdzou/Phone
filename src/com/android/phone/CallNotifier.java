@@ -288,6 +288,20 @@ public class CallNotifier extends Handler
                 break;
             case PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
+ // for firewall  start
+                AsyncResult r = (AsyncResult) msg.obj;
+                Connection c = (Connection) r.result;
+                Phone mPhone =  c.getCall().getPhone();
+
+                if (c != null && c.isRinging()) {
+                    String number = c.getAddress();
+                    if(PhoneUtils.IsInBlackList(mPhone,number)){
+                        if (VDBG) log("Reject the blacklist number:"+number);
+                        PhoneUtils.hangupRingingCall(c.getCall());
+                        return;
+                    }
+                }
+// for firewall  end
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
                 break;
@@ -1459,8 +1473,14 @@ public class CallNotifier extends Handler
             // Set the "type" to be displayed in the call log (see constants in CallLog.Calls)
             final int callLogType;
             if (c.isIncoming()) {
+                if(PhoneUtils.IsInBlackList(phone,number)){ 
+                    //callLogType = PhoneCalls.REJECTED_TYPE;
+                    callLogType = Calls.OUTGOING_TYPE;                    
+                }else
+                {
                 callLogType = (cause == Connection.DisconnectCause.INCOMING_MISSED ?
                                Calls.MISSED_TYPE : Calls.INCOMING_TYPE);
+                }
             } else {
                 callLogType = Calls.OUTGOING_TYPE;
             }

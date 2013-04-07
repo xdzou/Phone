@@ -77,6 +77,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import android.database.Cursor;
+import android.provider.ContactsContract.PhoneLookup;
+import android.telephony.TelephonyManager;
+import android.content.ContentResolver;
+
 /**
  * Misc utilities for the Phone app.
  */
@@ -2979,4 +2984,215 @@ public class PhoneUtils {
         }        
         return false;
     }
+
+// for firewall  start
+     /**
+     * if firewall is not enable,return false;
+     * if firewall is white mode,if in the list,return false;
+     * if firewall is black mode,if not in the list,return false;   
+     * if the number lenth is longer than 11,only use the last 11st num.
+     */ 
+    public static boolean IsInBlackList(Phone phone,String number){
+        if(number == null || number.length()==0){
+            return false;
+        }
+       if (DBG) log("wangxiaolin IsInBlackList: Whole number="+number);
+    Context context =   phone.getContext();
+       if(!isFirewallEnabled(context))
+       {
+              if (DBG) log("wangxiaolin IsInBlackList, firewall is not enable!");
+             return false;           
+     }
+
+        //Check the last 11 numbers
+        int len = number.length();
+        if(len > 11)
+        {
+            if (DBG) log("IsInBlackList: Whole number="+number);
+            number = number.substring(len - 11, len);
+            if (DBG) log("IsInBlackList: Sub number="+number);
+        }
+    boolean  result=isForbiddenNumber(context, number, phone.getSubscription()); // chenxiang 20111020
+     if (DBG) log("IsInBlackList: result="+result);
+       return result;
+
+    }
+
+     private static final Uri FIREWALL_SWITCHER_CONTENT_URI = Uri.parse("content://com.android.firewall/setting/1");
+     private static final Uri FIREWALL_MODE_CONTENT_URI = Uri.parse("content://com.android.firewall/setting/2");
+     private static final Uri FIREWALL_BLOCK_C_CONTENT_URI = Uri.parse("content://com.android.firewall/setting/3");
+     private static final Uri FIREWALL_BLOCK_G_CONTENT_URI = Uri.parse("content://com.android.firewall/setting/4");
+     public static final Uri FIREWALL_BLACKLIST_CONTENT_URI = Uri.parse("content://com.android.firewall/blacklistitems");
+     public static final Uri FIREWALL_WHITELIST_CONTENT_URI = Uri.parse("content://com.android.firewall/whitelistitems");
+     
+     //query is a number is forbidden
+     public static boolean isForbiddenNumber(Context context, String number, int mSubscription){
+         ContentResolver cr = context.getContentResolver();
+         Boolean isSingleCard = !TelephonyManager.isMultiSimEnabled(); 
+         Log.d("PhoneUtils","mSubscription is " + mSubscription);
+         Log.d("PhoneUtils","incoming number is " + number);
+         if(cr == null)
+         {
+             return false;
+         }
+         
+         if(number != null && !number.equals("")){
+             //number is not null and has at least one char
+              Log.d("PhoneUtils","getFirewallNetBlock");
+             if(isFirewallEnabled(context)){
+                 switch (Integer.valueOf(getFirewallMode(context))) {
+                     case 0: // blacklist
+                     {
+                         if (DBG) log("wangxiaolin isForbiddenNumber, blacklist is enable!");
+                         int len = number.length();
+                         if(len > 11)
+                         {
+                             number = number.substring(len - 11, len);
+                             if (DBG) log("isForbiddenNumber: Sub number="+number);
+                         }
+                         Cursor c = cr.query(FIREWALL_BLACKLIST_CONTENT_URI, 
+                                                     new String[] {"_id", "number", "person_id", "name"},
+                                                     "number" + " LIKE '%" + number +"'", 
+                                                     null,
+                                                     null);
+                         if(c==null){
+                            return false;
+                         }
+                         
+                         try{
+                            if(c.getCount() > 0){
+                                return true;
+                            }else{
+                                return false;
+                            }
+                         }finally{
+                            c.close();
+                               c=null;
+                         }
+                     }
+                         //break;
+                         
+                     case 1: // whitelist
+                     {
+                         if (DBG) log("wangxiaolin isForbiddenNumber, white is enable!");
+                         int len = number.length();
+                         if(len > 11)
+                         {
+                             number = number.substring(len - 11, len);
+                             if (DBG) log("isForbiddenNumber: Sub number="+number);
+                         }
+                         Cursor c = cr.query(FIREWALL_WHITELIST_CONTENT_URI, 
+                                                     new String[] {"_id", "number", "person_id", "name"},
+                                                     "number" + " LIKE '%" + number +"'", 
+                                                     null,
+                                                     null);
+                         if(c==null){
+                            return true;
+                         }
+                         
+                         try{
+                            if(c.getCount() > 0){
+                                return false;
+                            }else{
+                                return true;
+                            }
+                         }finally{
+                            c.close();
+                               c=null;
+                         }
+                     }
+                         //break;
+                         
+                     case 2: // block all
+                         if (DBG) log("wangxiaolin isForbiddenNumber, block all mode is enable!");
+                         return true;
+                         //break;
+                         
+                     case 3: // only accept contacts
+                     {
+                         if (DBG) log("wangxiaolin isForbiddenNumber, only accept contacts mode is enable!");
+                         Cursor c = cr.query(Uri.withAppendedPath(PhoneLookup.CONTENT_FILTER_URI,
+                                                     Uri.encode(number)),null, null, null, null);
+                         if(c==null){
+                            return true;
+                         }
+                         
+                         try{
+                            if(c.getCount() > 0){
+                                return false;
+                            }else{
+                                return true;
+                            }
+                         }finally{
+                            c.close();
+                               c=null;
+                         }
+                     }
+                         //break;
+                    case 4://block card1
+                        {
+                        if (0 == mSubscription)
+                            return true;
+                        else
+                            return false;
+                        }
+                    case 5://block card2
+                        {
+                        if (1 == mSubscription)
+                            return true;
+                        else
+                            return false;
+                        }
+                     default:
+                         break;
+                 }
+             }
+         }
+         return false;
+     }
+     public static  boolean isFirewallEnabled(Context context){
+         boolean result =false;
+         ContentResolver cr = context.getContentResolver();
+         if(cr == null)
+         {
+             return false;
+         }
+         Cursor c = cr.query(FIREWALL_SWITCHER_CONTENT_URI, 
+                 new String[] {"value"},
+                 "_id = ?",
+                 new String [] {"1"}, 
+                 null);
+     if(c!=null)
+     {
+         c.moveToFirst();
+            result=c.getString(0).equals("1");
+            c.close();
+            c=null;
+     }
+     
+         return result;
+     }
+     
+     public static String getFirewallMode(Context context){
+         String result =null;
+         ContentResolver cr = context.getContentResolver();
+         if(cr == null)
+         {
+             return "";
+         }
+         Cursor c = cr.query(FIREWALL_MODE_CONTENT_URI, 
+                 new String[] {"value"},
+                 "_id = ?",
+                 new String [] {"2"}, 
+                 null);
+     if(c!=null)
+     {
+         c.moveToFirst();
+            result=c.getString(0);
+            c.close();
+            c=null;
+     }
+         return result;
+     }
+
 }
