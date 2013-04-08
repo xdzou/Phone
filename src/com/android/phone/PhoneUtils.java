@@ -65,12 +65,14 @@ import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.cdma.CdmaConnection;
 import com.android.internal.telephony.sip.SipPhone;
+import com.google.android.collect.Maps;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Misc utilities for the Phone app.
@@ -613,7 +615,7 @@ public class PhoneUtils {
                     + ", emergency? " + isEmergencyCall);
         }
         return placeCall(context, phone, number, contactRef, isEmergencyCall, gatewayUri,
-                CallDetails.CALL_TYPE_VOICE);
+                CallDetails.CALL_TYPE_VOICE, null);
     }
 
     /**
@@ -635,12 +637,13 @@ public class PhoneUtils {
      * @param gatewayUri Is the address used to setup the connection, null
      * if not using a gateway
      * @param callType indicates that type of call, used mainly for IMS calls
+     * @param extras callDetails indicating if current call is VoLTE IMS call
      *
      * @return either CALL_STATUS_DIALED or CALL_STATUS_FAILED
      */
     public static int placeCall(Context context, Phone phone,
             String number, Uri contactRef, boolean isEmergencyCall,
-            Uri gatewayUri, int callType) {
+            Uri gatewayUri, int callType, String[] extras) {
         if (DBG) {
             log("placeCall '" + number + "' GW:'" + gatewayUri + "'" + " CallType:" + callType);
         }
@@ -693,7 +696,7 @@ public class PhoneUtils {
             }
         }
         try {
-            connection = app.mCM.dial(phone, numberToDial, callType, null);
+            connection = app.mCM.dial(phone, numberToDial, callType, extras);
         } catch (CallStateException ex) {
             // CallStateException means a new outgoing call is not currently
             // possible: either no more call slots exist, or there's another
@@ -2453,6 +2456,9 @@ public class PhoneUtils {
         dst.putExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
                 src.getIntExtra(OutgoingCallBroadcaster.EXTRA_CALL_DOMAIN,
                         CallDetails.CALL_DOMAIN_CS));
+        dst.putExtra(OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI,
+                src.getBooleanExtra(OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI,
+                        false));
     }
 
     /**
@@ -2880,8 +2886,13 @@ public class PhoneUtils {
              * If the EXTRA_ACTUAL_NUMBER_TO_DIAL extra is present, set the
              * phone number there. (That extra takes precedence over the actual
              * number included in the intent.)
+             *
+             * If it is dial conference uri use original number.
              */
-            if (intent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL)) {
+            boolean isConferenceUri = intent.getBooleanExtra(
+                    OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
+            if (intent.hasExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL) &&
+                    !isConferenceUri) {
                 intent.putExtra(OutgoingCallBroadcaster.EXTRA_ACTUAL_NUMBER_TO_DIAL,
                         imsNumber);
             }
