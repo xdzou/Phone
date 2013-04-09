@@ -107,11 +107,13 @@ public class MSimNotificationMgr extends NotificationMgr {
      */
     /* package */
     void updateMwi(boolean visible, Phone phone) {
-        if (DBG) log("updateMwi(): " + visible);
-
+        int subscription = phone.getSubscription();
+        if (DBG) log("updateMwi(): " + visible + " Subscription: "
+                + subscription);
+        int[] iconId = {R.drawable.stat_notify_voicemail_sub1,
+                    R.drawable.stat_notify_voicemail_sub2};
+        mVMResId = iconId[subscription];
          if (visible) {
-            int resId = android.R.drawable.stat_notify_voicemail;
-
             // This Notification can get a lot fancier once we have more
             // information about the current voicemail messages.
             // (For example, the current voicemail system can't tell
@@ -201,7 +203,7 @@ public class MSimNotificationMgr extends NotificationMgr {
             }
 
             Notification.Builder builder = new Notification.Builder(mContext);
-            builder.setSmallIcon(resId)
+            builder.setSmallIcon(mVMResId)
                     .setWhen(System.currentTimeMillis())
                     .setContentTitle(notificationTitle)
                     .setContentText(notificationText)
