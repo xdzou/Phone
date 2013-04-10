@@ -1814,7 +1814,7 @@
 
     <!-- IP call related strings -->
     <!-- Call settings screen, setting option name -->
-    <string name="ipcall">IP call setting</string>
+    <string name="ipcall">IP call settings</string>
     <!-- Call settings screen, subscription title -->
     <string name="ipcall_sub_title">IP call setting</string>
     <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
