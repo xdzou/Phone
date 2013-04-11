@@ -169,6 +169,7 @@ public class PhoneGlobals extends ContextWrapper
     // A few important fields we expose to the rest of the package
     // directly (rather than thru set/get methods) for efficiency.
     Phone phone;
+    Phone phoneIms;
     CallController callController;
     InCallUiState inCallUiState;
     CallerInfoCache callerInfoCache;
@@ -1580,12 +1581,25 @@ public class PhoneGlobals extends ContextWrapper
             } else if (action.equals(TelephonyIntents.ACTION_SERVICE_STATE_CHANGED)) {
                 handleServiceStateChanged(intent);
             } else if (action.equals(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED)) {
-                if (TelephonyCapabilities.supportsEcm(phone)) {
+                boolean isImsPhone = intent.getBooleanExtra("ims_phone", false);
+
+                if (isImsPhone) {
+                    phoneIms = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+                }
+                if (TelephonyCapabilities.supportsEcm(phone) ||
+                        TelephonyCapabilities.supportsEcm(phoneIms)) {
                     Log.d(LOG_TAG, "Emergency Callback Mode arrived in PhoneApp.");
                     // Start Emergency Callback Mode service
-                    if (intent.getBooleanExtra("phoneinECMState", false)) {
-                        context.startService(new Intent(context,
-                                EmergencyCallbackModeService.class));
+                    if (isImsPhone) {
+                        if (intent.getBooleanExtra("phoneinECMState", false)) {
+                            context.startService(new Intent(context,
+                                    EmergencyCallbackModeService.class).putExtra("ims_phone", true));
+                        }
+                    } else {
+                        if (intent.getBooleanExtra("phoneinECMState", false)) {
+                            context.startService(new Intent(context,
+                                    EmergencyCallbackModeService.class));
+                        }
                     }
                 } else {
                     // It doesn't make sense to get ACTION_EMERGENCY_CALLBACK_MODE_CHANGED
