@@ -421,23 +421,23 @@ public class NetworkSetting extends PreferenceActivity
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
 
-                    String rat = " (3G) ";
+                    String rat = " 3G ";
                     String niState = "";
 
                     if (ni.getRadioTech().equals("2")) {        // RADIO_TECH_EDGE
-                        rat = " (2G) ";
+                        rat = " 2G ";
                     } else if (ni.getRadioTech().equals("0")) { // RADIO_TECH_UNKNOWN
                         rat = " ";
                     }
 
-                    if (ni.getState() == OperatorInfo.State.AVAILABLE) {
-                        niState = getString(R.string.network_available);
-                    } else if (ni.getState() == OperatorInfo.State.CURRENT) {
-                        niState = getString(R.string.network_current);
-                    } else if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
-                        niState = getString(R.string.network_forbidden);
-                        carrier.setEnabled(false);
-                    }
+                    //if (ni.getState() == OperatorInfo.State.AVAILABLE) {
+                    //    niState = getString(R.string.network_available);
+                    //} else if (ni.getState() == OperatorInfo.State.CURRENT) {
+                    //    niState = getString(R.string.network_current);
+                    //} else if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
+                    //    niState = getString(R.string.network_forbidden);
+                    //    carrier.setEnabled(false);
+                    //}
 
                     carrier.setTitle(getNetworkTitle(ni) + rat + niState);
 
