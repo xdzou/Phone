@@ -1832,7 +1832,7 @@
 
     <string name="count_down_timer">Second:</string>
     <string name="input_password">Input password</string>
-    <string name="labelCbCancelAll">Cancal all callbarring</string>
+    <string name="labelCbCancelAll">Cancel all callbarring</string>
     <string name="psw_enter_old">Old password</string>
     <string name="labelCbChangePassword">Change password</string>
     <string name="psw_enter_new">New password</string>
