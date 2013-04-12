@@ -696,5 +696,8 @@
         <item>卡槽1</item>
         <item>卡槽2</item>
     </string-array>
+    
+    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
+    <string name="card_title_conditionalCF">呼叫转移已开启</string>
         
 </resources>
