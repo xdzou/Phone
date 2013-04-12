@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2012-2013 The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -467,18 +467,6 @@ public class BluetoothHandsfree {
             Message msg = Message.obtain(mHandler, SCO_AUDIO_STATE);
             msg.obj = mHeadset.getRemoteDevice();
             mHandler.sendMessageDelayed(msg, 2000);
-
-            // Sync with interrupt() statement of shutdown method
-            // This prevents resetting of a valid mConnectScoThread.
-            // If this thread has been interrupted, it has been shutdown and
-            // mConnectScoThread is/will be reset by the outer class.
-            // We do not want to do it here since mConnectScoThread could be
-            // assigned with a new object.
-            synchronized (ScoSocketConnectThread.this) {
-                if (!isInterrupted()) {
-                    resetConnectScoThread();
-                }
-            }
             if (mIsWbs) {
                 fallbackNb();
             }
@@ -1613,6 +1601,12 @@ public class BluetoothHandsfree {
                 BluetoothDevice device = (BluetoothDevice) msg.obj;
                 if (getAudioState(device) == BluetoothHeadset.STATE_AUDIO_CONNECTING) {
                     setAudioState(BluetoothHeadset.STATE_AUDIO_DISCONNECTED, device);
+                    //Added to delay the thread kill
+                    synchronized (ScoSocketConnectThread.class) {
+                        if (mConnectScoThread != null) {
+                            resetConnectScoThread();
+                        }
+                    }
                 }
                 break;
             case SCO_CONNECTION_CHECK:
