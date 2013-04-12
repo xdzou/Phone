@@ -657,6 +657,8 @@
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
     <string name="unknown_network">未知网络</string>
+    <string name="China_Mobile">中国移动</string>
+    <string name="China_Mobile_3G">中国移动3G</string>    
     <string name="call_barring">呼叫限制</string>
     <string name="call_barring_outgoing">呼出限制</string>
     <string-array name="call_barring_outgoing_display_values">

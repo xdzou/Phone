@@ -891,6 +891,8 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
  
     public String getNetworkName() {
         String networkName = null;
+        String ChinaMobile = null;
+        String ChinaMobile3G = null;
         ServiceState serviceState = mPhone.getServiceState();
         if (serviceState != null && serviceState.getState() == ServiceState.STATE_IN_SERVICE) {
             String operatorNumeric = serviceState.getOperatorNumeric();
@@ -898,14 +900,28 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
                                      && !("00000".equals(operatorNumeric));
             //init the network name is "unknown network"
             networkName = (String)mApp.getResources().getString(R.string.unknown_network);
+            ChinaMobile = (String)mApp.getResources().getString(R.string.China_Mobile);
+            ChinaMobile3G = (String)mApp.getResources().getString(R.string.China_Mobile_3G);
 
             Log.d(LOG_TAG, " operatorNumeric: " + operatorNumeric);
 
             if (isNumericValid) {
                 networkName = (String)SpnProvider.getSPNByMCCMNC(mApp, operatorNumeric);
                 //if cannot get name by mcc,mnc, use mcc+mnc
+
+                Log.d(LOG_TAG, " Operator Name: " + networkName);
+
                 if (TextUtils.isEmpty(networkName))
                     return operatorNumeric;
+                if(ChinaMobile.equals(networkName)){
+                    int networkType = getNetworkType();
+                    int netclass = TelephonyManager.getDefault().getNetworkClass(networkType);
+ 
+                    Log.d(LOG_TAG, " ChinaMobile:  networkType = " + networkType + "NetworkClass = " + netclass);
+                    if(netclass == TelephonyManager.NETWORK_CLASS_3_G ){
+                        networkName = ChinaMobile3G;
+                    }
+                }
             } else {
                 int phoneType = getActivePhoneType();
                 if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
