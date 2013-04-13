@@ -31,7 +31,10 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.ContactsContract.Contacts;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
+
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
@@ -1062,7 +1065,18 @@ public class CallCard extends LinearLayout
 
         if (!TextUtils.isEmpty(callStateLabel)) {
             mCallStateLabel.setVisibility(View.VISIBLE);
-            mCallStateLabel.setText(callStateLabel);
+            if (TelephonyManager.isMultiSimEnabled()){
+                // Get the subscription from current call object.
+                int subscription = call.getPhone().getSubscription();
+                String subInfo = getMultiSimName(subscription);                               
+                if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {
+                    mCallStateLabel.setText(callStateLabel);
+                } else {
+                    mCallStateLabel.setText(subInfo + "  " + callStateLabel);
+                }
+            }else{
+                mCallStateLabel.setText(callStateLabel);
+            }            
 
             // ...and display the icon too if necessary.
             if (bluetoothIconId != 0) {
@@ -1988,8 +2002,14 @@ public class CallCard extends LinearLayout
         }
     }
 
-
-
+    protected String getMultiSimName(int subscription) {
+        String name = Settings.System.getString(mContext.getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[subscription]);
+        if(name == null){
+            name = getResources().getStringArray(R.array.select_slot_items)[subscription];
+        }
+        return name;
+    }
 
     // Debugging / testing code
 
