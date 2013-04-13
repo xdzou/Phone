@@ -2099,4 +2099,14 @@ public class PhoneGlobals extends ContextWrapper
         return false;
     }
 
+    /**
+     * Show call duration when diconnect
+     * 
+     * @return
+     */
+    void showDuration(long duration) {
+        if(mInCallScreen != null){
+            mInCallScreen.showDurationDialog(duration);
+        }
+    }
 }
