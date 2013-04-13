@@ -87,7 +87,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
      *   (PhoneApp.DBG_LEVEL >= 2)
      * depending on the desired verbosity.
      */
-    /* package */ static final int DBG_LEVEL = 0;
+    /* package */ static final int DBG_LEVEL = 3;
 
     //TODO DSDS,restore the logging levels
     private static final boolean DBG =
