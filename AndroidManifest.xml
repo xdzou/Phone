@@ -191,10 +191,10 @@
             </intent-filter>
         </activity>
 
-        <activity android:name="MSimDialerActivity"
+        <!--<activity android:name="MSimDialerActivity"
                 android:permission="android.permission.CALL_PRIVILEGED"
                 android:configChanges="orientation|keyboardHidden">
-        </activity>
+        </activity>-->
 
         <activity android:name="OutgoingCallBroadcaster"
                 android:theme="@style/OutgoingCallBroadcasterTheme"
