@@ -2763,7 +2763,7 @@ public class InCallScreen extends Activity
 
             // And (finally!) exit from the in-call screen
             // (but not if we're already in the process of pausing...)
-            if (mIsForegroundActivity) {
+/*            if (mIsForegroundActivity) {
                 if (DBG) log("- delayedCleanupAfterDisconnect: finishing InCallScreen...");
 
                 // In some cases we finish the call by taking the user to the
@@ -2826,6 +2826,7 @@ public class InCallScreen extends Activity
                 }
 
             }
+*/
             endInCallScreenSession();
 
             // Reset the call origin when the session ends and this in-call UI is being finished.
