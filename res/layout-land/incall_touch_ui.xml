@@ -90,20 +90,39 @@
                  action button that brings up a popup menu; see
                  btn_compound_audio.xml and InCallTouchUi.updateAudioButton()
                  for the full details. -->
-            <ToggleButton
-                android:id="@+id/audioButton"
+            <LinearLayout
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:layout_width="match_parent"
-                style="@style/InCallCompoundButton"
-                android:background="@drawable/btn_compound_audio"
-                android:contentDescription="@string/onscreenAudioText" />
+                android:layout_width="match_parent">
+                <ToggleButton
+                    android:id="@+id/audioButton"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:layout_width="match_parent"
+                    style="@style/InCallCompoundButton"
+                    android:background="@drawable/btn_compound_audio"
+                    android:contentDescription="@string/onscreenAudioText" />
 
             <View
                 android:layout_height="@dimen/dialpad_button_margin"
                 android:layout_width="match_parent"
                 android:background="#66000000" />
 
+                <ToggleButton
+                    android:id="@+id/recorderButton"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    style="@style/InCallCompoundButton"
+                    android:background="@drawable/btn_compound_recorder"
+                    android:contentDescription="@string/onscreenRecorderText" />
+            </LinearLayout>
+
+            <View
+                    android:layout_height="@dimen/dialpad_button_margin"
+                    android:layout_width="match_parent"
+                    android:background="#66000000" />
+	        
             <LinearLayout
                 android:layout_height="0dp"
                 android:layout_weight="1"

@@ -3151,6 +3151,9 @@ public class InCallScreen extends Activity
                 // Show the Manage Conference panel.
                 setInCallScreenMode(InCallScreenMode.MANAGE_CONFERENCE);
                 requestUpdateScreen();
+                break;            
+            case R.id.recorderButton:
+                mApp.startRecord();
                 break;
 
             default:
@@ -4985,4 +4988,17 @@ public class InCallScreen extends Activity
     public boolean isQuickResponseDialogShowing() {
         return mRespondViaSmsManager != null && mRespondViaSmsManager.isShowingPopup();
     }
+
+    public boolean callRecorderReady(){
+        return mApp.isRecordReady();
+	}
+    
+    public boolean callRecorderEnabled(){
+		int phoneType = mCM.getFgPhone().getPhoneType();
+        return mApp.isRecordEnabled() && phoneType != PhoneConstants.PHONE_TYPE_SIP;
+	}
+
+	public boolean callRecorderRecording(){
+	    return mApp.isRecording();
+	}
 }
