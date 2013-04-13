@@ -46,6 +46,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.android.internal.telephony.CallDetails;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
@@ -92,6 +93,7 @@ public class OutgoingCallBroadcaster extends Activity
     /** the key used to specify subscription to be used for emergency calls */
     public static final String BLUETOOTH = "Bluetooth";
 
+    private boolean mIPCall;
     /**
      * Identifier for intent extra for sending an empty Flash message for
      * CDMA networks. This message is used by the network to simulate a
@@ -326,6 +328,7 @@ public class OutgoingCallBroadcaster extends Activity
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
         newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
         newIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        newIntent.putExtra(MSimConstants.IS_IP_CALL, mIPCall);
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
         PhoneUtils.copyImsExtras(intent, newIntent);
 
@@ -446,6 +449,7 @@ public class OutgoingCallBroadcaster extends Activity
             return;
         }
 
+        mIPCall = intent.getBooleanExtra(MSimConstants.IS_IP_CALL, false);
         /*
          * Clean up any undismissed ota dialogs. If ota call is active outgoing
          * calls will be blocked in OutgoingCallReceiver
@@ -474,6 +478,7 @@ public class OutgoingCallBroadcaster extends Activity
     private void processMSimIntent(Intent intent) {
         String action = intent.getAction();
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        intent.putExtra(MSimConstants.IS_IP_CALL, mIPCall);
         Log.d(TAG, "outGoingcallBroadCaster action is"+ action);
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
         Log.d(TAG, " number from Intent : "+ number);
