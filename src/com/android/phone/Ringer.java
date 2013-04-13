@@ -144,7 +144,7 @@ public class Ringer {
     /**
      * Starts the ringtone and/or vibrator
      */
-    void ring() {
+    void ring(int subscription) {
         if (DBG) log("ring()...");
 
         synchronized (this) {
@@ -158,7 +158,7 @@ public class Ringer {
                 // the other end of this binder call is in the system process.
             }
 
-            if (shouldVibrate() && mVibratorThread == null) {
+            if (shouldVibrate(subscription) && mVibratorThread == null) {
                 mContinueVibrating = true;
                 mVibratorThread = new VibratorThread();
                 if (DBG) log("- starting vibrator...");
@@ -198,10 +198,10 @@ public class Ringer {
         }
     }
 
-    boolean shouldVibrate() {
+    boolean shouldVibrate(int subscription) {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         int ringerMode = audioManager.getRingerMode();
-        if (CallFeaturesSetting.getVibrateWhenRinging(mContext)) {
+        if (CallFeaturesSetting.getVibrateWhenRinging(mContext, subscription)) {
             return ringerMode != AudioManager.RINGER_MODE_SILENT;
         } else {
             return ringerMode == AudioManager.RINGER_MODE_VIBRATE;

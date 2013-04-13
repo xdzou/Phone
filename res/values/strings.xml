@@ -1763,4 +1763,9 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+    <!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>SLOT1</item>
+        <item>SLOT2</item>
+    </string-array>
 </resources>

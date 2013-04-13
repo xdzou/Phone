@@ -633,4 +633,13 @@
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"响铃时振动"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
+    <!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>卡槽1</item>
+        <item>卡槽2</item>
+    </string-array>
+    
+    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
+    <string name="card_title_conditionalCF">呼叫转移已开启</string>
+        
 </resources>
