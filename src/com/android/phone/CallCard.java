@@ -35,7 +35,7 @@ import android.provider.ContactsContract.RawContacts;
 import android.provider.ContactsContract.Contacts;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
-import android.telephony.TelephonyManager;
+import android.telephony.MSimTelephonyManager;
 
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -1086,7 +1086,7 @@ public class CallCard extends LinearLayout
 
         if (!TextUtils.isEmpty(callStateLabel)) {
             mCallStateLabel.setVisibility(View.VISIBLE);
-            if (TelephonyManager.isMultiSimEnabled()){
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
                 // Get the subscription from current call object.
                 int subscription = call.getPhone().getSubscription();
                 String subInfo = getMultiSimName(subscription);                               
