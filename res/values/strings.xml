@@ -1739,6 +1739,9 @@
     <string name="deact_all_sub_not_supported">Deactivation of both the subscriptions is not supported.</string>
     <!-- Set Subscription screen: Deactivate both subscription not supported -->
     <string name="set_sub_not_supported_phone_in_call">Activate or Deactivate subscription is not allowed while phone in call.</string>
+    <string name="unknown_network">Unknown network</string>
+    <string name="China_Mobile">China Mobile</string>
+    <string name="China_Mobile_3G">China Mobile 3G</string>
 
     <!-- Call duration dialog title -->
     <string name="title_dialog_duration">Duration</string>

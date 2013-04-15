@@ -645,4 +645,8 @@
     <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
     <string name="card_title_conditionalCF">呼叫转移已开启</string>
         
+    <string name="unknown_network">未知网络</string>
+    <string name="China_Mobile">中国移动</string>
+    <string name="China_Mobile_3G">中国移动3G</string>    
+    
 </resources>
