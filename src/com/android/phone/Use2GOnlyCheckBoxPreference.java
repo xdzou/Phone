@@ -25,6 +25,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import com.android.internal.telephony.Phone;
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     private static final String LOG_TAG = "Use2GOnlyCheckBoxPreference";
@@ -91,6 +92,10 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
 
             if (ar.exception == null) {
                 int type = ((int[])ar.result)[0];
+                if (type != Phone.NT_MODE_GSM_ONLY) {
+                    // Allow only NT_MODE_GSM_ONLY or NT_MODE_WCDMA_PREF
+                    type = Phone.NT_MODE_WCDMA_PREF;
+                }
                 Log.i(LOG_TAG, "get preferred network type="+type);
                 setChecked(type == Phone.NT_MODE_GSM_ONLY);
                 android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
