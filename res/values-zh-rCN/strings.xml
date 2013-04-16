@@ -173,6 +173,8 @@
     <string name="preferred_network_mode_lte_gsm_wcdma_summary" msgid="7156440725909578607">首选网络模式：GSM/WCDMA/LTE</string>
     <string name="preferred_network_mode_lte_cdma_evdo_summary" msgid="8209856915462203788">首选网络模式：CDMA+LTE/EVDO</string>
     <string name="preferred_network_mode_global_summary" msgid="2805064161662132715">首选网络模式：Global</string>
+    <string name="preferred_network_mode_tdscdma_perf_summary" msgid="8521677230113533809">"首选网络模式：首选 TDS-CDMA"</string>
+    <string name="preferred_network_mode_tdscdma_only_summary" msgid="2836897236221063413">"首选网络模式：仅限 TDS-CDMA"</string>
   <string-array name="preferred_network_mode_choices">
     <item msgid="5543794538185064048">"LTE/CDMA"</item>
     <item msgid="1791696124550789935">仅 LTE</item>
@@ -192,6 +194,12 @@
     <item msgid="7002474529872452266">"LTE/CDMA"</item>
     <item msgid="5541716989029928208">"CDMA"</item>
   </string-array>
+  <string-array name="preferred_network_mode_choices_tdscdma">
+    <item>仅 TDS-CDMA</item>
+    <item>仅 GSM</item>
+    <item>首选 GSM/TDS-CDMA</item>
+  </string-array>
+
     <string name="data_enabled" msgid="5972538663568715366">"启用数据网络"</string>
     <string name="data_enable_summary" msgid="5022018967714633874">"允许通过移动网络存取数据"</string>
     <string name="roaming" msgid="8871412572928323707">"移动数据网络漫游"</string>
@@ -340,6 +348,12 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"设置 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自动重拨"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"启用自动重拨模式"</string>
+    
+    <!-- add for proximity sensor -->
+    <string name="proximity_mode_title">打开距离传感器</string>
+    <string name="proximity_on_summary">接听电话时，屏幕会关闭，从而节省电量</string>
+    <string name="proximity_off_summary">接听电话时，屏幕保持开启状态</string>
+    
     <string name="menu_add" msgid="1882023737425114762">"添加联系人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"编辑联系人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"删除联系人"</string>
@@ -620,6 +634,20 @@
     <string name="description_target_answer" msgid="7205604197797472471">"接听"</string>
     <string name="description_target_send_sms" msgid="2098326025587950144">"发送短信"</string>
     <string name="description_target_decline" msgid="4789834364389731957">"拒绝"</string>
+
+    <!-- IP call related strings -->
+    <!-- Call settings screen, setting option name -->
+    <string name="ipcall">IP电话设置</string>
+    <!-- Call settings screen, subscription title -->
+    <string name="ipcall_sub_title">IP电话设置</string>
+    <string name="ipcall_sub_summery">修改IP电话前缀</string>
+    <!-- Call settings screen, IP call setting dialog title -->
+    <string name="ipcall_dialog_title">IP电话设置</string>
+    <string name="ipcall_dialog_edit_hint">请输入IP电话前缀</string>
+    <!-- add for call setting vibrating after connected-->
+    <string name="vibrate_after_connected_title">接通振动提示</string>
+    <string name="vibrate_after_connected_summary">对方接通时振动</string>
+    
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"振动"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"振动"</string>
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"提示音"</string>
@@ -649,4 +677,34 @@
     <string name="China_Mobile">中国移动</string>
     <string name="China_Mobile_3G">中国移动3G</string>    
     
+    <string name="call_barring">呼叫限制</string>
+    <string name="call_barring_outgoing">呼出限制</string>
+    <string-array name="call_barring_outgoing_display_values">
+        <item>"关闭"</item>
+        <item>"国际漫游呼叫"</item>
+        <item>"限制国际呼叫"</item>
+        <item>"限制呼叫"</item>
+    </string-array>
+    <string-array name="call_barring_incoming_display_values">
+        <item>"关闭"</item>
+        <item>"漫游时来电"</item>
+        <item>"限制来电"</item>
+    </string-array>
+    <string name="call_barring_incoming">呼入限制</string>
+    <string name="input_password">输入密码</string>
+    <string name="labelCbCancelAll">取消全部限制</string>
+    <string name="psw_enter_old">旧密码</string>
+    <string name="labelCbChangePassword">修改限制密码</string>
+    <string name="psw_enter_new">新密码</string>
+    <string name="invalidPsw">输入 4 到 8 位数字的密码。</string>
+    <string name="psw_reenter_new">重新输入新密码</string>
+    <string name="no_call_barring">没有设置呼叫限制</string>
+    <string name="cb_psw_dont_match">密码不匹配！</string>
+    <string name="operation_successfully">操作成功！</string>
+
+    <string name="count_down_timer">计时:</string>
+    <string name="preferred_duration_title">挂机显示通话时长</string>
+    <string name="duration_enable_summary">挂机显示通话时长已开启</string>
+    <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
+
 </resources>

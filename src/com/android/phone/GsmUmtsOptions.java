@@ -24,12 +24,19 @@ import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.telephony.TelephonyManager;
+import android.telephony.MSimTelephonyManager;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.qualcomm.internal.telephony.MSimPhoneFactory;
+import com.qualcomm.internal.telephony.SubscriptionManager;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.qrd.plugin.feature_query.FeatureQuery;
+import android.util.Log;
+import android.os.SystemProperties;
 
 /**
  * List of Network-specific settings screens.
@@ -66,17 +73,54 @@ public class GsmUmtsOptions {
     protected void create() {
         mPrefActivity.addPreferencesFromResource(R.xml.gsm_umts_options);
         mButtonAPNExpand = (PreferenceScreen) mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY);
-        mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
-        mButtonOperatorSelectionExpand =
-                (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
+        //disable apn on slot2
+        boolean disableSlot2Apn = false;
+        if (1 == mSubscription && FeatureQuery.FEATURE_RESTRICT_SLOT2_DATA_SERVICE) {
+            boolean inChina = true;
+            if (SubscriptionManager.getInstance().isSubActive(mSubscription)) {
+                String operatorNumber = MSimPhoneFactory.getPhone(1).getServiceState()
+                        .getOperatorNumeric();
+                Log.d(LOG_TAG," operatorNumber: "  + operatorNumber);
+                if (null != operatorNumber && operatorNumber.length() >= 3) {
+                    String mcc = (String) operatorNumber.subSequence(0, 3);
+                    // China mainland and Macau
+                    if (!mcc.equals("460") && !mcc.equals("455")) {
+                        inChina = false;
+                    }
+                }
+            }
+            if (inChina) {
+                disableSlot2Apn = true;
+            }
+        }
+        if (disableSlot2Apn) {
+            log("disable apn");
+            mPrefScreen.removePreference(mButtonAPNExpand);
+        } else {
+            mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
+        }
+        mButtonOperatorSelectionExpand = (PreferenceScreen) mPrefScreen.
+                findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonOperatorSelectionExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mButtonPrefer2g = (CheckBoxPreference) mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY);
         Use2GOnlyCheckBoxPreference.updatePhone(mPhone);
+        if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CMCC && SystemProperties.getInt("ro.cmcc.protocol.test", 0) == 0){
+            mPrefScreen.removePreference(mButtonPrefer2g);
+        }
         enableScreen();
     }
 
     public void onResume() {
         updateOperatorSelectionVisibility();
+    }
+	
+    public void removeGSMOptions() {
+        mPrefScreen.removePreference(
+                mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY));
+        mPrefScreen.removePreference(
+                mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY));
+        mPrefScreen.removePreference(
+                mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY));
     }
 
     public void enableScreen() {
@@ -107,6 +151,10 @@ public class GsmUmtsOptions {
                 mButtonOperatorSelectionExpand.setEnabled(false);
             }
         }
+
+        // Set the preferences disabled if the sim state can not be recognized or deactivate.
+        if (!MSimTelephonyManager.getDefault().isValidSimState(mSubscription))
+            mPrefActivity.getPreferenceScreen().setEnabled(false);
     }
 
     public boolean preferenceTreeClick(Preference preference) {
@@ -120,5 +168,13 @@ public class GsmUmtsOptions {
 
     protected void log(String s) {
         android.util.Log.d(LOG_TAG, s);
+    }
+
+    //change apn item status when apn property change
+    public void setApnItemStatus(boolean recordLoaded){
+        if( null != mButtonAPNExpand ){
+            android.util.Log.d(LOG_TAG,"setApnItemStatus"+recordLoaded);
+            mButtonAPNExpand.setEnabled(recordLoaded);
+        }
     }
 }
