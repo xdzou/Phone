@@ -81,6 +81,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.qrd.plugin.feature_query.FeatureQuery;
+import android.os.SystemProperties;
 
 /**
  * Top level "Call settings" UI; see res/xml/call_feature_setting.xml
@@ -1732,7 +1733,7 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
         updateVoiceNumberField();
         mVMProviderSettingsForced = false;
-        if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP) {
+        if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP && (SystemProperties.getInt("ro.cta.test", 0) != 1)) {
             createSipCallSettings();
         }
         createImsSettings();

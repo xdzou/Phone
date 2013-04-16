@@ -48,6 +48,7 @@ import com.android.internal.telephony.cdma.TtyIntent;
 import com.qualcomm.internal.telephony.SubscriptionManager;
 import com.android.phone.sip.SipSharedPreferences;
 import com.qrd.plugin.feature_query.FeatureQuery;
+import android.os.SystemProperties;
 
 /**
  * Top level "Call settings" UI; see res/xml/call_feature_setting.xml
@@ -286,7 +287,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         }
 
         // for internet call settings
-        if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP) {
+        if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP && (SystemProperties.getInt("ro.cta.test", 0) != 1)) {
             createSipCallSettings();
         } else {
             PreferenceGroup sipSettingPref = (PreferenceGroup) findPreference(SIP_SETTINGS_CATEGORY_KEY);

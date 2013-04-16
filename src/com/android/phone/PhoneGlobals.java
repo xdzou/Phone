@@ -78,7 +78,6 @@ import com.android.server.sip.SipService;
 import com.qualcomm.recorder.ICallRecorder;
 
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
-import android.content.Context;
 
 import android.content.Context;
 import android.provider.RecentCallsPreferences;
