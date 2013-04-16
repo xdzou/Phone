@@ -53,6 +53,7 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
+import android.os.SystemClock;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
@@ -62,6 +63,8 @@ import android.text.TextUtils;
 import android.util.EventLog;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.qrd.plugin.feature_query.FeatureQuery;
 
 /**
  * Phone app module that listens for phone state changes and various other
@@ -95,6 +98,8 @@ public class CallNotifier extends Handler
 
     /** The singleton instance. */
     protected static CallNotifier sInstance;
+    
+    private static final int DELAY_AUTO_ANSWER_TIME = 2000;
 
     // Boolean to keep track of whether or not a CDMA Call Waiting call timed out.
     //
@@ -135,6 +140,7 @@ public class CallNotifier extends Handler
 
     // Event used to indicate a query timeout.
     private static final int RINGER_CUSTOM_RINGTONE_QUERY_TIMEOUT = 100;
+    private static final int RINGER_WAIT_FOR_QUERY = 101;
 
     // Events from the Phone object:
     private static final int PHONE_STATE_CHANGED = 1;
@@ -167,6 +173,12 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
+    private static final int SHOW_DURATION_OFF = 0;
+    private static final int SHOW_DURATION_ON = 1;
+    
+    private static final int VIBRATE_OFF = 0;
+    private static final int VIBRATE_ON = 1;
+    
     protected PhoneGlobals mApplication;
     private CallManager mCM;
     private Ringer mRinger;
@@ -183,6 +195,7 @@ public class CallNotifier extends Handler
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
 
     private Call.State mPreviousCdmaCallState;
+    private Call.State mPreviousGsmCallState;
     private boolean mVoicePrivacyState = false;
     private boolean mIsCdmaRedialCall = false;
 
@@ -199,7 +212,7 @@ public class CallNotifier extends Handler
 
     // Cached AudioManager
     private AudioManager mAudioManager;
-
+    private PhoneConstants.State lastState = null;
     /**
      * Initialize the singleton CallNotifier instance.
      * This is only done once, at startup, from PhoneApp.onCreate().
@@ -269,6 +282,10 @@ public class CallNotifier extends Handler
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
+            case RINGER_WAIT_FOR_QUERY:
+                int subscription = mCM.getRingingPhone().getSubscription();
+                mRinger.ring(subscription);
+                break;
             case PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
                 onNewRingingConnection((AsyncResult) msg.obj);
@@ -284,7 +301,7 @@ public class CallNotifier extends Handler
                     if ((pb.getState() == PhoneConstants.State.RINGING)
                             && (mSilentRingerRequested == false)) {
                         if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
-                        mRinger.ring();
+                        sendEmptyMessageDelayed(RINGER_WAIT_FOR_QUERY, RINGTONE_QUERY_WAIT_TIME);
                     } else {
                         if (DBG) log("RING before NEW_RING, skipping");
                     }
@@ -684,12 +701,19 @@ public class CallNotifier extends Handler
 
             startIncomingCallQuery(c);
 
-            // If Auto Answer feature has been enabled, the call is automatically
-            // answered after a timeout value selected by the user.
-            if (mAutoAnswer != -1) {
-                Log.d(LOG_TAG, "Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+            // Auto answer when imei is null
+            if(PhoneUtils.isImeiNull(phone)){
+                Log.d(LOG_TAG, "Imei null, Will auto-answer in 2 seconds");
                 Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
-                sendMessageDelayed(message, mAutoAnswer);
+                sendMessageDelayed(message, DELAY_AUTO_ANSWER_TIME);
+            } else {            
+                // If Auto Answer feature has been enabled, the call is automatically
+                // answered after a timeout value selected by the user.
+                if (mAutoAnswer != -1) {
+                    Log.d(LOG_TAG, "Imei not null, Will auto-answer in " + mAutoAnswer/1000 + " seconds");
+                    Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
+                    sendMessageDelayed(message, mAutoAnswer);
+                }
             }
         } else {
             if (VDBG) log("- starting call waiting tone...");
@@ -808,8 +832,9 @@ public class CallNotifier extends Handler
             }
         }
         if (shouldStartQuery) {
-            // Reset the ringtone to the default first.
-            mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
+            // create a custom ringer using the default ringer first
+            Phone phone = c.getCall().getPhone();
+            mRinger.setCustomRingtoneUri(phone.getSubscription() == 0 ? Settings.System.DEFAULT_RINGTONE_URI : Settings.System.DEFAULT_RINGTONE_URI_2);
 
             // query the callerinfo to try to get the ringer.
             PhoneUtils.CallerInfoToken cit = PhoneUtils.startGetCallerInfo(
@@ -839,7 +864,8 @@ public class CallNotifier extends Handler
 
             // In this case, just log the request and ring.
             if (VDBG) log("RINGING... (request to ring arrived while query is running)");
-            mRinger.ring();
+            int subscription = mCM.getRingingPhone().getSubscription();
+            mRinger.ring(subscription);
 
             // in this case, just fall through like before, and call
             // showIncomingCall().
@@ -901,7 +927,8 @@ public class CallNotifier extends Handler
 
         // Ring, either with the queried ringtone or default one.
         if (VDBG) log("RINGING... (onCustomRingQueryComplete)");
-        mRinger.ring();
+        int subscription = mCM.getRingingPhone().getSubscription();
+        mRinger.ring(subscription);
 
         // ...and display the incoming call to the user:
         if (DBG) log("- showing incoming call (custom ring query complete)...");
@@ -972,6 +999,7 @@ public class CallNotifier extends Handler
      */
     private void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
+        lastState = state;
         if (VDBG) log("onPhoneStateChanged: state = " + state);
 
         // Turn status bar notifications on or off depending upon the state
@@ -993,6 +1021,25 @@ public class CallNotifier extends Handler
                 stopSignalInfoTone();
             }
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
+        } else if (FeatureQuery.FEATURE_PHONE_SET_VIBRATE_AFTER_CONNECTED && 
+                fgPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+            if(DBG) log("onPhoneStateChanged: Current Call State = " + fgPhone.getForegroundCall().getState());
+            if(DBG) log("onPhoneStateChanged: Previous Call State = " + mPreviousGsmCallState);
+            if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
+                    && ((mPreviousGsmCallState == Call.State.DIALING)
+                    ||  (mPreviousGsmCallState == Call.State.ALERTING))) {
+                if(DBG) log("onPhoneStateChanged: GSM Connected.");
+                if (Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.VIBRATE_AFTER_CONNECTED, VIBRATE_OFF) == VIBRATE_ON) {
+                    if(DBG) log("onPhoneStateChanged: Vibrate.");
+                    Vibrator mSystemVibrator = new SystemVibrator();
+                    int nVibratorLength = 100;
+                    mSystemVibrator.vibrate(nVibratorLength);
+                    SystemClock.sleep(nVibratorLength);
+                    mSystemVibrator.cancel();
+                }
+            }
+            mPreviousGsmCallState = fgPhone.getForegroundCall().getState();
         }
 
         // Have the PhoneApp recompute its mShowBluetoothIndication
@@ -1030,6 +1077,7 @@ public class CallNotifier extends Handler
             // TODO: Confirm that this call really *is* unnecessary, and if so,
             // remove it!
             if (DBG) log("stopRing()... (OFFHOOK state)");
+            removeMessages(RINGER_WAIT_FOR_QUERY);
             mRinger.stopRing();
 
             // Post a request to update the "in-call" status bar icon.
@@ -1260,6 +1308,13 @@ public class CallNotifier extends Handler
             Log.w(LOG_TAG, "onDisconnect: null connection");
         }
 
+        // show call duration
+        if (lastState == PhoneConstants.State.OFFHOOK && c != null
+                && Settings.System.getInt(mApplication.getContentResolver(),
+                        Settings.System.SHOW_DURATION, SHOW_DURATION_OFF) == SHOW_DURATION_ON) {
+            mApplication.showDuration(c.getDurationMillis());
+        }
+        
         int autoretrySetting = 0;
         if ((c != null) && (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.
@@ -1300,10 +1355,12 @@ public class CallNotifier extends Handler
                 mApplication.notificationMgr.cancelCallInProgressNotifications();
             } else {
                 if (DBG) log("stopRing()... (onDisconnect)");
+                removeMessages(RINGER_WAIT_FOR_QUERY);
                 mRinger.stopRing();
             }
         } else { // GSM
             if (DBG) log("stopRing()... (onDisconnect)");
+            removeMessages(RINGER_WAIT_FOR_QUERY);
             mRinger.stopRing();
         }
 
@@ -1570,6 +1627,7 @@ public class CallNotifier extends Handler
     void silenceRinger() {
         mSilentRingerRequested = true;
         if (DBG) log("stopRing()... (silenceRinger)");
+        removeMessages(RINGER_WAIT_FOR_QUERY);
         mRinger.stopRing();
     }
 
@@ -1589,7 +1647,8 @@ public class CallNotifier extends Handler
         // regular INCOMING calls.
         if (DBG) log("- ringingCall state: " + ringingCall.getState());
         if (ringingCall.getState() == Call.State.INCOMING) {
-            mRinger.ring();
+            int subscription = mCM.getRingingPhone().getSubscription();
+            mRinger.ring(subscription);
         }
     }
 

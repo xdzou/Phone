@@ -1079,6 +1079,8 @@
     <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
+    <!-- Text for the onscreen "Show Recorder" button -->
+    <string name="onscreenRecorderText">Record</string>
     <!-- Text for the onscreen "Mute" button -->
     <string name="onscreenMuteText">Mute</string>
     <!-- Text for the onscreen "Add call" button -->
@@ -1811,7 +1813,7 @@
         <item><xliff:g>4</xliff:g></item>
         <item><xliff:g>3</xliff:g></item>
     </string-array>
-
+    
     <!-- IP call related strings -->
     <!-- Call settings screen, setting option name -->
     <string name="ipcall">IP call settings</string>
@@ -1839,6 +1841,7 @@
     <string name="no_call_barring">No callbarring</string>
     <string name="cb_psw_dont_match">Password do not match</string>
     <string name="operation_successfully">Operation successfully!</string>
+
     <!-- Sim contacts management -->
     <string name="ContactScreen"> Add/Edit SIM Contact</string>
     <string name="ExportContactScreen"> Export phone contacts to sim </string>

@@ -661,9 +661,22 @@
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"响铃时振动"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"拨号键盘触摸音效"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
+    <!--Call duration dialog title-->
+    <string name="title_dialog_duration">通话时长</string>
+    <string name="duration_format">"<xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒"</string>
+    <!-- Used in choose preferred subscription-->
+    <string-array name="select_slot_items">
+        <item>卡槽1</item>
+        <item>卡槽2</item>
+    </string-array>
+    
+    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
+    <string name="card_title_conditionalCF">呼叫转移已开启</string>
+        
     <string name="unknown_network">未知网络</string>
     <string name="China_Mobile">中国移动</string>
     <string name="China_Mobile_3G">中国移动3G</string>    
+    
     <string name="call_barring">呼叫限制</string>
     <string name="call_barring_outgoing">呼出限制</string>
     <string-array name="call_barring_outgoing_display_values">
@@ -689,24 +702,10 @@
     <string name="cb_psw_dont_match">密码不匹配！</string>
     <string name="operation_successfully">操作成功！</string>
 
-    <!--Call duration dialog title-->
-    <string name="title_dialog_duration">通话时长</string>
-    <string name="duration_format">"<xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒"</string>
-
     <string name="count_down_timer">计时:</string>
     <string name="preferred_duration_title">挂机显示通话时长</string>
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
     <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
-    
-    <!-- Used in choose preferred subscription-->
-    <string-array name="select_slot_items">
-        <item>卡槽1</item>
-        <item>卡槽2</item>
-    </string-array>
-    
-    <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
-    <string name="card_title_conditionalCF">呼叫转移已开启</string>
-    
+
     <string name="title_data_settings">数据设置</string>
-        
 </resources>

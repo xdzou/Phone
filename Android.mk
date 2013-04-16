@@ -24,7 +24,8 @@ LOCAL_SRC_FILES += \
         src/com/android/phone/INetworkQueryService.aidl \
         src/com/android/phone/INetworkQueryServiceCallback.aidl \
         src/com/qualcomm/ims/IImsService.aidl \
-        src/com/qualcomm/ims/IImsServiceListener.aidl
+        src/com/qualcomm/ims/IImsServiceListener.aidl \
+	src/com/qualcomm/recorder/ICallRecorder.aidl
 
 LOCAL_PACKAGE_NAME := Phone
 LOCAL_CERTIFICATE := platform
