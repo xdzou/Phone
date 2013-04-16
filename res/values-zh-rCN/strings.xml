@@ -706,5 +706,7 @@
     
     <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
     <string name="card_title_conditionalCF">呼叫转移已开启</string>
+    
+    <string name="title_data_settings">数据设置</string>
         
 </resources>
