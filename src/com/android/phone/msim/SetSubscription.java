@@ -153,9 +153,18 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
                         Log.d(TAG, "new card dialog box:  onClick");
-                        //finish();
+						Intent intent = new Intent(Intent.ACTION_MAIN);
+						intent.setClassName("com.android.settings",
+									"com.android.settings.multisimsettings.MultiSimSettings");
+						
+						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+						startActivity(intent);
                     }
                 })
+			.setNegativeButton(com.android.internal.R.string.no, new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+				}
+			})
             .show()
             .setOnDismissListener(new DialogInterface.OnDismissListener() {
                     public void onDismiss(DialogInterface dialog) {
