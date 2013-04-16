@@ -26,6 +26,8 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.net.ConnectivityManager;
 import android.net.ThrottleManager;
 import android.net.Uri;
@@ -97,7 +99,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     CdmaOptions mCdmaOptions;
 
     private Preference mClickedPreference;
-
+    private NetworkStatusChangeIntentReceiver mReceiver;
 
     //This is a method implemented for DialogInterface.OnClickListener.
     //  Used to dismiss the dialogs when they come up.
@@ -308,12 +310,21 @@ public class MobileNetworkSettings extends PreferenceActivity
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
         mDataUsageListener.resume();
+
+        // Register a broadcast receiver to listen the mobile connectivity
+        // changed.
+        mReceiver = new NetworkStatusChangeIntentReceiver();
+        IntentFilter filter = new IntentFilter(
+                ConnectivityManager.MOBILE_CONNECTIVITY_ACTION);
+        this.registerReceiver(mReceiver, filter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         mDataUsageListener.pause();
+        // Unregister the broadcast receiver when the activity is out of foreground.
+        this.unregisterReceiver(mReceiver);
     }
 
     /**
@@ -586,5 +597,20 @@ public class MobileNetworkSettings extends PreferenceActivity
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    /**
+     * Receives notifications when enable/disable mobile data.
+     */
+    private class NetworkStatusChangeIntentReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String actionStr = intent.getAction();
+            if (ConnectivityManager.MOBILE_CONNECTIVITY_ACTION
+                    .equals(actionStr)) {
+                // Make the DataEnabled button to correct state.
+                boolean enabled = intent.getBooleanExtra(ConnectivityManager.EXTRA_ENABLED, false);
+                mButtonDataEnabled.setChecked(enabled);
+            }
+        }
     }
 }
