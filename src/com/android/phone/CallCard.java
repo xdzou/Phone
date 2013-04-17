@@ -638,7 +638,8 @@ public class CallCard extends LinearLayout
                         // So, ci.phoneNumber will not match connection address.
                         String connAddress = conn.getAddress();
                         String number = PhoneNumberUtils.stripSeparators(ci.phoneNumber);
-                        if (!(ci.isEmergencyNumber() || ci.isVoiceMailNumber()) &&
+                        boolean isSIPCall = PhoneNumberUtils.isUriNumber(ci.phoneNumber);
+                        if (!(ci.isEmergencyNumber() || ci.isVoiceMailNumber() || isSIPCall) &&
                             (connAddress != null && !connAddress.equals(number))) {
                             log("- displayMainCallStatus: Phone number modified!!");
                             CallerInfo newCi = CallerInfo.getCallerInfo(getContext(), connAddress);
