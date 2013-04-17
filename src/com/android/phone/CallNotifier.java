@@ -1511,7 +1511,7 @@ public class CallNotifier extends Handler
                     CallLogAsync.AddCallArgs args =
                             new CallLogAsync.AddCallArgs(
                                 mApplication, ci, logNumber, presentation,
-                                callLogType, date, duration);
+                                callLogType, date, duration,phone.getSubscription());
                     mCallLog.addCall(args);
                 }
             }
@@ -2104,7 +2104,7 @@ public class CallNotifier extends Handler
                 final long duration = c.getDurationMillis();
                 final int callLogType = mCallWaitingTimeOut ?
                         Calls.MISSED_TYPE : Calls.INCOMING_TYPE;
-
+                final Phone phone = c.getCall().getPhone();
                 // get the callerinfo object and then log the call with it.
                 Object o = c.getUserData();
                 final CallerInfo ci;
@@ -2125,7 +2125,7 @@ public class CallNotifier extends Handler
                 CallLogAsync.AddCallArgs args =
                         new CallLogAsync.AddCallArgs(
                             mApplication, ci, logNumber, presentation,
-                            callLogType, date, duration);
+                            callLogType, date, duration, phone.getSubscription());
 
                 mCallLog.addCall(args);
 
