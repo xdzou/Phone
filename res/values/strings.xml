@@ -1763,4 +1763,7 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+
+    <!-- add illegal characters in SIP username and host -->
+    <string name="invalid_username_or_hostname">Invalid username or host parameters</string>
 </resources>
