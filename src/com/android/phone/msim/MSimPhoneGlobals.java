@@ -69,6 +69,7 @@ import java.util.ArrayList;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import com.qrd.plugin.feature_query.FeatureQuery;
+import com.qrd.plugin.feature_query.DefaultQuery;
 
 /**
  * Top-level Application class for the Phone app.
@@ -369,6 +370,19 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             audioManager.setParameter(CallFeaturesSetting.HAC_KEY, hac != 0 ?
                                       CallFeaturesSetting.HAC_VAL_ON :
                                       CallFeaturesSetting.HAC_VAL_OFF);
+        }
+
+        /*FEATURE_AUTO_REG_SMS*/
+        if (FeatureQuery.FEATURE_AUTO_REG_SMS) {
+             /*Unicom DM register through sms*/
+            if(DefaultQuery.AUTO_REG_SMS_OPERATOR.equals("cu"))
+            {
+                new UnicomDMRegister(mContext);
+            }
+            else
+            {
+                /*Other operater register*/
+            }
         }
 
     }
