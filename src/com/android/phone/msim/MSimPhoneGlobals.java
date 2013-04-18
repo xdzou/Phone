@@ -377,7 +377,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
              /*Unicom DM register through sms*/
             if(DefaultQuery.AUTO_REG_SMS_OPERATOR.equals("cu"))
             {
-                new UnicomDMRegister(mContext);
+                new UnicomDMRegister(phone.getContext());
             }
             else
             {
