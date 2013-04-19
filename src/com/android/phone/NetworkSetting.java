@@ -39,6 +39,7 @@ import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.LocaleNamesParser;
 
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.Phone;
@@ -71,6 +72,8 @@ public class NetworkSetting extends PreferenceActivity
     private static final String LIST_NETWORKS_KEY = "list_networks_key";
     private static final String BUTTON_SRCH_NETWRKS_KEY = "button_srch_netwrks_key";
     private static final String BUTTON_AUTO_SELECT_KEY = "button_auto_select_key";
+    private static final String CMCC_OPERATOR_NAME = "China Mobile";
+    private static final String UNICOM_OPERATOR_NAME = "China Unicom";
 
     //map of network controls to the network data.
     private HashMap<Preference, OperatorInfo> mNetworkMap;
@@ -85,6 +88,8 @@ public class NetworkSetting extends PreferenceActivity
     private PreferenceGroup mNetworkList;
     private Preference mSearchButton;
     private Preference mAutoSelect;
+
+    private LocaleNamesParser localeNamesParser;
 
     private final Handler mHandler = new Handler() {
         @Override
@@ -238,6 +243,9 @@ public class NetworkSetting extends PreferenceActivity
         mSearchButton = getPreferenceScreen().findPreference(BUTTON_SRCH_NETWRKS_KEY);
         mAutoSelect = getPreferenceScreen().findPreference(BUTTON_AUTO_SELECT_KEY);
 
+        localeNamesParser = new LocaleNamesParser(this, "NetworkSetting",
+                com.android.internal.R.array.origin_carrier_names,
+                com.android.internal.R.array.locale_carrier_names);
         // Start the Network Query service, and bind it.
         // The OS knows to start he service only once and keep the instance around (so
         // long as startService is called) until a stopservice request is made.  Since
@@ -418,7 +426,7 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    carrier.setTitle(getNetworkTitle(ni));
+                    carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni)));
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
@@ -442,13 +450,20 @@ public class NetworkSetting extends PreferenceActivity
      */
 
     private String getNetworkTitle(OperatorInfo ni) {
+        String sOperator;
         if (!TextUtils.isEmpty(ni.getOperatorAlphaLong())) {
-            return ni.getOperatorAlphaLong();
+            sOperator = ni.getOperatorAlphaLong();
         } else if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
-            return ni.getOperatorAlphaShort();
+            sOperator =  ni.getOperatorAlphaShort();
         } else {
-            return ni.getOperatorNumeric();
+            sOperator =  ni.getOperatorNumeric();
         }
+        if(sOperator.equals("CHINA  MOBILE")){
+            sOperator = CMCC_OPERATOR_NAME;
+        }else if(sOperator.equals("CHN-UNICOM")){
+            sOperator = UNICOM_OPERATOR_NAME;
+        }
+        return sOperator;
     }
 
     private void clearList() {
