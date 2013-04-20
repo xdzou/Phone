@@ -33,6 +33,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
 import android.text.TextUtils;
@@ -437,7 +438,12 @@ public class CallController extends Handler {
                 || (okToCallStatus == CallStatusCode.OUT_OF_SERVICE))) {
             if (DBG) log("placeCall: Emergency number detected with status = " + okToCallStatus);
             int sub = mApp.getVoiceSubscriptionInService();
-            phone = mApp.getPhone(sub);
+            // Avoid updating phone in IMS case as it gets picked
+            // above by PhoneUtils.pickPhoneBasedOnNumber()
+            if ((MSimTelephonyManager.getDefault().isMultiSimEnabled()) &&
+                    (phone.getPhoneType() != PhoneConstants.PHONE_TYPE_IMS)) {
+                phone = mApp.getPhone(sub);
+            }
             okToCallStatus = CallStatusCode.SUCCESS;
             if (DBG) log("==> UPDATING status to: " + okToCallStatus);
         }
