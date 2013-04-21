@@ -1219,8 +1219,9 @@ public class PhoneGlobals extends ContextWrapper
                 // We do not keep the screen off when the user is outside in-call screen and we are
                 // horizontal, but we do not force it on when we become horizontal until the
                 // proximity sensor goes negative.
-                boolean horizontal =
-                        (mOrientation == AccelerometerListener.ORIENTATION_HORIZONTAL);
+
+                //Cancel AccelerometerSensor's horizontal check.
+                boolean horizontal = false;
                 screenOnImmediately |= !isShowingCallScreenForProximity() && horizontal;
 
                 // We do not keep the screen off when dialpad is visible, we are horizontal, and
