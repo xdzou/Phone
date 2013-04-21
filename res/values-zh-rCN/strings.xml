@@ -393,6 +393,7 @@
     <string name="label_puk2_code" msgid="302845876240219560">"输入 PUK2 码"</string>
     <string name="fdn_enable_puk2_requested" msgid="4262894949634885773">"密码有误，请更改 PIN2 并重试。"</string>
     <string name="puk2_requested" msgid="8909278021238716877">"密码有误，SIM 卡已锁定。需要 PUK2。"</string>
+    <string name="pin2_attempts">"\n剩余次数 :"</string>
     <string name="doneButton" msgid="2859593360997984240">"完成"</string>
     <string name="caller_manage_header" msgid="3231519674734638786">"电话会议<xliff:g id="CONF_CALL_TIME">%s</xliff:g>"</string>
     <string name="voicemail_settings_number_label" msgid="8524164258691887790">"语音信箱号码"</string>

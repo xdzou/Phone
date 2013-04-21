@@ -399,6 +399,7 @@
     <string name="label_puk2_code" msgid="302845876240219560">"輸入 PUK2 碼"</string>
     <string name="fdn_enable_puk2_requested" msgid="4262894949634885773">"密碼不正確，請變更 PIN2 後重試。"</string>
     <string name="puk2_requested" msgid="8909278021238716877">"密碼不正確，SIM 已鎖住！請輸入 PUK2。"</string>
+    <string name="pin2_attempts">"\n剩餘次數 :"</string>
     <string name="doneButton" msgid="2859593360997984240">"完成"</string>
     <string name="caller_manage_header" msgid="3231519674734638786">"多方通話<xliff:g id="CONF_CALL_TIME">%s</xliff:g>"</string>
     <string name="voicemail_settings_number_label" msgid="8524164258691887790">"語音信箱號碼"</string>
