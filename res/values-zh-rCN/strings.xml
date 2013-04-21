@@ -403,6 +403,8 @@
     <!-- In-call screen: status label when Call waiting is enabled on remote party  -->
     <string name="card_title_calliswaiting">"来电等待"</string>
     <string name="card_title_conf_call" msgid="1162980346189744501">"电话会议"</string>
+    <string name="card_title_callonhold">"呼叫保持"</string>
+    <string name="card_title_callretrieved">"呼叫恢复"</string>
     <string name="card_title_incoming_call" msgid="7364539451234646909">"来电"</string>
     <string name="card_title_call_ended" msgid="5544730338889702298">"通话结束"</string>
     <string name="card_title_on_hold" msgid="821463117892339942">"保持"</string>
