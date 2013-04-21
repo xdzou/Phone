@@ -1111,6 +1111,11 @@ public class CallCard extends LinearLayout
                 }
                 break;
 
+            // Call Waiting update ElapsedTimeWidget
+            case WAITING:
+                updateElapsedTimeWidget(call);
+                break;
+
             default:
                 // Call state here is IDLE, ACTIVE, HOLDING, DIALING, ALERTING,
                 // INCOMING, or WAITING.
