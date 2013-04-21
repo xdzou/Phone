@@ -117,7 +117,13 @@ public class SipEditor extends PreferenceActivity
         void setValue(String value) {
             if (preference instanceof EditTextPreference) {
                 String oldValue = getValue();
-                ((EditTextPreference) preference).setText(value);
+                // If display name is equal to user name or null, that set display name's
+                // edit text to user name.
+                if (value == "" && this == DisplayName) {
+                    ((EditTextPreference) preference).setText(getDefaultDisplayName());
+                } else {
+                    ((EditTextPreference) preference).setText(value);
+                }
                 if (this != Password) {
                     Log.v(TAG, this + ": setValue() " + value + ": " + oldValue
                             + " --> " + getValue());
@@ -452,6 +458,23 @@ public class SipEditor extends PreferenceActivity
         if (pref == PreferenceKey.DisplayName.preference) {
             ((EditTextPreference) pref).setText(value);
             checkIfDisplayNameSet();
+        }
+
+        // If display name is equal to user name or null, that set display name's
+        // edit text to user name.
+        if (pref == PreferenceKey.Username.preference) {
+            PreferenceKey.Username.setValue(value);
+            for (PreferenceKey key : PreferenceKey.values()) {
+                Preference p = key.preference;
+                if (p instanceof EditTextPreference) {
+                    EditTextPreference prefer = (EditTextPreference) p;
+                    boolean fieldEmpty = isEditTextEmpty(key);
+                    // use default value if display name is empty
+                    if (fieldEmpty && key == PreferenceKey.DisplayName) {
+                        prefer.setText(getDefaultDisplayName());
+                    }
+                }
+            }
         }
 
         // SAVE menu should be enabled once the user modified some preference.
