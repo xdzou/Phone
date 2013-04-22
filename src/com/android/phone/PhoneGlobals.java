@@ -192,7 +192,7 @@ public class PhoneGlobals extends ContextWrapper
     NotificationMgr notificationMgr;
     Ringer ringer;
     IBluetoothHeadsetPhone mBluetoothPhone;    
-    private ICallRecorder mCallRecorder;
+    protected ICallRecorder mCallRecorder;
     PhoneInterfaceManager phoneMgr;
     CallManager mCM;
     ManagedRoaming mManagedRoam;
@@ -2071,7 +2071,7 @@ public class PhoneGlobals extends ContextWrapper
     }
 
     // Call recorder connection
-    private ServiceConnection mCallRecorderConnection = new ServiceConnection() {
+    protected ServiceConnection mCallRecorderConnection = new ServiceConnection() {
         
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -2091,7 +2091,7 @@ public class PhoneGlobals extends ContextWrapper
      * 
      * @param context
      */
-    private void bindRecorder(Context context) {
+    protected void bindRecorder(Context context) {
         if (mCallRecorder == null) {
             final Intent intent = new Intent("com.qualcomm.action.CALL_RECORD");
             try {

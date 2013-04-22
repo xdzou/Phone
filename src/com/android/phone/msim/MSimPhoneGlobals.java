@@ -209,6 +209,9 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 // Device is not bluetooth capable
                 mBluetoothPhone = null;
             }
+            
+            // bind call record service when phone process startup
+            bindRecorder(this);
 
             ringer = Ringer.init(this);
 
