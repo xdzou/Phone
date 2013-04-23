@@ -81,6 +81,8 @@ import android.database.Cursor;
 import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.TelephonyManager;
 import android.content.ContentResolver;
+import java.io.File;
+import android.os.StatFs;
 
 /**
  * Misc utilities for the Phone app.
@@ -2998,6 +3000,11 @@ public class PhoneUtils {
         }
        if (DBG) log("wangxiaolin IsInBlackList: Whole number="+number);
     Context context =   phone.getContext();
+    if(checkdataFull(context))
+        {
+          log("data is full can't query firewall, return false");
+          return false;   
+        }
        if(!isFirewallEnabled(context))
        {
               if (DBG) log("wangxiaolin IsInBlackList, firewall is not enable!");
@@ -3172,7 +3179,19 @@ public class PhoneUtils {
      
          return result;
      }
-     
+    public static boolean checkdataFull(Context context){
+            
+        File path = new File("/data/");
+        StatFs stat = new StatFs(path.getPath());
+        long blockSize = stat.getBlockSize();
+        long availableBlocks = stat.getAvailableBlocks();
+        long available = availableBlocks*blockSize;
+        if (available < 10*1024*1024)
+        {
+            return true;
+        }
+        return false;
+    }
      public static String getFirewallMode(Context context){
          String result =null;
          ContentResolver cr = context.getContentResolver();
