@@ -1167,6 +1167,15 @@ public class InCallTouchUi extends FrameLayout
         // Not used
     }
 
+    // hide the incoming call widget.
+    public void hideIncomingCall(){
+        if (mIncomingCallWidget != null) {
+            mIncomingCallWidget.setAlpha(1);
+            mIncomingCallWidget.setVisibility(View.GONE);
+            mIncomingCallWidget.animate().setListener(null);
+        }
+    }
+    
     /**
      * Apply an animation to hide the incoming call widget.
      */
