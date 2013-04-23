@@ -21,6 +21,9 @@ import android.preference.EditTextPreference;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.EditText;
+import android.text.InputFilter;
+import android.text.InputFilter.LengthFilter;
 
 /**
  * Ultra-simple subclass of EditTextPreference that allows the "title" to wrap
@@ -45,6 +48,9 @@ import android.widget.TextView;
  * <view class="com.android.phone.Foo$Bar"> as you can with regular views.
  */
 public class MultiLineTitleEditTextPreference extends EditTextPreference {
+
+    private static final int MAX_LENGTH = 64;
+    
     public MultiLineTitleEditTextPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
     }
@@ -69,5 +75,9 @@ public class MultiLineTitleEditTextPreference extends EditTextPreference {
         if (textView != null) {
             textView.setSingleLine(false);
         }
+
+        EditText editText = getEditText();
+        editText.setFilters(new InputFilter[] {
+                new LengthFilter(MAX_LENGTH) });
     }
 }
