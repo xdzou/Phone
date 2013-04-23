@@ -107,7 +107,7 @@ public class InCallTouchUi extends FrameLayout
     private Button mModifyCallButton;
     private CompoundButton mDialpadButton;
     private CompoundButton mMuteButton;    
-	private CompoundButton mRecorderButton;
+    private CompoundButton mRecorderButton;
     private CompoundButton mAudioButton;
     private CompoundButton mHoldButton;
     private ImageButton mSwapButton;
@@ -210,9 +210,9 @@ public class InCallTouchUi extends FrameLayout
         mMuteButton = (CompoundButton) mInCallControls.findViewById(R.id.muteButton);
         mMuteButton.setOnClickListener(this);
         mMuteButton.setOnLongClickListener(this);        
-		mRecorderButton = (CompoundButton) mInCallControls.findViewById(R.id.recorderButton);
-		mRecorderButton.setOnClickListener(this);
-		mRecorderButton.setOnLongClickListener(this);
+        mRecorderButton = (CompoundButton) mInCallControls.findViewById(R.id.recorderButton);
+        mRecorderButton.setOnClickListener(this);
+        mRecorderButton.setOnLongClickListener(this);
         mAudioButton = (CompoundButton) mInCallControls.findViewById(R.id.audioButton);
         mAudioButton.setOnClickListener(this);
         mAudioButton.setOnLongClickListener(this);

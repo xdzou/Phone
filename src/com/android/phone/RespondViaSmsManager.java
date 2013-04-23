@@ -36,6 +36,7 @@ import android.preference.EditTextPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.MSimTelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
@@ -95,6 +96,8 @@ public class RespondViaSmsManager {
     private static final String ACTION_SENDTO_NO_CONFIRMATION =
             "com.android.mms.intent.action.SENDTO_NO_CONFIRMATION";
 
+    private int mSub;
+
     /**
      * RespondViaSmsManager constructor.
      */
@@ -124,6 +127,12 @@ public class RespondViaSmsManager {
         if (isShowingPopup()) {
             if (DBG) log("Skip showing popup when one is already shown.");
             return;
+        }
+
+        if(MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            mSub = ringingCall.getPhone().getSubscription();
+        } else {
+            mSub = 0;
         }
 
         ListView lv = new ListView(mInCallScreen);
@@ -333,7 +342,7 @@ public class RespondViaSmsManager {
         if (VDBG) log("sendText: number "
                       + phoneNumber + ", message '" + message + "'");
 
-        mInCallScreen.startService(getInstantTextIntent(phoneNumber, message));
+        mInCallScreen.startService(getInstantTextIntent(phoneNumber, message, mSub));
     }
 
     /**
@@ -342,7 +351,7 @@ public class RespondViaSmsManager {
     private void launchSmsCompose(String phoneNumber) {
         if (VDBG) log("launchSmsCompose: number " + phoneNumber);
 
-        Intent intent = getInstantTextIntent(phoneNumber, null);
+        Intent intent = getInstantTextIntent(phoneNumber, null, mSub);
 
         if (VDBG) log("- Launching SMS compose UI: " + intent);
         mInCallScreen.startService(intent);
@@ -355,9 +364,15 @@ public class RespondViaSmsManager {
      * to be sent with no interaction from the user.
      * @return Service Intent for the instant response.
      */
-    private static Intent getInstantTextIntent(String phoneNumber, String message) {
+    private static Intent getInstantTextIntent(String phoneNumber, String message, int sub) {
         Uri uri = Uri.fromParts(Constants.SCHEME_SMSTO, phoneNumber, null);
         Intent intent = new Intent(ACTION_SENDTO_NO_CONFIRMATION, uri);
+        
+        if((MSimTelephonyManager.getDefault().isMultiSimEnabled()) && (sub < 2)) {
+            log("getInstantTextIntent: dsds product, sub = " + sub);
+            intent.putExtra("subscription",sub);
+        }
+
         if (message != null) {
             intent.putExtra(Intent.EXTRA_TEXT, message);
         } else {
@@ -552,8 +567,15 @@ public class RespondViaSmsManager {
             return false;
         }
 
+        int sub;
+        if(MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            sub = ringingCall.getPhone().getSubscription();
+        } else {
+            sub = 0;
+        }
+
         // Allow the feature only when there's a destination for it.
-        if (context.getPackageManager().resolveService(getInstantTextIntent(number, null) , 0)
+        if (context.getPackageManager().resolveService(getInstantTextIntent(number, null, sub) , 0)
                 == null) {
             return false;
         }
