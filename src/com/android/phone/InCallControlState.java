@@ -20,6 +20,7 @@
 
 package com.android.phone;
 
+import android.os.RemoteException;
 import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
@@ -50,7 +51,7 @@ public class InCallControlState {
 
     private InCallScreen mInCallScreen;
     private CallManager mCM;
-
+    private PhoneGlobals mApp;
     //
     // Our "public API": Boolean flags to indicate the state and/or
     // enabledness of all possible in-call user operations:
@@ -102,6 +103,7 @@ public class InCallControlState {
         if (DBG) log("InCallControlState constructor...");
         mInCallScreen = inCallScreen;
         mCM = cm;
+        mApp = PhoneGlobals.getInstance();
     }
 
     /**
@@ -218,8 +220,14 @@ public class InCallControlState {
 
         // VT upgrade downgrade
         if (TelephonyCapabilities.supportsCallModify(fgCall.getPhone())) {
-            modifyCallVisible = true;
-            modifyCallEnabled = true;
+            try {
+                if ((mApp.mImsService != null) && (mApp.mImsService.isVTModifyAllowed())) {
+                    modifyCallVisible = true;
+                    modifyCallEnabled = true;
+                }
+            } catch (RemoteException ex) {
+                Log.d(LOG_TAG, "Ims Service isVTModifyAllowed exception", ex);
+            }
         } else {
             // This device has no concept of VT upgrade downgrade .
             modifyCallVisible = false;
