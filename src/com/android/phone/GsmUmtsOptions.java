@@ -142,8 +142,17 @@ public class GsmUmtsOptions {
             }
         }
         // Set the preferences disabled if the sim state can not be recognized or deactivate.
-        if (!MSimTelephonyManager.getDefault().isValidSimState(mSubscription))
-            mPrefActivity.getPreferenceScreen().setEnabled(false);
+        if(TelephonyManager.isMultiSimEnabled()){
+            if (!MSimTelephonyManager.getDefault().isValidSimState(mSubscription))
+                mPrefActivity.getPreferenceScreen().setEnabled(false);
+        }else{
+            int simState = TelephonyManager.getDefault().getSimState();
+            if(TelephonyManager.SIM_STATE_ABSENT == simState
+             || TelephonyManager.SIM_STATE_UNKNOWN == simState
+             || TelephonyManager.SIM_STATE_DEACTIVATED == simState){
+                mPrefActivity.getPreferenceScreen().setEnabled(false);
+            }
+        }
     }
 
     public boolean preferenceTreeClick(Preference preference) {
