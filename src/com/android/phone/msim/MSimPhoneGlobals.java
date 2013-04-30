@@ -270,7 +270,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 IccCard sim = getPhone(i).getIccCard();
                 if (sim != null) {
                     if (VDBG) Log.v(LOG_TAG, "register for ICC status on subscription: " + i);
-                    sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, new Integer(i));
+                    sim.registerForPersoLocked(mHandler, EVENT_PERSO_LOCKED, new Integer(i));
                 }
             }
 
@@ -510,7 +510,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             if (DBG) Log.d(LOG_TAG, "Update registration for ICC status...");
 
             //Register all events new to the new active phone
-            sim.registerForNetworkLocked(mHandler, EVENT_SIM_NETWORK_LOCKED, null);
+            sim.registerForPersoLocked(mHandler, EVENT_PERSO_LOCKED, null);
         }
     }
 
