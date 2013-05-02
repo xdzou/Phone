@@ -670,6 +670,13 @@
         <item>卡槽2</item>
     </string-array>
     
+    <!-- Set Subscription screen: card changed -->
+    <string name="cards_changed">卡有变化，是否重新设置SIM卡？</string>
+    <!-- Set Subscription screen: New cards available -->
+    <string name="new_cards_available">有新卡,请配置!</string>
+    <!-- Set Subscription screen: Configure subscription dialog title -->
+    <string name="config_sub_title">配置卡</string>
+
     <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
     <string name="card_title_conditionalCF">呼叫转移已开启</string>
         
