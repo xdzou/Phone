@@ -38,7 +38,6 @@ import com.qrd.plugin.feature_query.DefaultQuery;
 
 public class UnicomDMRegister {
     private static final String TAG = "UnicomDMRegister";
-    private String REG_MSG_ACTION_OK = "android.selfsms.regok";
     
     /*Unicom lab test 10655464; Release 10655459*/
     private static final String SMS_NUMBER = DefaultQuery.AUTO_REG_SMS_SEVERNUM;
@@ -86,11 +85,6 @@ public class UnicomDMRegister {
                     mContext.unregisterReceiver(mReceiver);
                 }
             }
-            else if (action.equals(REG_MSG_ACTION_OK)) {
-                Log.d(TAG, "android.selfsms.regok");
-                saveImsi(strImsi);
-                mContext.unregisterReceiver(mReceiver);
-            }
         }
     };
         
@@ -102,7 +96,6 @@ public class UnicomDMRegister {
         IntentFilter filter = new IntentFilter();
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(REG_MSG_ACTION);
-        filter.addAction(REG_MSG_ACTION_OK);
         mContext.registerReceiver(mReceiver, filter);
     }
 
