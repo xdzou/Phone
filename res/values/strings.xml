@@ -185,16 +185,104 @@
     <!-- network depersonalization -->
     <!-- Label text for PIN entry widget on SIM Network Depersonalization panel -->
     <string name="label_ndp">SIM network unlock PIN</string>
-    <!-- Button label on SIM Network Depersonalization panel -->
+    <!-- Label text for PIN entry widget on SIM Network Subset Depersonalization panel -->
+    <string name="label_nsdp">SIM network subset unlock PIN</string>
+    <!-- Label text for PIN entry widget on SIM Corporate Depersonalization panel -->
+    <string name="label_cdp">SIM corporate unlock PIN</string>
+    <!-- Label text for PIN entry widget on SIM Service Provider Depersonalization panel -->
+    <string name="label_spdp">SIM service provider unlock PIN</string>
+    <!-- Label text for PIN entry widget on SIM SIM Depersonalization panel -->
+    <string name="label_sdp">SIM unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM Network1 Depersonalization panel -->
+    <string name="label_rn1dp">RUIM network1 unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM Network2 Depersonalization panel -->
+    <string name="label_rn2dp">RUIM network2 unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM Hrpd Depersonalization panel -->
+    <string name="label_rhrpd">RUIM hrpd unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM Corporate Depersonalization panel -->
+    <string name="label_rcdp">RUIM corporate unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM Service Provider Depersonalization panel -->
+    <string name="label_rspdp">RUIM service provider unlock PIN</string>
+    <!-- Label text for PIN entry widget on RUIM RUIM Depersonalization panel -->
+    <string name="label_rdp">RUIM unlock PIN</string>
+    <!-- Label text for PUK entry widget on Depersonalization panel -->
+    <string name="label_puk">Enter PUK</string>
+    <!-- Button label on SIM Depersonalization panel -->
     <string name="sim_ndp_unlock_text">Unlock</string>
-    <!-- Button label on SIM Network Depersonalization panel -->
+    <!-- Button label on SIM Depersonalization panel -->
     <string name="sim_ndp_dismiss_text">Dismiss</string>
     <!-- Status message displayed on SIM Network Depersonalization panel -->
-    <string name="requesting_unlock">Requesting network unlock\u2026</string>
+    <string name="requesting_nw_unlock">Requesting SIM network unlock\u2026</string>
+    <!-- Status message displayed on SIM Network Subset Depersonalization panel -->
+    <string name="requesting_nw_subset_unlock">Requesting SIM network subset unlock\u2026</string>
+    <!-- Status message displayed on SIM Service Provider Depersonalization panel -->
+    <string name="requesting_sp_unlock">Requesting SIM service provider unlock\u2026</string>
+    <!-- Status message displayed on SIM Corporate Depersonalization panel -->
+    <string name="requesting_corporate_unlock">Requesting SIM corporate unlock\u2026</string>
+    <!-- Status message displayed on SIM SIM Depersonalization panel -->
+    <string name="requesting_sim_unlock">Requesting SIM unlock\u2026</string>
+    <!-- Status message displayed on RUIM Network1 Depersonalization panel -->
+    <string name="requesting_rnw1_unlock">Requesting RUIM network1 unlock\u2026</string>
+    <!-- Status message displayed on RUIM Network2 Depersonalization panel -->
+    <string name="requesting_rnw2_unlock">Requesting RUIM network2 unlock\u2026</string>
+    <!-- Status message displayed on RUIM Hrpd Depersonalization panel -->
+    <string name="requesting_rhrpd_unlock">Requesting RUIM hrpd unlock\u2026</string>
+    <!-- Status message displayed on RUIM Service Provider Depersonalization panel -->
+    <string name="requesting_rsp_unlock">Requesting RUIM service provider unlock\u2026</string>
+    <!-- Status message displayed on RUIM Corporate Depersonalization panel -->
+    <string name="requesting_rc_unlock">Requesting RUIM corporate unlock\u2026</string>
+    <!-- Status message displayed on RUIM RUIM Depersonalization panel -->
+    <string name="requesting_ruim_unlock">Requesting RUIM unlock\u2026</string>
+    <!-- Status message displayed on PUK Depersonalization panel -->
+    <string name="requesting_puk_unlock">Requesting PUK unlock\u2026</string>
     <!-- Error message displayed on SIM Network Depersonalization panel -->
-    <string name="unlock_failed">Network unlock request unsuccessful.</string>
+    <string name="nw_unlock_failed">SIM Network unlock request unsuccessful.</string>
+    <!-- Error message displayed on SIM Network Subset Depersonalization panel -->
+    <string name="nw_subset_unlock_failed">SIM Network Subset unlock request unsuccessful.</string>
+    <!-- Error message displayed on SIM Service Provider Depersonalization panel -->
+    <string name="sp_unlock_failed">SIM Service Provider unlock request unsuccessful.</string>
+    <!-- Error message displayed on SIM Corporate Depersonalization panel -->
+    <string name="corporate_unlock_failed">SIM Corporate unlock request unsuccessful.</string>
+    <!-- Error message displayed on SIM SIM Depersonalization panel -->
+    <string name="sim_unlock_failed">SIM unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM Network1 Depersonalization panel -->
+    <string name="rnw1_unlock_failed">RUIM Network1 unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM Network2 Depersonalization panel -->
+    <string name="rnw2_unlock_failed">RUIM Network2 unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM Hrpd Depersonalization panel -->
+    <string name="rhrpd_unlock_failed">RUIM Hrpd unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM Service Provider Depersonalization panel -->
+    <string name="rsp_unlock_failed">RUIM Service Provider unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM Corporate Depersonalization panel -->
+    <string name="rc_unlock_failed">RUIM Corporate unlock request unsuccessful.</string>
+    <!-- Error message displayed on RUIM RUIM Depersonalization panel -->
+    <string name="ruim_unlock_failed">RUIM unlock request unsuccessful.</string>
+    <!-- Error message displayed on PUK Depersonalization panel -->
+    <string name="puk_unlock_failed">PUK unlock unsuccessful.</string>
     <!-- Success message displayed on SIM Network Depersonalization panel -->
-    <string name="unlock_success">Network unlock successful.</string>
+    <string name="nw_unlock_success">SIM Network unlock successful.</string>
+    <!-- Success message displayed on SIM Network Subset Depersonalization panel -->
+    <string name="nw_subset_unlock_success">SIM Network Subset unlock successful.</string>
+    <!-- Success message displayed on SIM Service Provider Depersonalization panel -->
+    <string name="sp_unlock_success">SIM Service Provider unlock successful.</string>
+    <!-- Success message displayed on SIM Corporate Depersonalization panel -->
+    <string name="corporate_unlock_success">SIM Corporate unlock successful.</string>
+    <!-- Success message displayed on SIM SIM Depersonalization panel -->
+    <string name="sim_unlock_success">SIM unlock successful.</string>
+    <!-- Success message displayed on RUIM Network1 Depersonalization panel -->
+    <string name="rnw1_unlock_success">RUIM Network1 unlock successful.</string>
+    <!-- Success message displayed on RUIM Network2 Depersonalization panel -->
+    <string name="rnw2_unlock_success">RUIM Network2 unlock successful.</string>
+    <!-- Success message displayed on RUIM Hrpd Depersonalization panel -->
+    <string name="rhrpd_unlock_success">RUIM Hrpd unlock successful.</string>
+    <!-- Success message displayed on RUIM Service Provider Depersonalization panel -->
+    <string name="rsp_unlock_success">RUIM Service Provider unlock successful.</string>
+    <!-- Success message displayed on RUIM Corporate Depersonalization panel -->
+    <string name="rc_unlock_success">RUIM Corporate unlock successful.</string>
+    <!-- Success message displayed on RUIM RUIM Depersonalization panel -->
+    <string name="ruim_unlock_success">RUIM unlock successful.</string>
+    <!-- Success message displayed on PUK Depersonalization panel -->
+    <string name="puk_unlock_success">PUK unlock successful.</string>
 
     <!-- settings strings -->
 
@@ -417,12 +505,42 @@
     <!-- Mobile network settings, summary for preferred network mode CDMA+LTE/EVDO[CHAR LIMIT=100] -->
     <string name="preferred_network_mode_lte_cdma_evdo_summary">Preferred network mode: CDMA+LTE/EVDO</string>
     <!-- Mobile network settings, summary for preferred network mode Global[CHAR LIMIT=100] -->
-    <string name="preferred_network_mode_global_summary">Preferred network mode: Global</string>
+    <string name="preferred_network_mode_global_summary">Preferred network mode: Global(CDMA/EVDO/LTE/GSM/WCDMA)</string>
     <!-- Mobile network settings, summary for preferred network mode LTE / WCDMA[CHAR LIMIT=100] -->
     <string name="preferred_network_mode_lte_wcdma_summary">Preferred network mode: LTE / WCDMA</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA only[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_only_summary">Preferred network mode: TD-SCDMA only</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / WCDMA[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_wcdma_summary">Preferred network mode: TD-SCDMA / WCDMA</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / LTE[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_lte_summary">Preferred network mode: TD-SCDMA / LTE</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / GSM[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_gsm_summary">Preferred network mode: TD-SCDMA / GSM</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / GSM / LTE[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_gsm_lte_summary">Preferred network mode: TD-SCDMA/GSM/LTE</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / GSM / WCDMA[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_gsm_wcdma_summary">Preferred network mode: TD-SCDMA/GSM/WCDMA</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / GSM / WCDMA/ LTE[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_wcdma_lte_summary">Preferred network mode: TD-SCDMA/WCDMA/LTE</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA / GSM / WCDMA/ LTE[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_gsm_wcdma_lte_summary">Preferred network mode: TD-SCDMA/GSM/WCDMA/LTE</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA/LTE/CDMA/EvDo/GSM/WCDMA[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_lte_cdma_evdo_gsm_wcdma_summary">Preferred network mode: TD-SCDMA/LTE/CDMA/EvDo/GSM/WCDMA</string>
+    <!-- Mobile network settings, summary for preferred network mode TD-SCDMA/CDMA/EvDo/GSM/WCDMA[CHAR LIMIT=100] -->
+    <string name="preferred_network_mode_td_scdma_cdma_evdo_gsm_wcdma_summary">Preferred network mode: TD-SCDMA/CDMA/EvDo/GSM/WCDMA</string>
 
 
     <string-array name="preferred_network_mode_choices">
+        <item>TD-SCDMA/LTE/GSM/WCDMA/CDMA/EVDO </item>
+        <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
+        <item>TD-SCDMA/GSM/WCDMA/LTE</item>
+        <item>TD-SCDMA/WCDMA/LTE</item>
+        <item>TD-SCDMA/GSM/WCDMA</item>
+        <item>TD-SCDMA/GSM/LTE</item>
+        <item>TD-SCDMA/GSM</item>
+        <item>TD-SCDMA/LTE</item>
+        <item>TD-SCDMA/WCDMA</item>
+        <item>TD-SCDMA only</item>
         <item>LTE / WCDMA</item>
         <item>LTE</item>
         <item>Global</item>
@@ -438,6 +556,16 @@
         <item>GSM/WCDMA preferred</item>
     </string-array>
     <string-array name="preferred_network_mode_values"  translatable="false">
+        <item>"22"</item>
+        <item>"21"</item>
+        <item>"20"</item>
+        <item>"19"</item>
+        <item>"18"</item>
+        <item>"17"</item>
+        <item>"16"</item>
+        <item>"15"</item>
+        <item>"14"</item>
+        <item>"13"</item>
         <item>"12"</item>
         <item>"11"</item>
         <item>"10"</item>
