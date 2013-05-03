@@ -469,6 +469,10 @@ public class OutgoingCallBroadcaster extends Activity
             Intent intentMSim = new Intent(this, MSimDialerActivity.class);
             intentMSim.setData(intent.getData());
             intentMSim.setAction(intent.getAction());
+            if (SystemProperties.getBoolean("persist.env.phone.smartdialer", true)) {
+                intentMSim.putExtra("dial_widget_switched",
+                        intent.getIntExtra("dial_widget_switched", -1));
+            }
             int requestCode = 1;
             startActivityForResult(intentMSim, requestCode);
         } else {
