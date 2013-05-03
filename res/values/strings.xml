@@ -465,7 +465,16 @@
         <item>"1"</item>
         <item>"0"</item>
     </string-array>
-
+    <string-array name="preferred_network_mode_choices_wcdma">
+        <item>WCDMA only</item>
+        <item>GSM only</item>
+        <item>WCDMA/GSM preferred</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_wcdma"  translatable="false">
+        <item>"2"</item>
+        <item>"1"</item>
+        <item>"0"</item>
+    </string-array>
     <!-- Mobile network settings, network mode choices for a device supporting CDMA and LTE [CHAR LIMIT=25] -->
     <string-array name="preferred_network_mode_choices_lte">
         <item>LTE/CDMA</item>
