@@ -56,7 +56,10 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
+import android.telephony.TelephonyManager;
+import com.qualcomm.internal.telephony.MSimPhoneFactory;
 
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * NotificationManager-related utility code for the Phone app.
@@ -128,6 +131,9 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     private QueryHandler mQueryHandler = null;
     private static final int CALL_LOG_TOKEN = -1;
     private static final int CONTACT_TOKEN = -2;
+
+    static final ComponentName DATA_ROAMING = new ComponentName("com.android.settings",
+            "com.android.settings.multisimsettings.MultiSimSettingTab");
 
     /**
      * Private constructor (this is a singleton).
@@ -1357,8 +1363,17 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         if (DBG) log("showDataDisconnectedRoaming()...");
 
         // "Mobile network settings" screen / dialog
-        Intent intent = new Intent(mContext,
-                com.android.phone.MobileNetworkSettings.class);
+        Intent intent;
+
+        if(!TelephonyManager.isMultiSimEnabled()){
+            intent = new Intent(mContext, com.android.phone.MobileNetworkSettings.class);
+        }else{
+            intent = new Intent();
+            intent.setComponent(DATA_ROAMING);
+            intent.putExtra("PACKAGE", "com.android.phone");
+            intent.putExtra("TARGET_CLASS", "com.android.phone.MSimMobileNetworkSubSettings");
+            intent.putExtra(SUBSCRIPTION_KEY, MSimPhoneFactory.getDataSubscription());
+        }
 
         Notification notification = new Notification(
                 android.R.drawable.stat_sys_warning, // icon
