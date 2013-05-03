@@ -159,7 +159,7 @@ public class CallCard extends LinearLayout
     // Cached DisplayMetrics density.
     private float mDensity;
 
-    private boolean mAudioDeviceInitialized = false;
+    private boolean mIsVTinitialized = false;
 
     /**
      * Sent when it takes too long (MESSAGE_DELAY msec) to load a contact photo for the given
@@ -740,11 +740,15 @@ public class CallCard extends LinearLayout
         int callType = getVideoCallType(call);
         switch (state) {
             case DIALING: // These are an intentional fall through(s)
+            case INCOMING:
             case ALERTING:
                 initVideoCall(callType);
                 break;
 
             case ACTIVE:
+                // If phone app didn't receive the previous call states such as
+                // dialing and alerting, make sure that the video call is still
+                // initialized
                 initVideoCall(callType);
 
                 // Show video call widget
@@ -753,7 +757,7 @@ public class CallCard extends LinearLayout
 
             case DISCONNECTING: // These are an intentional fall through(s)
             case DISCONNECTED:
-                mAudioDeviceInitialized = false;
+                mIsVTinitialized = false;
                 mVideoCallPanel.onCallDisconnect();
                 hideVideoCallWidgets();
                 break;
@@ -761,13 +765,13 @@ public class CallCard extends LinearLayout
             case HOLDING: // These are an intentional fall through(s)
             case IDLE:
             case WAITING:
-                mAudioDeviceInitialized = false;
+                mIsVTinitialized = false;
                 hideVideoCallWidgets();
                 break;
 
             default:
                 Log.e(LOG_TAG, "videocall: updateVideoCallState in bad state:" + state);
-                mAudioDeviceInitialized = false;
+                mIsVTinitialized = false;
                 hideVideoCallWidgets();
                 break;
         }
@@ -804,19 +808,12 @@ public class CallCard extends LinearLayout
      * Initializes the video call widgets if not already initialized
      */
     private void initVideoCall(int callType) {
-        /*
-         * 1. Speaker state is updated only at the beginning of a video call
-         * 2. For MO video call, speaker update happens in dialing state
-         * 3. For MT video call, it happens in active state
-         * 4. Speaker state not changed during a call when VOLTE<->VT
-         *    call type change happens.
-         */
-        if (!mAudioDeviceInitialized) {
+        if (!mIsVTinitialized) {
+            //Choose camera direction based on call type
+            mVideoCallPanel.onCallInitiating(callType);
             switchInVideoCallAudio(); // Set audio to speaker by default
-            mAudioDeviceInitialized = true;
+            mIsVTinitialized = true;
         }
-        //Choose camera direction based on call type
-        mVideoCallPanel.onCallInitiating(callType);
     }
 
     /**
