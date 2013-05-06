@@ -82,7 +82,8 @@ public class ExportContactsToSim extends Activity {
         new Thread(new Runnable() {
             public void run() {
                 Cursor contactsCursor = getContactsContentCursor();
-                for (int i = 0; contactsCursor.moveToNext(); i++) {
+                contactsCursor.moveToFirst();
+                while (contactsCursor.moveToNext()) {
                     populateContactDataFromCursor(contactsCursor );
                 }
 
