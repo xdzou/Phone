@@ -477,12 +477,13 @@ public class SimContacts extends ADNList {
         final String name = namePhoneTypePair.name;
         final int phoneType = namePhoneTypePair.phoneType;
         final String phoneNumber = cursor.getString(NUMBER_COLUMN);
+        final String phoneMail = cursor.getString(EMAILS_COLUMN);
 
         Uri uri = getUri();
         int result = -1;
         if (uri != null) {
             result = getContentResolver().delete(uri, "tag=" + name
-                    + " AND number=" + phoneNumber, null);
+                    + " AND number=" + phoneNumber + " AND emails=" + phoneMail, null);
         } else {
             Log.e(LOG_TAG, "actuallyDeleteOneSimContact: uri is null!!!");
         }
