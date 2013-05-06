@@ -1341,8 +1341,10 @@ public class BluetoothHandsfree {
                                    + mCall + "isAudioOn" + isAudioOn() );
                     if (mA2dpSuspended && mCall == 0 && !isAudioOn()) {
                         log("resuming A2DP stream after Call ends");
+                        sendURC(result.toString());
                         mA2dp.resumeSink(mA2dpDevice);
                         mA2dpSuspended = false ;
+                        return ;
                     }
                 }
             }
