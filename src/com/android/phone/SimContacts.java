@@ -483,7 +483,7 @@ public class SimContacts extends ADNList {
         int result = -1;
         if (uri != null) {
             result = getContentResolver().delete(uri, "tag=" + name
-                    + " AND number=" + phoneNumber + " AND emails=" + phoneMail, null);
+                    + " AND number=" + phoneNumber + (phoneMail != null ? " AND emails=" + phoneMail : ""), null);
         } else {
             Log.e(LOG_TAG, "actuallyDeleteOneSimContact: uri is null!!!");
         }
