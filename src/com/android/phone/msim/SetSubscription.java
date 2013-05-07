@@ -147,7 +147,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private void notifyNewCardAvailable() {
         Log.d(TAG, "notifyNewCardAvailable()");
 
-        new AlertDialog.Builder(this).setMessage(R.string.new_cards_available)
+        new AlertDialog.Builder(this).setMessage(R.string.cards_changed)
             .setTitle(R.string.config_sub_title)
             .setIcon(android.R.drawable.ic_dialog_alert)
             .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
@@ -155,8 +155,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         Log.d(TAG, "new card dialog box:  onClick");
                         Intent intent = new Intent(Intent.ACTION_MAIN);
                         intent.setClassName("com.android.settings",
-		                        	"com.android.settings.multisimsettings.MultiSimSettings");
-						
+                                    "com.android.settings.multisimsettings.MultiSimSettings");
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
                         startActivity(intent);
                     }
@@ -164,7 +163,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             .setNegativeButton(com.android.internal.R.string.no, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int which) {
                 }
-			})
+            })
             .show()
             .setOnDismissListener(new DialogInterface.OnDismissListener() {
                     public void onDismiss(DialogInterface dialog) {

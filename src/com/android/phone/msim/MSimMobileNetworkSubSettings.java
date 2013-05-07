@@ -137,6 +137,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         /** TODO: Refactor and get rid of the if's using subclasses */
         if (mGsmUmtsOptions != null &&
                 mGsmUmtsOptions.preferenceTreeClick(preference) == true) {
+            //update the preferred network mode summary
+            mPhone.getPreferredNetworkType(mHandler.obtainMessage(
+                    MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             return true;
         } else if (mCdmaOptions != null &&
                    mCdmaOptions.preferenceTreeClick(preference) == true) {
@@ -344,8 +347,13 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     }
 
             } else {
-                prefSet.removePreference(mButtonPreferredNetworkMode);
-
+                if(FeatureQuery.FEATURE_PREFERRED_NETWORK_MODE_CU && mSubscription == 0){
+                    mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_wcdma);
+                    mButtonPreferredNetworkMode.setEntryValues(R.array.preferred_network_mode_values_wcdma);
+                    mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+                }else{
+                    prefSet.removePreference(mButtonPreferredNetworkMode);
+                }
             }
             if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mSubscription);
