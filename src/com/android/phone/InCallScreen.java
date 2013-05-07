@@ -1030,6 +1030,9 @@ public class InCallScreen extends Activity
         if (mApp.otaUtils != null) {
             mApp.otaUtils.clearUiWidgets();
         }
+
+        //clean up any connections in the DISCONNECTED state and notify precise call state.
+        mCM.clearDisconnected();
     }
 
     /**
