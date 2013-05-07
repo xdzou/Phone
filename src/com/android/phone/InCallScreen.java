@@ -1024,6 +1024,9 @@ public class InCallScreen extends Activity
         if (mApp.otaUtils != null) {
             mApp.otaUtils.clearUiWidgets();
         }
+
+        //clean up any connections in the DISCONNECTED state and notify precise call state.
+        mCM.clearDisconnected();
     }
 
     /**
@@ -4995,16 +4998,16 @@ public class InCallScreen extends Activity
 
     public boolean callRecorderReady(){
         return mApp.isRecordReady();
-	}
+    }
     
     public boolean callRecorderEnabled(){
-		int phoneType = mCM.getFgPhone().getPhoneType();
+        int phoneType = mCM.getFgPhone().getPhoneType();
         return mApp.isRecordEnabled() && phoneType != PhoneConstants.PHONE_TYPE_SIP;
-	}
+    }
 
-	public boolean callRecorderRecording(){
-	    return mApp.isRecording();
-	}
+    public boolean callRecorderRecording(){
+        return mApp.isRecording();
+    }
 
     /**
      * show call duration dialog when diconnect
