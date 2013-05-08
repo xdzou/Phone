@@ -1420,7 +1420,7 @@ public class CallNotifier extends Handler
                     CallLogAsync.AddCallArgs args =
                             new CallLogAsync.AddCallArgs(
                                 mApplication, ci, logNumber, presentation,
-                                callLogType, date, duration);
+                                callLogType, date, duration, phone.getSubscription());
                     mCallLog.addCall(args);
                 }
             }
@@ -2029,10 +2029,11 @@ public class CallNotifier extends Handler
                 if (DBG) log("- onCdmaCallWaitingReject(): logNumber set to: " + logNumber
                         + ", newPresentation value is: " + newPresentation);
 
+                int subscription = c.getCall().getPhone().getSubscription();
                 CallLogAsync.AddCallArgs args =
                         new CallLogAsync.AddCallArgs(
                             mApplication, ci, logNumber, presentation,
-                            callLogType, date, duration);
+                            callLogType, date, duration, subscription);
 
                 mCallLog.addCall(args);
 
