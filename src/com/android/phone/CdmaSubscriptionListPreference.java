@@ -17,10 +17,13 @@
 package com.android.phone;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.ActivityNotFoundException;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.preference.ListPreference;
 import android.provider.Settings;
 import android.provider.Settings.Secure;
@@ -33,6 +36,11 @@ import com.android.internal.telephony.PhoneFactory;
 public class CdmaSubscriptionListPreference extends ListPreference {
 
     private static final String LOG_TAG = "CdmaSubscriptionListPreference";
+
+    private static final String PROPERTY_SET_RTRE_WITH_SPC = "persist.radio.set_rtre_w_spc";
+    //Information about SetCdmaSubSrc Activity from QualcommSettings
+    private static final String QC_ACTIVITY_PACKAGE = "com.qualcomm.qualcommsettings";
+    private static final String QC_ACTIVITY_CLASS = "com.qualcomm.qualcommsettings.SetCdmaSubSrc";
 
     // Used for CDMA subscription mode
     private static final int CDMA_SUBSCRIPTION_RUIM_SIM = 0;
@@ -65,9 +73,21 @@ public class CdmaSubscriptionListPreference extends ListPreference {
 
     @Override
     protected void showDialog(Bundle state) {
-        setCurrentCdmaSubscriptionModeValue();
-
-        super.showDialog(state);
+        if (SystemProperties.getBoolean(PROPERTY_SET_RTRE_WITH_SPC, false))
+        {
+            // Launch CDMA subscription settings activity from QualcommSettings instead.
+            Intent intent = new Intent();
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setClassName(QC_ACTIVITY_PACKAGE, QC_ACTIVITY_CLASS);
+            try {
+                mPhone.getContext().startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Log.e(LOG_TAG, "QC Activity not found.");
+            }
+        } else {
+            setCurrentCdmaSubscriptionModeValue();
+            super.showDialog(state);
+        }
     }
 
     @Override
