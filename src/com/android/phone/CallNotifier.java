@@ -2325,6 +2325,8 @@ public class CallNotifier extends Handler
 
         if ((o == null) || (o instanceof CallerInfo)) {
             ci = (CallerInfo) o;
+        } else if(o instanceof Uri) {
+            ci = CallerInfo.getCallerInfo(mApplication, (Uri) o);
         } else {
             ci = ((PhoneUtils.CallerInfoToken) o).currentInfo;
         }
