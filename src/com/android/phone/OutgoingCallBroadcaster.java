@@ -868,7 +868,7 @@ public class OutgoingCallBroadcaster extends Activity
                 String mCallNumber = getResources().getString(R.string.call_number);
                 String number = PhoneNumberUtils.getNumberFromIntent(getIntent(), this);
                 if (number != null) {
-                    number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+                //    number = PhoneNumberUtils.convertKeypadLettersToDigitsExt(number);
                     number = PhoneNumberUtils.stripSeparators(number);
                 }
                 if ((vm != null) && (vm.equals("voicemail"))) {
@@ -977,7 +977,7 @@ public class OutgoingCallBroadcaster extends Activity
     private void launchMSDialer(String number) {
         if (DBG) Log.v(TAG, "number " + number);
         if (number != null) {
-            number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+            number = PhoneNumberUtils.convertKeypadLettersToDigitsExt(number);
             number = PhoneNumberUtils.stripSeparators(number);
         }
         boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(number);
