@@ -365,7 +365,8 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                                       CallFeaturesSetting.HAC_VAL_ON :
                                       CallFeaturesSetting.HAC_VAL_OFF);
         }
-
+        // bind call record service when phone process startup
+        bindRecorder(this);
     }
 
     /**
