@@ -209,19 +209,6 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     }
 
     /**
-     * Call is disconnected so reset all the parameter/settings that are
-     * required to be set to specific values on start of every video call
-     */
-    public void onCallDisconnect() {
-        // Set the surface to null to release the resources
-        if (DBG) log("onCallDisconnect");
-
-        // Reset the isReadyToReceivePreview flag to false so that we can wait
-        // for this event again for the next call
-        VideoCallManager.setIsMediaReadyToReceivePreview(false);
-    }
-
-    /**
      * Called during layout when the size of the view has changed. This method
      * store the VideoCallPanel size to be later used to resize the camera
      * preview accordingly

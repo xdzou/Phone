@@ -762,7 +762,6 @@ public class CallCard extends LinearLayout
             case DISCONNECTING: // These are an intentional fall through(s)
             case DISCONNECTED:
                 mAudioDeviceInitialized = false;
-                mVideoCallPanel.onCallDisconnect();
                 hideVideoCallWidgets();
                 break;
 

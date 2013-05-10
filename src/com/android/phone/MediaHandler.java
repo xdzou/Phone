@@ -85,6 +85,8 @@ public class MediaHandler extends Handler {
      */
     public int init() {
         if (!mInitCalledFlag) {
+            //Initialize mIsReadyToReceivePreview to false to begin with
+            mIsReadyToReceivePreview = false;
             int error = nativeInit();
             Log.d(TAG, "init called error = " + error);
             switch (error) {
