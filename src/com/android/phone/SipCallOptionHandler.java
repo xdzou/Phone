@@ -23,6 +23,8 @@ package com.android.phone;
 import com.android.internal.telephony.CallDetails;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneBase;
+import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
 import com.android.phone.sip.SipProfileDb;
 import com.android.phone.sip.SipSettings;
@@ -408,6 +410,24 @@ public class SipCallOptionHandler extends Activity implements
         }
     }
 
+    private boolean useImsPhone() {
+        boolean useIms = false;
+        // mIsImsDefault is UI preference to use ims call
+        if (!mUseSipPhone && mIsImsDefault && PhoneUtils.isCallOnImsEnabled()) {
+            CallManager cm = PhoneGlobals.getInstance().mCM;
+            // If a 1x call exists, place current call on CDMA even though IMS is available
+            // If airplane mode is on then use default phone for call
+            if (!((cm.getPhoneInCall().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA
+                    && cm.getPhoneInCall().getState() != PhoneConstants.State.IDLE) ||
+                    (cm.getDefaultPhone().getServiceState().getState()
+                            == ServiceState.STATE_POWER_OFF))){
+                useIms = true;
+            }
+        }
+        Log.d(TAG, "useImsPhone returns " + useIms);
+        return useIms;
+    }
+
     private void setResultAndFinish() {
         runOnUiThread(new Runnable() {
             public void run() {
@@ -434,8 +454,8 @@ public class SipCallOptionHandler extends Activity implements
                     // Check if this is dial conference
                     boolean isConferenceUri = mIntent.getBooleanExtra(
                             OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
-                    // mIsImsDefault is UI preference to use ims call
-                    if (!mUseSipPhone && mIsImsDefault && PhoneUtils.isCallOnImsEnabled()) {
+
+                    if (useImsPhone()) {
                         /*
                          * Convert the voice call intent to the IMS intent as
                          * user requested to make an IMS call
