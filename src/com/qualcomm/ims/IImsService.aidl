@@ -73,6 +73,19 @@ interface IImsService {
     void hangupUri(int connectionId, String userUri, String confUri);
 
     /**
+     * Get the Call Details extras for the Call ID
+     * @param callId - ID of the Call
+     */
+    String[] getCallDetailsExtrasinCall(int callId);
+
+    /**
+     * Get the Disconnect cause for Connection
+     * @param callId - ID of the Call
+     */
+
+    String getImsDisconnectCauseInfo(int callId);
+
+    /**
      * Get List of User Uri in an IMS Conference Call
      */
     String[] getUriListinConf();
