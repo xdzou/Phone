@@ -65,6 +65,7 @@ public class EmergencyCallbackModeService extends Service {
     private Phone mPhone = null;
     private boolean mInEmergencyCall = false;
     private int mSubscription = 0;
+    private boolean mIsImsPhone = false;
 
     private static final int ECM_TIMER_RESET = 1;
 
@@ -89,13 +90,19 @@ public class EmergencyCallbackModeService extends Service {
 
         if (intent != null) {
             mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY, app.getDefaultSubscription());
+            mIsImsPhone = intent.getBooleanExtra("ims_phone", false);
         } else {
             Log.d(LOG_TAG, "onStartCommand: intent null");
         }
-        mPhone = app.getPhone(mSubscription);
 
-        // Check if it is CDMA phone
-        if (mPhone.getPhoneType() != PhoneConstants.PHONE_TYPE_CDMA) {
+        if (mIsImsPhone) {
+            mPhone = PhoneUtils.getImsPhone(PhoneGlobals.getInstance().mCM);
+        } else {
+            mPhone = app.getPhone(mSubscription);
+        }
+
+        // Check if it is GSM phone, as GSM phone does not support ECBM
+        if (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             Log.e(LOG_TAG, "Error! Emergency Callback Mode not supported for " +
                     mPhone.getPhoneName() + " phones");
             stopSelf();
@@ -191,6 +198,7 @@ public class EmergencyCallbackModeService extends Service {
 
         Intent intent = new Intent(EmergencyCallbackModeExitDialog.ACTION_SHOW_ECM_EXIT_DIALOG);
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        intent.putExtra("ims_phone", mIsImsPhone);
 
         // PendingIntent to launch Emergency Callback Mode Exit activity if the user selects
         // this notification
