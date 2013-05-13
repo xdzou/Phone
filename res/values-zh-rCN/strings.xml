@@ -684,6 +684,12 @@
 
     <!-- In-call screen: status label for Conditional Call Forwarding enabled  -->
     <string name="card_title_conditionalCF">呼叫转移已开启</string>
+    <!-- In-call screen: status label for Unconditional Call Forwarding enabled  -->
+    <string name="card_title_unconditionalCF">呼叫转移已开启</string>
+    <!-- In-call screen: status label for incoming call which is answered & then put on hold  -->
+    <string name="card_title_callonhold">呼叫保持</string>
+    <!-- In-call screen: status label for incoming call put on hold & then retreived back -->
+    <string name="card_title_callretrieved">呼叫恢复</string>
         
     <string name="unknown_network">未知网络</string>
     <string name="China_Mobile">中国移动</string>
