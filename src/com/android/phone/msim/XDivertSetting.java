@@ -56,4 +56,9 @@ public class XDivertSetting extends TimeConsumingPreferenceActivity {
         mXDivertButton = (XDivertCheckBoxPreference) prefSet.findPreference(BUTTON_XDIVERT);
         mXDivertButton.init(this, false, numbers);
    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        mXDivertButton.release();
+    }
 }
