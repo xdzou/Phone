@@ -73,6 +73,7 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
 
     private MSimCallNotifier mCallNotif;
     private XDivertUtility mXDivertUtility;
+    boolean isRelease = false;
 
     private static final int SUB1 = 0;
     private static final int SUB2 = 1;
@@ -328,6 +329,10 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
                 mTcpListener.onError(XDivertCheckBoxPreference.this, RESPONSE_ERROR);
                 processStopDialog(STOP, true);
         } else {
+            if(isRelease == true){
+                processStopDialog(STOP, true);
+                return;
+            }
             final CallForwardInfo cfInfoArray[] = (CallForwardInfo[]) ar.result;
             if (cfInfoArray == null) {
                 if (DBG) Log.d(LOG_TAG, "handleGetCFResponse: cfInfoArray.length==0");
@@ -398,6 +403,10 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
             //If cwArray[0] is = 1, then cwArray[1] must follow,
             //with the TS 27.007 service class bit vector of services
             //for which call waiting is enabled.
+            if(isRelease == true){
+                processStopDialog(STOP, true);
+                return;
+            }
             int[] cwArray = (int[])ar.result;
             if (arg1 == SUB1) {
                 mSub1CallWaiting = ((cwArray[0] == 1) && ((cwArray[1] & 0x01) == 0x01));
@@ -551,4 +560,11 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
                 toast.show();
     }
 
+    void release(){
+        isRelease = true;
+        mGetOptionComplete.removeMessages(MESSAGE_GET_CFNRC);
+        mGetOptionComplete.removeMessages(MESSAGE_GET_CALL_WAITING);
+        mSetOptionComplete.removeMessages(MESSAGE_SET_CFNRC);
+        mSetOptionComplete.removeMessages(MESSAGE_SET_CALL_WAITING);
+    }
 }
