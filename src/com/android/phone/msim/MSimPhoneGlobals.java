@@ -496,7 +496,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         if (VDBG) Log.d(LOG_TAG, "onMMIComplete()...");
         MmiCode mmiCode = (MmiCode) r.result;
         Phone localPhone = (Phone) mmiCode.getPhone();
-        PhoneUtils.displayMMIComplete(localPhone, getInstance(), mmiCode, null, null);
+        PhoneUtils.displayMMIComplete(localPhone, mInCallScreen, mmiCode, null, null);
     }
 
     void initForNewRadioTechnology(int subscription) {
