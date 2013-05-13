@@ -42,9 +42,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallDetails;
@@ -124,6 +126,9 @@ public class CallCard extends LinearLayout
 
     // Text colors, used for various labels / titles
     private int mTextColorCallTypeSip;
+
+    // Volume boost and Volume enhancements in-call UI
+    private Button mVolumeBoost;
 
     // The main block of info about the "primary" or "active" call,
     // including photo / name / phone number / etc.
@@ -268,6 +273,41 @@ public class CallCard extends LinearLayout
 
         // VideoCallPanel for Video Telephony calls
         mVideoCallPanel = (VideoCallPanel) findViewById(R.id.videoCallPanel);
+
+        // Volume boost and Volume enhancements in-call UI
+        mVolumeBoost = (Button) findViewById(R.id.volumeBoost);
+        mVolumeBoost.setOnClickListener(new OnClickListener(){
+            @Override
+            public void onClick(View arg0) {
+                // volume boost's low layer audio API is not full implemented,
+                // so comment out the low layer audio API. After it is fully
+                // implemented, the comment out will be removed.
+
+//              if(!AudioManager.volumeBoostEnabled()) {
+//                  AudioManager.enableVolumeBoost();
+                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
+                    showVolumeBoostNotify(true);
+//              } else {
+//                  AudioManager.disableVolumeBoost();
+//                  mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+//                  showVolumeBoostNotify(false);
+//              }
+            }
+        });
+    }
+
+    private void showVolumeBoostNotify(boolean enabled) {
+        Toast mToast;
+
+        if(enabled)
+            mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_enabled,
+                Toast.LENGTH_SHORT);
+        else
+            mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
+                Toast.LENGTH_SHORT);
+
+        mToast.setGravity(Gravity.TOP, 0, 150);
+        mToast.show();
     }
 
     /**
@@ -986,6 +1026,8 @@ public class CallCard extends LinearLayout
                 break;
 
             case ACTIVE:
+                mVolumeBoost.setVisibility(View.VISIBLE);
+                mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
                 // We normally don't show a "call state label" at all in
                 // this state (but see below for some special cases).
                 break;
@@ -1023,6 +1065,14 @@ public class CallCard extends LinearLayout
 
             case DISCONNECTED:
                 callStateLabel = getCallFailedString(call);
+                mVolumeBoost.setVisibility(View.INVISIBLE);
+                // volume boost's low layer audio API is not fully implemented,
+                // so comment out the low layer audio API. After it is fully
+                // implemented, the comment out will be removed.
+
+//              if(AudioManager.volumeBoostEnabled()) {
+//                  AudioManager.disableVolumeBoost();
+//              }
                 break;
 
             default:
