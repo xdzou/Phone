@@ -66,6 +66,8 @@ public class ExportContactsToSim extends Activity {
             "emails"
     };
 
+    private boolean mCancel = false;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +77,13 @@ public class ExportContactsToSim extends Activity {
         doExportToSim();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        mCancel = true;
+    }
+
     private void doExportToSim() {
 
         displayProgress(true);
@@ -82,14 +91,18 @@ public class ExportContactsToSim extends Activity {
         new Thread(new Runnable() {
             public void run() {
                 Cursor contactsCursor = getContactsContentCursor();
-                contactsCursor.moveToFirst();
-                while (contactsCursor.moveToNext()) {
-                    populateContactDataFromCursor(contactsCursor );
+                if (contactsCursor.moveToFirst()) {
+                    do {
+                        populateContactDataFromCursor(contactsCursor);
+                    } while (!mCancel && contactsCursor.moveToNext());
                 }
 
                 contactsCursor.close();
-                Message message = Message.obtain(mHandler, CONTACTS_EXPORTED, (Integer)mResult);
-                mHandler.sendMessage(message);
+
+                if (!mCancel) {
+                    Message message = Message.obtain(mHandler, CONTACTS_EXPORTED, (Integer)mResult);
+                    mHandler.sendMessage(message);
+                }
             }
         }).start();
     }
