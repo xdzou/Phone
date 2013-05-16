@@ -1841,6 +1841,7 @@
     <string name="no_call_barring">No callbarring</string>
     <string name="cb_psw_dont_match">Password do not match</string>
     <string name="operation_successfully">Operation successfully!</string>
+    <string name="blank_error_notification">Invalid template, try again.</string>
     <!-- Sim contacts management -->
     <string name="ContactScreen"> Add/Edit SIM Contact</string>
     <string name="ExportContactScreen"> Export phone contacts to sim </string>
