@@ -19,10 +19,10 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
             if (!TelephonyManager.isMultiSimEnabled())
             {
-               Log.d(TAG, "disable MSimCallFeaturesSubSetting");
+               Log.d(TAG, "disable MSimCallFeaturesSetting");
                PackageManager pm = context.getPackageManager();
                pm.setComponentEnabledSetting(new ComponentName("com.android.phone",
-                                             "com.android.phone.MSimCallFeaturesSubSetting"),
+                                             "com.android.phone.MSimCallFeaturesSetting"),
                                              PackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
             }else{
                 Log.d(TAG, "disable CallFeaturesSetting");
