@@ -163,7 +163,7 @@ static JNINativeMethod sMethods[] =
     {"nativeRegisterForMediaEvents", "()V", (void *)dpl_registerForImsEvent}
 };
 
-#define DEFAULT_IMPL_LIB_PATH "/vendor/lib/lib-imsvt.so"
+#define DEFAULT_IMPL_LIB_PATH "/system/lib/lib-imsvt.so"
 #define IMPL_LIB_PROPERTY_NAME "vt.impl.lib"
 
 #define IMPL_SYM_INIT        "initImsThinClient"
