@@ -500,8 +500,10 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
     /**
      * Select the best possible fps range from the supported list of fps ranges.
-     * For eg. if supported values are (20,40), (10,30), (30,30) and negotiated
-     * fps is 30 then fps should be set to (30,30).
+     * Find the auto mode range that camera supports and use low value of that
+     * range and high value as negotiated value For eg. if supported values are
+     * (7.5,30), (20,20), (10,10), (30,30) and negotiated fps is 25 then fps
+     * should be set to (7.5,25).
      */
     void setFpsRange() {
         // Camera apis need the FPS values scaled by 1000
@@ -509,7 +511,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         List<int[]> fpsRangeList = mParameters.getSupportedPreviewFpsRange();
 
         // Initialize bestFpsRange low and high values to 0
-        int bestFps = 0;
+        int bestFpsLow = 0;
+        int bestFpsHigh = 0;
 
         for (int i = 0; i < fpsRangeList.size(); i++) {
             int currFpsHigh = fpsRangeList.get(i)[1];
@@ -518,19 +521,22 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
                 Log.d(LOG_TAG, "Supported FPS range = " + currFpsLow + " : "
                         + currFpsHigh);
             }
-            if (currFpsHigh == currFpsLow
-                    && currFpsHigh <= negotiatedFPS
-                    && bestFps <= currFpsHigh) {
-                bestFps = currFpsHigh;
+
+            if (currFpsHigh != currFpsLow
+                    && currFpsLow <= negotiatedFPS
+                    && negotiatedFPS <= currFpsHigh) {
+                bestFpsLow = currFpsLow;
+                bestFpsHigh = negotiatedFPS;
+                break;
             }
         }
 
-        if (bestFps != 0) {
+        if (!(bestFpsHigh == 0 && bestFpsLow == 0 )) {
             if (DBG) {
                 Log.d(LOG_TAG, "Best FPS range for the negotiated FPS of " + negotiatedFPS + " is "
-                        + bestFps + " : " + bestFps);
+                        + bestFpsLow + " : " + bestFpsHigh);
             }
-            mParameters.setPreviewFpsRange(bestFps, bestFps);
+            mParameters.setPreviewFpsRange(bestFpsLow, bestFpsHigh);
         } else {
             Log.e(LOG_TAG, "Best FPS range for the negotiated FPS of " + negotiatedFPS
                     + " is not found");
