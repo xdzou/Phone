@@ -83,6 +83,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     private int mBackCameraId;
     private int mCameraId;
 
+    private int mTargetHeight=-1;
+
     // Property used to indicate that the Media running in loopback mode
     private boolean mIsMediaLoopback = false;
 
@@ -218,6 +220,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         if (DBG) log("onSizeChanged");
         if (DBG) log("Video Panel width:" + xNew + ", height:" + yNew);
 
+        mTargetHeight = yNew;
         // Resize preview window if the size of the view changed
         resizeCameraPreview(yNew);
         resizeFarEndView(xNew, yNew);
@@ -282,6 +285,9 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     private void startPreview() {
         try {
             mCameraPreview.setVisibility(View.VISIBLE);
+            if (mTargetHeight != -1) {
+                resizeCameraPreview(mTargetHeight);
+            }
             mVideoCallManager.startCameraPreview(mCameraSurface);
         } catch (IOException ioe) {
             closeCamera();
@@ -300,7 +306,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
      * This method stops the camera preview
      */
     private void stopPreview() {
-        mCameraPreview.setVisibility(View.GONE);
+        mCameraPreview.setVisibility(View.INVISIBLE);
         mVideoCallManager.stopCameraPreview();
     }
 
@@ -470,42 +476,35 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     }
 
     public void setPanelElementsVisibility(int callType) {
-        log("setPanelElementsVisibility: callType= " + callType);
         switch (callType) {
             case CallDetails.CALL_TYPE_VT:
-                mCameraPreview.setVisibility(VISIBLE);
-                mFarEndView.setVisibility(VISIBLE);
                 if (isCameraInitNeeded()) {
                     initializeCamera();
                 }
-                log("setPanelElementsVisibility: VT: mCameraPreview:VISIBLE, mFarEndView:VISIBLE");
                 break;
             case CallDetails.CALL_TYPE_VT_TX:
-                mCameraPreview.setVisibility(View.VISIBLE);
                 if (isCameraInitNeeded()) {
                     initializeCamera();
                 }
-                // Not setting mFarEndView to GONE as receiver side did not get the frames
-                log("setPanelElementsVisibility VT_TX: mCameraPreview:VISIBLE");
                 break;
             case CallDetails.CALL_TYPE_VT_RX:
-                mFarEndView.setVisibility(View.VISIBLE);
                 // Stop the preview and close the camera now because other
                 // activities may need to use it
                 if (mVideoCallManager.getCameraState() != CameraState.CAMERA_CLOSED) {
                     stopPreview();
                     closeCamera();
                 }
-                mCameraPreview.setVisibility(View.GONE);
-                log("setPanelElementsVisibility VT_RX: mCameraPreview:GONE mFarEndView:VISIBLE");
                 break;
             default:
-                log("setPanelElementsVisibility: Default: "
-                        + "VideoCallPanel is " + mVideoCallPanel.getVisibility()
-                        + "mCameraPreview is " + mCameraPreview.getVisibility()
-                        + "mFarEndView is " + mFarEndView.getVisibility());
+                log("setPanelElementsVisibility: callType=" + callType);
                 break;
         }
+        log("setPanelElementsVisibility: callType= " + callType
+                + " VideoCallPanel is " + mVideoCallPanel.getVisibility()
+                + " mCameraPreview is " + mCameraPreview.getVisibility() + " available="
+                + mCameraPreview.isAvailable() + " activated= " + mCameraPreview.isActivated()
+                + " mFarEndView is " + mFarEndView.getVisibility() + " available="
+                + mFarEndView.isAvailable() + " activated= " + mFarEndView.isActivated());
     }
 
     /**
@@ -560,7 +559,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
      * @param targetSize
      */
     private void resizeCameraPreview(int targetSize) {
-        if (DBG) log("resizeCameraPreview");
+        if (DBG) log("resizeCameraPreview targetSize=" + targetSize);
 
         // For now, set the preview size to be 1/4th of the VideoCallPanel
         mPreviewSize = mVideoCallManager.getCameraPreviewSize(targetSize / 4, true);
