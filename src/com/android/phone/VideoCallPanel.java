@@ -100,6 +100,30 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         }
     }
 
+    /**
+     * This class implements the listener for PARAM READY EVENT
+     */
+    public class ParamReadyListener implements MediaHandler.MediaEventListener {
+        @Override
+        public void onParamReadyEvent() {
+            CameraState cameraState = mVideoCallManager.getCameraState();
+            if (DBG) log("onParamReadyEvent cameraState= " + cameraState);
+            if (cameraState == CameraState.PREVIEW_STARTED) {
+                // If camera is already capturing stop preview, reset the
+                // parameters and then start preview again
+                try {
+                    mVideoCallManager.stopCameraPreview();
+                    initializeCameraParams();
+                    mVideoCallManager.startCameraPreview(mCameraSurface);
+                } catch (IOException ioe) {
+                    loge("Exception onParamReadyEvent stopping and starting preview "
+                            + ioe.toString());
+                }
+            }
+
+        }
+    }
+
     public VideoCallPanel(Context context) {
         super(context);
         mContext = context;
@@ -154,6 +178,9 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         } else {
             mCameraPicker.setVisibility(View.GONE);
         }
+
+        // Set media event listener
+        mVideoCallManager.setOnParamReadyListener(new ParamReadyListener());
     }
 
     public void setCameraNeeded(boolean mCameraNeeded) {
@@ -397,7 +424,6 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     /**
      * This method gets called when the zoom control reports that the zoom value
      * has changed. This method sets the camera zoom value accordingly.
-     *
      * @param index
      */
     private void onZoomValueChanged(int index) {
@@ -412,10 +438,11 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
     /**
      * Initialize camera parameters based on negotiated height, width
-     * TODO: FPS support
      */
     private void initializeCameraParams() {
         try {
+            // Get the parameter to make sure we have the up-to-date value.
+            mParameters = mVideoCallManager.getCameraParameters();
             // Set the camera preview size
             if (mIsMediaLoopback) {
                 // In loopback mode the IMS is hard coded to render the

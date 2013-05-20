@@ -162,7 +162,7 @@ public class CameraHandler implements Camera.PreviewCallback{
                 loge("reconnect failed.");
                 throw new Exception(e);
             }
-            mCameraDevice.setParameters(mParameters);
+            setCameraParameters(mParameters);
         }
         mCameraState = CameraState.PREVIEW_STOPPED;
         return true;
@@ -253,9 +253,11 @@ public class CameraHandler implements Camera.PreviewCallback{
      * @param parameters to be set
      */
     public void setCameraParameters(Parameters parameters) {
-        if (mCameraDevice == null) {
+        log("setCameraParameters mCameraDevice=" + mCameraDevice + "parameters =" + parameters);
+        if (mCameraDevice == null || parameters == null) {
             return;
         }
+        mParameters = parameters;
         mCameraDevice.setParameters(parameters);
     }
 
