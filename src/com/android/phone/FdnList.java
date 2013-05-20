@@ -30,6 +30,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.os.AsyncResult;
+import android.os.Handler;
+import android.os.Message;
+import com.android.internal.telephony.uicc.IccFileHandler;
+import com.android.internal.telephony.uicc.IccConstants;
+import com.android.internal.telephony.uicc.UiccCard;
+import com.android.internal.telephony.uicc.UiccCardApplication;
+import com.android.internal.telephony.uicc.UiccController;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 /**
@@ -45,6 +53,32 @@ public class FdnList extends ADNList {
 
     private static final boolean DBG = false;
 
+    protected static final int EVENT_GET_SIZE_DONE = 1;
+
+    protected UiccController mUiccController;
+    protected int FDNSize = 10;
+
+    protected Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            AsyncResult ar;
+
+            switch (msg.what) {
+                case EVENT_GET_SIZE_DONE:
+                    ar = (AsyncResult) msg.obj;
+                    if (ar.exception == null) {
+                        int[] recordSize = (int[])ar.result;
+                        // recordSize[0]  is the record length
+                        // recordSize[1]  is the total length of the EF file
+                        // recordSize[2]  is the number of records in the EF file
+                        FDNSize = recordSize[2];
+                        log("FDNSize = " + FDNSize);
+                    }
+                    break;
+            }
+        }
+    };
+
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -54,8 +88,32 @@ public class FdnList extends ADNList {
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        getFdnSize();
     }
 
+    protected void getFdnSize(){
+        Message response = mHandler.obtainMessage(EVENT_GET_SIZE_DONE);
+        mUiccController = UiccController.getInstance();
+        if (mUiccController != null) {
+            UiccCard newCard = mUiccController.getUiccCard();
+            UiccCardApplication newUiccApplication = null;
+            IccFileHandler fh = null;
+            if (newCard != null) {
+                // Always get IccApplication 0.
+                newUiccApplication = newCard.getApplication(UiccController.APP_FAM_3GPP);
+                if (newUiccApplication != null) {
+                    fh = newUiccApplication.getIccFileHandler();
+                } else {
+                    Log.d(TAG, "UiccApplication is null");
+                }
+            }
+            
+            if (fh != null) {
+                fh.getEFLinearRecordSize(IccConstants.EF_FDN, response);
+            }
+        }
+    }
+    
     @Override
     protected Uri resolveIntent() {
         Intent intent = getIntent();
@@ -84,7 +142,10 @@ public class FdnList extends ADNList {
         super.onPrepareOptionsMenu(menu);
         boolean hasSelection = (getSelectedItemPosition() >= 0);
 
-        menu.findItem(MENU_ADD).setVisible(true);
+        if(mCursorAdapter != null && mCursorAdapter.getCount() >= FDNSize)
+            menu.findItem(MENU_ADD).setVisible(false);
+        else
+            menu.findItem(MENU_ADD).setVisible(true);
         menu.findItem(MENU_EDIT).setVisible(hasSelection);
         menu.findItem(MENU_DELETE).setVisible(hasSelection);
 
