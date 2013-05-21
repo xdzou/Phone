@@ -707,5 +707,12 @@
     <string name="card_title_callonhold">呼叫保持</string>
     <!-- In-call screen: status label for incoming call put on hold & then retreived back -->
     <string name="card_title_callretrieved">呼叫恢复</string>
-        
+    
+    <!-- Set dual dialer for MultiSim -->
+    <string name="place_a_call1">卡槽 1</string>
+    <string name="place_a_call2">卡槽 2</string>
+    <string name="count_down">秒: </string>
+    <string name="call_number">至: </string>
+    <string name="cancel_call">取消</string>
+   
 </resources>
