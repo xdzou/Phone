@@ -445,9 +445,25 @@ public class RespondViaSmsManager {
             // (Watch out: onPreferenceChange() is called *before* the
             // Preference itself gets updated, so we need to use newValue here
             // rather than pref.getText().)
-            pref.setTitle((String) newValue);
+            if((newValue != null) && (newValue.toString().length() != 0)){
+                //check whether blank string
+                String mBlankChar = "[a-zA-Z\\u4E00-\\u9FA5]";
+                boolean mNotBlank = false;
 
-            return true;  // means it's OK to update the state of the Preference with the new value
+                for(int i = 0; i < newValue.toString().length(); i ++){
+                    String mTeString = "" + newValue.toString().charAt(i);
+                    mNotBlank = mTeString.matches(mBlankChar);
+
+                    if(mNotBlank){
+                        pref.setTitle((String) newValue);
+                        return true; // means it's OK to update the state of the Preference with the new value
+                    }
+                }
+            }
+
+            Toast.makeText(getApplicationContext(), getResources().getString(R.string.blank_error_notification)
+                   , Toast.LENGTH_LONG).show();
+            return false;
         }
 
         @Override
