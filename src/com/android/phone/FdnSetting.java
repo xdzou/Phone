@@ -25,7 +25,12 @@ import com.android.internal.telephony.Phone;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -33,6 +38,7 @@ import android.os.Message;
 import android.util.Log;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.provider.Settings.System;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -40,6 +46,7 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.android.internal.telephony.TelephonyIntents;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
@@ -67,6 +74,11 @@ public class FdnSetting extends PreferenceActivity
     private static final String BUTTON_FDN_ENABLE_KEY = "button_fdn_enable_key";
     private static final String BUTTON_CHANGE_PIN2_KEY = "button_change_pin2_key";
     private static final String BUTTON_FDN_KEY = "button_fdn_list_key";
+
+    //Information about logical "up" Activity
+    private static final String UP_ACTIVITY_PACKAGE = "com.android.settings";
+    private static final String UP_ACTIVITY_CLASS =
+            "com.android.settings.multisimsettings.MultiSimSettingTab";
 
     private EditPinPreference mButtonEnableFDN;
     private EditPinPreference mButtonChangePin2;
@@ -97,6 +109,85 @@ public class FdnSetting extends PreferenceActivity
     private static final int MAX_PIN_LENGTH = 8;
 
     private int mSubscription = 0;
+
+    private final int CHECK_FDN_STATE = 1;
+    private final int AIRPLANE_MODE_ON = 2;
+    private IntentFilter intentFilter = new IntentFilter(
+            Intent.ACTION_AIRPLANE_MODE_CHANGED);
+
+    private Handler mHandler = new Handler() {
+        @Override
+            public void handleMessage(Message msg) {
+
+                switch (msg.what) {
+                    case CHECK_FDN_STATE:
+                        // Sim card state is changed and icc fdn is available,
+                        // we need update ui.
+                        if (mPhone.getIccCard().getIccFdnAvailable()) {
+                            mButtonEnableFDN.setEnabled(true);
+                            mButtonChangePin2.setEnabled(true);
+                            updateEnableFDN();
+                            checkPin2StatusAndUpdateFdnScreen();
+                        }
+                        break;
+                    case AIRPLANE_MODE_ON:
+                        // Airplan mode is open, update current ui.
+                        dismissDialog(mButtonEnableFDN);
+                        dismissDialog(mButtonChangePin2);
+                        mButtonEnableFDN.setEnabled(false);
+                        mButtonChangePin2.setEnabled(false);
+                        mButtonEnableFDN.setSummary(R.string.fdn_unavailable);
+                        mButtonChangePin2.setSummary(R.string.fdn_unavailable);
+                        displayMessage(R.string.fdn_unavailable);
+                        break;
+                    default:
+                        break;
+                }
+            }
+    };
+
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(action)
+                        || TelephonyIntents.ACTION_SIM_STATE_CHANGED.equals(action)) {
+                    // Airplan's state is changed, we need update ui. If
+                    // mButtonEnableFDN and mButtonChangePin2 is showing, we need
+                    // dismiss it. If user open the airplan mode we also need
+                    // disable the mButtonEnableFDN, mButtonChangePin2 and show
+                    // relative information. And add ACTION_SIM_STATE_CHANGED
+                    // filter is used for when airplan mode is close, the radio
+                    // is not avaliable at once. We need listen the simcard
+                    // state to update current ui.
+                    boolean enabled = isAirplaneModeOn();
+                    mHandler.removeMessages(CHECK_FDN_STATE);
+                    // Only AIRPLANE_MODE open we disable the reference button and
+                    // show the toast information
+                    if (enabled
+                            && Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(action)) {
+                        mHandler.sendEmptyMessage(AIRPLANE_MODE_ON);
+                    } else {
+                        // When sim card state changed, need enable
+                        // mButtonEnableFDN and mButtonChangePin2 when fdn is
+                        // available.
+                        mHandler.sendEmptyMessage(CHECK_FDN_STATE);
+                    }
+                }
+            }
+    };
+
+    private boolean isAirplaneModeOn() {
+        return (System.getInt(getContentResolver(), System.AIRPLANE_MODE_ON, 0) != 0);
+    }
+
+    private void dismissDialog(EditPinPreference preference) {
+        Dialog dialog = preference.getDialog();
+        if (null != dialog && dialog.isShowing()) {
+            dialog.dismiss();
+        }
+    }
+
 
     /**
      * Delegate to the respective handlers.
@@ -302,6 +393,20 @@ public class FdnSetting extends PreferenceActivity
                                 a.show();
                             } else {
                                 // set the correct error message depending upon the state.
+                                if (mPinChangeState == PIN_CHANGE_PUK) {
+                                    if (mPhone.getIccCard().getIccPuk2Blocked()) {
+                                        Log.d(LOG_TAG,"PUK2 Blocked while changing PIN2.Options"
+                                                 + "'Enable FDN' & 'Change PIN2' disabled");
+                                        displayMessage(R.string.puk2_blocked);
+                                        mButtonEnableFDN.setEnabled(false);
+                                        mButtonChangePin2.setEnabled(false);
+                                    } else {
+                                        displayMessage(R.string.badPuk2);
+                                    }
+                                } else {
+                                    displayMessage(R.string.badPin2);
+                                }
+
                                 // Reset the state depending upon or knowledge of the PUK state.
                                 if (!mIsPuk2Locked) {
                                     displayMessage(R.string.badPin2);
@@ -440,14 +545,23 @@ public class FdnSetting extends PreferenceActivity
      * Reflect the updated FDN state in the UI.
      */
     private void updateEnableFDN() {
-        if (mPhone.getIccCard().getIccFdnEnabled()) {
-            mButtonEnableFDN.setTitle(R.string.enable_fdn_ok);
-            mButtonEnableFDN.setSummary(R.string.fdn_enabled);
-            mButtonEnableFDN.setDialogTitle(R.string.disable_fdn);
+        if (mPhone.getIccCard().getIccFdnAvailable()) {
+            if (mPhone.getIccCard().getIccFdnEnabled()) {
+                mButtonEnableFDN.setTitle(R.string.enable_fdn_ok);
+                mButtonEnableFDN.setSummary(R.string.fdn_enabled);
+                mButtonEnableFDN.setDialogTitle(R.string.disable_fdn);
+            } else {
+                mButtonEnableFDN.setTitle(R.string.disable_fdn_ok);
+                mButtonEnableFDN.setSummary(R.string.fdn_disabled);
+                mButtonEnableFDN.setDialogTitle(R.string.enable_fdn);
+            }
         } else {
-            mButtonEnableFDN.setTitle(R.string.disable_fdn_ok);
-            mButtonEnableFDN.setSummary(R.string.fdn_disabled);
-            mButtonEnableFDN.setDialogTitle(R.string.enable_fdn);
+            // Disable FDN Settings since FDN service is unavailable.
+            mButtonEnableFDN.setEnabled(false);
+            mButtonChangePin2.setEnabled(false);
+            mButtonEnableFDN.setSummary(R.string.fdn_unavailable);
+            mButtonChangePin2.setSummary(R.string.fdn_unavailable);
+            displayMessage(R.string.fdn_unavailable);
         }
     }
 
@@ -498,6 +612,8 @@ public class FdnSetting extends PreferenceActivity
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+        registerReceiver(mReceiver, intentFilter);
     }
 
     @Override
@@ -505,6 +621,13 @@ public class FdnSetting extends PreferenceActivity
         super.onResume();
         mPhone = PhoneGlobals.getInstance().getPhone(mSubscription);
         updateEnableFDN();
+        checkPin2StatusAndUpdateFdnScreen();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mReceiver);
     }
 
     /**
@@ -525,7 +648,18 @@ public class FdnSetting extends PreferenceActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         final int itemId = item.getItemId();
         if (itemId == android.R.id.home) {  // See ActionBar#setDisplayHomeAsUpEnabled()
-            CallFeaturesSetting.goUpToTopLevelSetting(this);
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.MAIN");
+                intent.setClassName(UP_ACTIVITY_PACKAGE, UP_ACTIVITY_CLASS);
+                intent.putExtra(SelectSubscription.PACKAGE, "com.android.phone");
+                intent.putExtra(SelectSubscription.TARGET_CLASS,
+                        "com.android.phone.MSimCallFeaturesSubSetting");
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startActivity(intent);
+                finish();
+            }else
+                CallFeaturesSetting.goUpToTopLevelSetting(this);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -533,6 +667,21 @@ public class FdnSetting extends PreferenceActivity
 
     private void log(String msg) {
         Log.d(LOG_TAG, "FdnSetting: " + msg);
+    }
+
+    private void checkPin2StatusAndUpdateFdnScreen() {
+        if (mPhone.getIccCard().getIccPuk2Blocked()) {
+            Log.d(LOG_TAG,"PUK2 is Blocked.Disabling Enable FDN,Change PIN2");
+            displayMessage(R.string.puk2_blocked);
+            mButtonEnableFDN.setEnabled(false);
+            mButtonChangePin2.setEnabled(false);
+        } else if (mPhone.getIccCard().getIccPin2Blocked()) {
+            Log.d(LOG_TAG,"PIN2 is Blocked");
+            resetPinChangeStateForPUK2();
+        } else {
+            Log.d(LOG_TAG,"PUK2/PIN2 is not Blocked");
+            resetPinChangeState();
+        }
     }
 }
 

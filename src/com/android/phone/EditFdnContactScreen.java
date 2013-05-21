@@ -32,9 +32,11 @@ import android.os.Handler;
 import android.provider.Contacts.PeopleColumns;
 import android.provider.Contacts.PhonesColumns;
 import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.method.DialerKeyListener;
 import android.util.Log;
 import android.view.Menu;
@@ -109,6 +111,7 @@ public class EditFdnContactScreen extends Activity {
         setTitle(mAddContact ?
                 R.string.add_fdn_contact : R.string.edit_fdn_contact);
 
+        mDataBusy = false;
         displayProgress(false);
     }
 
@@ -230,6 +233,35 @@ public class EditFdnContactScreen extends Activity {
             mNumberField.setKeyListener(DialerKeyListener.getInstance());
             mNumberField.setOnFocusChangeListener(mOnFocusChangeHandler);
             mNumberField.setOnClickListener(mClicked);
+            // add text change listen , when input more then 20 digits in number field.
+            mNumberField.addTextChangedListener (new TextWatcher() {
+                private CharSequence fdnNumber;
+                private int editStart ;
+                private int editEnd ;
+                @Override
+                public void beforeTextChanged(CharSequence s, int arg1, int arg2,
+                        int arg3) {
+                    fdnNumber = s;
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int arg1, int arg2,
+                        int arg3) {
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    editStart = mNumberField.getSelectionStart();
+                    editEnd = mNumberField.getSelectionEnd();
+                    if (!isValidNumber(fdnNumber.toString())) {
+                        showStatus(getResources().getText(R.string.fdn_invalid_number));
+                        s.delete(editStart-1, editEnd);
+                        int tempSelection = editStart;
+                        mNumberField.setText(s);
+                        mNumberField.setSelection(tempSelection);
+                    }
+                }
+            });
         }
 
         if (!mAddContact) {
@@ -269,7 +301,9 @@ public class EditFdnContactScreen extends Activity {
       * TODO: Fix this logic.
       */
      protected boolean isValidNumber(String number) {
-         return (number.length() <= 20);
+        // Although number is not empty(checked in method onClick), add null
+        // pointer check to ensure the robustness of the code
+        return (null != number) && (number.length() <= 20);
      }
 
 
@@ -402,11 +436,19 @@ public class EditFdnContactScreen extends Activity {
                 return;
             }
 
-            if (v == mNameField) {
+            if (v == mButton) {
+                //number is the most important. So
+                //when click save button focus on it.
                 mNumberField.requestFocus();
-            } else if (v == mNumberField) {
-                mButton.requestFocus();
-            } else if (v == mButton) {
+
+                //if number is empty,the fdn record is meaningless.
+                //but if name is empty and number isn't , name named number,it is can be saved.
+                if (TextUtils.isEmpty(mNumberField.getText())) {
+                    showStatus(getResources().getText(R.string.fdn_empty_number));
+                    return;
+                } else if (TextUtils.isEmpty(mNameField.getText())) {
+                    mNameField.setText(getNumberFromTextField());
+                }
                 // Authenticate the pin AFTER the contact information
                 // is entered, and if we're not busy.
                 if (!mDataBusy) {
@@ -423,6 +465,16 @@ public class EditFdnContactScreen extends Activity {
             if (hasFocus) {
                 TextView textView = (TextView) v;
                 Selection.selectAll((Spannable) textView.getText());
+            }
+            //Trim the name's both sides blank space
+            if (v == mNameField) {
+                String name = mNameField.getText().toString().trim();
+                mNameField.setText(name);
+            } else if (v == mNumberField) {
+                //remove the illegal character of the number
+                String number = mNumberField.getText().toString();
+                number = PhoneNumberUtils.stripSeparators(number);
+                mNumberField.setText(number);
             }
         }
     };

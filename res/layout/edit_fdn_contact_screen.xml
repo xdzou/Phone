@@ -46,6 +46,7 @@
                 android:inputType="textPersonName"
                 android:imeOptions="actionNext"
                 android:singleLine="true"
+                android:maxLength="14"
                 android:scrollHorizontally="true"
                 android:autoText="false"
                 android:capitalize="words" />

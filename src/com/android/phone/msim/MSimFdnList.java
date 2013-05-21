@@ -24,6 +24,13 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.os.Bundle;
+import com.qualcomm.internal.telephony.MSimUiccController;
+import android.os.Message;
+import com.android.internal.telephony.uicc.IccFileHandler;
+import com.android.internal.telephony.uicc.IccConstants;
+import com.android.internal.telephony.uicc.UiccCard;
+import com.android.internal.telephony.uicc.UiccCardApplication;
+import com.android.internal.telephony.uicc.UiccController;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 import static com.android.internal.telephony.MSimConstants.SUB1;
@@ -40,6 +47,30 @@ public class MSimFdnList extends FdnList {
 
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+    }
+
+    @Override
+    protected void getFdnSize(){
+        Message response = mHandler.obtainMessage(EVENT_GET_SIZE_DONE);
+        mUiccController = MSimUiccController.getInstance();
+        if (mUiccController != null) {
+            UiccCard newCard = ((MSimUiccController)mUiccController).getUiccCard(mSubscription);
+            UiccCardApplication newUiccApplication = null;
+            IccFileHandler fh = null;
+            if (newCard != null) {
+                // Always get IccApplication 0.
+                newUiccApplication = newCard.getApplication(UiccController.APP_FAM_3GPP);
+                if (newUiccApplication != null) {
+                    fh = newUiccApplication.getIccFileHandler();
+                } else {
+                    Log.d(TAG, "UiccApplication is null");
+                }
+            }
+            
+            if (fh != null) {
+                fh.getEFLinearRecordSize(IccConstants.EF_FDN, response);
+            }
+        }
     }
 
     @Override

@@ -687,7 +687,8 @@
     <!--Call duration dialog title-->
     <string name="title_dialog_duration">通话时长</string>
     <string name="duration_format">"<xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒"</string>
-
+    <string name="blank_error_notification">模版不正确, 请重试.</string>
+    <string name="fdn_empty_number">"FDN 未更新：号码不能为空。"</string>
     <string name="count_down_timer">计时:</string>
     <string name="preferred_duration_title">挂机显示通话时长</string>
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
