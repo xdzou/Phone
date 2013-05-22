@@ -54,10 +54,13 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.PhoneNumberUtils;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 
 import com.android.internal.telephony.CallForwardInfo;
@@ -162,6 +165,8 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     /* package */ static final String BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY =
             "button_voicemail_notification_ringtone_key";
     private static final String BUTTON_FDN_KEY   = "button_fdn_key";
+    // add for feature: IP call setting
+    private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key";
     private static final String BUTTON_RESPOND_VIA_SMS_KEY   = "button_respond_via_sms_key";
 
     private static final String BUTTON_RINGTONE_KEY    = "button_ringtone_key";
@@ -212,6 +217,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private static final int MSG_VM_NOCHANGE = 700;
 
     private PreferenceScreen mSubscriptionPrefFDN;
+    private PreferenceScreen mSubscriptionIPPrefix;    // add for new feature: IP call prefix
     private PreferenceScreen mSubscriptionPrefGSM;
     private PreferenceScreen mSubscriptionPrefCDMA;
 
@@ -438,7 +444,35 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     // Click listener for all toggle events
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-        if (preference == mSubMenuVoicemailSettings) {
+        if (preference == mSubscriptionIPPrefix) {
+            View v = getLayoutInflater().inflate(R.layout.ip_prefix, null);
+            final EditText edit = (EditText) v.findViewById(R.id.ip_prefix_dialog_edit);
+            String ip_prefix = Settings.System.getString(getContentResolver(),
+                                   Settings.Global.IPCALL_PREFIX[mSubscription]);
+            edit.setText(ip_prefix);
+
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.ipcall_dialog_title)
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setView(v)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String ip_prefix = edit.getText().toString();
+                                    Settings.System.putString(
+                                                    getContentResolver(),
+                                                    Settings.Global.IPCALL_PREFIX[mSubscription],
+                                                    ip_prefix);
+                                    if (TextUtils.isEmpty(ip_prefix)) {
+                                        mSubscriptionIPPrefix
+                                            .setSummary(R.string.ipcall_sub_summery);
+                                    } else {
+                                        mSubscriptionIPPrefix.setSummary(edit.getText());
+                                    }
+                                    onResume();
+                                }
+                            }).setNegativeButton(android.R.string.cancel, null)
+                    .show();
             return true;
         } else if (preference == mVoicemailSettings) {
             if (DBG) log("onPreferenceTreeClick: Voicemail Settings Preference is clicked.");
@@ -1433,8 +1467,18 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         // getting selected subscription
         mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY, 0);
 
-        mSubscriptionPrefFDN  = (PreferenceScreen) findPreference(BUTTON_FDN_KEY);
-        mSubscriptionPrefGSM  = (PreferenceScreen) findPreference(BUTTON_GSM_UMTS_OPTIONS);
+        mSubscriptionPrefFDN = (PreferenceScreen) findPreference(BUTTON_FDN_KEY);
+        mSubscriptionIPPrefix = (PreferenceScreen) findPreference(BUTTON_IPPREFIX_KEY);
+        if (mSubscriptionIPPrefix != null) {
+            String ip_prefix = Settings.System.getString(getContentResolver(),
+                                   Settings.Global.IPCALL_PREFIX[mSubscription]);
+            if (TextUtils.isEmpty(ip_prefix)) {
+                mSubscriptionIPPrefix.setSummary(R.string.ipcall_sub_summery);
+            } else {
+                mSubscriptionIPPrefix.setSummary(ip_prefix);
+            }
+        }
+        mSubscriptionPrefGSM = (PreferenceScreen) findPreference(BUTTON_GSM_UMTS_OPTIONS);
         mSubscriptionPrefCDMA = (PreferenceScreen) findPreference(BUTTON_CDMA_OPTIONS);
         mSubscriptionPrefFDN.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mSubscriptionPrefGSM.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
