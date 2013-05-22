@@ -30,6 +30,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.provider.ContactsContract.Contacts;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
@@ -54,6 +55,7 @@ import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.TelephonyProperties;
 
 import java.util.List;
 
@@ -160,6 +162,12 @@ public class CallCard extends LinearLayout
     private float mDensity;
 
     private boolean mAudioDeviceInitialized = false;
+
+    // Constants for TelephonyProperties.PROPERTY_IMS_AUDIO_OUTPUT property.
+    // Currently, the default audio output is headset if connected, bluetooth
+    // if connected, speaker/earpiece for video/voice call.
+    private static final int IMS_AUDIO_OUTPUT_DEFAULT = 0;
+    private static final int IMS_AUDIO_OUTPUT_DISABLE_SPEAKER = 1;
 
     /**
      * Sent when it takes too long (MESSAGE_DELAY msec) to load a contact photo for the given
@@ -850,8 +858,16 @@ public class CallCard extends LinearLayout
             return;
         }
 
-        // If the bluetooth headset or the wired headset is not connected then
-        // turn on speaker by default for the VT call
+        // If the speaker is explicitly disabled then do not enable it.
+        if (SystemProperties.getInt(TelephonyProperties.PROPERTY_IMS_AUDIO_OUTPUT,
+                IMS_AUDIO_OUTPUT_DEFAULT) == IMS_AUDIO_OUTPUT_DISABLE_SPEAKER) {
+            if (DBG) log("Speaker disabled, not routing audio to speaker");
+            return;
+        }
+
+        // If the bluetooth headset or the wired headset is not connected and
+        // the speaker is not disabled then turn on speaker by default
+        // for the VT call
         mInCallScreen.switchInCallAudio(InCallScreen.InCallAudioMode.SPEAKER);
     }
 
