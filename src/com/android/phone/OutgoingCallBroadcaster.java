@@ -38,6 +38,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
 import android.os.UserHandle;
+import android.provider.Settings;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
@@ -46,6 +47,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.android.internal.telephony.CallDetails;
+import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
@@ -92,6 +94,7 @@ public class OutgoingCallBroadcaster extends Activity
     /** the key used to specify subscription to be used for emergency calls */
     public static final String BLUETOOTH = "Bluetooth";
 
+    private boolean mIPCall;
     /**
      * Identifier for intent extra for sending an empty Flash message for
      * CDMA networks. This message is used by the network to simulate a
@@ -329,6 +332,7 @@ public class OutgoingCallBroadcaster extends Activity
         Intent newIntent = new Intent(Intent.ACTION_CALL, uri);
         newIntent.putExtra(EXTRA_ACTUAL_NUMBER_TO_DIAL, number);
         newIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        newIntent.putExtra(PhoneConstants.IP_CALL, mIPCall);
         PhoneUtils.checkAndCopyPhoneProviderExtras(intent, newIntent);
         PhoneUtils.copyImsExtras(intent, newIntent);
 
@@ -449,6 +453,7 @@ public class OutgoingCallBroadcaster extends Activity
             return;
         }
 
+        mIPCall = intent.getBooleanExtra(PhoneConstants.IP_CALL, false);
         /*
          * Clean up any undismissed ota dialogs. If ota call is active outgoing
          * calls will be blocked in OutgoingCallReceiver
@@ -477,6 +482,7 @@ public class OutgoingCallBroadcaster extends Activity
     private void processMSimIntent(Intent intent) {
         String action = intent.getAction();
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        intent.putExtra(PhoneConstants.IP_CALL, mIPCall);
         Log.d(TAG, "outGoingcallBroadCaster action is"+ action);
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
         Log.d(TAG, " number from Intent : "+ number);
@@ -590,7 +596,9 @@ public class OutgoingCallBroadcaster extends Activity
                 finish();
                 return;
             }
-            int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+            int sub = isExactEmergencyNumber ? getSubscriptionForEmergencyCall() : mSubscription;
+            Log.d(TAG, "Attempting emergency call on sub:" + sub + ",isExactEmergencyNumber:"
+                    + isExactEmergencyNumber);
             intent.putExtra(SUBSCRIPTION_KEY, sub);
             Log.d(TAG, "Attempting emergency call on sub :" + sub);
             callNow = true;
@@ -797,6 +805,12 @@ public class OutgoingCallBroadcaster extends Activity
                 break;
         }
         return dialog;
+    }
+
+    private int getSubscriptionForEmergencyCall(){
+        Log.d(TAG,"emergency call, getVoiceSubscriptionInService");
+        int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+        return sub;
     }
 
     /** DialogInterface.OnClickListener implementation */

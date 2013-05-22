@@ -1869,6 +1869,15 @@
     <string name="set_sub_not_supported_phone_in_call">Activate or Deactivate subscription is not allowed while phone in call.</string>
     <string name="menu_call_record">Call record</string>
     <string name="menu_show_record">Show recorder</string>
+    <!-- IP call related strings -->
+    <!-- Call settings screen, setting option name -->
+    <string name="ipcall">IP call setting</string>
+    <!-- Call settings screen, subscription title -->
+    <string name="ipcall_sub_title">IP call setting</string>
+    <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
+    <!-- Call settings screen, IP call setting dialog title -->
+    <string name="ipcall_dialog_title">IP call setting</string>
+    <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
 
     <!-- Sim contacts management -->
     <string name="ContactScreen"> Add/Edit SIM Contact</string>
