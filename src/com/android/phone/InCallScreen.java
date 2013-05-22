@@ -2191,7 +2191,7 @@ public class InCallScreen extends Activity
         Phone phone = (Phone) mmiCode.getPhone();
         int phoneType = phone.getPhoneType();
         if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
-            PhoneUtils.displayMMIComplete(phone, this, mmiCode, null, null);
+            PhoneUtils.displayMMIComplete(phone, mApp, mmiCode, null, null);
         } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
             if (mmiCode.getState() != MmiCode.State.PENDING) {
                 if (DBG) log("Got MMI_COMPLETE, finishing InCallScreen...");
