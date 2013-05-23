@@ -254,6 +254,11 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         startPreview();
     }
 
+    public boolean isCameraInitNeeded() {
+        return mCameraNeeded
+                && mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED;
+    }
+
     /**
      * This method crates the camera object if camera is not disabled
      *
@@ -306,7 +311,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         if (surface.equals(mCameraPreview.getSurfaceTexture())) {
             if (DBG) log("Camera surface texture created");
             mCameraSurface = surface;
-            if (mCameraNeeded && mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
+            if (isCameraInitNeeded()) {
                 initializeCamera();
             } else {
                 // Set preview display if the surface is being created and preview
@@ -369,8 +374,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
                 break;
             case View.VISIBLE:
                 if (DBG) log("VideoCallPanel View is VISIBLE");
-                if (mCameraNeeded
-                        && mVideoCallManager.getCameraState() == CameraState.CAMERA_CLOSED) {
+                if (isCameraInitNeeded()) {
                     initializeCamera();
                 }
                 break;
@@ -471,10 +475,16 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
             case CallDetails.CALL_TYPE_VT:
                 mCameraPreview.setVisibility(VISIBLE);
                 mFarEndView.setVisibility(VISIBLE);
+                if (isCameraInitNeeded()) {
+                    initializeCamera();
+                }
                 log("setPanelElementsVisibility: VT: mCameraPreview:VISIBLE, mFarEndView:VISIBLE");
                 break;
             case CallDetails.CALL_TYPE_VT_TX:
                 mCameraPreview.setVisibility(View.VISIBLE);
+                if (isCameraInitNeeded()) {
+                    initializeCamera();
+                }
                 // Not setting mFarEndView to GONE as receiver side did not get the frames
                 log("setPanelElementsVisibility VT_TX: mCameraPreview:VISIBLE");
                 break;
@@ -596,7 +606,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         }
 
         // Restart camera if camera doesn't need to stay off
-        if (cameraId != CAMERA_UNKNOWN) {
+        if (isCameraInitNeeded()) {
             initializeCamera();
         }
     }
