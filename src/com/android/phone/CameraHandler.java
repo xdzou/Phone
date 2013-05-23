@@ -165,6 +165,7 @@ public class CameraHandler implements Camera.PreviewCallback{
             setCameraParameters(mParameters);
         }
         mCameraState = CameraState.PREVIEW_STOPPED;
+        mCameraDevice.setPreviewCallback(this);
         return true;
     }
 
@@ -185,9 +186,6 @@ public class CameraHandler implements Camera.PreviewCallback{
 
             // Set the SurfaceTexture to be used for preview
             mCameraDevice.setPreviewTexture(mSurfaceTexture);
-
-            // Set the Preview Call Back to show the camera frames on UI
-            mCameraDevice.setPreviewCallback(this);
 
             setDisplayOrientation();
             mCameraDevice.startPreview();
