@@ -126,6 +126,8 @@ public class PhoneUtils {
     /** Noise suppression status as selected by user */
     private static boolean sIsNoiseSuppressionEnabled = true;
 
+    private static MmiCode mMmiCode = null;
+
     /**
      * Handler that tracks the connections and updates the value of the
      * Mute settings for each connection as needed.
@@ -1061,9 +1063,12 @@ public class PhoneUtils {
             previousAlert.dismiss();
         }
 
+        mMmiCode = mmiCode;
+        displayMmiDialog(context, title, text);
+        
         // Check to see if a UI exists for the PUK activation.  If it does
         // exist, then it indicates that we're trying to unblock the PUK.
-        if ((app.getPUKEntryActivity() != null) && (state == MmiCode.State.COMPLETE)) {
+/*        if ((app.getPUKEntryActivity() != null) && (state == MmiCode.State.COMPLETE)) {
             if (DBG) log("displaying PUK unblocking progress dialog.");
 
             // create the progress dialog, make sure the flags and type are
@@ -1201,8 +1206,17 @@ public class PhoneUtils {
 
                 // now show the dialog!
                 newDialog.show();
-            }
-        }
+            } 
+        } */
+    }
+
+    static void displayMmiDialog(Context context, int title, CharSequence text) {
+        Intent intent = new Intent();
+        intent.setClass(context, DisplayMmiDialogActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra(DisplayMmiDialogActivity.USSD_MESSAGE_TITLE, title);
+        intent.putExtra(DisplayMmiDialogActivity.USSD_MESSAGE_TEXT, text);
+        context.startActivity(intent);
     }
 
     /**
@@ -3184,26 +3198,36 @@ public class PhoneUtils {
         }
         return false;
     }
-     public static String getFirewallMode(Context context){
-         String result =null;
-         ContentResolver cr = context.getContentResolver();
-         if(cr == null)
-         {
-             return "";
-         }
-         Cursor c = cr.query(FIREWALL_MODE_CONTENT_URI, 
-                 new String[] {"value"},
-                 "_id = ?",
-                 new String [] {"2"}, 
-                 null);
-     if(c!=null)
-     {
-         c.moveToFirst();
-            result=c.getString(0);
+    public static String getFirewallMode(Context context){
+        String result =null;
+        ContentResolver cr = context.getContentResolver();
+        if(cr == null)
+        {
+            return "";
+        }
+        Cursor c = cr.query(FIREWALL_MODE_CONTENT_URI, 
+        new String[] {"value"},
+                "_id = ?",
+                new String [] {"2"}, 
+                null);
+        if(c!=null)
+        {
+            c.moveToFirst();
+            result = c.getString(0);
             c.close();
-            c=null;
-     }
-         return result;
-     }
+            c = null;
+        }
+        return result;
+    }
+
+    public static void cancelUssdDialog() {
+        if (mMmiCode!= null && mMmiCode.isCancelable()) {
+            mMmiCode.cancel();
+        }
+    }
+
+    public static MmiCode getCurrentMmiCode() {
+        return mMmiCode;
+    }
 
 }

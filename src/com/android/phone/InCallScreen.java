@@ -1,8 +1,12 @@
 /*
  * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
- * Not a Contribution
+ * Not a Contribution.
  *
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
+ *
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -2209,7 +2213,7 @@ public class InCallScreen extends Activity
         Phone phone = (Phone) mmiCode.getPhone();
         int phoneType = phone.getPhoneType();
         if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
-            PhoneUtils.displayMMIComplete(phone, this, mmiCode, null, null);
+            PhoneUtils.displayMMIComplete(phone, mApp, mmiCode, null, null);
         } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
             if (mmiCode.getState() != MmiCode.State.PENDING) {
                 if (DBG) log("Got MMI_COMPLETE, finishing InCallScreen...");
