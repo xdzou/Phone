@@ -4,6 +4,7 @@ import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.Phone;
 
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
+import static com.android.phone.TimeConsumingPreferenceActivity.RADIO_OFF_ERROR;
 
 import android.content.Context;
 import android.os.AsyncResult;
@@ -23,6 +24,13 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
     private Phone mPhone;
     private TimeConsumingPreferenceListener mTcpListener;
 
+    //record call waiting status
+    protected enum CallWaitingStatus{
+        CALL_WAITING_IDLE,
+        CALL_WAITING_READING,
+        CALL_WAITING_UPDATING
+    };
+    protected CallWaitingStatus mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_IDLE;
     public CallWaitingCheckBoxPreference(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
@@ -51,6 +59,7 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
                     MyHandler.MESSAGE_GET_CALL_WAITING, MyHandler.MESSAGE_GET_CALL_WAITING));
             if (mTcpListener != null) {
                 mTcpListener.onStarted(this, true);
+                mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_READING;
             }
         }
     }
@@ -63,6 +72,7 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
                 mHandler.obtainMessage(MyHandler.MESSAGE_SET_CALL_WAITING));
         if (mTcpListener != null) {
             mTcpListener.onStarted(this, false);
+            mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_UPDATING;
         }
     }
 
@@ -91,6 +101,7 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
                 } else {
                     mTcpListener.onFinished(CallWaitingCheckBoxPreference.this, true);
                 }
+                mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_IDLE;
             }
 
             if (ar.exception != null) {
@@ -135,6 +146,24 @@ public class CallWaitingCheckBoxPreference extends CheckBoxPreference {
 
             mPhone.getCallWaiting(obtainMessage(MESSAGE_GET_CALL_WAITING,
                     MESSAGE_SET_CALL_WAITING, MESSAGE_SET_CALL_WAITING, ar.exception));
+        }
+    }
+
+    public void onAirplanOn() {
+        if(DBG) Log.d(LOG_TAG,"onAirplanOn : mCallWaitingStatus " + mCallWaitingStatus);
+        setEnabled(false);
+        if (mTcpListener != null) {
+            if (CallWaitingStatus.CALL_WAITING_READING == mCallWaitingStatus) {
+                mTcpListener
+                        .onFinished(CallWaitingCheckBoxPreference.this, true);
+                mTcpListener.onError(CallWaitingCheckBoxPreference.this, RADIO_OFF_ERROR);
+                mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_IDLE;
+            } else if (CallWaitingStatus.CALL_WAITING_UPDATING == mCallWaitingStatus) {
+                mTcpListener.onFinished(CallWaitingCheckBoxPreference.this,
+                        false);
+                mTcpListener.onError(CallWaitingCheckBoxPreference.this, RADIO_OFF_ERROR);
+                mCallWaitingStatus = CallWaitingStatus.CALL_WAITING_IDLE;
+            }
         }
     }
 }

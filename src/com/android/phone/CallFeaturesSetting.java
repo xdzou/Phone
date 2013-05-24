@@ -203,6 +203,8 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String SPEED_DIAL_SETTINGS_KEY = "speed_dial_settings";
+
     private Intent mContactListIntent;
 
     /** Event for Async voicemail change call */
@@ -1682,6 +1684,11 @@ public class CallFeaturesSetting extends PreferenceActivity
                 prefSet.removePreference(mButtonTTY);
                 mButtonTTY = null;
             }
+        }
+
+        if (!FeatureQuery.FEATURE_CONTACTS_SPEED_DIAL) {
+            PreferenceScreen spdSettings = (PreferenceScreen)findPreference(SPEED_DIAL_SETTINGS_KEY);
+            prefSet.removePreference(spdSettings);
         }
 
         if (!getResources().getBoolean(R.bool.world_phone)) {

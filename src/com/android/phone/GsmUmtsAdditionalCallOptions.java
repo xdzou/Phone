@@ -1,7 +1,10 @@
 package com.android.phone;
 
 import android.app.ActionBar;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
@@ -26,6 +29,18 @@ public class GsmUmtsAdditionalCallOptions extends
     private final ArrayList<Preference> mPreferences = new ArrayList<Preference>();
     private int mInitIndex= 0;
     private int mSubscription = 0;
+    private BroadcastReceiver mAirplaneListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            boolean airplanOn = intent.getBooleanExtra("state", false);
+            if (DBG)
+                Log.d(LOG_TAG, "intent:" + intent);
+            if (Intent.ACTION_AIRPLANE_MODE_CHANGED.equals(action) && airplanOn) {
+                mCWButton.onAirplanOn();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -66,6 +81,9 @@ public class GsmUmtsAdditionalCallOptions extends
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        registerReceiver(mAirplaneListener, filter);
     }
 
     @Override
