@@ -162,6 +162,15 @@
         android:entryValues="@array/dtmf_tone_values"/>
 
     <PreferenceScreen
+        android:key="speed_dial_settings"
+        android:title="@string/speed_dial_setting"
+        android:persistent="false">
+        <intent android:action="android.intent.action.MAIN"
+            android:targetPackage="com.android.contacts"
+            android:targetClass="com.android.contacts.SpeedDialListActivity"/>
+    </PreferenceScreen>
+
+    <PreferenceScreen
         android:key="button_gsm_more_expand_key"
         android:title="@string/labelGSMMore"
         android:summary="@string/sum_gsm_call_settings"
