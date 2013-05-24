@@ -2214,11 +2214,18 @@ public class PhoneUtils {
      */
     private static final boolean hasDisconnectedConnections(Call call) {
         // look through all connections for non-active ones.
-        for (Connection c : call.getConnections()) {
-            if (!c.isAlive()) {
-                return true;
+        try {
+            for (Connection c : call.getConnections()) {
+                if (!c.isAlive()) {
+                    return true;
+                }
             }
-        }
+        } catch (Exception e) {
+            //It's possible a currentmodificationexception thrown when deleting
+            //a disconnected connection.
+            Log.w(LOG_TAG, "caught: " + e);
+            return true;
+		 }				
         return false;
     }
 
