@@ -1824,6 +1824,7 @@
     <!-- Call settings screen, IP call setting dialog title -->
     <string name="ipcall_dialog_title">IP call setting</string>
     <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
+    <string name="speed_dial_setting">Speed dial settings</string>
     <!-- add for call setting vibrating after connected-->
     <string name="vibrate_after_connected_title">Vibrating after connected</string>
     <string name="vibrate_after_connected_summary">Vibrate when answers</string>

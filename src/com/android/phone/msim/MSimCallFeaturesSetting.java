@@ -96,6 +96,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String SPEED_DIAL_SETTINGS_KEY = "speed_dial_settings";
     private static final String SHOW_DURATION_KEY = "duration_enable_key";
     // preferred TTY mode
     // Phone.TTY_MODE_xxx
@@ -311,6 +312,11 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
+        }
+
+        if (!FeatureQuery.FEATURE_CONTACTS_SPEED_DIAL) {
+            PreferenceScreen spdSettings = (PreferenceScreen) findPreference(SPEED_DIAL_SETTINGS_KEY);
+            prefSet.removePreference(spdSettings);
         }
 
         showDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);

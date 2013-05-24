@@ -642,6 +642,7 @@
     <!-- add for call setting vibrating after connected-->
     <string name="vibrate_after_connected_title">接通振动提示</string>
     <string name="vibrate_after_connected_summary">对方接通时振动</string>
+    <string name="speed_dial_setting">快速拨号设置</string>
     
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"振动"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"振动"</string>
