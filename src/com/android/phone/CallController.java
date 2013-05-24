@@ -512,7 +512,7 @@ public class CallController extends Handler {
                 // Otherwise we want to make sure the user can see the regular
                 // in-call UI while the new call is dialing, and when it
                 // first gets connected.)
-                inCallUiState.showDialpad = voicemailUriSpecified;
+                inCallUiState.showDialpad = false/*voicemailUriSpecified*/;
 
                 // For voicemails, we add context text to let the user know they
                 // are dialing their voicemail.
