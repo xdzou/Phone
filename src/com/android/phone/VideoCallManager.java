@@ -48,13 +48,11 @@ public class VideoCallManager {
     private static final String TAG = "VideoCallManager";
     private static VideoCallManager mInstance; // Use a singleton
     private CameraHandler mCameraHandler;
-    private MediaHandler mMediaHandler;
 
     /** @hide */
     private VideoCallManager(Context context) {
         log("Instantiating VideoCallManager");
         mCameraHandler = CameraHandler.getInstance(context);
-        mMediaHandler = new MediaHandler();
     }
 
     /**
@@ -73,7 +71,7 @@ public class VideoCallManager {
      * Initialize the Media
      */
     public int mediaInit() {
-        return mMediaHandler.init();
+        return MediaHandler.init();
     }
 
     /**
@@ -282,10 +280,6 @@ public class VideoCallManager {
      */
     void setCameraDisplayOrientation() {
         mCameraHandler.setDisplayOrientation();
-    }
-
-    public void setOnParamReadyListener(VideoCallPanel.ParamReadyListener listener) {
-        mMediaHandler.setMediaEventListener(listener);
     }
 
     private void log(String msg) {
