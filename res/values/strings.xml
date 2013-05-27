@@ -822,6 +822,7 @@
     <string name="pin2_or_fdn_invalid">FDN wasn\'t updated. The PIN2 was incorrect, or the phone number was rejected.</string>
     <!-- FDN settings: error message displayed in a popup (toast) -->
     <string name="fdn_failed">FDN operation failed.</string>
+    <string name="fdn_empty_number">FDN not updated: number cannot be empty.</string>
 
     <!-- ADN related strings -->
     <!-- Placeholder text displayed while loading the list of SIM contacts -->
@@ -1834,12 +1835,14 @@
     <!-- Call settings screen, IP call setting dialog title -->
     <string name="ipcall_dialog_title">IP call setting</string>
     <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
+    <string name="speed_dial_setting">Speed dial settings</string>
     <!-- add for call setting vibrating after connected-->
     <string name="vibrate_after_connected_title">Vibrating after connected</string>
     <string name="vibrate_after_connected_summary">Vibrate when answers</string>
     <!-- Call duration dialog title -->
     <string name="title_dialog_duration">Duration</string>
     <string name="duration_format"><xliff:g id="minutes" example="42">%s</xliff:g> mins <xliff:g id="seconds" example="28">%s</xliff:g> secs</string>
+    <string name="network_forbidden">(Forbidden)</string>
 
     <string name="count_down_timer">Second:</string>
     <string name="input_password">Input password</string>
@@ -1852,7 +1855,7 @@
     <string name="no_call_barring">No callbarring</string>
     <string name="cb_psw_dont_match">Password do not match</string>
     <string name="operation_successfully">Operation successfully!</string>
-
+    <string name="blank_error_notification">Invalid template, try again.</string>
     <!-- Sim contacts management -->
     <string name="ContactScreen"> Add/Edit SIM Contact</string>
     <string name="ExportContactScreen"> Export phone contacts to sim </string>

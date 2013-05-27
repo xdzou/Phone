@@ -1377,7 +1377,7 @@ public class PhoneGlobals extends ContextWrapper
     protected void onMMIComplete(AsyncResult r) {
         if (VDBG) Log.d(LOG_TAG, "onMMIComplete()...");
         MmiCode mmiCode = (MmiCode) r.result;
-        PhoneUtils.displayMMIComplete(phone, mInCallScreen, mmiCode, null, null);
+        PhoneUtils.displayMMIComplete(phone, getInstance(), mmiCode, null, null);
     }
 
     private void initForNewRadioTechnology() {

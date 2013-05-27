@@ -427,6 +427,8 @@ public class NetworkSetting extends PreferenceActivity
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
                     carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni)));
+                    if (ni.getState() == OperatorInfo.State.FORBIDDEN)
+                        carrier.setTitle(carrier.getTitle()+ getString(R.string.network_forbidden));
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
@@ -458,9 +460,9 @@ public class NetworkSetting extends PreferenceActivity
         } else {
             sOperator =  ni.getOperatorNumeric();
         }
-        if(sOperator.equals("CHINA  MOBILE")){
+        if(sOperator.equals("CHINA  MOBILE") || sOperator.equals("46000")  || sOperator.equals("46002")  || sOperator.equals("46007")){
             sOperator = CMCC_OPERATOR_NAME;
-        }else if(sOperator.equals("CHN-UNICOM")){
+        }else if(sOperator.equals("CHN-UNICOM") || sOperator.equals("46001")){
             sOperator = UNICOM_OPERATOR_NAME;
         }
         return sOperator;

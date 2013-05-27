@@ -987,8 +987,10 @@ public class OutgoingCallBroadcaster extends Activity
             return;
         }
 
-        Vibrator mCalloutNotify = (Vibrator)getApplication().getSystemService(Service.VIBRATOR_SERVICE);
-        mCalloutNotify.vibrate(1000);
+        // CU request do not vibrate
+        // Vibrator mCalloutNotify = (Vibrator)getApplication().getSystemService(Service.VIBRATOR_SERVICE);
+        // mCalloutNotify.vibrate(1000);
+        
         showDialog(INDEX_MULTI_SIM_DIALOG);
     }
 

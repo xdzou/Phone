@@ -652,6 +652,7 @@
     <!-- add for call setting vibrating after connected-->
     <string name="vibrate_after_connected_title">接通振动提示</string>
     <string name="vibrate_after_connected_summary">对方接通时振动</string>
+    <string name="speed_dial_setting">快速拨号设置</string>
     
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"振动"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"振动"</string>
@@ -720,10 +721,21 @@
     <string name="cb_psw_dont_match">密码不匹配！</string>
     <string name="operation_successfully">操作成功！</string>
 
+    <string name="network_forbidden">(禁用)</string>
+    <string name="blank_error_notification">模版不正确, 请重试.</string>
+    <string name="fdn_empty_number">"FDN 未更新：号码不能为空。"</string>
     <string name="count_down_timer">计时:</string>
     <string name="preferred_duration_title">挂机显示通话时长</string>
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
     <string name="duration_disable_summary">挂机显示通话时长已关闭</string>
 
     <string name="title_data_settings">数据设置</string>
+    
+    <!-- Set dual dialer for MultiSim -->
+    <string name="place_a_call1">卡槽 1</string>
+    <string name="place_a_call2">卡槽 2</string>
+    <string name="count_down">秒: </string>
+    <string name="call_number">至: </string>
+    <string name="cancel_call">取消</string>
+    
 </resources>

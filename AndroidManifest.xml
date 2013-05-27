@@ -230,6 +230,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name="DisplayMmiDialogActivity"
+                android:process="com.android.phone"
+                android:excludeFromRecents="true"
+                android:launchMode="singleInstance"
+                android:theme="@android:style/Theme.Translucent.NoTitleBar">
+        </activity>
+
         <activity-alias android:name="EmergencyOutgoingCallBroadcaster"
                 android:targetActivity="OutgoingCallBroadcaster"
                 android:permission="android.permission.CALL_PRIVILEGED">
@@ -696,6 +703,12 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
+
+        <receiver android:name="BootBroadcastReceiver">
+             <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+             </intent-filter>
+        </receiver>
 
     </application>
 </manifest>
