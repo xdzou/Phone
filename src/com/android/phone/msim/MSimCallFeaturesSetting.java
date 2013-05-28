@@ -81,6 +81,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_PLAY_DTMF_TONE  = "button_play_dtmf_tone";
     private static final String BUTTON_DTMF_KEY        = "button_dtmf_settings";
     private static final String BUTTON_RETRY_KEY       = "button_auto_retry_key";
+    private static final String BUTTON_PROXIMITY_KEY   = "button_proximity_key";
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
     private static final String BUTTON_SELECT_SUB_KEY  = "button_call_independent_serv";
@@ -118,6 +119,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private CheckBoxPreference mPlayDtmfTone;
     private CheckBoxPreference mButtonAutoRetry;
     private CheckBoxPreference mButtonHAC;
+    private CheckBoxPreference mButtonProximity;
     private ListPreference mButtonDTMF;
     private ListPreference mButtonTTY;
     private ListPreference mButtonSipCallOptions;
@@ -155,6 +157,13 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonXDivert) {
             processXDivert();
             return true;
+        } else if (preference == mButtonProximity) {
+            boolean checked = mButtonProximity.isChecked();
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Global.PROXIMITY_SENSOR, checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                                  : R.string.proximity_off_summary);
+            return true;
         }
         return false;
     }
@@ -179,6 +188,12 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, index);
         } else if (preference == mButtonTTY) {
             handleTTYChange(preference, objValue);
+        } else if (preference == mButtonProximity) {
+            boolean checked = mButtonProximity.isChecked();
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.Global.PROXIMITY_SENSOR, checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
         }
@@ -208,6 +223,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mPlayDtmfTone = (CheckBoxPreference) findPreference(BUTTON_PLAY_DTMF_TONE);
         mButtonDTMF = (ListPreference) findPreference(BUTTON_DTMF_KEY);
         mButtonAutoRetry = (CheckBoxPreference) findPreference(BUTTON_RETRY_KEY);
+        mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
@@ -243,6 +259,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                 prefSet.removePreference(mButtonHAC);
                 mButtonHAC = null;
             }
+        }
+
+        if (mButtonProximity != null) {
+            mButtonProximity.setOnPreferenceChangeListener(this);
         }
 
         if (mButtonTTY != null) {
@@ -413,6 +433,15 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             int autoretry = Settings.Global.getInt(getContentResolver(),
                     Settings.Global.CALL_AUTO_RETRY, 0);
             mButtonAutoRetry.setChecked(autoretry != 0);
+        }
+
+        if (mButtonProximity != null) {
+            int proximity = Settings.Global.getInt(getContentResolver(),
+                                Settings.Global.PROXIMITY_SENSOR, 1);
+            boolean checked = (proximity == 1);
+            mButtonProximity.setChecked(checked);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                                 : R.string.proximity_off_summary);
         }
 
         if (mButtonHAC != null) {
