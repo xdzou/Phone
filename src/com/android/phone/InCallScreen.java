@@ -4932,60 +4932,88 @@ public class InCallScreen extends Activity
             final Phone phone = conn.getCall().getPhone();
             if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
                 int callType = phone.getProposedConnectionType(conn);
+                boolean error = getProposedConnectionFailed(conn);
                 int prevCallType = phone.getCallType(mCM.getActiveFgCall());
+
                 log("videocall handleModifyCallRequest: connection = " + conn
                         + " prevCallType= " + prevCallType
-                        + " calltype = " + callType);
+                        + " calltype= " + callType
+                        + " error=" + error);
 
-                boolean isConsentRequired = false;
-                isConsentRequired = isUserConsentRequired(callType, prevCallType);
-                if (callType == CallDetails.CALL_TYPE_VT) {
-                    str = getResources().getString(R.string.upgrade_vt_prompt);
-                } else if (callType == CallDetails.CALL_TYPE_VT_TX) {
-                    str = getResources().getString(R.string.upgrade_vt_tx_prompt);
-                } else if (callType == CallDetails.CALL_TYPE_VT_RX) {
-                    str = getResources().getString(R.string.upgrade_vt_rx_prompt);
-                }
-                if (isConsentRequired) {
-                    mModifyCallPromptDialog = new AlertDialog.Builder(this)
-                            .setMessage(str)
-                            .setPositiveButton(R.string.modify_call_prompt_yes,
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog,
-                                                int whichButton) {
-                                            log("videocall: MODIFY_CALL_PROMPT_CONFIRMED, proceed");
-                                            try {
-                                                phone.acceptConnectionTypeChange(conn, null);
-                                            } catch (CallStateException e) {
-                                                Log.e(LOG_TAG, "videocall: Exception "
-                                                        + "acceptConnectionTypeChange " + e);
+                if (!error) {
+
+                    boolean isConsentRequired = false;
+                    isConsentRequired = isUserConsentRequired(callType, prevCallType);
+                    if (callType == CallDetails.CALL_TYPE_VT) {
+                        str = getResources().getString(R.string.upgrade_vt_prompt);
+                    } else if (callType == CallDetails.CALL_TYPE_VT_TX) {
+                        str = getResources().getString(R.string.upgrade_vt_tx_prompt);
+                    } else if (callType == CallDetails.CALL_TYPE_VT_RX) {
+                        str = getResources().getString(R.string.upgrade_vt_rx_prompt);
+                    }
+                    if (isConsentRequired) {
+                        mModifyCallPromptDialog = new AlertDialog.Builder(this)
+                                .setMessage(str)
+                                .setPositiveButton(R.string.modify_call_prompt_yes,
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(DialogInterface dialog,
+                                                    int whichButton) {
+                                                log("videocall: MODIFY_CALL_PROMPT_CONFIRMED," +
+                                                    " proceed");
+                                                try {
+                                                    phone.acceptConnectionTypeChange(conn, null);
+                                                } catch (CallStateException e) {
+                                                    Log.e(LOG_TAG, "videocall: Exception "
+                                                            + "acceptConnectionTypeChange " + e);
+                                                }
                                             }
-                                        }
-                                    })
-                            .setNegativeButton(R.string.modify_call_prompt_no,
-                                    new DialogInterface.OnClickListener() {
+                                        })
+                                .setNegativeButton(R.string.modify_call_prompt_no,
+                                        new DialogInterface.OnClickListener() {
 
-                                        public void onClick(DialogInterface dialog,
-                                                int whichButton) {
-                                            log("videocall: MODIFY_CALL_PROMPT_CANCELED!");
-                                            try {
-                                                phone.rejectConnectionTypeChange(conn);
-                                            } catch (CallStateException e) {
-                                                Log.e(LOG_TAG, "videocall: Exception "
-                                                        + "acceptConnectionTypeChange " + e);
+                                            public void onClick(DialogInterface dialog,
+                                                    int whichButton) {
+                                                log("videocall: MODIFY_CALL_PROMPT_CANCELED!");
+                                                try {
+                                                    phone.rejectConnectionTypeChange(conn);
+                                                } catch (CallStateException e) {
+                                                    Log.e(LOG_TAG, "videocall: Exception "
+                                                            + "acceptConnectionTypeChange " + e);
+                                                }
                                             }
-                                        }
-                                    })
-                            .create();
-                    mModifyCallPromptDialog.getWindow().addFlags(
-                            WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+                                        })
+                                .create();
+                        mModifyCallPromptDialog.getWindow().addFlags(
+                                WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 
-                    mModifyCallPromptDialog.show();
+                        mModifyCallPromptDialog.show();
+                    }
+                } else {
+                    log("videocall: Modify Call request failed.");
+                    phone.rejectConnectionTypeChange(conn);
+                    // We are not explicitly dismissing mModifyCallPromptDialog
+                    // here
+                    // since it is dismissed at the beginning of this function.
+
                 }
+
             }
         } catch (CallStateException e) {
             Log.e(LOG_TAG, "videocall CallStateException " + e);
         }
+    }
+
+    public boolean getProposedConnectionFailed(final Connection conn) {
+        boolean error = true;
+
+        try {
+            error = mApp.mImsService.getProposedConnectionFailed(conn.getIndex());
+        } catch (RemoteException e) {
+            Log.e(LOG_TAG,"videocall: Ims Service getProposedConnectionFailed exception:", e);
+        } catch (CallStateException e) {
+            Log.e(LOG_TAG,"videocall: Ims Service CallStateException exception:", e);
+        }
+        return error;
     }
 
     private boolean isUserConsentRequired(int callType, int prevCallType) {
