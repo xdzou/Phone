@@ -497,6 +497,10 @@ public class OutgoingCallBroadcaster extends Activity
         // immediately rather than going through the NEW_OUTGOING_CALL sequence.)
         boolean callNow;
 
+        // If true, then emergency call has been initiated on IMS.
+        // Use this flag to avoid call being processed as Sip.
+        boolean emergencyOnIms = false;
+
         if (getClass().getName().equals(intent.getComponent().getClassName())) {
             // If we were launched directly from the OutgoingCallBroadcaster,
             // not one of its more privileged aliases, then make sure that
@@ -642,6 +646,7 @@ public class OutgoingCallBroadcaster extends Activity
             if (PhoneUtils.isCallOnImsEnabled()) {
                 Log.d(TAG, "IMS is enabled , place IMS emergency call");
                 PhoneUtils.convertCallToIMS(intent, CallDetails.CALL_TYPE_VOICE);
+                emergencyOnIms = true;
             }
 
             // Initiate the outgoing call, and simultaneously launch the
@@ -679,7 +684,8 @@ public class OutgoingCallBroadcaster extends Activity
         // a plain address, whether it could be a tel: URI, etc.)
         Uri uri = intent.getData();
         String scheme = uri.getScheme();
-        if (Constants.SCHEME_SIP.equals(scheme) || PhoneNumberUtils.isUriNumber(number)) {
+        if ((Constants.SCHEME_SIP.equals(scheme) || PhoneNumberUtils.isUriNumber(number)) &&
+                !emergencyOnIms) {
             Log.i(TAG, "The requested number was detected as SIP call.");
             startSipCallOptionHandler(this, intent, uri, number);
             finish();
