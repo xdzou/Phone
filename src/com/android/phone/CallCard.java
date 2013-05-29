@@ -2078,6 +2078,13 @@ public class CallCard extends LinearLayout
         return name;
     }
 
+    // Set mPhoto to invisible
+    public void setPhotoInvisible(){
+        if (mPhoto != null){
+            mPhoto.setVisibility(View.GONE);
+        }
+    }
+
     // Debugging / testing code
 
     private static void log(String msg) {
