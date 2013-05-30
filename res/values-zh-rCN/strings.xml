@@ -663,4 +663,6 @@
     <string name="invalid_username_or_hostname">"用户名或服务器参数设置无效"</string>
     <string name="volume_boost_notify_enabled">"开启音效增强"</string>
     <string name="volume_boost_notify_disabled">"关闭音效增强"</string>
+
+    <string name="speed_dial_setting">快速拨号设置</string>
 </resources>

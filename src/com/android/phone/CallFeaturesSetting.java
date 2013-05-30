@@ -43,6 +43,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.Vibrator;
 import android.preference.CheckBoxPreference;
@@ -194,6 +195,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String SPEED_DIAL_SETTINGS_KEY = "speed_dial_settings";
     private Intent mContactListIntent;
 
     /** Event for Async voicemail change call */
@@ -1583,6 +1585,12 @@ public class CallFeaturesSetting extends PreferenceActivity
             }
         }
 
+
+        if (SystemProperties.getBoolean("persist.env.contacts.speeddial", false)) {
+            PreferenceScreen spdSettings = (PreferenceScreen) findPreference(
+                SPEED_DIAL_SETTINGS_KEY);
+            prefSet.removePreference(spdSettings);
+        }
         if (!getResources().getBoolean(R.bool.world_phone)) {
             Preference options = prefSet.findPreference(BUTTON_CDMA_OPTIONS);
             if (options != null)
