@@ -1201,6 +1201,16 @@ public class InCallScreen extends Activity
         // original Intent from when we first got created!)
         setIntent(intent);
 
+        // Set the mPhoto of call card invisible every time start phone application.
+        if (mCallCard != null) {
+            mCallCard.setPhotoInvisible();
+        }
+
+        // Hide the incoming call widget every time start phone application.
+        if (mInCallTouchUi != null) {
+            mInCallTouchUi.hideIncomingCall();
+        }
+
         // Activities are always paused before receiving a new intent, so
         // we can count on our onResume() method being called next.
 
