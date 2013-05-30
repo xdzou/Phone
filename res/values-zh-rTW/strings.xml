@@ -653,4 +653,5 @@
     <string name="card_title_forwarded_MTcall">"被轉來電"</string>
     <!-- add illegal characters in SIP username and host -->
     <string name="invalid_username_or_hostname">"用戶名或服務器參數設置無效"</string>
+    <string name="speed_dial_setting">"快速撥號設置"</string>
 </resources>

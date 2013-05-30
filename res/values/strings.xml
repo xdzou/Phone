@@ -1909,4 +1909,6 @@
     <string name="invalid_username_or_hostname">Invalid username or host parameters</string>
     <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
     <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
+
+    <string name="speed_dial_setting">Speed dial settings</string>
 </resources>

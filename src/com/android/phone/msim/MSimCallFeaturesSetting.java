@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -94,6 +95,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String SPEED_DIAL_SETTINGS_KEY = "speed_dial_settings";
     // preferred TTY mode
     // Phone.TTY_MODE_xxx
     static final int preferredTtyMode = Phone.TTY_MODE_OFF;
@@ -290,6 +292,11 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     "com.android.phone.MSimCallFeaturesSubSetting");
         }
 
+        if (SystemProperties.getBoolean("persist.env.contacts.speeddial", false)) {
+            PreferenceScreen spdSettings = (PreferenceScreen) findPreference(
+                SPEED_DIAL_SETTINGS_KEY);
+            prefSet.removePreference(spdSettings);
+        }
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
