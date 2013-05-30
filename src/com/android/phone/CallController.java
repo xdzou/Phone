@@ -35,6 +35,8 @@ import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
+import android.provider.Settings;
+
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
@@ -369,6 +371,13 @@ public class CallController extends Handler {
             // update okToCallStatus based on new phone
             okToCallStatus = checkIfOkToInitiateOutgoingCall(
                     phone.getServiceState().getState());
+            if (DBG) log("placeCallInternal - okToCallStatus="+okToCallStatus);
+            if (Settings.Global.getInt(mApp.getContentResolver(),
+                                   Settings.Global.AIRPLANE_MODE_ON, 0) > 0) {
+						if (DBG) log("placeCallInternal - airplane mode have been switched on!"); 	
+						//phone service state needs time to power off the radio and switch state.
+                     okToCallStatus = CallStatusCode.POWER_OFF;
+			 }
 
         } catch (PhoneUtils.VoiceMailNumberMissingException ex) {
             // If the call status is NOT in an acceptable state, it
@@ -411,6 +420,8 @@ public class CallController extends Handler {
             return CallStatusCode.CALL_FAILED;
         }
 
+        if (DBG) log("placeCallInternal - isEmergencyNumber="+isEmergencyNumber
+					   + "  ; isPotentialEmergencyNumber="+isPotentialEmergencyNumber);
         // If we're trying to call an emergency number, then it's OK to
         // proceed in certain states where we'd otherwise bring up
         // an error dialog:
