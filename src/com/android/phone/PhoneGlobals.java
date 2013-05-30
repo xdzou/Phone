@@ -596,6 +596,7 @@ public class PhoneGlobals extends ContextWrapper
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
             }
             intentFilter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
+            intentFilter.addAction(TelephonyIntents.ACTION_ENABLE_ENGINEER_MODE);
             registerReceiver(mReceiver, intentFilter);
 
             // Use a separate receiver for ACTION_MEDIA_BUTTON broadcasts,
@@ -1623,6 +1624,9 @@ public class PhoneGlobals extends ContextWrapper
                     mAccelerometerListener.enable(mLastPhoneState == PhoneConstants.State.OFFHOOK
                             && action.equals(Intent.ACTION_SCREEN_ON));
                 }
+            } else if (action.equals(TelephonyIntents.ACTION_ENABLE_ENGINEER_MODE)) {
+                if (VDBG) Log.d(LOG_TAG, "Enable Engineer Mode: " + intent.getIntExtra("engineer_mode_enable", 0));
+                mCM.enableEngineerMode(getPhone(), intent.getIntExtra("engineer_mode_enable", 0));
             }
         }
     }

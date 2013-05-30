@@ -239,6 +239,9 @@ public class CallNotifier extends Handler
     }
 
     protected void listen() {
+        if (!PhoneGlobals.sVoiceCapable) {
+            return;
+        }
         TelephonyManager telephonyManager = (TelephonyManager)mApplication.
             getSystemService(Context.TELEPHONY_SERVICE);
         telephonyManager.listen(mPhoneStateListener,

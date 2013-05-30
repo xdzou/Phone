@@ -1447,8 +1447,10 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
             if (serviceState == ServiceState.STATE_OUT_OF_SERVICE
                     && !TextUtils.isEmpty(networkSelection)) {
                 if (!mSelectedUnavailableNotify) {
-                    showNetworkSelection(networkSelection);
-                    mSelectedUnavailableNotify = true;
+                    if (mPhone.getIccCard().hasIccCard()) {
+                        showNetworkSelection(networkSelection);
+                        mSelectedUnavailableNotify = true;
+                    }
                 }
             } else {
                 if (mSelectedUnavailableNotify) {

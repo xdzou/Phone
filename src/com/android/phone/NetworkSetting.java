@@ -420,7 +420,20 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    carrier.setTitle(getNetworkTitle(ni));
+
+                    String rat = " 3G ";
+
+                    if (ni.getRadioTech().equals("2")) {        // RADIO_TECH_EDGE
+                        rat = " 2G ";
+                    } else if (ni.getRadioTech().equals("0")) { // RADIO_TECH_UNKNOWN
+                        rat = " ";
+                    }
+
+                    carrier.setTitle(getNetworkTitle(ni) + rat);
+
+                    //if (ni.getState() == OperatorInfo.State.FORBIDDEN)
+                    //    carrier.setEnabled(false);
+
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
