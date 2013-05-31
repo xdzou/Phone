@@ -308,6 +308,7 @@ public class NetworkSetting extends PreferenceActivity
                     dialog.setMessage(getResources().getString(R.string.load_networks_progress));
                     dialog.setCancelable(true);
                     dialog.setOnCancelListener(this);
+                    dialog.setCanceledOnTouchOutside(false);
                     break;
             }
             return dialog;
