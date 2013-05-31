@@ -289,9 +289,6 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         // for internet call settings
         if (!FeatureQuery.FEATURE_PHONE_RESTRICT_VOIP) {
             createSipCallSettings();
-        } else {
-            PreferenceGroup sipSettingPref = (PreferenceGroup) findPreference(SIP_SETTINGS_CATEGORY_KEY);
-            prefSet.removePreference(sipSettingPref);
         }
 
         ActionBar actionBar = getActionBar();
