@@ -89,7 +89,7 @@ public class OutgoingCallBroadcaster extends Activity
     private static final boolean DBG =
             (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
     // Do not check in with VDBG = true, since that may write PII to the system log.
-    private static final boolean VDBG = false;
+    private static final boolean VDBG = true;
 
     public static final String ACTION_SIP_SELECT_PHONE = "com.android.phone.SIP_SELECT_PHONE";
     public static final String EXTRA_ALREADY_CALLED = "android.phone.extra.ALREADY_CALLED";
@@ -470,6 +470,7 @@ public class OutgoingCallBroadcaster extends Activity
         }
 
         mIPCall = intent.getBooleanExtra(MSimConstants.IS_IP_CALL, false);
+        Log.d(TAG, "mIPCall = " + mIPCall);
 
         // Get the SIP phone setting state
         SharedPreferences sp = getSharedPreferences(SIP_TYPE_INDEX, MODE_WORLD_READABLE);

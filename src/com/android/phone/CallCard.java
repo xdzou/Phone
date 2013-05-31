@@ -1518,7 +1518,7 @@ public class CallCard extends LinearLayout
                     // AND a restricted presentation. However we leave it here in case of weird
                     // network behavior
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
-                    cityName = displayName;	
+                    cityName = displayName;
                     if (DBG) log("  ==> presentation not allowed! displayName = " + displayName);
                 } else if (!TextUtils.isEmpty(info.cnapName)) {
                     // No name, but we do have a valid CNAP name, so use that.
@@ -1598,7 +1598,7 @@ public class CallCard extends LinearLayout
             if ((visiblePhoneNumber != null &&
                  PhoneNumberUtils.compare(visiblePhoneNumber, displayName)) ||
                 (PhoneNumberUtils.compare(mName.getText().toString(), displayName) &&
-                 displayName.length() < mName.length())) {
+                 displayName.length() == mName.length())) {
                 if (DBG) log("chose not to update display {" + mName.getText() + ", "
                              + visiblePhoneNumber + "} with number " + displayName);
                 updateNameAndNumber = false;
@@ -1610,7 +1610,7 @@ public class CallCard extends LinearLayout
                 mName.setText(R.string.card_title_in_call);
             } else {
                 mName.setText(displayName);
-            }
+            }            
             mName.setVisibility(View.VISIBLE);
 
             if (displayNumber != null && !call.isGeneric()) {
