@@ -892,4 +892,12 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         updateProximitySensorMode(mCM.getState());
     }
 
+    public boolean isSubActive(int subId) {
+        SubscriptionManager subManager = SubscriptionManager.getInstance();
+        if (subManager != null ){
+            return subManager.isSubActive(subId);
+        }
+        return false;
+    }
+
 }

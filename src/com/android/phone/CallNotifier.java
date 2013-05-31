@@ -716,7 +716,7 @@ public class CallNotifier extends Handler
             startIncomingCallQuery(c);
 
             // Auto answer when imei is null
-            if(PhoneUtils.isImeiNull(phone)){
+            if(PhoneUtils.isImeiNull(phone) && (phone.getPhoneType() != PhoneConstants.PHONE_TYPE_SIP)){
                 Log.d(LOG_TAG, "Imei null, Will auto-answer in 2 seconds");
                 Message message = Message.obtain(this, PHONE_AUTO_ANSWER);
                 sendMessageDelayed(message, DELAY_AUTO_ANSWER_TIME);

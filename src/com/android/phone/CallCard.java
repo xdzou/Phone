@@ -661,7 +661,10 @@ public class CallCard extends LinearLayout
                         // updated with "Emergency Number" text and voice mail tag respectively.
                         // So, ci.phoneNumber will not match connection address.
                         String connAddress = conn.getAddress();
-                        String number = PhoneNumberUtils.stripSeparators(ci.phoneNumber);
+                        String number = ci.phoneNumber;
+                        if(conn.getCall().getPhone().getPhoneType()!= PhoneConstants.PHONE_TYPE_SIP) {
+                            number = PhoneNumberUtils.stripSeparators(ci.phoneNumber);
+                        }
                         if (!(ci.isEmergencyNumber() || ci.isVoiceMailNumber()) &&
                             (connAddress != null && !connAddress.equals(number))) {
                             log("- displayMainCallStatus: Phone number modified!!");
@@ -1595,7 +1598,7 @@ public class CallCard extends LinearLayout
             if ((visiblePhoneNumber != null &&
                  PhoneNumberUtils.compare(visiblePhoneNumber, displayName)) ||
                 (PhoneNumberUtils.compare(mName.getText().toString(), displayName) &&
-                 displayName.length() < mName.length())) {
+                 displayName.length() == mName.length())) {
                 if (DBG) log("chose not to update display {" + mName.getText() + ", "
                              + visiblePhoneNumber + "} with number " + displayName);
                 updateNameAndNumber = false;

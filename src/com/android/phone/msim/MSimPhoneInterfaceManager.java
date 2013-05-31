@@ -498,6 +498,14 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
         return ((MSimPhoneGlobals)mApp).isSimPukLocked(subscription);
     }
 
+    public boolean isSubActive() {
+        return isSubActive(getDefaultSubscription());
+    }
+
+    public boolean isSubActive(int subId) {
+        return ((MSimPhoneGlobals)mApp).isSubActive(subId);
+    }
+
     public boolean supplyPin(String pin, int subscription) {
         enforceModifyPermission();
         final UnlockSim checkSimPin = new UnlockSim(getPhone(subscription).getIccCard());
