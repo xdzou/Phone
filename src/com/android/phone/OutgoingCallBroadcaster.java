@@ -470,6 +470,7 @@ public class OutgoingCallBroadcaster extends Activity
         }
 
         mIPCall = intent.getBooleanExtra(MSimConstants.IS_IP_CALL, false);
+        Log.d(TAG, "mIPCall = " + mIPCall);
 
         // Get the SIP phone setting state
         SharedPreferences sp = getSharedPreferences(SIP_TYPE_INDEX, MODE_WORLD_READABLE);
