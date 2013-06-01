@@ -448,7 +448,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             View v = getLayoutInflater().inflate(R.layout.ip_prefix, null);
             final EditText edit = (EditText) v.findViewById(R.id.ip_prefix_dialog_edit);
             String ip_prefix = Settings.System.getString(getContentResolver(),
-                                   Settings.Global.IPCALL_PREFIX[mSubscription]);
+                                   Settings.System.IPCALL_PREFIX[mSubscription]);
             edit.setText(ip_prefix);
 
             new AlertDialog.Builder(this)
@@ -461,7 +461,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                                     String ip_prefix = edit.getText().toString();
                                     Settings.System.putString(
                                                     getContentResolver(),
-                                                    Settings.Global.IPCALL_PREFIX[mSubscription],
+                                                    Settings.System.IPCALL_PREFIX[mSubscription],
                                                     ip_prefix);
                                     if (TextUtils.isEmpty(ip_prefix)) {
                                         mSubscriptionIPPrefix
@@ -1471,7 +1471,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         mSubscriptionIPPrefix = (PreferenceScreen) findPreference(BUTTON_IPPREFIX_KEY);
         if (mSubscriptionIPPrefix != null) {
             String ip_prefix = Settings.System.getString(getContentResolver(),
-                                   Settings.Global.IPCALL_PREFIX[mSubscription]);
+                                   Settings.System.IPCALL_PREFIX[mSubscription]);
             if (TextUtils.isEmpty(ip_prefix)) {
                 mSubscriptionIPPrefix.setSummary(R.string.ipcall_sub_summery);
             } else {

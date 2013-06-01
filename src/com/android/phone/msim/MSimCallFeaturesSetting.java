@@ -162,7 +162,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonProximity) {
             boolean checked = mButtonProximity.isChecked();
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
-                    android.provider.Settings.Global.PROXIMITY_SENSOR, checked ? 1 : 0);
+                    android.provider.Settings.System.PROXIMITY_SENSOR, checked ? 1 : 0);
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
                                   : R.string.proximity_off_summary);
             return true;
@@ -193,7 +193,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonProximity) {
             boolean checked = mButtonProximity.isChecked();
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
-                    android.provider.Settings.Global.PROXIMITY_SENSOR, checked ? 1 : 0);
+                    android.provider.Settings.System.PROXIMITY_SENSOR, checked ? 1 : 0);
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
                     : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
@@ -443,8 +443,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         }
 
         if (mButtonProximity != null) {
-            int proximity = Settings.Global.getInt(getContentResolver(),
-                                Settings.Global.PROXIMITY_SENSOR, 1);
+            int proximity = Settings.System.getInt(getContentResolver(),
+                                Settings.System.PROXIMITY_SENSOR, 1);
             boolean checked = (proximity == 1);
             mButtonProximity.setChecked(checked);
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary

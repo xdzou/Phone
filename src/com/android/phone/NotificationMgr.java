@@ -1002,8 +1002,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 String contentText = mContext.getString(contextTextId);
 
                 int sub = currentCall.getPhone().getSubscription();
-                String name = Settings.Global.getString(mContext.getContentResolver(),
-                    Settings.Global.MULTI_SIM_NAME[sub]);
+                String name = Settings.System.getString(mContext.getContentResolver(),
+                    Settings.System.MULTI_SIM_NAME[sub]);
                 contentText +=  "  (" + name + ")";
                 builder.setContentText(contentText);
             }
