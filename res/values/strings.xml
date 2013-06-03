@@ -1889,4 +1889,7 @@
         <item>SLOT1</item>
         <item>SLOT2</item>
     </string-array>
+
+    <string name="number_voicemail">Voicemail</string>
+    
 </resources>
