@@ -24,6 +24,8 @@
 
 package com.android.phone;
 
+import java.util.Map;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -36,6 +38,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.telephony.MSimTelephonyManager;
@@ -46,9 +49,12 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.android.internal.telephony.CallDetails;
+import com.android.internal.telephony.CallStateException;
+import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
+import com.google.android.collect.Maps;
 import com.qualcomm.internal.telephony.SubscriptionManager;
 import com.qualcomm.internal.telephony.MSimPhoneFactory;
 
@@ -108,6 +114,7 @@ public class OutgoingCallBroadcaster extends Activity
     public static final String EXTRA_DIAL_CONFERENCE_URI =
             "com.android.phone.extra.DIAL_CONFERENCE_URI";
 
+    public static final String ADD_PARTICIPANT_KEY = "add_participant";
     // Dialog IDs
     private static final int DIALOG_NOT_VOICE_CAPABLE = 1;
 
@@ -116,6 +123,7 @@ public class OutgoingCallBroadcaster extends Activity
     private static final int OUTGOING_CALL_TIMEOUT_THRESHOLD = 2000; // msec
 
     private int mSubscription;
+    private PhoneGlobals mApp;
 
     /**
      * ProgressBar object with "spinner" style, which will be shown if we take more than
@@ -359,6 +367,7 @@ public class OutgoingCallBroadcaster extends Activity
         super.onCreate(icicle);
         setContentView(R.layout.outgoing_call_broadcaster);
         mWaitingSpinner = (ProgressBar) findViewById(R.id.spinner);
+        mApp = PhoneGlobals.getInstance();
 
         Intent intent = getIntent();
         if (DBG) {
@@ -697,34 +706,68 @@ public class OutgoingCallBroadcaster extends Activity
             // case here too (most likely by just doing nothing at all.)
         }
 
-        Intent broadcastIntent = new Intent(Intent.ACTION_NEW_OUTGOING_CALL);
-        if (number != null) {
-            broadcastIntent.putExtra(Intent.EXTRA_PHONE_NUMBER, number);
+        if (!processAddParticipant(intent, number)) {
+            Intent broadcastIntent = new Intent(Intent.ACTION_NEW_OUTGOING_CALL);
+            if (number != null) {
+                broadcastIntent.putExtra(Intent.EXTRA_PHONE_NUMBER, number);
+            }
+            PhoneUtils.checkAndCopyPhoneProviderExtras(intent, broadcastIntent);
+            broadcastIntent.putExtra(EXTRA_ALREADY_CALLED, callNow);
+            broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
+            broadcastIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+            broadcastIntent.putExtra(EXTRA_DIAL_CONFERENCE_URI,
+                    intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
+
+            // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
+            // to intercept the outgoing call.
+            broadcastIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+            if (DBG) Log.v(TAG, " - Broadcasting intent: " + broadcastIntent + ".");
+
+            // Set a timer so that we can prepare for unexpected delay introduced by the broadcast.
+            // If it takes too much time, the timer will show "waiting" spinner.
+            // This message will be removed when OutgoingCallReceiver#onReceive() is called before the
+            // timeout.
+            mHandler.sendEmptyMessageDelayed(EVENT_OUTGOING_CALL_TIMEOUT,
+                    OUTGOING_CALL_TIMEOUT_THRESHOLD);
+            sendOrderedBroadcastAsUser(broadcastIntent, UserHandle.OWNER,
+                    PERMISSION, new OutgoingCallReceiver(),
+                    null,  // scheduler
+                    Activity.RESULT_OK,  // initialCode
+                    number,  // initialData: initial value for the result data
+                    null);  // initialExtras
         }
-        PhoneUtils.checkAndCopyPhoneProviderExtras(intent, broadcastIntent);
-        broadcastIntent.putExtra(EXTRA_ALREADY_CALLED, callNow);
-        broadcastIntent.putExtra(EXTRA_ORIGINAL_URI, uri.toString());
-        broadcastIntent.putExtra(SUBSCRIPTION_KEY, mSubscription);
-        broadcastIntent.putExtra(EXTRA_DIAL_CONFERENCE_URI,
-                intent.getBooleanExtra((EXTRA_DIAL_CONFERENCE_URI), false));
+    }
 
-        // Need to raise foreground in-call UI as soon as possible while allowing 3rd party app
-        // to intercept the outgoing call.
-        broadcastIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
-        if (DBG) Log.v(TAG, " - Broadcasting intent: " + broadcastIntent + ".");
-
-        // Set a timer so that we can prepare for unexpected delay introduced by the broadcast.
-        // If it takes too much time, the timer will show "waiting" spinner.
-        // This message will be removed when OutgoingCallReceiver#onReceive() is called before the
-        // timeout.
-        mHandler.sendEmptyMessageDelayed(EVENT_OUTGOING_CALL_TIMEOUT,
-                OUTGOING_CALL_TIMEOUT_THRESHOLD);
-        sendOrderedBroadcastAsUser(broadcastIntent, UserHandle.OWNER,
-                PERMISSION, new OutgoingCallReceiver(),
-                null,  // scheduler
-                Activity.RESULT_OK,  // initialCode
-                number,  // initialData: initial value for the result data
-                null);  // initialExtras
+    private boolean processAddParticipant(Intent intent, String number) {
+        String[] extras = null;
+        boolean isConferenceUri = false;
+        boolean ret = false;
+        // For IMS add participant functionality, invoke api using ImsService
+        // and return.
+        if (intent.getBooleanExtra(ADD_PARTICIPANT_KEY, false)) {
+            isConferenceUri = intent.getBooleanExtra(
+                    OutgoingCallBroadcaster.EXTRA_DIAL_CONFERENCE_URI, false);
+            if (isConferenceUri) {
+                final Map<String, String> extrasMap = Maps.newHashMap();
+                extrasMap.put(CallDetails.EXTRAS_IS_CONFERENCE_URI,
+                        Boolean.toString(isConferenceUri));
+                extras = CallDetails.getExtrasFromMap(extrasMap);
+            }
+            try {
+                if (PhoneGlobals.getInstance().mImsService != null) {
+                    PhoneGlobals.getInstance().mImsService.addParticipant(number,
+                            CommandsInterface.CLIR_DEFAULT,
+                            CallDetails.CALL_TYPE_UNKNOWN,
+                            extras);
+                }
+            } catch (RemoteException ex) {
+                Log.d(TAG, "Ims Service addParticipant exception", ex);
+            }
+            ret = true;
+            finish();
+        }
+        Log.d(TAG, "processAddParticipant return = " + ret);
+        return ret;
     }
 
     @Override
