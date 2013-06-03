@@ -361,7 +361,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         String[] line1Numbers = new String[mNumPhones];
         for (int i = 0; i < mNumPhones; i++) {
             Phone phone = MSimPhoneGlobals.getInstance().getPhone(i);
-            line1Numbers[i] = PhoneNumberUtils.formatNumber(phone.getLine1Number());
+            String rawNumber = phone.getLine1Number();
+            if(!TextUtils.isEmpty(rawNumber)) {
+                line1Numbers[i] = PhoneNumberUtils.formatNumber(rawNumber);
+            }
             Log.d(LOG_TAG, "SUB:" + i + " phonetype = " + phone.getPhoneType()
                     + " isSubActive = " + mSubManager.isSubActive(i)
                     + " line1Number = " + line1Numbers[i]);
