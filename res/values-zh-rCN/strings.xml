@@ -738,4 +738,6 @@
     <string name="call_number">至: </string>
     <string name="cancel_call">取消</string>
     
+    <string name="number_voicemail">语音信箱</string>
+    
 </resources>
