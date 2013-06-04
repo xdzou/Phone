@@ -1003,5 +1003,8 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
         return networkName;
     }
 
-
+    // Gets the retry count during PIN1/PUK1 verification.
+    public int getIccPin1RetryCount(int subscription) {
+        return getPhone(subscription).getIccCard().getIccPin1RetryCount();
+}
 }
