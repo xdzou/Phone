@@ -119,8 +119,17 @@ public class MSimDialerActivity extends Activity {
             startOutgoingCall(phone.getSubscription());
         } else {
             if (DBG) Log.v(TAG, "launch dsdsdialer");
-            // if none in use, launch the MultiSimDialer
-            launchMSDialer();
+            int subscription;
+            if (SystemProperties.getBoolean("persist.env.phone.smartdialer", true)) {
+                subscription = mIntent.getIntExtra("dial_widget_switched", -1);
+            } else {
+                subscription = -1;
+            }
+            if (subscription != -1) {
+                startOutgoingCall(subscription);
+            } else {
+                launchMSDialer();
+            }
         }
         Log.d(TAG, "end of onResume()");
     }
