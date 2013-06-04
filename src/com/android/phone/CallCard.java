@@ -1598,7 +1598,7 @@ public class CallCard extends LinearLayout
             if ((visiblePhoneNumber != null &&
                  PhoneNumberUtils.compare(visiblePhoneNumber, displayName)) ||
                 (PhoneNumberUtils.compare(mName.getText().toString(), displayName) &&
-                 displayName.length() < mName.length())) {
+                 displayName.length() == mName.length())) {
                 if (DBG) log("chose not to update display {" + mName.getText() + ", "
                              + visiblePhoneNumber + "} with number " + displayName);
                 updateNameAndNumber = false;

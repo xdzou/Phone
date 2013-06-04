@@ -872,7 +872,7 @@ public class OutgoingCallBroadcaster extends Activity
                     number = PhoneNumberUtils.stripSeparators(number);
                 }
                 if ((vm != null) && (vm.equals("voicemail"))) {
-                    title = mCallNumber + "VoiceMail";
+                    title = mCallNumber + getResources().getString(R.string.number_voicemail);
                     Log.d(TAG, "its voicemail!!!");
                 } else {
                     title = mCallNumber + number;

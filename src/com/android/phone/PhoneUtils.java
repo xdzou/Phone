@@ -1564,7 +1564,7 @@ public class PhoneUtils {
                 } else {
                     if (DBG) log("==> Actually starting CallerInfoAsyncQuery.startQuery()...");
                     cit.asyncQuery = CallerInfoAsyncQuery.startQuery(QUERY_TOKEN, context,
-                            number, sCallerInfoQueryListener, c);
+                            number, sCallerInfoQueryListener, c, c.getCall().getPhone().getSubscription());
                     cit.asyncQuery.addQueryListener(QUERY_TOKEN, listener, cookie);
                     cit.isFinal = false;
                 }
@@ -1633,7 +1633,7 @@ public class PhoneUtils {
                         cit.isFinal = true;
                     } else {
                         cit.asyncQuery = CallerInfoAsyncQuery.startQuery(QUERY_TOKEN, context,
-                                updatedNumber, sCallerInfoQueryListener, c);
+                                updatedNumber, sCallerInfoQueryListener, c, c.getCall().getPhone().getSubscription());
                         cit.asyncQuery.addQueryListener(QUERY_TOKEN, listener, cookie);
                         cit.isFinal = false;
                     }

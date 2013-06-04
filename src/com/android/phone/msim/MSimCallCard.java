@@ -144,9 +144,10 @@ public class MSimCallCard extends CallCard {
             if (mSubInfo != null) {
                 //Get the subscription from current call object.
                 int subscription = call.getPhone().getSubscription();
-                subscription++;
+                // subscription++;
                 // --msim--: TODO: Better to have a string resource
-                String subInfo = "SUB" + subscription;
+                // String subInfo = "SUB" + subscription;
+                String subInfo = getMultiSimName(subscription);
                 if (DBG) Log.v(LOG_TAG, "Setting subinfo: " + subInfo);
                 mSubInfo.setText(subInfo);
                 mSubInfo.setVisibility(View.VISIBLE);
