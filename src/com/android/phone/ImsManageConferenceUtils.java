@@ -92,23 +92,20 @@ public class ImsManageConferenceUtils extends ManageConferenceUtils {
                 if (mUriListInConf != null) {
                     mNumCallersInConference = mUriListInConf.length;
                     Log.d(LOG_TAG, "mNumCallersInConference " + mNumCallersInConference);
-                }
-                for (int i = 0; i < MAX_CALLERS_IN_CONFERENCE; i++) {
-                    if (i < mNumCallersInConference) {
-                        // Fill in the row in the UI for this caller.
-                        updateManageConferenceRow(i, connection, false, mUriListInConf[i]);
-                    } else {
-                        // Blank out this row in the UI
-                        updateManageConferenceRow(i, null, false);
+                    for (int i = 0; i < MAX_CALLERS_IN_CONFERENCE; i++) {
+                        if (i < mNumCallersInConference) {
+                            // Fill in the row in the UI for this caller.
+                            updateManageConferenceRow(i, connection, false, mUriListInConf[i]);
+                        } else {
+                            // Blank out this row in the UI
+                            updateManageConferenceRow(i, null, false);
+                        }
                     }
+                    return;
                 }
-            } else {
-                Log.d(LOG_TAG, "Ims Service is null");
             }
         }
-        else {
-            super.updateManageConferencePanel(connections);
-        }
+        super.updateManageConferencePanel(connections);
     }
 
     /**
