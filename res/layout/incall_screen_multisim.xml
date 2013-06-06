@@ -18,7 +18,7 @@
      limitations under the License.
 -->
 
-<!-- In-call Phone UI; see InCallScreen.java. -->
+<!-- In-call Phone UI; see MSiMSimmInCallScreen.java. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -29,7 +29,7 @@
          (since layout_width and layout_height are both "match_parent" here) but
          we manually adjust its bottom margin in CallCard.updateCallInfoLayout()
          to make sure it doesn't overlap with the onscreen buttons from
-         incall_touch_ui.xml. -->
+         incall_touch_ui_msim.xml. -->
     <include
         layout="@layout/call_card_multi_sim"
         android:id="@+id/mSimCallCard"
@@ -41,8 +41,8 @@
          This widget contains the cluster of buttons shown at the bottom
          of the in-call screen, and also the DTMF dialpad (which, when
          visible, covers the upper part of the screen too.) -->
-    <include layout="@layout/incall_touch_ui"
-        android:id="@+id/inCallTouchUi"
+    <include layout="@layout/incall_touch_ui_msim"
+        android:id="@+id/inCallTouchUiMSim"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         />

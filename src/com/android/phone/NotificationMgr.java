@@ -97,7 +97,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
     protected PhoneGlobals mApp;
     private Phone mPhone;
-    private CallManager mCM;
+    protected CallManager mCM;
 
     protected Context mContext;
     protected NotificationManager mNotificationManager;
@@ -114,7 +114,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
 
     // Currently-displayed resource IDs for some status bar icons (or zero
     // if no notification is active):
-    private int mInCallResId;
+    protected int mInCallResId;
 
     // used to track the notification of selected network unavailable
     private boolean mSelectedUnavailableNotify = false;
@@ -125,8 +125,8 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
     protected int mVmNumberRetriesRemaining = MAX_VM_NUMBER_RETRIES;
 
     // Query used to look up caller-id info for the "call log" notification.
-    private QueryHandler mQueryHandler = null;
-    private static final int CALL_LOG_TOKEN = -1;
+    protected QueryHandler mQueryHandler = null;
+    protected static final int CALL_LOG_TOKEN = -1;
     private static final int CONTACT_TOKEN = -2;
 
     /**
@@ -305,7 +305,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *  2. For each call, run a query to retrieve the caller's name.
      *  3. For each caller, try obtaining photo.
      */
-    private class QueryHandler extends AsyncQueryHandler
+    protected class QueryHandler extends AsyncQueryHandler
             implements ContactsAsyncHelper.OnImageLoadCompleteListener {
 
         /**
@@ -602,7 +602,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         }
     }
 
-    private void cancelSpeakerphone() {
+    protected void cancelSpeakerphone() {
         if (mShowingSpeakerphoneIcon) {
             mStatusBarManager.removeIcon("speakerphone");
             mShowingSpeakerphoneIcon = false;
@@ -620,7 +620,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      * (But note that the status bar icon is *never* shown while the in-call UI
      * is active; it only appears if you bail out to some other activity.)
      */
-    private void updateSpeakerNotification() {
+    protected void updateSpeakerNotification() {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         boolean showNotification =
                 (mCM.getState() == PhoneConstants.State.OFFHOOK) && audioManager.isSpeakerphoneOn();
@@ -664,7 +664,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         }
     }
 
-    private void notifyMute() {
+    protected void notifyMute() {
         if (!mShowingMuteIcon) {
             mStatusBarManager.setIcon("mute", android.R.drawable.stat_notify_call_mute, 0,
                     mContext.getString(R.string.accessibility_call_muted));
@@ -672,7 +672,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
         }
     }
 
-    private void cancelMute() {
+    protected void cancelMute() {
         if (mShowingMuteIcon) {
             mStatusBarManager.removeIcon("mute");
             mShowingMuteIcon = false;
@@ -770,7 +770,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      *   handling the "new ringing connection" event from the telephony
      *   layer (see updateNotificationAndLaunchIncomingCallUi().)
      */
-    private void updateInCallNotification(boolean allowFullScreenIntent) {
+    protected void updateInCallNotification(boolean allowFullScreenIntent) {
         int resId;
         if (DBG) log("updateInCallNotification(allowFullScreenIntent = "
                      + allowFullScreenIntent + ")...");
@@ -1152,7 +1152,7 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
      * Take down the in-call notification.
      * @see updateInCallNotification()
      */
-    private void cancelInCall() {
+    protected void cancelInCall() {
         if (DBG) log("cancelInCall()...");
         mNotificationManager.cancel(IN_CALL_NOTIFICATION);
         mInCallResId = 0;

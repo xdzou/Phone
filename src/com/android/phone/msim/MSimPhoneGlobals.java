@@ -70,7 +70,7 @@ import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
  * Top-level Application class for the Phone app.
  */
 public class MSimPhoneGlobals extends PhoneGlobals {
-    /* package */ static final String LOG_TAG = "MSimPhoneApp";
+    /* package */ static final String LOG_TAG = "MSimPhoneGlobals";
 
     /**
      * Phone app-wide debug level:
@@ -86,12 +86,12 @@ public class MSimPhoneGlobals extends PhoneGlobals {
      *   (PhoneApp.DBG_LEVEL >= 2)
      * depending on the desired verbosity.
      */
-    /* package */ static final int DBG_LEVEL = 0;
+    /* package */ static final int DBG_LEVEL = 2;
 
     //TODO DSDS,restore the logging levels
     private static final boolean DBG =
-            (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
-    private static final boolean VDBG = (PhoneGlobals.DBG_LEVEL >= 2);
+            (MSimPhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
+    private static final boolean VDBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
     // Message codes; see mHandler below.
     private static final int EVENT_PERSO_LOCKED = 3;
@@ -245,7 +245,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // Create the CallController singleton, which is the interface
             // to the telephony layer for user-initiated telephony functionality
             // (like making outgoing calls.)
-            callController = CallController.init(this);
+            callController = MSimCallController.init(this);
             // ...and also the InCallUiState instance, used by the CallController to
             // keep track of some "persistent state" of the in-call UI.
             inCallUiState = InCallUiState.init(this);
@@ -399,6 +399,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.setClassName("com.android.phone", getCallScreenClassName());
         return intent;
+    }
+
+    protected static String getCallScreenClassName() {
+        return MSimInCallScreen.class.getName();
     }
 
     @Override
@@ -801,4 +805,13 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         updateProximitySensorMode(mCM.getState());
     }
 
+    /**
+     * Returns the singleton instance of the PhoneApp.
+     */
+    static PhoneGlobals getInstance() {
+        if (sMe == null) {
+            throw new IllegalStateException("No PhoneGlobals here!");
+        }
+        return sMe;
+    }
 }
