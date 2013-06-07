@@ -58,6 +58,11 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
         android.telephony.MSimTelephonyManager.putIntAtIndex(mPhone.getContext().getContentResolver(),
                 android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
                 mPhone.getSubscription(), networkType);
+
+        if(mPhone.getSubscription()==0){
+            android.provider.Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.SLOT1_USER_PRE_MODE, networkType);
+        }
         mPhone.setPreferredNetworkType(networkType, mHandler
                 .obtainMessage(MyHandler.MESSAGE_SET_PREFERRED_NETWORK_TYPE));
    }
