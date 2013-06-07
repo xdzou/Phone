@@ -116,4 +116,12 @@ public class GsmUmtsAdditionalCallOptions extends
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onDestroy() {
+        if (null != mAirplaneListener) {
+            unregisterReceiver(mAirplaneListener);
+        }
+        super.onDestroy();
+    }
 }
