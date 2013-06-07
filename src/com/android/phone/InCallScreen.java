@@ -814,14 +814,37 @@ public class InCallScreen extends Activity
         // Also we show pre-populated in-call UI under the dialog, which looks
         // not great. (issue 5210375, 5545506)
         // After cleaning them, remove commented-out MMI handling code elsewhere.
-        if (!mPhone.getPendingMmiCodes().isEmpty()) {
-            if (mMmiStartedDialog == null) {
-                MmiCode mmiCode = mPhone.getPendingMmiCodes().get(0);
-                Message message = Message.obtain(mHandler, PhoneGlobals.MMI_CANCEL);
-                mMmiStartedDialog = PhoneUtils.displayMMIInitiate(this, mmiCode,
-                        message, mMmiStartedDialog);
-                // mInCallScreen needs to receive MMI_COMPLETE/MMI_CANCEL event from telephony,
-                // which will dismiss the entire screen.
+
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            if (!((MSimPhoneGlobals)mApp).getPhone(0).getPendingMmiCodes().isEmpty()) {
+                if (mMmiStartedDialog == null) {
+                    MmiCode mmiCode = ((MSimPhoneGlobals)mApp).getPhone(0).getPendingMmiCodes().get(0);
+                    Message message = Message.obtain(mHandler, PhoneGlobals.MMI_CANCEL);
+                    mMmiStartedDialog = PhoneUtils.displayMMIInitiate(this, mmiCode,
+                            message, mMmiStartedDialog);
+                    // mInCallScreen needs to receive MMI_COMPLETE/MMI_CANCEL event from telephony,
+                    // which will dismiss the entire screen.
+                }
+            } else if (!((MSimPhoneGlobals)mApp).getPhone(1).getPendingMmiCodes().isEmpty()) {
+                if (mMmiStartedDialog == null) {
+                    MmiCode mmiCode = ((MSimPhoneGlobals)mApp).getPhone(1).getPendingMmiCodes().get(0);
+                    Message message = Message.obtain(mHandler, PhoneGlobals.MMI_CANCEL);
+                    mMmiStartedDialog = PhoneUtils.displayMMIInitiate(this, mmiCode,
+                            message, mMmiStartedDialog);
+                    // mInCallScreen needs to receive MMI_COMPLETE/MMI_CANCEL event from telephony,
+                    // which will dismiss the entire screen.
+                }
+            }
+        } else {
+            if (!mPhone.getPendingMmiCodes().isEmpty()) {
+                if (mMmiStartedDialog == null) {
+                    MmiCode mmiCode = mPhone.getPendingMmiCodes().get(0);
+                    Message message = Message.obtain(mHandler, PhoneGlobals.MMI_CANCEL);
+                    mMmiStartedDialog = PhoneUtils.displayMMIInitiate(this, mmiCode,
+                            message, mMmiStartedDialog);
+                    // mInCallScreen needs to receive MMI_COMPLETE/MMI_CANCEL event from telephony,
+                    // which will dismiss the entire screen.
+                }
             }
         }
 
@@ -2639,9 +2662,21 @@ public class InCallScreen extends Activity
         //   phones.  (The code's been that way all along.)  But CDMAPhone
         //   does in fact implement getPendingMmiCodes(), so should we
         //   check that here regardless of the phone type?
-        boolean hasPendingMmiCodes =
-                (mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM)
-                && !mPhone.getPendingMmiCodes().isEmpty();
+
+        boolean hasPendingMmiCodes = false;
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            if (((MSimPhoneGlobals)mApp).getPhone(0).getPhoneType() == PhoneConstants.PHONE_TYPE_GSM
+                    && (!((MSimPhoneGlobals)mApp).getPhone(0).getPendingMmiCodes().isEmpty())
+                    || ((MSimPhoneGlobals)mApp).getPhone(1).getPhoneType() == PhoneConstants.PHONE_TYPE_GSM
+                    && (!((MSimPhoneGlobals)mApp).getPhone(1).getPendingMmiCodes().isEmpty())) {
+                hasPendingMmiCodes = true;
+            }
+        } else {
+            if ((mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM)
+                    && !mPhone.getPendingMmiCodes().isEmpty()) {
+                hasPendingMmiCodes = true;
+            }
+        }
 
         // Finally, it's also OK to stay here on the InCallScreen if we
         // need to display a progress indicator while something's

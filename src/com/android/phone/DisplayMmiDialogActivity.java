@@ -38,6 +38,7 @@ import com.android.internal.app.AlertActivity;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.MmiCode;
 import android.util.Log;
+import android.telephony.TelephonyManager;
 
 
 public class DisplayMmiDialogActivity extends AlertActivity {
@@ -50,6 +51,7 @@ public class DisplayMmiDialogActivity extends AlertActivity {
     
     private int mTitle;
     private String mText;
+    Phone mPhone = null;
 
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -62,17 +64,23 @@ public class DisplayMmiDialogActivity extends AlertActivity {
         super.onResume();
         
         final PhoneGlobals app = PhoneGlobals.getInstance();
-        final Phone mPhone = PhoneGlobals.getInstance().phone;
-
+        MmiCode.State mState = null;        
+        
         MmiCode mMmiCode = PhoneUtils.getCurrentMmiCode();
-        MmiCode.State mState = null;
         if (mMmiCode != null) {
             mState = mMmiCode.getState();
         } else {
             finish();
             return;
         }
+        if (TelephonyManager.getDefault().isMultiSimEnabled() && (mMmiCode != null)) {
+            mPhone = (Phone) mMmiCode.getPhone();
+        } else {
+            mPhone = PhoneGlobals.getInstance().phone;
+        }
         
+        log("app.getPUKEntryActivity() != null ? " + (app.getPUKEntryActivity() != null));
+        log("mState = " + mState );
         if ((app.getPUKEntryActivity() != null) && (mState == MmiCode.State.COMPLETE)) {
             if (DBG) log("displaying PUK unblocking progress dialog.");
 
