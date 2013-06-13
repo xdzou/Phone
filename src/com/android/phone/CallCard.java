@@ -409,7 +409,7 @@ public class CallCard extends LinearLayout
     /**
      * Updates the UI for the state where the phone is in use, but not ringing.
      */
-    private void updateForegroundCall(CallManager cm) {
+    protected void updateForegroundCall(CallManager cm) {
         if (DBG) log("updateForegroundCall()...");
         // if (DBG) PhoneUtils.dumpCallManager();
 
@@ -456,7 +456,7 @@ public class CallCard extends LinearLayout
      * Updates the UI for the state where an incoming call is ringing (or
      * call waiting), regardless of whether the phone's already offhook.
      */
-    private void updateRingingCall(CallManager cm) {
+    protected void updateRingingCall(CallManager cm) {
         if (DBG) log("updateRingingCall()...");
 
         Call ringingCall = cm.getFirstActiveRingingCall();
