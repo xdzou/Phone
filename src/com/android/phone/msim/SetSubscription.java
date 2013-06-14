@@ -394,6 +394,11 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                     mSubscriptionManager.registerForSetSubscriptionCompleted(mHandler,
                             EVENT_SET_SUBSCRIPTION_DONE, null);
                 } else {
+                    // Show a message to prompt the user that nothing is changed
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            R.string.set_sub_no_change,
+                            Toast.LENGTH_SHORT);
+                    toast.show();
                     //TODO: Already some set sub in progress. Display a Toast?
                 }
             }
