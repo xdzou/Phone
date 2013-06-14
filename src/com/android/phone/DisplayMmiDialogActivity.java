@@ -114,8 +114,10 @@ public class DisplayMmiDialogActivity extends AlertActivity {
                 if (DBG) log("MMI code has finished running.");
 
                 if (DBG) log("Extended NW displayMMIInitiate (" + mText + ")");
-                if (mText == null || mText.length() == 0)
+                if (mText == null || mText.length() == 0) {
+                    finish();
                     return;
+                }
 
                 final DialogInterface.OnClickListener mUSSDFailDialogListener =
                     new DialogInterface.OnClickListener() {
@@ -134,7 +136,7 @@ public class DisplayMmiDialogActivity extends AlertActivity {
                 AlertDialog newDialog = new AlertDialog.Builder(DisplayMmiDialogActivity.this)
                         .setMessage(mText)
                         .setPositiveButton(R.string.ok, mUSSDFailDialogListener)
-                        .setCancelable(true)
+                        .setCancelable(false)
                         .create();
 
                 newDialog.getWindow().setType(

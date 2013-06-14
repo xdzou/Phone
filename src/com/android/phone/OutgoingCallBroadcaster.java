@@ -483,10 +483,12 @@ public class OutgoingCallBroadcaster extends Activity
         boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
         boolean isEccNum = (number != null) && PhoneNumberUtils.isEmergencyNumber(number);
+        boolean showMSimDialerOrNot = (intent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY, -1) == -1);
         // Treat bluetooth redial as normal call.
-        if (!isEccNum && MSimTelephonyManager.getDefault().isMultiSimEnabled() && /**promptEnabled &&**/
+        if (/*!isEccNum && */MSimTelephonyManager.getDefault().isMultiSimEnabled() && /**promptEnabled &&**/
                (activeSubCount() > 1) && (!isSIPCall(number, intent))
-               && (!isCdmaSuppCall(intent)) && index != SIP_TYPE_ALL) {
+               && (!isCdmaSuppCall(intent)) && index != SIP_TYPE_ALL
+               && showMSimDialerOrNot) {
             Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
 
             // set subscription for call back
@@ -516,7 +518,7 @@ public class OutgoingCallBroadcaster extends Activity
             // if this call is initiated from the bluetooth handset to redial
             // last call log, we will try to get
             // the original subscription info to MO call
-            if (!isEccNum && MSimTelephonyManager.getDefault().isMultiSimEnabled() && activeSubCount() > 1
+            if (/*!isEccNum && */MSimTelephonyManager.getDefault().isMultiSimEnabled() && activeSubCount() > 1
                     && isCallbackPriorityEnabled()) {
                 mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
                         PhoneGlobals.getInstance().getVoiceSubscription());
@@ -656,9 +658,9 @@ public class OutgoingCallBroadcaster extends Activity
                 finish();
                 return;
             }
-            int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
-            intent.putExtra(SUBSCRIPTION_KEY, sub);
-            Log.d(TAG, "Attempting emergency call on sub :" + sub);
+            //int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+            intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+            Log.d(TAG, "Attempting emergency call on mSubscription :" + mSubscription);
             callNow = true;
         } else {
             Log.e(TAG, "Unhandled Intent " + intent + ". Finish the Activity immediately.");
@@ -980,12 +982,12 @@ public class OutgoingCallBroadcaster extends Activity
             number = PhoneNumberUtils.convertKeypadLettersToDigitsExt(number);
             number = PhoneNumberUtils.stripSeparators(number);
         }
-        boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(number);
-        if (isEmergency) {
-            Log.d(TAG,"emergency call");
-            startOutgoingCall(getSubscriptionForEmergencyCall());
-            return;
-        }
+        //boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(number);
+        //if (isEmergency) {
+        //    Log.d(TAG,"emergency call");
+        //    startOutgoingCall(getSubscriptionForEmergencyCall());
+        //    return;
+        //}
 
         // CU request do not vibrate
         // Vibrator mCalloutNotify = (Vibrator)getApplication().getSystemService(Service.VIBRATOR_SERVICE);
