@@ -133,9 +133,9 @@ public class InCallScreen extends Activity
     // Amount of time (in msec) that we display the "Call ended" state.
     // The "short" value is for calls ended by the local user, and the
     // "long" value is for calls ended by the remote caller.
-    private static final int CALL_ENDED_SHORT_DELAY =  200;  // msec
-    private static final int CALL_ENDED_LONG_DELAY = 2000;  // msec
-    private static final int CALL_ENDED_EXTRA_LONG_DELAY = 5000;  // msec
+    protected static final int CALL_ENDED_SHORT_DELAY =  200;  // msec
+    protected static final int CALL_ENDED_LONG_DELAY = 2000;  // msec
+    protected static final int CALL_ENDED_EXTRA_LONG_DELAY = 5000;  // msec
 
     // Amount of time that we display the PAUSE alert Dialog showing the
     // post dial string yet to be send out to the n/w
@@ -154,24 +154,24 @@ public class InCallScreen extends Activity
 
     // Message codes; see mHandler below.
     // Note message codes < 100 are reserved for the PhoneApp.
-    private static final int PHONE_STATE_CHANGED = 101;
-    private static final int PHONE_DISCONNECT = 102;
-    private static final int EVENT_HEADSET_PLUG_STATE_CHANGED = 103;
-    private static final int POST_ON_DIAL_CHARS = 104;
+    protected static final int PHONE_STATE_CHANGED = 101;
+    protected static final int PHONE_DISCONNECT = 102;
+    protected static final int EVENT_HEADSET_PLUG_STATE_CHANGED = 103;
+    protected static final int POST_ON_DIAL_CHARS = 104;
     private static final int WILD_PROMPT_CHAR_ENTERED = 105;
-    private static final int ADD_VOICEMAIL_NUMBER = 106;
-    private static final int DONT_ADD_VOICEMAIL_NUMBER = 107;
-    private static final int DELAYED_CLEANUP_AFTER_DISCONNECT = 108;
-    private static final int SUPP_SERVICE_FAILED = 110;
-    private static final int REQUEST_UPDATE_BLUETOOTH_INDICATION = 114;
-    private static final int PHONE_CDMA_CALL_WAITING = 115;
-    private static final int REQUEST_CLOSE_SPC_ERROR_NOTICE = 118;
-    private static final int REQUEST_CLOSE_OTA_FAILURE_NOTICE = 119;
-    private static final int EVENT_PAUSE_DIALOG_COMPLETE = 120;
-    private static final int EVENT_HIDE_PROVIDER_INFO = 121;  // Time to remove the info.
-    private static final int REQUEST_UPDATE_SCREEN = 122;
-    private static final int PHONE_INCOMING_RING = 123;
-    private static final int PHONE_NEW_RINGING_CONNECTION = 124;
+    protected static final int ADD_VOICEMAIL_NUMBER = 106;
+    protected static final int DONT_ADD_VOICEMAIL_NUMBER = 107;
+    protected static final int DELAYED_CLEANUP_AFTER_DISCONNECT = 108;
+    protected static final int SUPP_SERVICE_FAILED = 110;
+    protected static final int REQUEST_UPDATE_BLUETOOTH_INDICATION = 114;
+    protected static final int PHONE_CDMA_CALL_WAITING = 115;
+    protected static final int REQUEST_CLOSE_SPC_ERROR_NOTICE = 118;
+    protected static final int REQUEST_CLOSE_OTA_FAILURE_NOTICE = 119;
+    protected static final int EVENT_PAUSE_DIALOG_COMPLETE = 120;
+    protected static final int EVENT_HIDE_PROVIDER_INFO = 121;  // Time to remove the info.
+    protected static final int REQUEST_UPDATE_SCREEN = 122;
+    protected static final int PHONE_INCOMING_RING = 123;
+    protected static final int PHONE_NEW_RINGING_CONNECTION = 124;
     private static final int PHONE_INCOMING_MODIFY_CALL_REQUEST = 125;
     private static final int PHONE_MODIFY_CALL_EVENT = 126;
     private static final int PHONE_AVP_UPGRADE_RETRY_FAILURE_NOTICE = 127;
@@ -220,7 +220,7 @@ public class InCallScreen extends Activity
                                           {0, 0, 0, 0},
                                           {0, 0, 0, 1},
                                           {0, 0, 0, 0}};
-    private boolean mRegisteredForPhoneStates;
+    protected boolean mRegisteredForPhoneStates;
 
     protected PhoneGlobals mApp;
     protected CallManager mCM;
@@ -238,13 +238,13 @@ public class InCallScreen extends Activity
     private long mBluetoothConnectionRequestTime;
 
     /** Main in-call UI elements. */
-    private CallCard mCallCard;
+    protected CallCard mCallCard;
 
     // UI controls:
-    private InCallControlState mInCallControlState;
-    private InCallTouchUi mInCallTouchUi;
+    protected InCallControlState mInCallControlState;
+    protected InCallTouchUi mInCallTouchUi;
     protected RespondViaSmsManager mRespondViaSmsManager;  // see internalRespondViaSms()
-    private ManageConferenceUtils mManageConferenceUtils;
+    protected ManageConferenceUtils mManageConferenceUtils;
 
     // DTMF Dialer controller and its view:
     protected DTMFTwelveKeyDialer mDialer;
@@ -261,10 +261,10 @@ public class InCallScreen extends Activity
     private AlertDialog mMissingVoicemailDialog;
     protected AlertDialog mGenericErrorDialog;
     private AlertDialog mSuppServiceFailureDialog;
-    private AlertDialog mWaitPromptDialog;
-    private AlertDialog mWildPromptDialog;
+    protected AlertDialog mWaitPromptDialog;
+    protected AlertDialog mWildPromptDialog;
     private AlertDialog mCallLostDialog;
-    private AlertDialog mPausePromptDialog;
+    protected AlertDialog mPausePromptDialog;
     private AlertDialog mExitingECMDialog;
     private AlertDialog mModifyCallPromptDialog;
     // NOTE: if you add a new dialog here, be sure to add it to dismissAllDialogs() also.
@@ -277,7 +277,7 @@ public class InCallScreen extends Activity
     protected boolean mIsDestroyed = false;
     protected boolean mIsForegroundActivity = false;
     private boolean mIsForegroundActivityForProximity = false;
-    private PowerManager mPowerManager;
+    protected PowerManager mPowerManager;
 
     // For use with Pause/Wait dialogs
     private String mPostDialStrAfterPause;
@@ -514,7 +514,7 @@ public class InCallScreen extends Activity
         mApp.setInCallScreenInstance(this);
 
         int subscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
-                    mApp.getDefaultSubscription());
+                mApp.getDefaultSubscription());
         log("onCreate Subscription: " + subscription);
         Phone phone = mApp.getPhone(subscription);
 
@@ -1107,7 +1107,7 @@ public class InCallScreen extends Activity
      *        truly finish() rather than just calling moveTaskToBack().
      *        @see finish()
      */
-    private void endInCallScreenSession(boolean forceFinish) {
+    protected void endInCallScreenSession(boolean forceFinish) {
         if (DBG) {
             log("endInCallScreenSession(" + forceFinish + ")...  phone state = " + mCM.getState());
         }
@@ -1182,7 +1182,7 @@ public class InCallScreen extends Activity
         }
     }
 
-    private void unregisterForPhoneStates() {
+    protected void unregisterForPhoneStates() {
         mCM.unregisterForPreciseCallStateChanged(mHandler);
         mCM.unregisterForDisconnect(mHandler);
         mCM.unregisterForMmiInitiate(mHandler);
@@ -1255,8 +1255,7 @@ public class InCallScreen extends Activity
         if (intent == null || intent.getAction() == null) {
             return;
         }
-        int subscription = mApp.getVoiceSubscription();
-        Phone phone = mApp.getPhone(subscription);
+        Phone phone = mApp.getPhone();
         String action = intent.getAction();
         if (DBG) log("internalResolveIntent: action=" + action);
 
@@ -1377,11 +1376,8 @@ public class InCallScreen extends Activity
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_IGNORE_CHEEK_PRESSES);
 
         // Initialize the CallCard.
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            mCallCard = (CallCard) findViewById(R.id.mSimCallCard);
-        } else {
-            mCallCard = (CallCard) findViewById(R.id.callCard);
-        }
+        mCallCard = (CallCard) findViewById(R.id.callCard);
+
         if (VDBG) log("  - mCallCard = " + mCallCard);
         mCallCard.setInCallScreenInstance(this);
 
@@ -1765,7 +1761,7 @@ public class InCallScreen extends Activity
     /**
      * Something has changed in the phone's state.  Update the UI.
      */
-    private void onPhoneStateChanged(AsyncResult r) {
+    protected void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
         if (DBG) log("onPhoneStateChanged: current state = " + state);
 
@@ -1808,7 +1804,7 @@ public class InCallScreen extends Activity
      *
      * @param r r.result contains the connection that just ended
      */
-    private void onDisconnect(AsyncResult r) {
+    protected void onDisconnect(AsyncResult r) {
         Connection c = (Connection) r.result;
         Connection.DisconnectCause cause = c.getDisconnectCause();
         if (DBG) log("onDisconnect: connection '" + c + "', cause = " + cause
@@ -2203,7 +2199,7 @@ public class InCallScreen extends Activity
      * (labeled either "OK" or "Cancel") on the "MMI Started" dialog.
      * @see PhoneUtils#cancelMmiCode(Phone)
      */
-    private void onMMICancel(Phone phone) {
+    protected void onMMICancel(Phone phone) {
         if (VDBG) log("onMMICancel()...");
 
         // First of all, cancel the outstanding MMI code (if possible.)
@@ -2227,7 +2223,7 @@ public class InCallScreen extends Activity
      * Handles an MMI_COMPLETE event, which is triggered by telephony,
      * implying MMI
      */
-    private void onMMIComplete(MmiCode mmiCode) {
+    protected void onMMIComplete(MmiCode mmiCode) {
         // Check the code to see if the request is ready to
         // finish, this includes any MMI state that is not
         // PENDING.
@@ -2255,7 +2251,7 @@ public class InCallScreen extends Activity
      * Dialer UI instead.  Similarly, we may now need to go directly to the
      * Dialer to handle POST_ON_DIAL_CHARS too.
      */
-    private void handlePostOnDialChars(AsyncResult r, char ch) {
+    protected void handlePostOnDialChars(AsyncResult r, char ch) {
         Connection c = (Connection) r.result;
 
         if (c != null) {
@@ -2476,7 +2472,7 @@ public class InCallScreen extends Activity
      * Right now this method will update UI visibility immediately, with no animation.
      * TODO: have animate flag here and use it anywhere possible.
      */
-    private void updateScreen() {
+    protected void updateScreen() {
         if (DBG) log("updateScreen()...");
         final InCallScreenMode inCallScreenMode = mApp.inCallUiState.inCallScreenMode;
         if (VDBG) {
@@ -2680,7 +2676,6 @@ public class InCallScreen extends Activity
     }
 
 
-
     private void handleMissingVoiceMailNumber() {
         if (DBG) log("handleMissingVoiceMailNumber");
 
@@ -2722,7 +2717,7 @@ public class InCallScreen extends Activity
         mMissingVoicemailDialog.show();
     }
 
-    private void addVoiceMailNumberPanel() {
+    protected void addVoiceMailNumberPanel() {
         if (mMissingVoicemailDialog != null) {
             mMissingVoicemailDialog.dismiss();
             mMissingVoicemailDialog = null;
@@ -2738,7 +2733,7 @@ public class InCallScreen extends Activity
         startActivity(intent);
     }
 
-    private void dontAddVoiceMailNumber() {
+    protected void dontAddVoiceMailNumber() {
         if (mMissingVoicemailDialog != null) {
             mMissingVoicemailDialog.dismiss();
             mMissingVoicemailDialog = null;
@@ -3332,7 +3327,7 @@ public class InCallScreen extends Activity
      * Utility function to bring up a generic "error" dialog, and then bail
      * out of the in-call UI when the user hits OK (or the BACK button.)
      */
-    private void showGenericErrorDialog(int resid, boolean isStartupError) {
+    protected void showGenericErrorDialog(int resid, boolean isStartupError) {
         CharSequence msg = getResources().getText(resid);
         if (DBG) log("showGenericErrorDialog('" + msg + "')...");
 
@@ -3377,7 +3372,7 @@ public class InCallScreen extends Activity
         mGenericErrorDialog.show();
     }
 
-    private void showCallLostDialog() {
+    protected void showCallLostDialog() {
         if (DBG) log("showCallLostDialog()...");
 
         // Don't need to show the dialog if InCallScreen isn't in the forgeround
@@ -3906,7 +3901,7 @@ public class InCallScreen extends Activity
      * responsible for calling updateScreen() or requestUpdateScreen() if
      * necessary.
      */
-    private void setInCallScreenMode(InCallScreenMode newMode) {
+    protected void setInCallScreenMode(InCallScreenMode newMode) {
         if (DBG) log("setInCallScreenMode: " + newMode);
         mApp.inCallUiState.inCallScreenMode = newMode;
 
@@ -4215,7 +4210,7 @@ public class InCallScreen extends Activity
     /**
      * Initializes the in-call touch UI on devices that need it.
      */
-    private void initInCallTouchUi() {
+    protected void initInCallTouchUi() {
         if (DBG) log("initInCallTouchUi()...");
         // TODO: we currently use the InCallTouchUi widget in at least
         // some states on ALL platforms.  But if some devices ultimately
@@ -4837,7 +4832,7 @@ public class InCallScreen extends Activity
     /**
      * Handles an incoming RING event from the telephony layer.
      */
-    private void onIncomingRing() {
+    protected void onIncomingRing() {
         if (DBG) log("onIncomingRing()...");
         // IFF we're visible, forward this event to the InCallTouchUi
         // instance (which uses this event to drive the animation of the
@@ -4857,7 +4852,7 @@ public class InCallScreen extends Activity
      * which typically happens for the first incoming phone call (even before
      * the possible first outgoing call).
      */
-    private void onNewRingingConnection() {
+    protected void onNewRingingConnection() {
         if (DBG) log("onNewRingingConnection()...");
 
         // We use this event to reset any incoming-call-related UI elements

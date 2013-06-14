@@ -303,6 +303,16 @@
             android:exported="false">
         </activity>
 
+        <activity android:name="MSimInCallScreen"
+            android:theme="@style/Theme.InCallScreen"
+            android:label="@string/phoneIconLabel"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:screenOrientation="nosensor"
+            android:configChanges="keyboardHidden"
+            android:exported="false">
+        </activity>
+
         <!-- Trampoline activity that handles the PERFORM_CDMA_PROVISIONING intent. -->
         <activity android:name="InCallScreenShowActivation"
             android:permission="android.permission.PERFORM_CDMA_PROVISIONING"
