@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,19 +31,13 @@ package com.android.phone;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.content.DialogInterface;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemProperties;
-import android.os.Handler;
+import android.os.SystemProperties;	
 import android.telephony.PhoneNumberUtils;
 import android.telephony.MSimTelephonyManager;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.View;
@@ -54,16 +48,16 @@ import android.widget.Button;
 
 
 import com.android.internal.telephony.MSimConstants;
-import com.qualcomm.internal.telephony.MSimPhoneFactory;
 import com.android.internal.telephony.Phone;
-import com.qualcomm.internal.telephony.SubscriptionManager;
-
-import android.provider.Settings;
-import android.provider.Settings.SettingNotFoundException;
-import android.telephony.ServiceState;
+import com.qualcomm.internal.telephony.MSimPhoneFactory;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
+/**
+ * While initiating MO call this class is used to provide
+ * a prompt option to user to choose the sub on  which user
+ * want to make outgoing call.
+ */
 public class MSimDialerActivity extends Activity {
     private static final String TAG = "MSimDialerActivity";
     private static final boolean DBG = true;
@@ -113,7 +107,9 @@ public class MSimDialerActivity extends Activity {
                  break;
              }
         }
-        if (phoneInCall) {
+
+        if (phoneInCall && !(MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                == MSimTelephonyManager.MultiSimVariants.DSDA)) {
             if (DBG) Log.v(TAG, "subs [" + phone.getSubscription() + "] is in call");
             // use the sub which is already in call
             startOutgoingCall(phone.getSubscription());

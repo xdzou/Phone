@@ -72,9 +72,9 @@ public class CallController extends Handler {
     private static final boolean VDBG = false;
 
     /** The singleton CallController instance. */
-    private static CallController sInstance;
+    protected static CallController sInstance;
 
-    private PhoneGlobals mApp;
+    protected PhoneGlobals mApp;
     private CallManager mCM;
 
     /** Helper object for emergency calls in some rare use cases.  Created lazily. */
@@ -121,7 +121,7 @@ public class CallController extends Handler {
      * Private constructor (this is a singleton).
      * @see init()
      */
-    private CallController(PhoneGlobals app) {
+    protected CallController(PhoneGlobals app) {
         if (DBG) log("CallController constructor: app = " + app);
         mApp = app;
         mCM = app.mCM;
@@ -327,7 +327,7 @@ public class CallController extends Handler {
      *    outgoing call.  If there was some kind of failure, return one of
      *    the other CallStatusCode codes indicating what went wrong.
      */
-    private CallStatusCode placeCallInternal(Intent intent) {
+    protected CallStatusCode placeCallInternal(Intent intent) {
         if (DBG) log("placeCallInternal()...  intent = " + intent);
 
         // TODO: This method is too long.  Break it down into more

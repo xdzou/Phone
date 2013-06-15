@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -30,6 +30,9 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneConstants;
 
 import java.util.List;
 
@@ -41,7 +44,7 @@ import java.util.List;
  */
 public class MSimCallCard extends CallCard {
     private static final String LOG_TAG = "MSimCallCard";
-    private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
+    private static final boolean DBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
     //Display subscription info for incoming call.
     private TextView mSubInfo;
@@ -62,29 +65,52 @@ public class MSimCallCard extends CallCard {
         mSubInfo = (TextView) findViewById(R.id.subInfo);
     }
 
-    @Override
-    protected void cancelTimer(Call call) {
-        Call.State state = call.getState();
-        mCallTime.cancelTimer();
-        if (state == Call.State.DIALING || state == Call.State.ALERTING) {
-            //Display subscription info only for incoming calls.
-            if (mSubInfo != null) {
-                mSubInfo.setVisibility(View.GONE);
-            }
-        } else if (state == Call.State.INCOMING || state == Call.State.WAITING) {
-            if (mSubInfo != null) {
-                //Get the subscription from current call object.
-                int subscription = call.getPhone().getSubscription();
-                subscription++;
-                // --msim--: TODO: Better to have a string resource
-                String subInfo = "SUB" + subscription;
-                if (DBG) Log.v(LOG_TAG, "Setting subinfo: " + subInfo);
-                mSubInfo.setText(subInfo);
+   // TODO need to find proper way to do this
+    void updateSubInfo() {
+        int activeSub = -1;
+        String subName = null;
+
+        activeSub = PhoneUtils.getActiveSubscription();
+        switch(activeSub) {
+            case 0:
+                subName = "SUB1";
+                mSubInfo.setText(subName);
                 mSubInfo.setVisibility(View.VISIBLE);
-            }
-        } else {
-            if (DBG) log(" - call.state: " + call.getState());
+            break;
+            case 1:
+                subName = "SUB2";
+                mSubInfo.setText(subName);
+                mSubInfo.setVisibility(View.VISIBLE);
+            break;
+            default:
+                log(" Updating SUB info default ");
+            break;
         }
+
+        log(" Updating SUB info " + subName);
+    }
+
+    /**
+     * Updates the UI for the state where the phone is in use, but not ringing.
+     */
+    @Override
+    protected void updateForegroundCall(CallManager cm) {
+        super.updateForegroundCall(cm);
+
+        //Update the subscriptio name on UI.
+        updateSubInfo();
+    }
+
+    /**
+     * Updates the UI for the state where an incoming call is ringing (or
+     * call waiting), regardless of whether the phone's already offhook.
+     */
+    @Override
+    protected void updateRingingCall(CallManager cm) {
+        super.updateRingingCall(cm);
+
+        //Update the subscriptio name on UI.
+        updateSubInfo();
     }
 
     // Accessibility event support.
