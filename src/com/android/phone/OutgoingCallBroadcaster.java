@@ -77,7 +77,7 @@ public class OutgoingCallBroadcaster extends Activity
     private static final String PERMISSION = android.Manifest.permission.PROCESS_OUTGOING_CALLS;
     private static final String TAG = "OutgoingCallBroadcaster";
     private static final boolean DBG =
-            (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
+        (PhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
     // Do not check in with VDBG = true, since that may write PII to the system log.
     private static final boolean VDBG = false;
 
@@ -478,6 +478,7 @@ public class OutgoingCallBroadcaster extends Activity
         } else {
             mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
                     PhoneGlobals.getInstance().getVoiceSubscription());
+            PhoneUtils.setActiveSubscription(mSubscription);
             Log.d(TAG, "subscription when there is (from Extra):" + mSubscription);
             processMSimIntent(intent);
         }
@@ -506,6 +507,10 @@ public class OutgoingCallBroadcaster extends Activity
         // to intercept or affect in any way.  (In that case, we start the call
         // immediately rather than going through the NEW_OUTGOING_CALL sequence.)
         boolean callNow;
+
+        // If true, then emergency call has been initiated on IMS.
+        // Use this flag to avoid call being processed as Sip.
+        boolean emergencyOnIms = false;
 
         if (getClass().getName().equals(intent.getComponent().getClassName())) {
             // If we were launched directly from the OutgoingCallBroadcaster,
@@ -654,6 +659,7 @@ public class OutgoingCallBroadcaster extends Activity
             if (PhoneUtils.isCallOnImsEnabled()) {
                 Log.d(TAG, "IMS is enabled , place IMS emergency call");
                 PhoneUtils.convertCallToIMS(intent, CallDetails.CALL_TYPE_VOICE);
+                emergencyOnIms = true;
             }
 
             // Initiate the outgoing call, and simultaneously launch the
@@ -691,7 +697,8 @@ public class OutgoingCallBroadcaster extends Activity
         // a plain address, whether it could be a tel: URI, etc.)
         Uri uri = intent.getData();
         String scheme = uri.getScheme();
-        if (Constants.SCHEME_SIP.equals(scheme) || PhoneNumberUtils.isUriNumber(number)) {
+        if ((Constants.SCHEME_SIP.equals(scheme) || PhoneNumberUtils.isUriNumber(number)) &&
+                !emergencyOnIms) {
             Log.i(TAG, "The requested number was detected as SIP call.");
             startSipCallOptionHandler(this, intent, uri, number);
             finish();
