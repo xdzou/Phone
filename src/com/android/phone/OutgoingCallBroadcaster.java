@@ -462,7 +462,7 @@ public class OutgoingCallBroadcaster extends Activity
 
         boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && promptEnabled &&
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && /**promptEnabled &&**/
                (activeSubCount() > 1) && (!isIntentFromBluetooth(intent)) &&
                        (!isSIPCall(number, intent))) {
             Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
