@@ -1312,6 +1312,12 @@ public class CallNotifier extends Handler
     private void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
 
+        if (mCM.getState() == PhoneConstants.State.IDLE && PhoneGlobals.getInstance().pendingMmiCodeAsyncResult != null) {
+            log("Process pendingMmiCodeAsyncResult...");
+            PhoneGlobals.getInstance().onMMIComplete(PhoneGlobals.getInstance().pendingMmiCodeAsyncResult);
+            PhoneGlobals.getInstance().pendingMmiCodeAsyncResult = null;
+        }
+
         mVoicePrivacyState = false;
         Connection c = (Connection) r.result;
         if (c != null) {

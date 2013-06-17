@@ -247,6 +247,7 @@ public class PhoneGlobals extends ContextWrapper
     protected PowerManager.WakeLock mProximityWakeLock;
     protected KeyguardManager mKeyguardManager;
     protected AccelerometerListener mAccelerometerListener;
+    protected AsyncResult pendingMmiCodeAsyncResult;
     private int mOrientation = AccelerometerListener.ORIENTATION_UNKNOWN;
 
     protected UpdateLock mUpdateLock;
@@ -356,7 +357,12 @@ public class PhoneGlobals extends ContextWrapper
                     break;
 
                 case MMI_COMPLETE:
-                    onMMIComplete((AsyncResult) msg.obj);
+                    if (mCM.getState() == PhoneConstants.State.IDLE) {
+                        onMMIComplete((AsyncResult) msg.obj);
+                    } else {
+                        Log.d(LOG_TAG, "Save pendingMmiCodeAsyncResult...");
+                        pendingMmiCodeAsyncResult = (AsyncResult) msg.obj;
+                    }
                     break;
 
                 case MMI_CANCEL:
