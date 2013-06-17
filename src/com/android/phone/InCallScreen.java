@@ -2751,7 +2751,11 @@ public class InCallScreen extends Activity
 
         // navigate to the Voicemail setting in the Call Settings activity.
         Intent intent = new Intent(CallFeaturesSetting.ACTION_ADD_VOICEMAIL);
-        intent.setClass(this, CallFeaturesSetting.class);
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
+            intent.setClass(this, MSimCallFeaturesSetting.class);
+		 } else {
+		     intent.setClass(this, CallFeaturesSetting.class);
+		 }
         startActivity(intent);
     }
 
