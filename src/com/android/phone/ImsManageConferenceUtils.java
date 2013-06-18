@@ -92,16 +92,18 @@ public class ImsManageConferenceUtils extends ManageConferenceUtils {
                 if (mUriListInConf != null) {
                     mNumCallersInConference = mUriListInConf.length;
                     Log.d(LOG_TAG, "mNumCallersInConference " + mNumCallersInConference);
-                    for (int i = 0; i < MAX_CALLERS_IN_CONFERENCE; i++) {
-                        if (i < mNumCallersInConference) {
-                            // Fill in the row in the UI for this caller.
-                            updateManageConferenceRow(i, connection, false, mUriListInConf[i]);
-                        } else {
-                            // Blank out this row in the UI
-                            updateManageConferenceRow(i, null, false);
+                    if(mNumCallersInConference > 0) {
+                        for (int i = 0; i < MAX_CALLERS_IN_CONFERENCE; i++) {
+                            if (i < mNumCallersInConference) {
+                                // Fill in the row in the UI for this caller.
+                                updateManageConferenceRow(i, connection, false, mUriListInConf[i]);
+                            } else {
+                                // Blank out this row in the UI
+                                updateManageConferenceRow(i, null, false);
+                            }
                         }
+                        return;
                     }
-                    return;
                 }
             }
         }
@@ -175,16 +177,11 @@ public class ImsManageConferenceUtils extends ManageConferenceUtils {
         // that'll happen automatically very soon (when we get the
         // onDisconnect() callback triggered by this hangup() call.)
 
-        int connId = 0;
-        try {
-            connId = (connection != null) ? connection.getIndex() : connId;
-        } catch (CallStateException ex) {
-            Log.d(LOG_TAG, "Conn id for end is not found " + ex);
-        }
-
         if (mApp.mImsService != null) {
             try {
-                mApp.mImsService.hangupUri(connId, uri, null);
+                /* HangupURI  conference event package support , conn id = -1, uri=particpant uri
+                 * without conf event , conn id = valid index, uri =dialadress */
+                mApp.mImsService.hangupUri(-1, uri, null);
             } catch (RemoteException ex) {
                 Log.d(LOG_TAG, "Ims Service hangupUri exception", ex);
             }
