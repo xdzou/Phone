@@ -58,6 +58,7 @@ public class ExportContactsToSim extends Activity {
     private static final String TAG = "ExportContactsToSim";
     private TextView mEmptyText;
     private int mResult = 1;
+    protected boolean mIsForeground = false;
 
     private static final int CONTACTS_EXPORTED = 1;
     private static final String[] COLUMN_NAMES = new String[] {
@@ -73,6 +74,18 @@ public class ExportContactsToSim extends Activity {
         setContentView(R.layout.export_contact_screen);
         mEmptyText = (TextView) findViewById(android.R.id.empty);
         doExportToSim();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mIsForeground = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mIsForeground = false;
     }
 
     private void doExportToSim() {
@@ -99,8 +112,8 @@ public class ExportContactsToSim extends Activity {
                 "='1' AND (account_type is NULL OR account_type !=?)";
         String[] selectionArg = new String[] {"SIM"};
 
-        Cursor contactsCursor = managedQuery(phoneBookContentUri, null,
-                selection, selectionArg, null);
+        Cursor contactsCursor = getContentResolver().query(phoneBookContentUri, null, selection,
+                selectionArg, null);
         return contactsCursor;
     }
 
@@ -135,6 +148,10 @@ public class ExportContactsToSim extends Activity {
     }
 
     private void showAlertDialog(String value) {
+        if (!mIsForeground) {
+            Log.d(TAG, "The activitiy is not in foreground. Do not display dialog!!!");
+            return;
+        }
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
         alertDialog.setTitle("Result...");
         alertDialog.setMessage(value);
