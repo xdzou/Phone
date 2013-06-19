@@ -57,7 +57,7 @@ public class NetworkSetting extends PreferenceActivity
         implements DialogInterface.OnCancelListener {
 
     private static final String LOG_TAG = "phone";
-    private static final boolean DBG = false;
+    private static final boolean DBG = true;
 
     private static final int EVENT_NETWORK_SCAN_COMPLETED = 100;
     private static final int EVENT_NETWORK_SELECTION_DONE = 200;

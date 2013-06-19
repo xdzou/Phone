@@ -41,7 +41,7 @@ import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 public class NetworkQueryService extends Service {
     // debug data
     private static final String LOG_TAG = "NetworkQuery";
-    private static final boolean DBG = false;
+    private static final boolean DBG = true;
 
     // static events
     private static final int EVENT_NETWORK_SCAN_COMPLETED = 100; 
