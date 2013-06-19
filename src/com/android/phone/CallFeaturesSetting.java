@@ -69,6 +69,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.cdma.TtyIntent;
 import com.android.phone.sip.SipSharedPreferences;
+import android.telephony.TelephonyManager;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -1570,6 +1571,16 @@ public class CallFeaturesSetting extends PreferenceActivity
 
         // get buttons
         PreferenceScreen prefSet = getPreferenceScreen();
+        if(!TelephonyManager.getDefault().hasIccCard()){
+            Preference voicemail = prefSet.findPreference("button_voicemail_category_key");
+            if(voicemail != null){
+                voicemail.setEnabled(false);
+            }
+            Preference fdn = prefSet.findPreference(BUTTON_FDN_KEY);
+            if(fdn != null){
+                fdn.setEnabled(false);
+            }
+        }
         mSubMenuVoicemailSettings = (EditPhoneNumberPreference)findPreference(BUTTON_VOICEMAIL_KEY);
         if (mSubMenuVoicemailSettings != null) {
             mSubMenuVoicemailSettings.setParentActivity(this, VOICEMAIL_PREF_ID, this);
