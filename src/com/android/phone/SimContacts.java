@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
- * Copyright (c) 2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013 The Linux Foundation. All rights reserved.
  *
  * Not a Contribution, Apache license notifications and license are retained
  * for attribution purposes only
@@ -71,7 +71,7 @@ public class SimContacts extends ADNList {
     private static final String UP_ACTIVITY_PACKAGE = "com.android.contacts";
     private static final String UP_ACTIVITY_CLASS =
             "com.android.contacts.activities.PeopleActivity";
-
+    protected boolean mIsForeground = false;
     static final ContentValues sEmptyContentValues = new ContentValues();
 
     private static final int MENU_IMPORT_ONE = 1;
@@ -134,7 +134,9 @@ public class SimContacts extends ADNList {
                 mProgressDialog.incrementProgressBy(1);
             }
 
-            mProgressDialog.dismiss();
+            if (mIsForeground) {
+                mProgressDialog.dismiss();
+            }
             finish();
         }
 
@@ -253,6 +255,18 @@ public class SimContacts extends ADNList {
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    protected void onResume() {
+         super.onResume();
+         mIsForeground = true;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mIsForeground = false;
     }
 
     @Override
