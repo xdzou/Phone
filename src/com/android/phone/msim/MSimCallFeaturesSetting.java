@@ -96,6 +96,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             "sip_settings_category_key";
 
     private static final String SPEED_DIAL_SETTINGS_KEY = "speed_dial_settings";
+    private static final String DISPLAY_HOME_LOCATION_KEY   = "display_home_location_key";
     // preferred TTY mode
     // Phone.TTY_MODE_xxx
     static final int preferredTtyMode = Phone.TTY_MODE_OFF;
@@ -128,6 +129,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private SipSharedPreferences mSipSharedPreferences;
 
     private PreferenceScreen mButtonXDivert;
+    private CheckBoxPreference mDisplayHomeLocation;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
 
@@ -198,6 +200,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        } else if (preference == mDisplayHomeLocation) {
+            handleDisplayHomeLocationChange(preference, objValue);
         }
         // always let the preference setting proceed.
         return true;
@@ -229,7 +233,11 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
+        mDisplayHomeLocation = (CheckBoxPreference)findPreference(DISPLAY_HOME_LOCATION_KEY);
 
+        if (mDisplayHomeLocation != null ) {
+            mDisplayHomeLocation.setOnPreferenceChangeListener(this);
+        }
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(getContentResolver(),
                     Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
@@ -464,9 +472,19 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             updatePreferredTtyModeSummary(settingsTtyMode);
         }
 
+        if (mDisplayHomeLocation != null) {
+            updateHomeLocationCheckbox();
+        }
+
         if (mButtonXDivert != null) {
             if (!isAllSubActive()) mButtonXDivert.setEnabled(false);
         }
+    }
+
+    private void updateHomeLocationCheckbox() {
+        mDisplayHomeLocation.setChecked(Settings.System.getInt(
+                getContentResolver(),
+                Settings.System.DISPLAY_HOME_LOCATION, 1) != 0);
     }
 
     private boolean isAirplaneModeOn() {
@@ -502,6 +520,12 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             ttyModeChanged.putExtra(TtyIntent.TTY_PREFFERED_MODE, buttonTtyMode);
             sendBroadcast(ttyModeChanged);
         }
+    }
+
+    private void handleDisplayHomeLocationChange(Preference preference,Object objValue) {
+        boolean isEnabled = Boolean.parseBoolean(objValue.toString());
+        android.provider.Settings.System.putInt(getContentResolver(),
+                Settings.System.DISPLAY_HOME_LOCATION, isEnabled ? 1 : 0);
     }
 
     private void handleSipCallOptionsChange(Object objValue) {

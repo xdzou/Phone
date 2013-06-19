@@ -182,6 +182,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_RETRY_KEY       = "button_auto_retry_key";
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
+    private static final String DISPLAY_HOME_LOCATION_KEY   = "display_home_location_key";
 
     private static final String BUTTON_GSM_UMTS_OPTIONS = "button_gsm_more_expand_key";
     private static final String BUTTON_CDMA_OPTIONS = "button_cdma_more_expand_key";
@@ -284,6 +285,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private Preference mVoicemailNotificationRingtone;
     private CheckBoxPreference mVoicemailNotificationVibrate;
     private SipSharedPreferences mSipSharedPreferences;
+    private CheckBoxPreference mDisplayHomeLocation;
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -597,6 +599,8 @@ public class CallFeaturesSetting extends PreferenceActivity
             }
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        } else if (preference == mDisplayHomeLocation) {
+            handleDisplayHomeLocationChange(preference, objValue);
         }
         // always let the preference setting proceed.
         return true;
@@ -1522,6 +1526,12 @@ public class CallFeaturesSetting extends PreferenceActivity
         mButtonAutoRetry = (CheckBoxPreference) findPreference(BUTTON_RETRY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
+        mDisplayHomeLocation = (CheckBoxPreference)findPreference(DISPLAY_HOME_LOCATION_KEY);
+
+        if (mDisplayHomeLocation != null ) {
+            mDisplayHomeLocation.setOnPreferenceChangeListener(this);
+        }
+
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
@@ -1814,6 +1824,10 @@ public class CallFeaturesSetting extends PreferenceActivity
                     BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY, false));
         }
 
+        if (mDisplayHomeLocation != null) {
+            updateHomeLocationCheckbox();
+        }
+
         lookupRingtoneName();
     }
 
@@ -1893,6 +1907,12 @@ public class CallFeaturesSetting extends PreferenceActivity
         }
     }
 
+    private void handleDisplayHomeLocationChange(Preference preference,Object objValue) {
+        boolean isEnabled = Boolean.parseBoolean(objValue.toString());
+        android.provider.Settings.System.putInt(getContentResolver(),
+                Settings.System.DISPLAY_HOME_LOCATION, isEnabled ? 1 : 0);
+        }
+
     private void handleSipCallOptionsChange(Object objValue) {
         String option = objValue.toString();
         mSipSharedPreferences.setSipCallOption(option);
@@ -1918,6 +1938,12 @@ public class CallFeaturesSetting extends PreferenceActivity
 
     private static void log(String msg) {
         Log.d(LOG_TAG, msg);
+    }
+
+    private void updateHomeLocationCheckbox() {
+        mDisplayHomeLocation.setChecked(Settings.System.getInt(
+                getContentResolver(),
+                Settings.System.DISPLAY_HOME_LOCATION, 1) != 0);
     }
 
     /**
