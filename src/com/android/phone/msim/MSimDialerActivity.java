@@ -108,6 +108,11 @@ public class MSimDialerActivity extends Activity {
              }
         }
 
+        //we set voice always ask in settings
+        int voiceSubscription = MSimPhoneFactory.getVoiceSubscription();
+        boolean isAlwaysAsk = voiceSubscription != MSimConstants.SUB1 &&
+                voiceSubscription != MSimConstants.SUB2;
+
         if (phoneInCall && !(MSimTelephonyManager.getDefault().getMultiSimConfiguration()
                 == MSimTelephonyManager.MultiSimVariants.DSDA)) {
             if (DBG) Log.v(TAG, "subs [" + phone.getSubscription() + "] is in call");
@@ -123,6 +128,8 @@ public class MSimDialerActivity extends Activity {
             }
             if (subscription != -1) {
                 startOutgoingCall(subscription);
+            } else if (!isAlwaysAsk) {
+                startOutgoingCall(voiceSubscription);
             } else {
                 launchMSDialer();
             }
