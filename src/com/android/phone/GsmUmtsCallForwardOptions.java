@@ -11,6 +11,8 @@ import android.os.SystemProperties;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -63,6 +65,14 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
         mButtonCFNRy = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFNRY_KEY);
         mButtonCFNRc = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFNRC_KEY);
 
+        if(SystemProperties.getBoolean("persist.env.phone.jointforward", false)){
+           if(mSubscription == 0){
+               int phoneType = getPhoneTypeBySubscription(mSubscription);
+               if(TelephonyManager.PHONE_TYPE_GSM == phoneType && mButtonCFNRc != null){
+                   prefSet.removePreference(mButtonCFNRc);
+               }
+            }
+        }
         mButtonCFU.setParentActivity(this, mButtonCFU.reason);
         mButtonCFB.setParentActivity(this, mButtonCFB.reason);
         mButtonCFNRy.setParentActivity(this, mButtonCFNRy.reason);
@@ -91,6 +101,14 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
+
+    private int getPhoneTypeBySubscription(int subscription){
+        int phoneType = MSimTelephonyManager.getDefault().isMultiSimEnabled() ?
+                MSimTelephonyManager.getDefault().getCurrentPhoneType(subscription) :
+                TelephonyManager.getDefault().getCurrentPhoneType();
+        return phoneType;
+    }
+
 
     @Override
     public void onResume() {
