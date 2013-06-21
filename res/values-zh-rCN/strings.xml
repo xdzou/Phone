@@ -669,4 +669,5 @@
     <string name="volume_boost_notify_disabled">"关闭音效增强"</string>
 
     <string name="speed_dial_setting">快速拨号设置</string>
+    <string name="callind_multi_sim">"SIM卡配置"</string>
 </resources>
