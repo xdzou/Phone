@@ -97,7 +97,7 @@ public class ExportContactsToSim extends Activity {
                     } while (!mCancel && contactsCursor.moveToNext());
                 }
 
-                contactsCursor.close();
+                //contactsCursor.close();
 
                 if (!mCancel) {
                     Message message = Message.obtain(mHandler, CONTACTS_EXPORTED, (Integer)mResult);
