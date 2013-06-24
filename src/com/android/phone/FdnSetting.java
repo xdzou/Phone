@@ -550,10 +550,16 @@ public class FdnSetting extends PreferenceActivity
                 mButtonEnableFDN.setTitle(R.string.enable_fdn_ok);
                 mButtonEnableFDN.setSummary(R.string.fdn_enabled);
                 mButtonEnableFDN.setDialogTitle(R.string.disable_fdn);
+                Intent intent = new Intent("android.intent.action.SIM_ENABLE_FDN");
+                intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+                sendBroadcast(intent);
             } else {
                 mButtonEnableFDN.setTitle(R.string.disable_fdn_ok);
                 mButtonEnableFDN.setSummary(R.string.fdn_disabled);
                 mButtonEnableFDN.setDialogTitle(R.string.enable_fdn);
+                Intent intent = new Intent("android.intent.action.SIM_DISABLE_FDN");
+                intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+                sendBroadcast(intent);
             }
         } else {
             // Disable FDN Settings since FDN service is unavailable.
