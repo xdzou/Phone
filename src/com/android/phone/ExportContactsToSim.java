@@ -84,6 +84,12 @@ public class ExportContactsToSim extends Activity {
         mCancel = true;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        displayProgress(false);
+    }
+
     private void doExportToSim() {
 
         displayProgress(true);

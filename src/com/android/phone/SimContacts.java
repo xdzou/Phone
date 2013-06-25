@@ -131,10 +131,13 @@ public class SimContacts extends ADNList {
             mCursor.moveToPosition(-1);
             while (!mCanceled && mCursor.moveToNext()) {
                 actuallyImportOneSimContact(mCursor, resolver, mAccount);
+                if(mProgressDialog != null)
                 mProgressDialog.incrementProgressBy(1);
             }
 
+            if(mProgressDialog != null)
             mProgressDialog.dismiss();
+            mProgressDialog = null;
             finish();
         }
 
@@ -253,6 +256,14 @@ public class SimContacts extends ADNList {
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(mProgressDialog != null)
+        mProgressDialog.dismiss();
+        mProgressDialog = null;
     }
 
     @Override
@@ -430,12 +441,18 @@ public class SimContacts extends ADNList {
             mCursor.moveToPosition(-1);
             while (!mCanceled && mCursor.moveToNext()) {
                 result = result & actuallyDeleteOneSimContact(mCursor);
+                if(mProgressDialog != null)
                 mProgressDialog.incrementProgressBy(1);
+
             }
 
-            mProgressDialog.dismiss();
-            Message message = Message.obtain(mHandler, EVENT_CONTACTS_DELETED, (Integer)result);
-            mHandler.sendMessage(message);
+            if(mProgressDialog != null){
+                mProgressDialog.dismiss();
+                Message message = Message.obtain(mHandler, EVENT_CONTACTS_DELETED, (Integer)result);
+                mHandler.sendMessage(message);
+                }
+            mProgressDialog = null;
+
         }
 
         public void onCancel(DialogInterface dialog) {
