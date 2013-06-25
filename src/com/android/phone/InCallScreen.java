@@ -4013,7 +4013,7 @@ public class InCallScreen extends Activity
         }
 
         int numConnections = connections.size();
-        if (numConnections <= 1) {
+        if (!mCM.getActiveFgCall().isMultiparty()) {
             if (VDBG) log("==> foreground call no longer a conference!");
             // Hide the Manage Conference panel, return to NORMAL mode.
             setInCallScreenMode(InCallScreenMode.NORMAL);
