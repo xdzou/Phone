@@ -33,6 +33,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.util.Log;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
@@ -80,6 +81,11 @@ public class SelectSubscription extends PreferenceActivity {
 
         subscriptionPref0.getIntent().putExtra(SUBSCRIPTION_KEY, 0);
         subscriptionPref1.getIntent().putExtra(SUBSCRIPTION_KEY, 1);
+
+        subscriptionPref0.setTitle(Settings.System.getString(this.getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[0]));
+        subscriptionPref1.setTitle(Settings.System.getString(this.getContentResolver(),
+                Settings.System.MULTI_SIM_NAME[1]));
     }
 
     @Override
