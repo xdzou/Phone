@@ -429,7 +429,7 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni))+ ni.getRadioTechDes());
+                    carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni)) + ni.getRadioTechDes());
                     if (ni.getState() == OperatorInfo.State.FORBIDDEN)
                         carrier.setTitle(carrier.getTitle()+ getString(R.string.network_forbidden));
                     carrier.setPersistent(false);
