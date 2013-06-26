@@ -407,8 +407,10 @@ public class NetworkSetting extends PreferenceActivity
         // update the state of the preferences.
         if (DBG) log("hideProgressPanel");
 
-        if (mIsForeground) {
+        try {
             dismissDialog(DIALOG_NETWORK_LIST_LOAD);
+        } catch (IllegalArgumentException e){
+            if (DBG) log(" DIALOG_NETWORK_LIST_LOAD dismissed already");
         }
 
         getPreferenceScreen().setEnabled(true);
@@ -427,7 +429,7 @@ public class NetworkSetting extends PreferenceActivity
                 // confusing mcc/mnc.
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
-                    carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni)));
+                    carrier.setTitle(localeNamesParser.getLocaleName(getNetworkTitle(ni))+ ni.getRadioTechDes());
                     if (ni.getState() == OperatorInfo.State.FORBIDDEN)
                         carrier.setTitle(carrier.getTitle()+ getString(R.string.network_forbidden));
                     carrier.setPersistent(false);
