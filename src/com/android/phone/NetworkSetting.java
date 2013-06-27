@@ -57,7 +57,7 @@ public class NetworkSetting extends PreferenceActivity
         implements DialogInterface.OnCancelListener {
 
     private static final String LOG_TAG = "phone";
-    private static final boolean DBG = false;
+    private static final boolean DBG = true;
 
     private static final int EVENT_NETWORK_SCAN_COMPLETED = 100;
     private static final int EVENT_NETWORK_SELECTION_DONE = 200;
@@ -154,7 +154,7 @@ public class NetworkSetting extends PreferenceActivity
             if (DBG) log("connection created, binding local service.");
             mNetworkQueryService = ((NetworkQueryService.LocalBinder) service).getService();
             // as soon as it is bound, run a query.
-            loadNetworksList();
+            //loadNetworksList();
         }
 
         /** Handle the task of cleaning up the local binding */
@@ -407,8 +407,10 @@ public class NetworkSetting extends PreferenceActivity
         // update the state of the preferences.
         if (DBG) log("hideProgressPanel");
 
-        if (mIsForeground) {
+        try {
             dismissDialog(DIALOG_NETWORK_LIST_LOAD);
+        } catch (IllegalArgumentException e){
+            if (DBG) log(" DIALOG_NETWORK_LIST_LOAD dismissed already");
         }
 
         getPreferenceScreen().setEnabled(true);
