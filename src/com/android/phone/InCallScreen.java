@@ -2753,9 +2753,9 @@ public class InCallScreen extends Activity
         Intent intent = new Intent(CallFeaturesSetting.ACTION_ADD_VOICEMAIL);
         if (MSimTelephonyManager.getDefault().isMultiSimEnabled()){
             intent.setClass(this, MSimCallFeaturesSetting.class);
-		 } else {
-		     intent.setClass(this, CallFeaturesSetting.class);
-		 }
+        } else {
+            intent.setClass(this, CallFeaturesSetting.class);
+        }
         startActivity(intent);
     }
 
