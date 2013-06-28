@@ -100,7 +100,7 @@ public class ExportContactsToSim extends Activity {
                 if (contactsCursor.moveToFirst()) {
                     do {
                         populateContactDataFromCursor(contactsCursor);
-                    } while (!mCancel && contactsCursor.moveToNext());
+                    } while (!mCancel && contactsCursor.moveToNext() && mResult==1 );
                 }
 
                 //contactsCursor.close();

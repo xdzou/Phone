@@ -1800,8 +1800,8 @@
     <string name="contactdeleteSuccess"> Succesfully deleted contact from SIM </string>
     <string name="contactdeleteFailed"> Failed to delete contact from SIM !!!</string>
     <string name="allContactdeleteSuccess"> Succesfully deleted all contacts from SIM </string>
-    <string name="allContactdeleteFailed"> Failed to delete all contacts from SIM !!!</string>
+    <string name="allContactdeleteFailed"> Failed to delete all contacts from SIM</string>
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
-    <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
+    <string name="exportAllcontatsFailed"> SIM Card is full !</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
 </resources>
