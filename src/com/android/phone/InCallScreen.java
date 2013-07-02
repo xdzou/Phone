@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
- * Not a Contribution
+ * Not a Contribution.
  *
  * Copyright (C) 2006 The Android Open Source Project
  *
@@ -56,8 +56,6 @@ import android.text.method.DialerKeyListener;
 import android.util.EventLog;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -987,37 +985,6 @@ public class InCallScreen extends Activity
                 }
             }
         }
-    }
-
-    private static final int ID_RECORD = 0;
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case ID_RECORD:
-                mApp.startRecord();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // disable Record in PHONE_TYPE_SIP call
-        int phoneType = mCM.getFgPhone().getPhoneType();
-        if (mApp.isRecordReady() && phoneType != PhoneConstants.PHONE_TYPE_SIP) {
-            MenuItem item = menu.findItem(ID_RECORD);
-            if (item == null) {
-                item = menu.add(0, ID_RECORD, 0, !mApp.isRecording() ? R.string.menu_call_record
-                        : R.string.menu_show_record);
-            } else {
-                item.setTitle(!mApp.isRecording() ? R.string.menu_call_record
-                        : R.string.menu_show_record);
-            }
-            item.setEnabled(mApp.isRecordEnabled());
-        } else {
-            menu.removeItem(ID_RECORD);
-            // remove ID_RECORD menu no need to call super
-            return false;
-        }
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -3181,6 +3148,9 @@ public class InCallScreen extends Activity
                 setInCallScreenMode(InCallScreenMode.MANAGE_CONFERENCE);
                 requestUpdateScreen();
                 break;
+            case R.id.recorderButton:
+                mApp.startRecord();
+                break;
 
             default:
                 Log.w(LOG_TAG, "handleOnscreenButtonClick: unexpected ID " + id);
@@ -5041,5 +5011,18 @@ public class InCallScreen extends Activity
      */
     public boolean isQuickResponseDialogShowing() {
         return mRespondViaSmsManager != null && mRespondViaSmsManager.isShowingPopup();
+    }
+
+    public boolean callRecorderReady() {
+        return mApp.isRecordReady();
+    }
+
+    public boolean callRecorderEnabled() {
+        int phoneType = mCM.getFgPhone().getPhoneType();
+        return mApp.isRecordEnabled() && phoneType != PhoneConstants.PHONE_TYPE_SIP;
+    }
+
+    public boolean callRecorderRecording() {
+        return mApp.isRecording();
     }
 }
