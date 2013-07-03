@@ -7,6 +7,7 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
@@ -66,6 +67,11 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
         mButtonCFB.setParentActivity(this, mButtonCFB.reason);
         mButtonCFNRy.setParentActivity(this, mButtonCFNRy.reason);
         mButtonCFNRc.setParentActivity(this, mButtonCFNRc.reason);
+
+        if(SystemProperties.getBoolean("persist.env.phone.callfwd.name", false)) {
+            mButtonCFNRc.setTitle(getString(R.string.labelCFNRc_CTA));
+            mButtonCFNRc.setDialogTitle(getString(R.string.labelCFNRc_CTA));
+        }
 
         mPreferences.add(mButtonCFU);
         mPreferences.add(mButtonCFB);

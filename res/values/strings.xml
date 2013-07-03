@@ -370,6 +370,7 @@
 
     <!-- Call forwarding settings screen, setting option name -->
     <string name="labelCFNRc">Forward when unreachable</string>
+    <string name="labelCFNRc_CTA">Forward Implicitly </string>
     <!-- Call forwarding dialog box, text field label -->
     <string name="messageCFNRc">Number when unreachable</string>
     <!-- Call forwarding settings screen, setting summary text when forwarding to a specific number when unreachable-->
