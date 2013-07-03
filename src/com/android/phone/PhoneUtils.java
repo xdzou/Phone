@@ -2707,7 +2707,9 @@ public class PhoneUtils {
         PhoneGlobals app = PhoneGlobals.getInstance();
         sVoipSupported = SipManager.isVoipSupported(app)
                 && app.getResources().getBoolean(com.android.internal.R.bool.config_built_in_sip_phone)
-                && app.getResources().getBoolean(com.android.internal.R.bool.config_voice_capable);
+                && app.getResources().getBoolean(com.android.internal.R.bool.config_voice_capable)
+                // need hide Voip for CTA test
+                && !SystemProperties.getBoolean("persist.env.phone.hidevoip", false);
     }
 
     /**
