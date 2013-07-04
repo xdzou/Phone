@@ -676,6 +676,7 @@
         <item>卡槽2</item>
     </string-array>
     
+    <string name="set_subscription">选择配置</string>
     <!-- Set Subscription screen: card changed -->
     <string name="cards_changed">卡有变化，是否重新设置SIM卡？</string>
     <!-- Set Subscription screen: New cards available -->
