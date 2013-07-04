@@ -168,6 +168,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
                                   : R.string.proximity_off_summary);
             return true;
+        } else if (preference == mPlayDtmfTone) {
+            Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
+                    mPlayDtmfTone.isChecked() ? 1 : 0);
+            return true;
         }
         return false;
     }
