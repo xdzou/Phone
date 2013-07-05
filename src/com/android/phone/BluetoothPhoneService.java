@@ -135,8 +135,9 @@ public class BluetoothPhoneService extends Service {
                                                PRECISE_CALL_STATE_CHANGED, null);
         mCM.registerForCallWaiting(mHandler,
                                    PHONE_CDMA_CALL_WAITING, null);
+        mCM.registerForDisconnect(mHandler,
+                                  PHONE_DISCONNECT, null);
         // TODO(BT) registerForIncomingRing?
-        // TODO(BT) registerdisconnection?
         mClccTimestamps = new long[GSM_MAX_CONNECTIONS];
         mClccUsed = new boolean[GSM_MAX_CONNECTIONS];
         for (int i = 0; i < GSM_MAX_CONNECTIONS; i++) {
@@ -171,7 +172,7 @@ public class BluetoothPhoneService extends Service {
     private static final int QUERY_PHONE_STATE = 5;
     private static final int CDMA_SWAP_SECOND_CALL_STATE = 6;
     private static final int CDMA_SET_SECOND_CALL_STATE = 7;
-
+    private static final int PHONE_DISCONNECT = 8;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -183,6 +184,7 @@ public class BluetoothPhoneService extends Service {
                     break;
                 case PRECISE_CALL_STATE_CHANGED:
                 case PHONE_CDMA_CALL_WAITING:
+                case PHONE_DISCONNECT:
                     Connection connection = null;
                     if (((AsyncResult) msg.obj).result instanceof Connection) {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
@@ -220,6 +222,8 @@ public class BluetoothPhoneService extends Service {
                                                PRECISE_CALL_STATE_CHANGED, null);
         mCM.registerForCallWaiting(mHandler,
                                    PHONE_CDMA_CALL_WAITING, null);
+        mCM.registerForDisconnect(mHandler,
+                                  PHONE_DISCONNECT, null);
     }
 
     private void updateServiceState(ServiceState state) {
