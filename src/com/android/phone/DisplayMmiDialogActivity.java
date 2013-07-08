@@ -58,6 +58,12 @@ public class DisplayMmiDialogActivity extends AlertActivity {
         Intent mIntent = getIntent();        
         mTitle = mIntent.getIntExtra(USSD_MESSAGE_TITLE, 0);
         mText  = mIntent.getStringExtra(USSD_MESSAGE_TEXT);
+
+        //display the information when screen locked,especially at PIN unlock interface.
+        int flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.flags |= flags;
+        getWindow().setAttributes(lp);
     }
 
     protected void onResume() {
