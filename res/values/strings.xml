@@ -1170,6 +1170,8 @@
     <string name="onscreenModifyCallText">Modify Call</string>
     <!-- Text for the onscreen "Show Dialpad" button -->
     <string name="onscreenShowDialpadText">Dialpad</string>
+    <!-- Text for the onscreen "Record" button -->
+    <string name="onscreenRecorderText">Record</string>
     <!-- Text for the onscreen "Mute" button -->
     <string name="onscreenMuteText">Mute</string>
     <!-- Text for the onscreen "Add call" button -->
@@ -1877,8 +1879,6 @@
     <string name="deact_all_sub_not_supported">Deactivation of both the subscriptions is not supported.</string>
     <!-- Set Subscription screen: Deactivate both subscription not supported -->
     <string name="set_sub_not_supported_phone_in_call">Activate or Deactivate subscription is not allowed while phone in call.</string>
-    <string name="menu_call_record">Call record</string>
-    <string name="menu_show_record">Show recorder</string>
     <!-- IP call related strings -->
     <!-- Call settings screen, setting option name -->
     <string name="ipcall">IP call setting</string>

@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2012, The Linux Foundation. All rights reserved.
- * Not a Contribution, Apache license notifications and license are retained
- * for attribution purposes only.
+ * Not a Contribution.
  *
  * Copyright (C) 2009 The Android Open Source Project
  *
@@ -81,6 +80,9 @@ public class InCallControlState {
     public boolean speakerEnabled;
     public boolean speakerOn;
     //
+    public boolean canRecord;
+    public boolean recordIndicatorOn;
+    //
     public boolean canMute;
     public boolean muteIndicatorOn;
     //
@@ -159,6 +161,10 @@ public class InCallControlState {
         // The current speaker state comes from the AudioManager.
         speakerEnabled = (state != PhoneConstants.State.IDLE);
         speakerOn = PhoneUtils.isSpeakerOn(mInCallScreen);
+
+        // "Recorder":
+        canRecord = mInCallScreen.callRecorderEnabled();
+        recordIndicatorOn = mInCallScreen.callRecorderRecording();
 
         // "Mute": only enabled when the foreground call is ACTIVE.
         // (It's meaningless while on hold, or while DIALING/ALERTING.)
@@ -253,6 +259,8 @@ public class InCallControlState {
         log("  speakerOn: " + speakerOn);
         log("  canMute: " + canMute);
         log("  muteIndicatorOn: " + muteIndicatorOn);
+        log("  canRecord: " + canRecord);
+        log("  recordIndicatorOn: " + recordIndicatorOn);
         log("  dialpadEnabled: " + dialpadEnabled);
         log("  dialpadVisible: " + dialpadVisible);
         log("  onHold: " + onHold);
