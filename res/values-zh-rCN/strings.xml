@@ -498,6 +498,33 @@
     <item msgid="899650777817315681">"正常"</item>
     <item msgid="2883365539347850535">"长"</item>
   </string-array>
+
+    <!-- XDivert Settings -->
+    <!-- Title for the XDivert Feature displayed in Call Settings -->
+    <string name="xdivert_title">"呼叫转移扩展设置"</string>
+    <!-- Summary for the XDivert Feature displayed in Call Settings -->
+    <string name="xdivert_summary">"呼叫不可及前转等"</string>
+    <string name="phone_numbers">"请输入电话号码"</string>
+    <string name="sub1LineNumber">"卡1号码 :"</string>
+    <string name="sub2LineNumber">"卡2号码 :"</string>
+    <string name="proceed">"启用"</string>
+    <string name="xdivert_button">"设置"</string>
+    <string name="xdivert_setting">"确定"</string>
+    <string name="sum_xdivert_enabled">"呼叫转移扩展功能已启用"</string>
+    <string name="sum_xdivert_disabled">"呼叫转移扩展功能已禁用"</string>
+    <string name="xdivert_not_supported">"CDMA网络不支持呼叫转移扩展设置。"</string>
+    <string name="xdivert_enternumber_error">"请分别输入两张卡的电话号码。"</string>
+    <string name="xdivert_partial_set">"仅卡1设置了呼叫转移。"</string>
+    <string name="xdivert_sub_absent">"开启呼叫转移扩展设置须双卡均启用。"</string>
+    <string name="xdivert_status">"呼叫转移扩展设置状态"</string>
+    <string name="xdivert_active">"可用"</string>
+    <string name="xdivert_not_active">"不可用"</string>
+    <string name="xdivert_imsi_not_read">"SIM卡正在初始化，请稍后再试。"</string>
+    <!-- Set Subscription screen: Subscription 1 -->
+    <string name="set_sub_1">"卡1: "</string>
+    <!-- Set Subscription screen: Subscription 2 -->
+    <string name="set_sub_2">"卡2: "</string>
+
     <string name="network_message" msgid="4483886461245213802">"网络讯息"</string>
     <string name="ota_title_activate" msgid="8616918561356194398">"激活您的手机"</string>
     <string name="ota_touch_activate" msgid="6553212803262586244">"需要拨打特别号码才能激活您的手机服务。"\n\n"在按下“激活”后，按照语音提示激活您的手机。"</string>
