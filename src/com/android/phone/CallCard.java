@@ -24,6 +24,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.media.AudioManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -75,6 +76,7 @@ public class CallCard extends LinearLayout
 
     private static final int TOKEN_UPDATE_PHOTO_FOR_CALL_STATE = 0;
     private static final int TOKEN_DO_NOTHING = 1;
+    private static final String VOLUME_BOOST = "volume_boost";
 
     /**
      * Used with {@link ContactsAsyncHelper#startObtainPhotoAsync(int, Context, Uri,
@@ -129,6 +131,8 @@ public class CallCard extends LinearLayout
 
     // Volume boost and Volume enhancements in-call UI
     private Button mVolumeBoost;
+    private AudioManager mAudioManager;
+    private String mVolumeBoostEnabled;
 
     // The main block of info about the "primary" or "active" call,
     // including photo / name / phone number / etc.
@@ -212,6 +216,8 @@ public class CallCard extends LinearLayout
 
         mDensity = getResources().getDisplayMetrics().density;
         if (DBG) log("- Density: " + mDensity);
+
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     /* package */ void setInCallScreenInstance(InCallScreen inCallScreen) {
@@ -276,22 +282,21 @@ public class CallCard extends LinearLayout
 
         // Volume boost and Volume enhancements in-call UI
         mVolumeBoost = (Button) findViewById(R.id.volumeBoost);
+        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
         mVolumeBoost.setOnClickListener(new OnClickListener(){
             @Override
             public void onClick(View arg0) {
-                // volume boost's low layer audio API is not full implemented,
-                // so comment out the low layer audio API. After it is fully
-                // implemented, the comment out will be removed.
-
-//              if(!AudioManager.volumeBoostEnabled()) {
-//                  AudioManager.enableVolumeBoost();
-                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
-                    showVolumeBoostNotify(true);
-//              } else {
-//                  AudioManager.disableVolumeBoost();
-//                  mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
-//                  showVolumeBoostNotify(false);
-//              }
+                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                if(((!mAudioManager.isMicrophoneMute()) || mAudioManager.isSpeakerphoneOn())
+                        &&(!mVolumeBoostEnabled.contains("=on"))) {
+                    mAudioManager.setParameters(VOLUME_BOOST + "=on");
+                    mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                    if(mVolumeBoostEnabled.contains("=on")) showVolumeBoostNotify(true);
+                } else {
+                    mAudioManager.setParameters(VOLUME_BOOST + "=off");
+                    mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                    if(mVolumeBoostEnabled.contains("=off")) showVolumeBoostNotify(false);
+                }
             }
         });
     }
@@ -299,12 +304,15 @@ public class CallCard extends LinearLayout
     private void showVolumeBoostNotify(boolean enabled) {
         Toast mToast;
 
-        if(enabled)
+        if(enabled) {
+            mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
             mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_enabled,
                 Toast.LENGTH_SHORT);
-        else
+        } else {
+            mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
             mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
                 Toast.LENGTH_SHORT);
+        }
 
         mToast.setGravity(Gravity.TOP, 0, 150);
         mToast.show();
@@ -1028,7 +1036,12 @@ public class CallCard extends LinearLayout
 
             case ACTIVE:
                 mVolumeBoost.setVisibility(View.VISIBLE);
-                mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                if(mVolumeBoostEnabled.contains("=on")) {
+                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
+                } else {
+                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+                }
                 // We normally don't show a "call state label" at all in
                 // this state (but see below for some special cases).
                 break;
@@ -1066,14 +1079,11 @@ public class CallCard extends LinearLayout
 
             case DISCONNECTED:
                 callStateLabel = getCallFailedString(call);
+                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
                 mVolumeBoost.setVisibility(View.INVISIBLE);
-                // volume boost's low layer audio API is not fully implemented,
-                // so comment out the low layer audio API. After it is fully
-                // implemented, the comment out will be removed.
-
-//              if(AudioManager.volumeBoostEnabled()) {
-//                  AudioManager.disableVolumeBoost();
-//              }
+                if(mVolumeBoostEnabled.contains("=on")) {
+                    mAudioManager.setParameters(VOLUME_BOOST + "=off");
+                }
                 break;
 
             default:
