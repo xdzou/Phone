@@ -22,11 +22,16 @@ package com.android.phone;
 
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,7 +48,13 @@ import android.util.LocaleNamesParser;
 
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.Phone;
+import com.qualcomm.internal.telephony.MSimPhoneFactory;
+import com.qualcomm.internal.telephony.MSimProxyManager;
 import com.android.internal.telephony.OperatorInfo;
+import com.android.internal.telephony.PhoneFactory;
+import android.telephony.TelephonyManager;
+import com.android.internal.telephony.PhoneBase;
+import com.android.internal.telephony.PhoneProxy;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +65,8 @@ import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
  * "Networks" settings UI for the Phone app.
  */
 public class NetworkSetting extends PreferenceActivity
-        implements DialogInterface.OnCancelListener {
+        implements DialogInterface.OnCancelListener,
+                   DialogInterface.OnClickListener{
 
     private static final String LOG_TAG = "phone";
     private static final boolean DBG = true;
@@ -62,11 +74,15 @@ public class NetworkSetting extends PreferenceActivity
     private static final int EVENT_NETWORK_SCAN_COMPLETED = 100;
     private static final int EVENT_NETWORK_SELECTION_DONE = 200;
     private static final int EVENT_AUTO_SELECT_DONE = 300;
+    private static final int EVENT_SCAN_TIME_OUT = 400;
+    private static final int EVENT_NETWOKK_DISCONNECT_DATA_DONE = 500;
+    private static final int MAX_SCAN_TIME_OUT = 5*60*1000; // 5 minutes
 
     //dialog ids
     private static final int DIALOG_NETWORK_SELECTION = 100;
     private static final int DIALOG_NETWORK_LIST_LOAD = 200;
     private static final int DIALOG_NETWORK_AUTO_SELECT = 300;
+    private static final int DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM = 400;
 
     //String keys for preference lookup
     private static final String LIST_NETWORKS_KEY = "list_networks_key";
@@ -83,6 +99,7 @@ public class NetworkSetting extends PreferenceActivity
 
     /** message for network selection */
     String mNetworkSelectMsg;
+    private boolean mNetworkSearchDataDisabled = false;
 
     //preference objects
     private PreferenceGroup mNetworkList;
@@ -97,7 +114,28 @@ public class NetworkSetting extends PreferenceActivity
             AsyncResult ar;
             switch (msg.what) {
                 case EVENT_NETWORK_SCAN_COMPLETED:
-                    networksListLoaded ((List<OperatorInfo>) msg.obj, msg.arg1);
+                    int airPlaneOn = Settings.Global.getInt(getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 1);
+                    if (airPlaneOn != 1) { // dismiss the message when air plane mode is on
+                        networksListLoaded ((List<OperatorInfo>) msg.obj, msg.arg1);
+                    }
+                    break;
+                case EVENT_SCAN_TIME_OUT:
+                    log("network scan timeout!");
+                    try {
+                        mNetworkQueryService.stopNetworkQuery(mCallback);
+                        dismissDialog(DIALOG_NETWORK_LIST_LOAD);
+                    } catch (RemoteException e) {
+                        log("RemoteException[stopQuery]: " + e);
+                    } catch (IllegalArgumentException e1) {
+                        log("RemoteException[stopQuery]: " + e1);
+                    }
+                    if (TelephonyManager.getDefault().isMultiSimEnabled()) {
+                        MSimProxyManager.getInstance().enableDataConnectivity(MSimPhoneFactory.getDataSubscription());
+                    } else {
+                        setDataConnectivity(true, null);
+                    }
+                    mNetworkSearchDataDisabled = false;
+                    getPreferenceScreen().setEnabled(true);
                     break;
 
                 case EVENT_NETWORK_SELECTION_DONE:
@@ -130,6 +168,13 @@ public class NetworkSetting extends PreferenceActivity
                         if (DBG) log("automatic network selection: succeeded!");
                         displayNetworkSelectionSucceeded();
                     }
+                    break;
+                case EVENT_NETWOKK_DISCONNECT_DATA_DONE:
+                    handleNetworkDisconnectDataDone(msg);
+                    break;
+
+                default:
+                    if (DBG) log("unknown msg id: "+msg.what);
                     break;
             }
 
@@ -184,7 +229,7 @@ public class NetworkSetting extends PreferenceActivity
         boolean handled = false;
 
         if (preference == mSearchButton) {
-            loadNetworksList();
+            showDialog(DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM);
             handled = true;
         } else if (preference == mAutoSelect) {
             selectNetworkAutomatic();
@@ -208,6 +253,13 @@ public class NetworkSetting extends PreferenceActivity
 
     //implemented for DialogInterface.OnCancelListener
     public void onCancel(DialogInterface dialog) {
+        if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
+            mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
+        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
+            MSimProxyManager.getInstance().enableDataConnectivity(MSimPhoneFactory.getDataSubscription());
+        } else {
+            setDataConnectivity(true, null);
+        }
         // request that the service stop the query with this callback object.
         try {
             mNetworkQueryService.stopNetworkQuery(mCallback);
@@ -217,12 +269,53 @@ public class NetworkSetting extends PreferenceActivity
         finish();
     }
 
+    //implement DialogInterface.OnClickListener
+    public void onClick(DialogInterface dialog,int which){
+        if (which == DialogInterface.BUTTON_POSITIVE){
+            if (DBG) log("do network search, disable data service first");
+            showDialog(DIALOG_NETWORK_LIST_LOAD);
+            //disable data service
+            Message onCompleteMsg = mHandler.obtainMessage(EVENT_NETWOKK_DISCONNECT_DATA_DONE);
+            if (TelephonyManager.getDefault().isMultiSimEnabled()) {
+                MSimProxyManager.getInstance().disableDataConnectivity(MSimPhoneFactory.getDataSubscription(),onCompleteMsg);
+            } else {
+                setDataConnectivity(false, onCompleteMsg);
+            }
+        }else if (which == DialogInterface.BUTTON_NEGATIVE){
+            if(DBG) log("network search,do nothing");
+        }
+    }
+
+    private void handleNetworkDisconnectDataDone(Message msg){
+        if(DBG) log("network disconnect data done");
+        mNetworkSearchDataDisabled = true;
+        loadNetworksList();
+    }
+
     public String getNormalizedCarrierName(OperatorInfo ni) {
         if (ni != null) {
             return ni.getOperatorAlphaLong() + " (" + ni.getOperatorNumeric() + ")";
         }
         return null;
     }
+
+    private BroadcastReceiver mAirplaneListener = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int airPlaneOn = Settings.Global.getInt(getContentResolver(), Settings.System.AIRPLANE_MODE_ON, 1);
+            try {
+                if(airPlaneOn == 1){ // when air plane is on, dismiss the search dialog, disable the preference
+                    dismissDialog(DIALOG_NETWORK_LIST_LOAD);
+                    removeDialog(DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM);
+                    getPreferenceScreen().setEnabled(false);
+                }
+            } catch (IllegalArgumentException e){
+                if (DBG) log(" DIALOG_NETWORK_LIST_LOAD dismissed already");
+            }
+            if(airPlaneOn == 0) // when air plane is off, turn on the search preference
+                getPreferenceScreen().setEnabled(true);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -254,6 +347,10 @@ public class NetworkSetting extends PreferenceActivity
         startService (intent);
         bindService (new Intent(this, NetworkQueryService.class), mNetworkQueryServiceConnection,
                 Context.BIND_AUTO_CREATE);
+
+        IntentFilter intentFilter =
+                new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        registerReceiver(mAirplaneListener, intentFilter);
     }
 
     @Override
@@ -277,6 +374,11 @@ public class NetworkSetting extends PreferenceActivity
         // unbind the service.
         unbindService(mNetworkQueryServiceConnection);
 
+        if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
+            mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
+        if (null != mAirplaneListener) {
+            unregisterReceiver(mAirplaneListener);
+        }
         super.onDestroy();
     }
 
@@ -303,14 +405,26 @@ public class NetworkSetting extends PreferenceActivity
                     dialog.setIndeterminate(true);
                     break;
                 case DIALOG_NETWORK_LIST_LOAD:
-                default:
                     // reinstate the cancelablity of the dialog.
                     dialog.setMessage(getResources().getString(R.string.load_networks_progress));
                     dialog.setCancelable(true);
                     dialog.setOnCancelListener(this);
                     dialog.setCanceledOnTouchOutside(false);
                     break;
+                default:
+                    break;
             }
+            return dialog;
+        }
+
+        if (id == DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM){
+            AlertDialog dialog = new AlertDialog.Builder(this)
+                                     .setIcon(android.R.drawable.ic_dialog_alert)
+                                     .setTitle(android.R.string.dialog_alert_title)
+                                     .setMessage(R.string.disconnect_data_confirm)
+                                     .setPositiveButton(android.R.string.ok,this)
+                                     .setNegativeButton(android.R.string.no,this)
+                                     .show();
             return dialog;
         }
         return null;
@@ -381,14 +495,18 @@ public class NetworkSetting extends PreferenceActivity
     private void loadNetworksList() {
         if (DBG) log("load networks list...");
 
-        if (mIsForeground) {
-            showDialog(DIALOG_NETWORK_LIST_LOAD);
-        }
-
+        mHandler.sendEmptyMessageDelayed(EVENT_SCAN_TIME_OUT, MAX_SCAN_TIME_OUT);
+		
         // delegate query request to the service.
         try {
             mNetworkQueryService.startNetworkQuery(mCallback);
         } catch (RemoteException e) {
+            log("RemoteException: " + e);
+            try {
+                mNetworkQueryService.stopNetworkQuery(mCallback);
+            } catch (RemoteException e1) {
+                log("RemoteException[stopQuery]: " + e1);
+            }
         }
 
         displayEmptyNetworkList(false);
@@ -412,6 +530,16 @@ public class NetworkSetting extends PreferenceActivity
         } catch (IllegalArgumentException e){
             if (DBG) log(" DIALOG_NETWORK_LIST_LOAD dismissed already");
         }
+
+        if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
+            mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
+        //enable data service
+        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
+            MSimProxyManager.getInstance().enableDataConnectivity(MSimPhoneFactory.getDataSubscription());
+        } else {
+            setDataConnectivity(true, null);
+        }
+        mNetworkSearchDataDisabled = false;
 
         getPreferenceScreen().setEnabled(true);
         clearList();
@@ -442,6 +570,22 @@ public class NetworkSetting extends PreferenceActivity
             } else {
                 displayEmptyNetworkList(true);
             }
+        }
+    }
+
+    /**
+     * Single Standby control the data enable or disable
+     *
+     * @param enabled indicate whether to turn off or turn on data
+     * @param onCompleteMsg return success or failure flag
+     */
+    private void setDataConnectivity(Boolean enabled, Message onCompleteMsg){
+        Phone tPhone = ((PhoneProxy)mPhone).getActivePhone();
+
+        if(onCompleteMsg == null){
+            ((PhoneBase)tPhone).setInternalDataEnabled(enabled);
+        } else {
+            ((PhoneBase)tPhone).setInternalDataEnabled(enabled, onCompleteMsg);
         }
     }
 
