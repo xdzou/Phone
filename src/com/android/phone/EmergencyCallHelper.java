@@ -387,6 +387,7 @@ public class EmergencyCallHelper extends Handler {
 
         registerForDisconnect();  // Get notified when this call disconnects
         int sub = mApp.getVoiceSubscriptionInService();
+        PhoneUtils.setActiveSubscription(sub);
         Phone phone = mApp.getPhone(sub);
 
         if (DBG) log("- placing call to '" + mNumber + "'...");
