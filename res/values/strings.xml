@@ -1905,4 +1905,6 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+    <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
+    <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
 </resources>

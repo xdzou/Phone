@@ -149,6 +149,14 @@
 
     </RelativeLayout>  <!-- End of call_banner -->
 
+    <!-- Volume boost and Volume enhancements in-call UI -->
+    <Button android:id="@+id/volumeBoost"
+         android:layout_below="@id/primary_call_banner"
+         android:layout_width="80dp"
+         android:layout_height="80dp"
+         android:visibility="invisible"
+         android:background="@drawable/volume_in_boost_nor"/>
+
     <LinearLayout android:id="@+id/secondary_info_container"
         android:layout_below="@id/primary_call_banner"
         android:layout_width="match_parent"
