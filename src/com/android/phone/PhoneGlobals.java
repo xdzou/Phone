@@ -77,6 +77,7 @@ import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
 import org.codeaurora.ims.IImsService;
+import com.android.recorder.ICallRecorder;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 
 /**
@@ -678,7 +679,75 @@ public class PhoneGlobals extends ContextWrapper
             mVideoCallManager = VideoCallManager.getInstance(this);
             mCM.registerForPreciseCallStateChanged(mHandler, EVENT_CALL_STATE_CHANGED, null);
         }
-   }
+
+        // bind call record service when phone process startup
+        bindRecorder(this);
+    }
+
+    protected ICallRecorder callRecorder;
+
+    protected ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            callRecorder = ICallRecorder.Stub.asInterface(service);
+            Log.d(LOG_TAG, "bind call record service:" + callRecorder);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(LOG_TAG, "call record service is unbind");
+            callRecorder = null;
+        }
+    };
+
+    protected void bindRecorder(Context context) {
+        if (callRecorder == null) {
+            final Intent intent = new Intent("com.android.action.CALL_RECORD");
+            try {
+                context.bindService(intent, connection, BIND_AUTO_CREATE);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    public void startRecord() {
+        if (callRecorder != null) {
+            try {
+                callRecorder.startOrShowRecord();
+            } catch (RemoteException e) {
+                callRecorder = null;
+                Log.w(LOG_TAG, "start recorder error:" + e);
+            }
+        }
+    }
+
+    public boolean isRecordReady() {
+        return callRecorder != null;
+    }
+
+    public boolean isRecordEnabled() {
+        if (callRecorder != null) {
+            try {
+                return callRecorder.isEnabled();
+            } catch (RemoteException e) {
+                callRecorder = null;
+                Log.w(LOG_TAG, "get recorder status error:" + e);
+            }
+        }
+        return false;
+    }
+
+    public boolean isRecording() {
+        if (callRecorder != null) {
+            try {
+                return callRecorder.isRecording();
+            } catch (RemoteException e) {
+                callRecorder = null;
+                Log.w(LOG_TAG, "get recorder status error:" + e);
+            }
+        }
+        return false;
+    }
 
     public void createImsService() {
         if (PhoneUtils.isCallOnImsEnabled()) {

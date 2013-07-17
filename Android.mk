@@ -12,7 +12,8 @@ LOCAL_SRC_FILES += \
         src/com/android/phone/INetworkQueryService.aidl \
         src/com/android/phone/INetworkQueryServiceCallback.aidl \
         src/org/codeaurora/ims/IImsService.aidl \
-        src/org/codeaurora/ims/IImsServiceListener.aidl
+        src/org/codeaurora/ims/IImsServiceListener.aidl \
+        src/com/android/recorder/ICallRecorder.aidl
 
 LOCAL_PACKAGE_NAME := Phone
 LOCAL_CERTIFICATE := platform
