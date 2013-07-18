@@ -575,8 +575,10 @@ public class SimContacts extends ADNList {
     }
 
     private void showAlertDialog(String value) {
+        CharSequence title ;
+        title = getString(R.string.resultDialogTitle);
         AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-        alertDialog.setTitle("Result...");
+        alertDialog.setTitle(title);
         alertDialog.setMessage(value);
         alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {

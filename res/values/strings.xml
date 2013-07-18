@@ -1793,15 +1793,16 @@
     <string name="dial"> Dial</string>
     <string name="enterName"> Enter Name:</string>
     <string name="enterNumber"> Enter Phone Number:</string>
-    <string name="contactAddSuccess"> Succesfully added contact to SIM </string>
+    <string name="contactAddSuccess"> Successfully added contact to SIM </string>
     <string name="contactAddFailed"> Failed to add contact to SIM !!!</string>
-    <string name="contactUpdateSuccess"> Succesfully updated contact in SIM </string>
+    <string name="contactUpdateSuccess"> Successfully updated contact in SIM </string>
     <string name="contactUpdateFailed"> Failed to update contact in SIM !!!</string>
-    <string name="contactdeleteSuccess"> Succesfully deleted contact from SIM </string>
+    <string name="contactdeleteSuccess"> Successfully deleted contact from SIM </string>
     <string name="contactdeleteFailed"> Failed to delete contact from SIM !!!</string>
-    <string name="allContactdeleteSuccess"> Succesfully deleted all contacts from SIM </string>
+    <string name="allContactdeleteSuccess"> Successfully deleted all contacts from SIM </string>
     <string name="allContactdeleteFailed"> Failed to delete all contacts from SIM</string>
-    <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
+    <string name="exportAllcontatsSuccess">Successfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> SIM Card is full !</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+    <string name="resultDialogTitle"> Result... </string>
 </resources>
