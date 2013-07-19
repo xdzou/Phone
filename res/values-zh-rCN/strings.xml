@@ -336,6 +336,9 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"设置 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自动重拨"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"启用自动重拨模式"</string>
+    <string name="proximity_mode_title">"打开距离传感器"</string>
+    <string name="proximity_on_summary">"接听电话时，屏幕会关闭，从而节省电量"</string>
+    <string name="proximity_off_summary">"接听电话时，屏幕保持开启状态"</string>
     <string name="menu_add" msgid="1882023737425114762">"添加联系人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"编辑联系人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"删除联系人"</string>
