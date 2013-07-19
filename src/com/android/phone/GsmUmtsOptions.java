@@ -20,14 +20,20 @@
 
 package com.android.phone;
 
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.util.Log;
 
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.codeaurora.telephony.msim.MSimPhoneFactory;
+import com.codeaurora.telephony.msim.SubscriptionManager;
+
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
@@ -44,6 +50,9 @@ public class GsmUmtsOptions {
     private static final String BUTTON_APN_EXPAND_KEY = "button_apn_key";
     private static final String BUTTON_OPERATOR_SELECTION_EXPAND_KEY = "button_carrier_sel_key";
     private static final String BUTTON_PREFER_2G_KEY = "button_prefer_2g_key";
+    private static final String MCC_CHINA = "460";
+    private static final String MCC_MACAU = "455";
+    private static final String PROP_DATA_DISABLE_SUB2 = "persist.env.data.disable.sub2";
     private PreferenceActivity mPrefActivity;
     private PreferenceScreen mPrefScreen;
     private int mSubscription = 0;
@@ -66,7 +75,34 @@ public class GsmUmtsOptions {
     protected void create() {
         mPrefActivity.addPreferencesFromResource(R.xml.gsm_umts_options);
         mButtonAPNExpand = (PreferenceScreen) mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY);
-        mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
+        // disable APN on SUB2
+        boolean disableSub2Apn = false;
+        if (MSimConstants.SUB2 == mSubscription
+                && SystemProperties.getBoolean(PROP_DATA_DISABLE_SUB2,false) ) {
+            boolean inChina = true;
+            if (SubscriptionManager.getInstance().isSubActive(mSubscription)) {
+                String operatorNumberic = MSimPhoneFactory.getPhone(MSimConstants.SUB2)
+                        .getServiceState().getOperatorNumeric();
+                Log.d(LOG_TAG, " operatorNumber: " + operatorNumberic);
+                if (null != operatorNumberic && operatorNumberic.length() >= 3) {
+                    String mcc = (String) operatorNumberic.subSequence(0, 3);
+                    // China mainland and Macau
+                    if (!mcc.equals(MCC_CHINA) && !mcc.equals(MCC_MACAU)) {
+                        inChina = false;
+                    }
+                }
+            }
+            if (inChina) {
+                disableSub2Apn = true;
+            }
+        }
+        if (disableSub2Apn) {
+            log("disable sub2 apn");
+            mPrefScreen.removePreference(mButtonAPNExpand);
+        } else {
+            mButtonAPNExpand.getIntent().putExtra(SUBSCRIPTION_KEY,
+                    mSubscription);
+        }
         mButtonOperatorSelectionExpand =
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonOperatorSelectionExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
