@@ -621,6 +621,11 @@
     <string name="description_target_answer" msgid="7205604197797472471">"接听"</string>
     <string name="description_target_send_sms" msgid="2098326025587950144">"发送短信"</string>
     <string name="description_target_decline" msgid="4789834364389731957">"拒绝"</string>
+    <string name="ipcall">IP电话设置</string>
+    <string name="ipcall_sub_title">IP电话设置</string>
+    <string name="ipcall_sub_summery">修改IP电话前缀</string>
+    <string name="ipcall_dialog_title">IP电话设置</string>
+    <string name="ipcall_dialog_edit_hint">请输入IP电话前缀</string>
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"振动"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"振动"</string>
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"提示音"</string>
