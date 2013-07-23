@@ -635,4 +635,5 @@
     <string name="preference_category_ringtone" msgid="5197960752529332721">"铃声和振动"</string>
     <string name="volume_boost_notify_enabled">"开启音效增强"</string>
     <string name="volume_boost_notify_disabled">"关闭音效增强"</string>
+    <string name="speed_dial_setting">快速拨号设置</string>
 </resources>

@@ -1907,4 +1907,5 @@
     <string name="cursorError"> Cursor is not having proper data !!! </string>
     <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
     <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
+    <string name="speed_dial_setting">Speed dial settings</string>
 </resources>
