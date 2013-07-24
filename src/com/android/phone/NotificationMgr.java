@@ -997,8 +997,13 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                         call.getPhone().getPhoneType()) && call.isDialingOrAlerting()) {
                   contextTextId = R.string.notification_dialing;
                 }
+                String contentText = mContext.getString(contextTextId);
 
-                builder.setContentText(mContext.getString(contextTextId));
+                int sub = currentCall.getPhone().getSubscription();
+                String name = Settings.System.getString(mContext.getContentResolver(),
+                    Settings.System.MULTI_SIM_NAME[sub]);
+                contentText +=  "  (" + name + ")";
+                builder.setContentText(contentText);
             }
         } else if (DBG) {
             Log.w(LOG_TAG, "updateInCallNotification: null connection, can't set exp view line 1.");
