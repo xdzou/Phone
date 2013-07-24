@@ -113,10 +113,21 @@ public class VideoCallManager {
     }
 
     /**
+     * Get negotiated width
+     */
+    public int getUIOrientationMode() {
+        return mMediaHandler.getUIOrientationMode();
+    }
+
+    /**
      * Get negotiated FPS
      */
     public int getNegotiatedFPS() {
         return MediaHandler.getNegotiatedFPS();
+    }
+
+    public boolean isCvoModeEnabled() {
+        return mMediaHandler.isCvoModeEnabled();
     }
 
     public static boolean isMediaReadyToReceivePreview() {
@@ -286,6 +297,14 @@ public class VideoCallManager {
 
     public void setOnParamReadyListener(VideoCallPanel.ParamReadyListener listener) {
         mMediaHandler.setMediaEventListener(listener);
+    }
+
+    public void startOrientationListener() {
+        mMediaHandler.startOrientationListener();
+    }
+
+    public void stopOrientationListener() {
+        mMediaHandler.stopOrientationListener();
     }
 
     private void log(String msg) {
