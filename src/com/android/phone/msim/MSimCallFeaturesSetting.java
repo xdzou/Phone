@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -120,6 +121,8 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private PreferenceScreen mButtonXDivert;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
+    private PreferenceScreen mEmergencyCall;
+    private static final String BUTTON_EMERGENCY_CALL_KEY = "emergency_call_list";
 
     /*
      * Click Listeners, handle click based on objects attached to UI.
@@ -211,6 +214,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
 
         final ContentResolver contentResolver = getContentResolver();
+        mEmergencyCall = (PreferenceScreen) findPreference(BUTTON_EMERGENCY_CALL_KEY);
+        if (!SystemProperties.getBoolean("persist.env.phone.ecclist", false)) {
+            prefSet.removePreference(mEmergencyCall);
+        }
 
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(contentResolver,

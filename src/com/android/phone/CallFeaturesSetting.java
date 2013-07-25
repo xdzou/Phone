@@ -43,6 +43,7 @@ import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.os.Vibrator;
 import android.preference.CheckBoxPreference;
@@ -195,6 +196,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String SIP_SETTINGS_CATEGORY_KEY =
             "sip_settings_category_key";
 
+    private static final String BUTTON_EMERGENCY_CALL_KEY = "emergency_call_list";
     private Intent mContactListIntent;
 
     /** Event for Async voicemail change call */
@@ -280,6 +282,7 @@ public class CallFeaturesSetting extends PreferenceActivity
     private Preference mVoicemailNotificationRingtone;
     private CheckBoxPreference mVoicemailNotificationVibrate;
     private SipSharedPreferences mSipSharedPreferences;
+    private PreferenceScreen mEmergencyCall;
 
     private class VoiceMailProvider {
         public VoiceMailProvider(String name, Intent intent) {
@@ -1531,6 +1534,11 @@ public class CallFeaturesSetting extends PreferenceActivity
             mVoicemailNotificationVibrate =
                     (CheckBoxPreference) findPreference(BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY);
             initVoiceMailProviders();
+        }
+
+        mEmergencyCall = (PreferenceScreen) findPreference(BUTTON_EMERGENCY_CALL_KEY);
+        if (!SystemProperties.getBoolean("persist.env.phone.ecclist", false)) {
+            prefSet.removePreference(mEmergencyCall);
         }
 
         if (mVibrateWhenRinging != null) {
