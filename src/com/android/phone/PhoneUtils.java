@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -3150,5 +3151,35 @@ public class PhoneUtils {
             Log.d(LOG_TAG, "Failed to retrieve Csvt call state. " + e);
         }
         return isActive;
+    }
+
+    // This method is called when user does which SUB from UI.
+    public static void switchToLocalHold(int subscription, boolean switchTo) {
+        Log.d(LOG_TAG, "Switch to local hold  = " );
+        MSimPhoneGlobals.getInstance().mCM.switchToLocalHold(subscription, switchTo);
+    }
+
+    /**
+     * @return the user preferred sim icon.
+     */
+    public static Drawable getMultiSimIcon(Context context, int subscription) {
+        if (context == null) {
+            // If the context is null, return null as no resource found.
+            return null;
+        }
+
+        TypedArray icons = context.getResources().obtainTypedArray(
+                com.android.internal.R.array.sim_icons);
+        String simIconIndex = Settings.System.getString(context.getContentResolver(),
+                Settings.System.PREFERRED_SIM_ICON_INDEX);
+        if (TextUtils.isEmpty(simIconIndex)) {
+            return icons.getDrawable(subscription);
+        } else {
+            String[] indexs = simIconIndex.split(",");
+            if (subscription >= indexs.length) {
+                return null;
+            }
+            return icons.getDrawable(Integer.parseInt(indexs[subscription]));
+        }
     }
 }

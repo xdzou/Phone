@@ -32,6 +32,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemProperties;
 import android.provider.ContactsContract.Contacts;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -104,7 +105,7 @@ public class CallCard extends LinearLayout
 
     // Top-level subviews of the CallCard
     /** Container for info about the current call(s) */
-    private ViewGroup mCallInfoContainer;
+    protected ViewGroup mCallInfoContainer;
     /** Primary "call info" block (the foreground or ringing call) */
     protected ViewGroup mPrimaryCallInfo;
     /** "Call banner" for the primary call */
@@ -142,7 +143,10 @@ public class CallCard extends LinearLayout
     private TextView mName;
     private TextView mPhoneNumber;
     private TextView mLabel;
+    private TextView mPrefixOfLabel;
+    private TextView mSuffixOfLabel;
     private TextView mCallTypeLabel;
+    private TextView mCityName;
     // private TextView mSocialStatus;
 
     /**
@@ -260,59 +264,60 @@ public class CallCard extends LinearLayout
         if (DBG) log("CallCard onFinishInflate(this = " + this + ")...");
 
         mCallInfoContainer = (ViewGroup) findViewById(R.id.call_info_container);
-        mPrimaryCallInfo = (ViewGroup) findViewById(R.id.primary_call_info);
-        mPrimaryCallBanner = (ViewGroup) findViewById(R.id.primary_call_banner);
-
-        mSecondaryInfoContainer = (ViewGroup) findViewById(R.id.secondary_info_container);
-        mProviderInfo = (ViewGroup) findViewById(R.id.providerInfo);
-        mProviderLabel = (TextView) findViewById(R.id.providerLabel);
-        mProviderAddress = (TextView) findViewById(R.id.providerAddress);
-        mCallStateLabel = (TextView) findViewById(R.id.callStateLabel);
-        mElapsedTime = (TextView) findViewById(R.id.elapsedTime);
-
         // Text colors
         mTextColorCallTypeSip = getResources().getColor(R.color.incall_callTypeSip);
-
-        // "Caller info" area, including photo / name / phone numbers / etc
-        mPhoto = (ImageView) findViewById(R.id.photo);
-        mPhotoDimEffect = findViewById(R.id.dim_effect_for_primary_photo);
-
-        mName = (TextView) findViewById(R.id.name);
-        mPhoneNumber = (TextView) findViewById(R.id.phoneNumber);
-        mLabel = (TextView) findViewById(R.id.label);
-        mCallTypeLabel = (TextView) findViewById(R.id.callTypeLabel);
-        // mSocialStatus = (TextView) findViewById(R.id.socialStatus);
-
+        mSecondaryInfoContainer = (ViewGroup) findViewById(R.id.secondary_info_container);
         // Secondary info area, for the background ("on hold") call
         mSecondaryCallInfo = (ViewStub) findViewById(R.id.secondary_call_info);
+    }
 
-        // VideoCallPanel for Video Telephony calls
-        mVideoCallPanel = (VideoCallPanel) findViewById(R.id.videoCallPanel);
+    private void setWidget() {
+        // "Caller info" area, including photo / name / phone numbers / etc
+        mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
+        mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
+
+        mVideoCallPanel = (VideoCallPanel) mPrimaryCallInfo.findViewById(R.id.videoCallPanel);
+
+        mPrimaryCallBanner = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.primary_call_banner);
+
+        mName = (TextView) mPrimaryCallInfo.findViewById(R.id.name);
+        mLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.label);
+        mPrefixOfLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.prefix_of_label);
+        mSuffixOfLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.suffix_of_label);
+        mPhoneNumber = (TextView) mPrimaryCallInfo.findViewById(R.id.phoneNumber);
+        mCityName = (TextView)mPrimaryCallInfo.findViewById(R.id.cityName);
+        mCallTypeLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callTypeLabel);
+        mElapsedTime = (TextView) mPrimaryCallInfo.findViewById(R.id.elapsedTime);
+        mProviderInfo = (ViewGroup) mPrimaryCallInfo.findViewById(R.id.providerInfo);
+        mProviderLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.providerLabel);
+        mProviderAddress = (TextView) mPrimaryCallInfo.findViewById(R.id.providerAddress);
+        mCallStateLabel = (TextView) mPrimaryCallInfo.findViewById(R.id.callStateLabel);
 
         // Volume boost and Volume enhancements in-call UI
-        mVolumeBoost = (Button) findViewById(R.id.volumeBoost);
-        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-
-        mVolumeBoost.setOnClickListener(new OnClickListener(){
-            @Override
-            public void onClick(View arg0) {
-                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                if(((!mAudioManager.isMicrophoneMute()) || mAudioManager.isSpeakerphoneOn())
-                        &&(!mVolumeBoostEnabled.contains("=on"))) {
-                    mAudioManager.setParameters(VOLUME_BOOST + "=on");
+        mVolumeBoost = (Button) mPrimaryCallInfo.findViewById(R.id.volumeBoost);
+        if (mVolumeBoost != null) {
+            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+            mVolumeBoost.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View arg0) {
                     mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                    if(mVolumeBoostEnabled.contains("=on")) {
-                        showVolumeBoostNotify(true);
-                    }
-                } else {
-                    mAudioManager.setParameters(VOLUME_BOOST + "=off");
-                    mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                    if(mVolumeBoostEnabled.contains("=off")) {
-                        showVolumeBoostNotify(false);
+                    if(((!mAudioManager.isMicrophoneMute()) || mAudioManager.isSpeakerphoneOn())
+                            &&(!mVolumeBoostEnabled.contains("=on"))) {
+                        mAudioManager.setParameters(VOLUME_BOOST + "=on");
+                        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                        if(mVolumeBoostEnabled.contains("=on")) {
+                            showVolumeBoostNotify(true);
+                        }
+                    } else {
+                        mAudioManager.setParameters(VOLUME_BOOST + "=off");
+                        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                        if(mVolumeBoostEnabled.contains("=off")) {
+                            showVolumeBoostNotify(false);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     private void showVolumeBoostNotify(boolean enabled) {
@@ -336,8 +341,14 @@ public class CallCard extends LinearLayout
      */
     /* package */ void updateState(CallManager cm) {
         if (DBG) log("updateState(" + cm + ")...");
-
+        mPrimaryCallInfo = (ViewGroup) findViewById(R.id.primary_call_info);
+        doUpdate(cm);
+    }
         // Update the onscreen UI based on the current state of the phone.
+
+    protected void doUpdate(CallManager cm) {
+        setWidget();
+        mPrimaryCallInfo.setVisibility(View.VISIBLE);
 
         PhoneConstants.State state = cm.getState();  // IDLE, RINGING, or OFFHOOK
         Call ringingCall = cm.getFirstActiveRingingCall();
@@ -758,6 +769,8 @@ public class CallCard extends LinearLayout
             mPhoneNumber.setTextColor(getResources().getColor(mIncomingCallWidgetHintColorResId));
             mPhoneNumber.setVisibility(View.VISIBLE);
             mLabel.setVisibility(View.GONE);
+            mPrefixOfLabel.setVisibility(View.GONE);
+            mSuffixOfLabel.setVisibility(View.GONE);
         }
         // If we don't have a hint to display, just don't touch
         // mPhoneNumber and mLabel. (Their text / color / visibility have
@@ -1503,6 +1516,7 @@ public class CallCard extends LinearLayout
         String displayName;
         String displayNumber = null;
         String label = null;
+        String cityName = null;
         Uri personUri = null;
         // String socialStatusText = null;
         // Drawable socialStatusBadge = null;
@@ -1548,18 +1562,21 @@ public class CallCard extends LinearLayout
                     // No name *or* number!  Display a generic "unknown" string
                     // (or potentially some other default based on the presentation.)
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+                    cityName = displayName;
                     if (DBG) log("  ==> no name *or* number! displayName = " + displayName);
                 } else if (presentation != PhoneConstants.PRESENTATION_ALLOWED) {
                     // This case should never happen since the network should never send a phone #
                     // AND a restricted presentation. However we leave it here in case of weird
                     // network behavior
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+                    cityName = displayName;
                     if (DBG) log("  ==> presentation not allowed! displayName = " + displayName);
                 } else if (!TextUtils.isEmpty(info.cnapName)) {
                     // No name, but we do have a valid CNAP name, so use that.
                     displayName = info.cnapName;
                     info.name = info.cnapName;
                     displayNumber = number;
+                    cityName = info.geoDescription;
                     if (DBG) log("  ==> cnapName available: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
                 } else {
@@ -1571,14 +1588,11 @@ public class CallCard extends LinearLayout
                     // Promote the phone number up to the "name" slot:
                     displayName = number;
 
-                    // ...and use the "number" slot for a geographical description
-                    // string if available (but only for incoming calls.)
-                    if ((conn != null) && (conn.isIncoming())) {
-                        // TODO (CallerInfoAsyncQuery cleanup): Fix the CallerInfo
-                        // query to only do the geoDescription lookup in the first
-                        // place for incoming calls.
-                        displayNumber = info.geoDescription;  // may be null
-                    }
+                    // We display the geographical description all the time except for EMCC,
+                    // forther more,the geo info comes from local AreaSearch instead of QCM's
+                    // original design(reference CallerInfo.java).
+                    cityName = info.geoDescription;
+
 
                     if (DBG) log("  ==>  no name; falling back to number: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
@@ -1596,6 +1610,7 @@ public class CallCard extends LinearLayout
                 } else {
                     displayName = info.name;
                     displayNumber = number;
+                    cityName = info.geoDescription;
                     label = info.getPhoneLabel(getContext());
                     if (DBG) log("  ==>  name is present in CallerInfo: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
@@ -1606,12 +1621,13 @@ public class CallCard extends LinearLayout
                          + "', based on info.person_id: " + info.person_id);
         } else {
             displayName = PhoneUtils.getPresentationString(getContext(), presentation);
+            cityName = displayName;
         }
 
         if (call.isGeneric()) {
             updateGenericInfoUi();
         } else {
-            updateInfoUi(displayName, displayNumber, label);
+            updateInfoUi(displayName, displayNumber, label, cityName);
         }
 
         // Update mPhoto
@@ -1681,12 +1697,16 @@ public class CallCard extends LinearLayout
         mName.setText(R.string.card_title_in_call);
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
+        mPrefixOfLabel.setVisibility(View.GONE);
+        mSuffixOfLabel.setVisibility(View.GONE);
+        mCityName.setVisibility(View.GONE);
     }
 
     /**
      * Updates the info portion of the call card with passed in values.
      */
-    private void updateInfoUi(String displayName, String displayNumber, String label) {
+    private void updateInfoUi(String displayName, String displayNumber,
+            String label, String cityName) {
         mName.setText(displayName);
         mName.setVisibility(View.VISIBLE);
 
@@ -1703,9 +1723,24 @@ public class CallCard extends LinearLayout
 
         if (TextUtils.isEmpty(label)) {
             mLabel.setVisibility(View.GONE);
+            mPrefixOfLabel.setVisibility(View.GONE);
+            mSuffixOfLabel.setVisibility(View.GONE);
         } else {
             mLabel.setText(label);
+            mPrefixOfLabel.setText(getResources().getString(R.string.prefix_of_label));
+            mSuffixOfLabel.setText(getResources().getString(R.string.suffix_of_label));
             mLabel.setVisibility(View.VISIBLE);
+            mPrefixOfLabel.setVisibility(View.VISIBLE);
+            mSuffixOfLabel.setVisibility(View.VISIBLE);
+        }
+
+        boolean showHomeLocation = Settings.System.getInt(mInCallScreen.getContentResolver(),
+                Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
+        if (!showHomeLocation || TextUtils.isEmpty(cityName)) {
+            mCityName.setVisibility(View.GONE);
+        } else {
+            mCityName.setText(cityName);
+            mCityName.setVisibility(View.VISIBLE);
         }
     }
 
@@ -1756,6 +1791,9 @@ public class CallCard extends LinearLayout
         // But for now, just hide it:
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
+        mPrefixOfLabel.setVisibility(View.GONE);
+        mSuffixOfLabel.setVisibility(View.GONE);
+        mCityName.setVisibility(View.GONE);
 
         // Other text fields:
         updateCallTypeLabel(call);

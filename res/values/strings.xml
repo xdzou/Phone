@@ -1947,4 +1947,7 @@
         <xliff:g id="seconds" example="28">%s</xliff:g> secs
     </string>
     <string name="network_forbidden">(Forbidden)</string>
+
+    <string name="prefix_of_label">(</string>
+    <string name="suffix_of_label">)</string>
 </resources>
