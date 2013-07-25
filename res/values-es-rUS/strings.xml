@@ -675,6 +675,7 @@
     <string name="corporate_unlock_failed" >Solicitud de desbloqueo SIM sin éxito.</string>
     <string name="callind_multi_sim" >Seleccione Suscripción</string>
     <string name="exportAllcontatsSuccess" >Exportación de todos los contactos a la tarjeta SIM com succeso</string>
+    <string name="resultDialogTitle"> Resultado </string>
     <string name="set_subscription" >Seleccione las suscripciones</string>
     <string name="nw_subset_unlock_failed" >Solicitud de desbloqueo de red de subconjunto SIM sin éxito.</string>
     <string name="deact_all_sub_not_supported" >La desactivación de ambas las suscripciones no es compatible.</string>
@@ -775,7 +776,7 @@
     <string name="card_01" >Tarjeta 1</string>
     <string name="card_title_deflectedcall" >Llamada desviada</string>
     <string name="rsp_unlock_success" >Desbloqueo de proveedor de servicio RUIM con éxito.</string>
-    <string name="deleteAllSimEntries" >  Borrar todos los contactos SIM</string>
+    <string name="deleteAllSimEntries" >Borrar todos los contactos SIM</string>
     <string name="phone_numbers" >Introducir números de teléfono</string>
     <string name="config_sub_title" >Configurar Suscripciones</string>
     <string name="exportContacts" >Exportar contactos a la tarjeta SIM \ u2026</string>
