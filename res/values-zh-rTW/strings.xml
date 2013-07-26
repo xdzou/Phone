@@ -342,6 +342,9 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"設定 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自動重試"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"啟用自動重試模式"</string>
+    <string name="proximity_mode_title">打開距離傳感器</string>
+    <string name="proximity_on_summary">接聽電話時，屏幕會關閉，從而節省電量</string>
+    <string name="proximity_off_summary">接聽電話時，屏幕保持開啟狀態</string>
     <string name="menu_add" msgid="1882023737425114762">"新增聯絡人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"編輯聯絡人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"刪除聯絡人"</string>
