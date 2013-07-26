@@ -158,6 +158,11 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
+    // Show call duration related defines:
+    protected static final int SHOW_CALL_DURATION_OFF = 0;
+    protected static final int SHOW_CALL_DURATION_ON = 1;
+    protected PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
+
     protected PhoneGlobals mApplication;
     protected CallManager mCM;
     protected Ringer mRinger;
@@ -935,6 +940,7 @@ public class CallNotifier extends Handler
     protected void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
         if (VDBG) log("onPhoneStateChanged: state = " + state);
+        mLastPhoneState = state;
 
         // Turn status bar notifications on or off depending upon the state
         // of the phone.  Notification Alerts (audible or vibrating) should
@@ -1219,6 +1225,9 @@ public class CallNotifier extends Handler
                     getContentResolver(),android.provider.Settings.Global.CALL_AUTO_RETRY, 0);
         }
 
+        // Show the call duration dialog
+        showCallDuration(c);
+
         // Stop any signalInfo tone being played when a call gets ended
         stopSignalInfoTone();
 
@@ -1410,6 +1419,15 @@ public class CallNotifier extends Handler
                     mIsCdmaRedialCall = false;
                 }
             }
+        }
+    }
+
+    protected void showCallDuration(Connection connection) {
+        int showCallDurationSetting = Settings.System.getInt(mApplication.
+                getContentResolver(), Settings.System.SHOW_CALL_DURATION, SHOW_CALL_DURATION_OFF);
+        if (mLastPhoneState == PhoneConstants.State.OFFHOOK && connection != null
+                && showCallDurationSetting == SHOW_CALL_DURATION_ON) {
+            mApplication.showCallDuration(connection.getDurationMillis());
         }
     }
 

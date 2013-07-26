@@ -348,6 +348,7 @@ public class MSimCallNotifier extends CallNotifier {
         PhoneConstants.State state = mCM.getState(subscription);
         if (VDBG) log("onPhoneStateChanged: state = " + state +
                 " subscription = " + subscription);
+        mLastPhoneState = state;
 
         // Turn status bar notifications on or off depending upon the state
         // of the phone.  Notification Alerts (audible or vibrating) should
@@ -534,6 +535,9 @@ public class MSimCallNotifier extends CallNotifier {
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.
                     getContentResolver(),android.provider.Settings.Global.CALL_AUTO_RETRY, 0);
         }
+
+        // Show the call duration dialog
+        showCallDuration(c);
 
         // Stop any signalInfo tone being played when a call gets ended
         stopSignalInfoTone();

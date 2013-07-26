@@ -2086,4 +2086,13 @@ public class PhoneGlobals extends ContextWrapper
     /* package */ Intent createInCallIntent(int subscription) {
         return PhoneGlobals.createInCallIntent();
     }
+
+    /**
+     * Show call duration when diconnect
+     */
+    void showCallDuration(long duration) {
+        if (mInCallScreen != null) {
+            mInCallScreen.showCallDurationDialog(duration);
+        }
+    }
 }

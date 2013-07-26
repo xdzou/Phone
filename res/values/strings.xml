@@ -1918,4 +1918,10 @@
     <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
     <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
     <string name="speed_dial_setting">Speed dial settings</string>
+    <!-- The strings used for call duration dialog -->
+    <string name="title_dialog_duration">Duration</string>
+    <string name="duration_format">
+        <xliff:g id="minutes" example="42">%s</xliff:g> mins
+        <xliff:g id="seconds" example="28">%s</xliff:g> secs
+    </string>
 </resources>
