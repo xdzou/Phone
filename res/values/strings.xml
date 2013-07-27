@@ -1919,6 +1919,9 @@
     <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
     <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
     <string name="speed_dial_setting">Speed dial settings</string>
+    <string name="preferred_duration_title">Display duration</string>
+    <string name="duration_enable_summary">Display duration is ON</string>
+    <string name="duration_disable_summary">Display duration is OFF</string>
     <!-- The strings used for call duration dialog -->
     <string name="title_dialog_duration">Duration</string>
     <string name="duration_format">
