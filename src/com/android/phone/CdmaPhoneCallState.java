@@ -69,6 +69,9 @@ package com.android.phone;
         // to be displayed after a Call Waiting call was ignored or timed out
         private boolean mAddCallMenuStateAfterCW;
 
+        // Flag to indicate if two calls has been merged
+        private boolean mConferenceCallMerged;
+
         /**
          * Initialize PhoneCallState related members - constructor
          */
@@ -77,6 +80,7 @@ package com.android.phone;
             mPreviousCallState = PhoneCallState.IDLE;
             mThreeWayCallOrigStateDialing = false;
             mAddCallMenuStateAfterCW = true;
+            mConferenceCallMerged = false;
         }
 
         /**
@@ -144,6 +148,20 @@ package com.android.phone;
         }
 
         /**
+         * Return true if two calls have been merged, otherwise return false
+         */
+        public boolean getConferenceCallMergedState() {
+            return mConferenceCallMerged;
+        }
+
+        /**
+         * Set mConferenceCallMerged to the new state
+         */
+        public void setConferenceCallMergedState(boolean newState) {
+            mConferenceCallMerged = newState;
+        }
+
+        /**
          * Reset all PhoneCallState
          */
         public void resetCdmaPhoneCallState() {
@@ -151,5 +169,6 @@ package com.android.phone;
             mPreviousCallState = PhoneCallState.IDLE;
             mThreeWayCallOrigStateDialing = false;
             mAddCallMenuStateAfterCW = true;
+            mConferenceCallMerged = false;
         }
    }

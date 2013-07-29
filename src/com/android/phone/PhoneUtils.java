@@ -912,6 +912,7 @@ public class PhoneUtils {
                 // Set the Phone Call State to conference
                 app.cdmaPhoneCallState.setCurrentCallState(
                         CdmaPhoneCallState.PhoneCallState.CONF_CALL);
+                app.cdmaPhoneCallState.setConferenceCallMergedState(true);
 
                 // Send flash cmd
                 // TODO: Need to change the call from switchHoldingAndActive to
@@ -2233,8 +2234,9 @@ public class PhoneUtils {
             // CDMA: "Swap" is enabled only when the phone reaches a *generic*.
             // state by either accepting a Call Waiting or by merging two calls
             PhoneGlobals app = PhoneGlobals.getInstance();
-            return (app.cdmaPhoneCallState.getCurrentCallState()
-                    == CdmaPhoneCallState.PhoneCallState.CONF_CALL);
+            return ((app.cdmaPhoneCallState.getCurrentCallState()
+                    == CdmaPhoneCallState.PhoneCallState.CONF_CALL)
+                    && !app.cdmaPhoneCallState.getConferenceCallMergedState());
         } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM)
                 || (phoneType == PhoneConstants.PHONE_TYPE_SIP)
                 || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
