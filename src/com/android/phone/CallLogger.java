@@ -79,7 +79,8 @@ class CallLogger {
                 && phone.isOtaSpNumber(number);
 
         int durationType = Calls.DURATION_TYPE_ACTIVE;
-        if(Calls.OUTGOING_TYPE == callLogType && c instanceof CdmaConnection){
+        if (Calls.OUTGOING_TYPE == callLogType && c instanceof CdmaConnection
+                && !((CdmaConnection) c).isConnectionTimerReset()) {
             durationType = Calls.DURATION_TYPE_CALLOUT;
         }
         // Don't log OTASP calls.
