@@ -1926,10 +1926,12 @@ public class CallCard extends LinearLayout
      * visible.
      */
     private final void showImage(ImageView view, Drawable drawable) {
-        Resources res = view.getContext().getResources();
-        Drawable current = (Drawable) view.getTag();
+        if ((mVideoCallPanel != null) && (mVideoCallPanel.getVisibility() == View.VISIBLE)) {
+            view.setVisibility(View.INVISIBLE);
+        } else {
+            Resources res = view.getContext().getResources();
+            Drawable current = (Drawable) view.getTag();
 
-        if ((mVideoCallPanel != null) && mVideoCallPanel.getVisibility() != View.VISIBLE) {
             if (current == null) {
                 if (DBG) log("Start fade-in animation for " + view);
                 view.setImageDrawable(drawable);
@@ -1939,8 +1941,6 @@ public class CallCard extends LinearLayout
                 AnimationUtils.startCrossFade(view, current, drawable);
                 view.setVisibility(View.VISIBLE);
             }
-        } else {
-            view.setVisibility(View.INVISIBLE);
         }
     }
 
