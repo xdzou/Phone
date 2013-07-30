@@ -1722,8 +1722,14 @@ public class CallCard extends LinearLayout
             // the generic "dialing" icon and no caller information,
             // because in this state in CDMA the user does not really know
             // which caller party he is talking to.
-            showImage(mPhoto, R.drawable.picture_dialing);
-            mName.setText(R.string.card_title_in_call);
+            PhoneGlobals app = PhoneGlobals.getInstance();
+            if (app.cdmaPhoneCallState.getConferenceCallMergedState()) {
+                showImage(mPhoto, R.drawable.picture_conference);
+                mName.setText(R.string.card_title_conf_call);
+            } else {
+                showImage(mPhoto, R.drawable.picture_dialing);
+                mName.setText(R.string.card_title_in_call);
+            }
         } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM)
                 || (phoneType == PhoneConstants.PHONE_TYPE_SIP)
                 || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
