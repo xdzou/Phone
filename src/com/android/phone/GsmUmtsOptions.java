@@ -20,18 +20,26 @@
 
 package com.android.phone;
 
+import java.util.List;
+
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.content.res.Resources;
 
 import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.PhoneFactory;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.SubscriptionManager;
 
@@ -112,6 +120,53 @@ public class GsmUmtsOptions {
         enableScreen();
     }
 
+    /**
+     * check whether NetworkSetting apk exist in system, if true, replace the
+     * intent of the NetworkSetting Activity with the intent of NetworkSetting
+     */
+    private void enablePlmnIncSearch() {
+        if (mButtonOperatorSelectionExpand != null) {
+            PackageManager pm = mButtonOperatorSelectionExpand.getContext().getPackageManager();
+
+            // check whether the target handler exist in system
+            List<ResolveInfo> list = pm.queryIntentActivities(new Intent(
+                    "android.settings.NETWORK_OPERATOR_SETTINGS_ASYNC"), 0);
+            int listSize = list.size();
+            for (int i = 0; i < listSize; i++) {
+                ResolveInfo resolveInfo = list.get(i);
+
+                // check is it installed in system.img, exclude the application
+                // installed by user
+                if ((resolveInfo.activityInfo.applicationInfo.flags &
+                        ApplicationInfo.FLAG_SYSTEM) != 0) {
+
+                    // set the target intent
+                    mButtonOperatorSelectionExpand.setIntent(new Intent().setClassName(
+                            resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name)
+                            .putExtra(SUBSCRIPTION_KEY, mSubscription));
+
+                    // get current SPN
+                    MSimTelephonyManager mtm = MSimTelephonyManager.getDefault();
+                    TelephonyManager tm = TelephonyManager.getDefault();
+                    String spn = null;
+                    if (mtm.isMultiSimEnabled()) {
+                        spn = mtm.getNetworkOperatorName(mSubscription);
+                    } else {
+                        spn = tm.getNetworkOperatorName();
+                    }
+
+                    // set current SPN as the summary of the preference view
+                    if (!TextUtils.isEmpty(spn) && !"null".equals(spn)) {
+                        mButtonOperatorSelectionExpand.setSummary(spn);
+                    } else {
+                        mButtonOperatorSelectionExpand.setSummary(R.string.sum_carrier_select);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
     public void onResume() {
         updateOperatorSelectionVisibility();
     }
@@ -153,11 +208,13 @@ public class GsmUmtsOptions {
             android.util.Log.e(LOG_TAG, "mButtonOperatorSelectionExpand is null");
             return;
         }
-        if (!PhoneFactory.getDefaultPhone().isManualNetSelAllowed()) {
+
+        enablePlmnIncSearch();
+        if (!mPhone.isManualNetSelAllowed()) {
             log("Manual network selection not allowed.Disabling Operator Selection menu.");
             mButtonOperatorSelectionExpand.setEnabled(false);
         } else if (res.getBoolean(R.bool.csp_enabled)) {
-            if (PhoneFactory.getDefaultPhone().isCspPlmnEnabled()) {
+            if (mPhone.isCspPlmnEnabled()) {
                 log("[CSP] Enabling Operator Selection menu.");
                 mButtonOperatorSelectionExpand.setEnabled(true);
             } else {
