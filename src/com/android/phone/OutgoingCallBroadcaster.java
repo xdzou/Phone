@@ -46,6 +46,7 @@ import android.view.View;
 import android.widget.ProgressBar;
 
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
@@ -465,8 +466,10 @@ public class OutgoingCallBroadcaster extends Activity
             int requestCode = 1;
             startActivityForResult(intentMSim, requestCode);
         } else {
-            mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
-                    PhoneGlobals.getInstance().getVoiceSubscription());
+            mSubscription = PhoneGlobals.getInstance().getVoiceSubscription();
+            if (mSubscription != MSimConstants.SUB1 && mSubscription != MSimConstants.SUB2) {
+                mSubscription = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+            }
             PhoneUtils.setActiveSubscription(mSubscription);
             Log.d(TAG, "subscription when there is (from Extra):" + mSubscription);
             processMSimIntent(intent);
