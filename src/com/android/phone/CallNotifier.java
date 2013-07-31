@@ -39,6 +39,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
@@ -46,6 +47,7 @@ import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
@@ -157,6 +159,9 @@ public class CallNotifier extends Handler
     protected static final int EMERGENCY_TONE_OFF = 0;
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
+
+    // Vibrate after connected related defines:
+    protected Call.State mPreviousCallState = Call.State.IDLE;
 
     // Show call duration related defines:
     protected static final int SHOW_CALL_DURATION_OFF = 0;
@@ -963,6 +968,10 @@ public class CallNotifier extends Handler
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
         }
 
+        int vibrateSetting = PhoneGlobals.getInstance().getVibrateAfterConnected(0);
+        vibrateAfterCallConnected(fgPhone, vibrateSetting);
+        mPreviousCallState = fgPhone.getForegroundCall().getState();
+
         // Have the PhoneApp recompute its mShowBluetoothIndication
         // flag based on the (new) telephony state.
         // There's no need to force a UI update since we update the
@@ -1063,6 +1072,19 @@ public class CallNotifier extends Handler
                     mInCallRingbackTonePlayer = null;
                 }
             }
+        }
+    }
+
+    protected void vibrateAfterCallConnected(Phone fgPhone, int vibrateSetting) {
+        if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
+                && ((mPreviousCallState == Call.State.DIALING)
+                || (mPreviousCallState == Call.State.ALERTING))
+                && (vibrateSetting == Constants.VIBRATE_ON)) {
+            Vibrator mSystemVibrator = new SystemVibrator();
+            int nVibratorLength = 100;
+            mSystemVibrator.vibrate(nVibratorLength);
+            SystemClock.sleep(nVibratorLength);
+            mSystemVibrator.cancel();
         }
     }
 

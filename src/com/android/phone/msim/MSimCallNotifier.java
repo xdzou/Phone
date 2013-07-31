@@ -453,6 +453,10 @@ public class MSimCallNotifier extends CallNotifier {
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
         }
 
+        int vibrateSetting = PhoneGlobals.getInstance().getVibrateAfterConnected(subscription);
+        vibrateAfterCallConnected(fgPhone, vibrateSetting);
+        mPreviousCallState = fgPhone.getForegroundCall().getState();
+
         // Have the PhoneApp recompute its mShowBluetoothIndication
         // flag based on the (new) telephony state.
         // There's no need to force a UI update since we update the

@@ -102,6 +102,13 @@
           android:dialogTitle="@string/voicemail_notification_vibarte_when_dialog_title" />
   </PreferenceScreen>
 
+  <CheckBoxPreference
+      android:key="button_vibrate_after_connected"
+      android:title="@string/vibrate_after_connected_title"
+      android:persistent="false"
+      android:defaultValue="true"
+      android:summary="@string/vibrate_after_connected_summary" />
+
   <PreferenceScreen
       android:key="button_respond_via_sms_key"
       android:title="@string/respond_via_sms_setting_title"
