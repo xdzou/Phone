@@ -88,6 +88,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_DIALPAD_AUTOCOMPLETE = "button_dialpad_autocomplete";
     private static final String BUTTON_SELECT_SUB_KEY  = "button_call_independent_serv";
     private static final String BUTTON_XDIVERT_KEY     = "button_xdivert";
+    private static final String SHOW_DURATION_KEY      = "duration_enable_key";
 
     private static final String BUTTON_SIP_CALL_OPTIONS =
             "sip_call_options_key";
@@ -121,6 +122,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private SipSharedPreferences mSipSharedPreferences;
 
     private PreferenceScreen mButtonXDivert;
+    private CheckBoxPreference mShowDurationCheckBox;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
     private PreferenceScreen mEmergencyCall;
@@ -189,6 +191,12 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        } else if (preference == mShowDurationCheckBox) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.SHOW_CALL_DURATION, checked ? 1 : 0);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
         }
         // always let the preference setting proceed.
         return true;
@@ -221,6 +229,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
+        mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
 
         final ContentResolver contentResolver = getContentResolver();
         mEmergencyCall = (PreferenceScreen) findPreference(BUTTON_EMERGENCY_CALL_KEY);
@@ -301,6 +310,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
+        }
+
+        if (mShowDurationCheckBox != null) {
+            mShowDurationCheckBox.setOnPreferenceChangeListener(this);
         }
     }
 
@@ -466,6 +479,14 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
         if (mButtonXDivert != null) {
             if (!isAllSubActive()) mButtonXDivert.setEnabled(false);
+        }
+
+        if (mShowDurationCheckBox != null) {
+            boolean checked = Settings.System.getInt(getContentResolver(),
+                    Settings.System.SHOW_CALL_DURATION, 1) == 1;
+            mShowDurationCheckBox.setChecked(checked);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
         }
     }
 
