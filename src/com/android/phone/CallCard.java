@@ -751,11 +751,13 @@ public class CallCard extends LinearLayout
         }
         int callType = getVideoCallType(call);
         switch (state) {
-            case DIALING: // These are an intentional fall through(s)
-            case ALERTING:
-                initVideoCall(callType);
+            case INCOMING:
                 break;
 
+            case DIALING: // These are an intentional fall through(s)
+                          // showVideoCallWidgets is added for DIALING to
+                          // support early media
+            case ALERTING:
             case ACTIVE:
                 initVideoCall(callType);
 
@@ -796,6 +798,7 @@ public class CallCard extends LinearLayout
 
         mVideoCallPanel.setVisibility(View.VISIBLE);
         mVideoCallPanel.setPanelElementsVisibility(callType);
+        mVideoCallPanel.startOrientationListener();
     }
 
     /**
@@ -808,6 +811,7 @@ public class CallCard extends LinearLayout
             mPhoto.setVisibility(View.VISIBLE);
             mVideoCallPanel.setVisibility(View.GONE);
             mVideoCallPanel.setCameraNeeded(false);
+            mVideoCallPanel.stopOrientationListener();
         }
     }
 
@@ -1859,10 +1863,12 @@ public class CallCard extends LinearLayout
      * visible.
      */
     private final void showImage(ImageView view, Drawable drawable) {
-        Resources res = view.getContext().getResources();
-        Drawable current = (Drawable) view.getTag();
+        if ((mVideoCallPanel != null) && (mVideoCallPanel.getVisibility() == View.VISIBLE)) {
+            view.setVisibility(View.INVISIBLE);
+        } else {
+            Resources res = view.getContext().getResources();
+            Drawable current = (Drawable) view.getTag();
 
-        if ((mVideoCallPanel != null) && mVideoCallPanel.getVisibility() != View.VISIBLE) {
             if (current == null) {
                 if (DBG) log("Start fade-in animation for " + view);
                 view.setImageDrawable(drawable);
@@ -1872,8 +1878,6 @@ public class CallCard extends LinearLayout
                 AnimationUtils.startCrossFade(view, current, drawable);
                 view.setVisibility(View.VISIBLE);
             }
-        } else {
-            view.setVisibility(View.INVISIBLE);
         }
     }
 
