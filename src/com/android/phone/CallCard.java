@@ -1596,7 +1596,7 @@ public class CallCard extends LinearLayout
                 } else {
                     displayName = info.name;
                     displayNumber = number;
-                    label = info.phoneLabel;
+                    label = info.getPhoneLabel(getContext());
                     if (DBG) log("  ==>  name is present in CallerInfo: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
                 }
