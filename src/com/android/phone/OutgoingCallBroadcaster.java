@@ -466,11 +466,7 @@ public class OutgoingCallBroadcaster extends Activity
          */
         otaCleanup();
 
-        boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
-        String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && promptEnabled &&
-               (activeSubCount() > 1) && (!isIntentFromBluetooth(intent)) &&
-                       (!isSIPCall(number, intent))) {
+        if (launchMSimDialerOrNot(intent)) {
             Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
             Intent intentMSim = new Intent(this, MSimDialerActivity.class);
             intentMSim.setData(intent.getData());
@@ -478,12 +474,8 @@ public class OutgoingCallBroadcaster extends Activity
             int requestCode = 1;
             startActivityForResult(intentMSim, requestCode);
         } else {
-            mSubscription = PhoneGlobals.getInstance().getVoiceSubscription();
-            if (mSubscription != MSimConstants.SUB1 && mSubscription != MSimConstants.SUB2) {
-                mSubscription = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
-            }
             PhoneUtils.setActiveSubscription(mSubscription);
-            Log.d(TAG, "subscription when there is (from Extra):" + mSubscription);
+            Log.d(TAG, "subscription: " + mSubscription);
             processMSimIntent(intent);
         }
     }
@@ -901,6 +893,70 @@ public class OutgoingCallBroadcaster extends Activity
         int count = subManager.getActiveSubscriptionsCount();
         if (DBG) Log.v(TAG, "count of subs activated " + count);
         return count;
+    }
+
+    private boolean launchMSimDialerOrNot(Intent intent) {
+        boolean launchMSimDialer = false;
+        Phone phone = null;
+        boolean phoneInCall = false;
+
+        // Check if any of the phones are in use
+        for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+             phone = MSimPhoneFactory.getPhone(i);
+             if ((phone != null) && (isInCall(phone))) {
+                 phoneInCall = true;
+                 break;
+             }
+        }
+
+        if (phoneInCall && !(MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                == MSimTelephonyManager.MultiSimVariants.DSDA)) {
+            // use the sub which is already in call
+            mSubscription = phone.getSubscription();
+        } else {
+            int voiceSubscription = MSimPhoneFactory.getVoiceSubscription();
+            boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
+            String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
+            boolean isEmergency = (number != null) && PhoneNumberUtils.isEmergencyNumber(number);
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && (activeSubCount() > 1)
+                    && (!isIntentFromBluetooth(intent)) && (!isSIPCall(number, intent))
+                    && !isEmergency) {
+                int subscription = -1;
+                if (SystemProperties.getBoolean("persist.env.phone.smartdialer", true)) {
+                    subscription = intent.getIntExtra("dial_widget_switched", -1);
+                }
+                if (subscription >= MSimConstants.SUB1) {
+                    mSubscription = subscription;
+                } else if (!promptEnabled) {
+                    mSubscription = voiceSubscription;
+                } else {
+                    launchMSimDialer = true;
+                }
+            } else {
+                if (isEmergency) {
+                    mSubscription = getSubscriptionForEmergencyCall();
+                } else {
+                    mSubscription = voiceSubscription;
+                }
+            }
+        }
+        return launchMSimDialer;
+    }
+
+    private int getSubscriptionForEmergencyCall(){
+        int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
+        return sub;
+    }
+
+    private boolean isInCall(Phone phone) {
+        if (phone != null) {
+            if ((phone.getForegroundCall().getState().isAlive())
+                    || (phone.getBackgroundCall().getState().isAlive())
+                    || (phone.getRingingCall().getState().isAlive())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean  isIntentFromBluetooth(Intent intent) {
