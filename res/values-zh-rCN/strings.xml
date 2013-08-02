@@ -350,6 +350,9 @@
     <string name="proximity_mode_title">"打开距离传感器"</string>
     <string name="proximity_on_summary">"接听电话时，屏幕会关闭，从而节省电量"</string>
     <string name="proximity_off_summary">"接听电话时，屏幕保持开启状态"</string>
+    <string name="display_home_location_title">"显示来去电归属地"</string>
+    <string name="home_location_enable_summary">"显示来去电归属地"</string>
+    <string name="home_location_disable_summary">"不显示来去电归属地"</string>
     <string name="menu_add" msgid="1882023737425114762">"添加联系人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"编辑联系人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"删除联系人"</string>

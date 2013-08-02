@@ -87,6 +87,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
     private static final String BUTTON_DIALPAD_AUTOCOMPLETE = "button_dialpad_autocomplete";
     private static final String BUTTON_SELECT_SUB_KEY  = "button_call_independent_serv";
+    private static final String DISPLAY_HOME_LOCATION_KEY = "display_home_location_key";
     private static final String BUTTON_XDIVERT_KEY     = "button_xdivert";
     private static final String SHOW_DURATION_KEY      = "duration_enable_key";
 
@@ -120,7 +121,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private ListPreference mButtonTTY;
     private ListPreference mButtonSipCallOptions;
     private SipSharedPreferences mSipSharedPreferences;
-
+    private CheckBoxPreference mDisplayHomeLocation;
     private PreferenceScreen mButtonXDivert;
     private CheckBoxPreference mShowDurationCheckBox;
     private int mNumPhones;
@@ -195,6 +196,12 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        } else if (preference == mDisplayHomeLocation) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    Settings.System.DISPLAY_HOME_LOCATION, checked ? 1 : 0);
+            mDisplayHomeLocation.setSummary(checked ? R.string.home_location_enable_summary
+                    : R.string.home_location_disable_summary);
         } else if (preference == mShowDurationCheckBox) {
             boolean checked = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
@@ -232,6 +239,7 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
+        mDisplayHomeLocation = (CheckBoxPreference)findPreference(DISPLAY_HOME_LOCATION_KEY);
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
         mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
 
@@ -309,6 +317,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             intent.putExtra(SelectSubscription.PACKAGE, "com.android.phone");
             intent.putExtra(SelectSubscription.TARGET_CLASS,
                     "com.android.phone.MSimCallFeaturesSubSetting");
+        }
+
+        if (mDisplayHomeLocation != null) {
+            mDisplayHomeLocation.setOnPreferenceChangeListener(this);
         }
 
         mNumPhones = MSimTelephonyManager.getDefault().getPhoneCount();
@@ -479,6 +491,14 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     Phone.TTY_MODE_OFF);
             mButtonTTY.setValue(Integer.toString(settingsTtyMode));
             updatePreferredTtyModeSummary(settingsTtyMode);
+        }
+
+        if (mDisplayHomeLocation != null) {
+            boolean checked = Settings.System.getInt(getContentResolver(),
+                    Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
+            mDisplayHomeLocation.setChecked(checked);
+            mDisplayHomeLocation.setSummary(checked ? R.string.home_location_enable_summary
+                    : R.string.home_location_disable_summary);
         }
 
         if (mButtonXDivert != null) {

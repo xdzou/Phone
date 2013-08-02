@@ -848,6 +848,9 @@
     <string name="proximity_mode_title">Turn on proximity sensor</string>
     <string name="proximity_on_summary">When you answer a call, the screen will be turned off to save power.</string>
     <string name="proximity_off_summary">When you answer a call, the screen will be turned on always.</string>
+    <string name="display_home_location_title">Display Home Location</string>
+    <string name="home_location_enable_summary">Display home location is enabled</string>
+    <string name="home_location_disable_summary">Display home location is disabled</string>
 
     <!-- FDN list screen: menu item label -->
     <string name="menu_add">Add contact</string>
