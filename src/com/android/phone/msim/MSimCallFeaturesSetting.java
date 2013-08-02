@@ -159,7 +159,11 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonXDivert) {
             processXDivert();
             return true;
-        }
+        } else if (preference == mPlayDtmfTone) {
+            Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
+            mPlayDtmfTone.isChecked() ? 1 : 0);
+            return true;
+         }
         return false;
     }
 
@@ -487,6 +491,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             mShowDurationCheckBox.setChecked(checked);
             mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
                     : R.string.duration_disable_summary);
+        }
+        if (mPlayDtmfTone != null) {
+            mPlayDtmfTone.setChecked(Settings.System.getInt(getContentResolver(),
+                    Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
         }
     }
 
