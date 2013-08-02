@@ -182,6 +182,25 @@ public class PhoneUtils {
                         cn = cnlist.next();
                         if (!fgConnections.contains(cn) && !bgConnections.contains(cn)) {
                             if (DBG) log("connection '" + cn + "' not accounted for, removing.");
+                            for (Connection fgcn : fgConnections) {
+                                if((cn.getAddress()).equals(fgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating fg conn '"+fgcn +"' wth mute value: "+bMute+
+                                                                 " address: "+fgcn.getAddress());
+                                   sConnectionMuteTable.put(fgcn, bMute);
+                                   break;
+                                }
+                            }
+
+                            for (Connection bgcn : bgConnections) {
+                                if((cn.getAddress()).equals(bgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating bg conn '"+bgcn+"' wth mute value: "+bMute+
+                                                                 " address: "+bgcn.getAddress());
+                                   sConnectionMuteTable.put(bgcn, bMute);
+                                   break;
+                                }
+                            }
                             cnlist.remove();
                         }
                     }
@@ -2906,6 +2925,13 @@ public class PhoneUtils {
     }
 
     /**
+     * Returns true if Android supports Csvt calls
+     */
+    public static boolean isCallOnCsvtEnabled() {
+        return CallManager.isCallOnCsvtEnabled();
+    }
+
+    /**
      * If the intent is not  already the IMS intent, conert the intent to the
      * IMS intent
      */
@@ -3102,6 +3128,18 @@ public class PhoneUtils {
                 break;
             }
         }
+    }
+
+    public static boolean isCsvtCallActive() {
+        boolean isActive = false;
+
+        try {
+            isActive =  PhoneGlobals.mCsvtService != null &&
+                      ! PhoneGlobals.mCsvtService.isIdle();
+        } catch(RemoteException e) {
+            Log.d(LOG_TAG, "Failed to retrieve Csvt call state. " + e);
+        }
+        return isActive;
     }
 
     // This method is called when user does which SUB from UI.
