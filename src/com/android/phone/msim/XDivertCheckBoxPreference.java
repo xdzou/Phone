@@ -29,6 +29,7 @@
 
 package com.android.phone;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -48,6 +49,8 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.CallForwardInfo;
 import com.android.internal.telephony.CommandException;
 import static com.android.phone.TimeConsumingPreferenceActivity.RESPONSE_ERROR;
+
+import java.util.List;
 
 // This class handles the actual processing required for XDivert feature.
 // Handles the checkbox display.
@@ -220,21 +223,23 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
         }
 
         Log.d(LOG_TAG, "displayAlertMessage:  dispMsg = " + dispMsg);
-        new AlertDialog.Builder(this.getContext())
-            .setTitle(R.string.xdivert_status)
-            .setMessage(dispMsg)
-            .setIcon(android.R.drawable.ic_dialog_alert)
-            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        Log.d(LOG_TAG, "displayAlertMessage:  onClick");
-                    }
-                })
-            .show()
-            .setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    public void onDismiss(DialogInterface dialog) {
-                        Log.d(LOG_TAG, "displayAlertMessage:  onDismiss");
-                    }
-                });
+        if (isXDivertSettingRunning()) {
+            new AlertDialog.Builder(this.getContext())
+                .setTitle(R.string.xdivert_status)
+                .setMessage(dispMsg)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            Log.d(LOG_TAG, "displayAlertMessage:  onClick");
+                        }
+                    })
+                .show()
+                .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        public void onDismiss(DialogInterface dialog) {
+                            Log.d(LOG_TAG, "displayAlertMessage:  onDismiss");
+                        }
+                    });
+        }
 
     }
 
@@ -267,15 +272,32 @@ public class XDivertCheckBoxPreference extends CheckBoxPreference {
             AsyncResult result = (AsyncResult) msg.obj;
             switch (msg.what) {
                 case MESSAGE_GET_CFNRC:
-                    handleGetCFNRCResponse(result, msg.arg1);
+                    if (isXDivertSettingRunning()) {
+                        handleGetCFNRCResponse(result, msg.arg1);
+                    }
                     break;
 
                 case MESSAGE_GET_CALL_WAITING:
-                    handleGetCallWaitingResponse(result, msg.arg1, msg.arg2);
+                    if (isXDivertSettingRunning()) {
+                        handleGetCallWaitingResponse(result, msg.arg1, msg.arg2);
+                    }
                     break;
             }
         }
     };
+
+    private boolean isXDivertSettingRunning() {
+        ActivityManager am = (ActivityManager) getContext().getSystemService("activity");
+        List<ActivityManager.RunningTaskInfo> runningTasks = am.getRunningTasks(1);
+        if (runningTasks.size() > 0) {
+            if (runningTasks.get(0).topActivity.getClassName()
+                    .equals("com.android.phone.XDivertSetting")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     private final Handler mSetOptionComplete = new Handler() {
         @Override
