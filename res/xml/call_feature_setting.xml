@@ -170,6 +170,14 @@
         android:entries="@array/dtmf_tone_entries"
         android:entryValues="@array/dtmf_tone_values"/>
 
+    <CheckBoxPreference
+        android:key="display_home_location_key"
+        android:title="@string/display_home_location_title"
+        android:summaryOn="@string/home_location_enable_summary"
+        android:summaryOff="@string/home_location_disable_summary"
+        android:persistent="false">
+    </CheckBoxPreference>
+
     <PreferenceScreen
         android:key="button_gsm_more_expand_key"
         android:title="@string/labelGSMMore"
