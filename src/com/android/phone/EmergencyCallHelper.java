@@ -154,8 +154,9 @@ public class EmergencyCallHelper extends Handler {
 
         mNumRetriesSoFar = 0;
 
-        // Reset mPhone to whatever the current default phone is right now.
-        mPhone = mApp.mCM.getDefaultPhone();
+        // Get the Phone corresponding to the sub
+        int sub = mApp.getVoiceSubscriptionInService();
+        mPhone = mApp.getPhone(sub);
 
         // Wake lock to make sure the processor doesn't go to sleep midway
         // through the emergency call sequence.
@@ -280,6 +281,14 @@ public class EmergencyCallHelper extends Handler {
      * Handles the retry timer expiring.
      */
     private void onRetryTimeout() {
+        // Check if the Phone has changed
+        int sub = mApp.getVoiceSubscriptionInService();
+        Phone phone = mApp.getPhone(sub);
+        if (phone != mPhone){
+            unregisterForServiceStateChanged();
+            mPhone = phone;
+            registerForServiceStateChanged();
+        }
         PhoneConstants.State phoneState = mCM.getState();
         int serviceState = mPhone.getServiceState().getState();
         if (DBG) log("onRetryTimeout():  phone state " + phoneState
