@@ -672,4 +672,7 @@
         <xliff:g id="MINUTES">%s</xliff:g> 分 <xliff:g id="SECONDS">%s</xliff:g> 秒
     </string>
     <string name="network_forbidden">(禁用)</string>
+    <!-- Set dual dialer for MultiSim -->
+    <string name="call_number">拨至: </string>
+    <string name="cancel_call">取消</string>
 </resources>
