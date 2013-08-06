@@ -571,7 +571,16 @@ public class MSimNotificationMgr extends NotificationMgr {
                 // and translate that into the elapsedRealtime() timebase.
                 long callDurationMsec = currentConn.getDurationMillis();
                 builder.setWhen(System.currentTimeMillis() - callDurationMsec);
-                builder.setContentText(mContext.getString(R.string.notification_ongoing_call));
+
+                int contextTextId = R.string.notification_ongoing_call;
+                String contentText = mContext.getString(contextTextId);
+
+                int sub = currentCall.getPhone().getSubscription();
+                String name = Settings.System.getString(mContext.getContentResolver(),
+                        Settings.System.MULTI_SIM_NAME[sub]);
+                contentText += "  (" + name + ")";
+
+                builder.setContentText(contentText);
             }
         } else if (DBG) {
             Log.w(LOG_TAG, "updateInCallNotification: null connection, can't set exp view line 1.");
