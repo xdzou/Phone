@@ -1941,4 +1941,5 @@
         <xliff:g id="minutes" example="42">%s</xliff:g> mins
         <xliff:g id="seconds" example="28">%s</xliff:g> secs
     </string>
+    <string name="network_forbidden">(Forbidden)</string>
 </resources>
