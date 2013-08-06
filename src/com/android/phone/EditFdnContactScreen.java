@@ -264,14 +264,16 @@ public class EditFdnContactScreen extends Activity {
     }
 
     /**
-      * @param number is voice mail number
-      * @return true if number length is less than 20-digit limit
-      *
-      * TODO: Fix this logic.
-      */
-     protected boolean isValidNumber(String number) {
-         return (number.length() <= 20);
-     }
+     * @param number is voice mail number
+     * @return true if number length is less than 20-digit limit
+     *
+     * TODO: Fix this logic.
+     */
+    protected boolean isValidNumber(String number) {
+        // Although number is not empty(checked in method onClick), add null
+        // pointer check to ensure the robustness of the code
+        return (null != number) && (number.length() <= 20);
+    }
 
 
     protected void addContact() {
@@ -408,6 +410,15 @@ public class EditFdnContactScreen extends Activity {
             } else if (v == mNumberField) {
                 mButton.requestFocus();
             } else if (v == mButton) {
+                //if number is empty,the fdn record is meaningless.
+                //but if name is empty and number isn't,name named number,
+                //it is can be saved.
+                if (TextUtils.isEmpty(mNumberField.getText())) {
+                    showStatus(getResources().getText(R.string.fdn_empty_number));
+                    return;
+                } else if (TextUtils.isEmpty(mNameField.getText())) {
+                    mNameField.setText(getNumberFromTextField());
+                }
                 // Authenticate the pin AFTER the contact information
                 // is entered, and if we're not busy.
                 if (!mDataBusy) {
