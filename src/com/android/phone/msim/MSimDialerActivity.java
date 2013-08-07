@@ -96,28 +96,9 @@ public class MSimDialerActivity extends Activity {
             mNumber = PhoneNumberUtils.stripSeparators(mNumber);
         }
 
-        Phone phone = null;
-        boolean phoneInCall = false;
-        //checking if any of the phones are in use
-        for (int i = 0; i < mPhoneCount; i++) {
-             phone = MSimPhoneFactory.getPhone(i);
-             boolean inCall = isInCall(phone);
-             if ((phone != null) && (inCall)) {
-                 phoneInCall = true;
-                 break;
-             }
-        }
+        if (DBG) Log.v(TAG, "launch dsdsdialer");
+        launchMSDialer();
 
-        if (phoneInCall && !(MSimTelephonyManager.getDefault().getMultiSimConfiguration()
-                == MSimTelephonyManager.MultiSimVariants.DSDA)) {
-            if (DBG) Log.v(TAG, "subs [" + phone.getSubscription() + "] is in call");
-            // use the sub which is already in call
-            startOutgoingCall(phone.getSubscription());
-        } else {
-            if (DBG) Log.v(TAG, "launch dsdsdialer");
-            // if none in use, launch the MultiSimDialer
-            launchMSDialer();
-        }
         Log.d(TAG, "end of onResume()");
     }
 
@@ -130,20 +111,7 @@ public class MSimDialerActivity extends Activity {
         }
     }
 
-    private int getSubscriptionForEmergencyCall(){
-        Log.d(TAG,"emergency call, getVoiceSubscriptionInService");
-        int sub = PhoneGlobals.getInstance().getVoiceSubscriptionInService();
-        return sub;
-    }
-
     private void launchMSDialer() {
-        boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(mNumber);
-        if (isEmergency) {
-            Log.d(TAG,"emergency call");
-            startOutgoingCall(getSubscriptionForEmergencyCall());
-            return;
-        }
-
         LayoutInflater inflater = (LayoutInflater) mContext.
                 getSystemService(LAYOUT_INFLATER_SERVICE);
         View layout = inflater.inflate(R.layout.dialer_ms,
@@ -241,16 +209,6 @@ public class MSimDialerActivity extends Activity {
         }
 
         mAlertDialog.show();
-    }
-
-    boolean isInCall(Phone phone) {
-        if (phone != null) {
-            if ((phone.getForegroundCall().getState().isAlive()) ||
-                   (phone.getBackgroundCall().getState().isAlive()) ||
-                   (phone.getRingingCall().getState().isAlive()))
-                return true;
-        }
-        return false;
     }
 
     private void startOutgoingCall(int subscription) {
