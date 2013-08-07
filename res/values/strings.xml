@@ -1773,6 +1773,11 @@
     <string name="description_direction_down_left">Down Left</string>
     <string name="description_direction_down_right">Down Right</string>
 
+    <!-- Description of the bubble content in the incoming call screen -->
+    <string name="incall_hangup_active_alert">
+        If you answer the incoming call,\nyou will hang up on the %s call.
+    </string>
+
     <!-- Dialog title for the vibration settings for voicemail notifications [CHAR LIMIT=40] -->
     <string name="voicemail_notification_vibrate_when_title" msgid="8731372580674292759">Vibrate</string>
     <!-- Dialog title for the vibration settings for voice mail notifications [CHAR LIMIT=40]-->

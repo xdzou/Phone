@@ -5050,6 +5050,13 @@ public class InCallScreen extends Activity
     }
 
     /**
+     * Returns the CallCard object which contains the caller information.
+     */
+    public CallCard getCallCard() {
+        return mCallCard;
+    }
+
+    /**
      * Show call duration dialog when diconnect
      */
     void showCallDurationDialog(long duration) {

@@ -22,12 +22,14 @@ package com.android.phone;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -42,9 +44,11 @@ import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -127,6 +131,10 @@ public class InCallTouchUi extends FrameLayout
 
     // Time of the most recent "answer" or "reject" action (see updateState())
     private long mLastIncomingCallActionTime;  // in SystemClock.uptimeMillis() time base
+
+    // Popup window alert
+    private PopupWindow mBubblePopup;
+    private boolean mHasShownBubblePopup = false;
 
     // Parameters for the GlowPadView "ping" animation; see triggerPing().
     private static final boolean ENABLE_PING_ON_RING_EVENTS = false;
@@ -360,6 +368,15 @@ public class InCallTouchUi extends FrameLayout
             if (DBG) log("- updateState: showing incoming call widget...");
             showIncomingCallWidget(ringingCall);
 
+            // This is already an active call and a holding call. Show the popup window
+            // if the phone type is GSM.
+            if (ringingCall.getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
+                if (!mHasShownBubblePopup && cm.hasActiveFgCall() && cm.hasActiveBgCall()) {
+                    mHasShownBubblePopup = true;
+                    showBubbleNotice();
+                }
+            }
+
             // On devices with a system bar (soft buttons at the bottom of
             // the screen), disable navigation while the incoming-call UI
             // is up.
@@ -371,6 +388,12 @@ public class InCallTouchUi extends FrameLayout
         } else {
             if (DBG) log("- updateState: HIDING incoming call widget...");
             hideIncomingCallWidget();
+
+            mHasShownBubblePopup = false;
+            if (mBubblePopup != null) {
+                mBubblePopup.dismiss();
+                mBubblePopup = null;
+            }
 
             // The system bar is allowed to work normally in regular
             // in-call states.
@@ -1480,6 +1503,48 @@ public class InCallTouchUi extends FrameLayout
             mHandler.sendEmptyMessageDelayed(INCOMING_CALL_WIDGET_PING,
                                              PING_AUTO_REPEAT_DELAY_MSEC);
         }
+    }
+
+    /**
+     * Show a bubble notice to warn the user that the active call will
+     * be ended as a result of answering the incoming call only when
+     * there is already an active GSM call and a holding GSM call.
+     */
+    private void showBubbleNotice() {
+        if (mBubblePopup != null) {
+            mBubblePopup.dismiss();
+            mBubblePopup = null;
+        }
+
+        DisplayMetrics dm = mInCallScreen.getResources().getDisplayMetrics();
+        float scale = dm.density;
+        int displayWidth = dm.widthPixels;
+        int textWidth = displayWidth - (int) (70 * scale + 0.5f);
+
+        LinearLayout bubbleLayout = new LinearLayout(mInCallScreen);
+        bubbleLayout.setBackgroundResource(R.drawable.incoming_call_bubble_bkgnd);
+
+        TextView bubbleText = new TextView(mInCallScreen);
+        bubbleText.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT));
+        bubbleText.setMaxWidth(textWidth);
+        bubbleText.setGravity(Gravity.CENTER_HORIZONTAL);
+        bubbleText.setTextSize(18);
+        bubbleText.setText(mInCallScreen.getString(R.string.incall_hangup_active_alert,
+                mInCallScreen.getCallCard().getActiveCallName()));
+        bubbleLayout.addView(bubbleText);
+
+        bubbleLayout.measure(0, 0);
+        int bubbleWidth = displayWidth - (int) (64 * scale + 0.5f);
+        int bubbleHeight = bubbleLayout.getMeasuredHeight();
+        int textLineCount = bubbleText.getLineCount();
+        int textLineHeight = bubbleText.getLineHeight();
+        int offset_y = (int) (90 * scale - (textLineCount - 2) * textLineHeight / 2 + 0.5f);
+
+        mBubblePopup = new PopupWindow(bubbleLayout, bubbleWidth, bubbleHeight);
+        mBubblePopup.setBackgroundDrawable(new BitmapDrawable());
+        mBubblePopup.setOutsideTouchable(true);
+        mBubblePopup.showAtLocation(mIncomingCallWidget, Gravity.CENTER, 0, offset_y);
     }
 
     // Debugging / testing code

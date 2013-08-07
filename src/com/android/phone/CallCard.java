@@ -173,6 +173,9 @@ public class CallCard extends LinearLayout
     // Cached DisplayMetrics density.
     private float mDensity;
 
+    // Name or number of the active call.
+    private String mActiveCallName;
+
     private boolean mAudioDeviceInitialized = false;
 
     // Constants for TelephonyProperties.PROPERTY_IMS_AUDIO_OUTPUT property.
@@ -1630,6 +1633,10 @@ public class CallCard extends LinearLayout
             updateInfoUi(displayName, displayNumber, label, cityName);
         }
 
+        if (call.getState() == Call.State.ACTIVE) {
+            mActiveCallName = displayName;
+        }
+
         // Update mPhoto
         // if the temporary flag is set, we know we'll be getting another call after
         // the CallerInfo has been correctly updated.  So, we can skip the image
@@ -2007,6 +2014,13 @@ public class CallCard extends LinearLayout
         }
         String titleFormat = context.getString(R.string.card_title_my_phone_number);
         return String.format(titleFormat, formattedNumber);
+    }
+
+    /**
+     * Returns the name or number of the active call.
+     */
+    public String getActiveCallName() {
+        return mActiveCallName;
     }
 
     /**
