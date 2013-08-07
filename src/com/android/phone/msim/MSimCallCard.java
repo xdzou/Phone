@@ -26,6 +26,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.accessibility.AccessibilityEvent;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
@@ -45,10 +46,17 @@ public class MSimCallCard extends CallCard {
     private static final String LOG_TAG = "MSimCallCard";
     private static final boolean DBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
+    private Context mContext;
     //Display subscription info for incoming call.
     private TextView mSubInfo;
+    // Display sub icon beside the call state label
+    private ImageView mCallStateSubIcon;
+    // Display sub icon above the call duration when a call is connected
+    private ImageView mInCallSubIcon;
+
     public MSimCallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
+        mContext = context;
 
         if (DBG) log("MSimCallCard constructor...");
         if (DBG) log("- this = " + this);
@@ -60,8 +68,27 @@ public class MSimCallCard extends CallCard {
         super.onFinishInflate();
 
         if (DBG) log("CallCard onFinishInflate(this = " + this + ")...");
-        mPrimaryCallInfo = (ViewGroup) findViewById(R.id.msim_primary_call_info);
-        mSubInfo = (TextView) findViewById(R.id.subInfo);
+    }
+
+    @Override
+    /* package */ void updateState(CallManager cm) {
+        if (DBG) log("updateState(" + cm + ")...");
+        if (cm.getFirstActiveRingingCall().getState().isAlive()) {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer
+                    .findViewById(R.id.msim_primary_incoming_call_info);
+            ((ViewGroup) mCallInfoContainer
+                    .findViewById(R.id.msim_primary_call_info)).setVisibility(View.GONE);
+        } else {
+            mPrimaryCallInfo = (ViewGroup) mCallInfoContainer
+                    .findViewById(R.id.msim_primary_call_info);
+            ((ViewGroup) mCallInfoContainer
+                    .findViewById(R.id.msim_primary_incoming_call_info)).setVisibility(View.GONE);
+            mInCallSubIcon = (ImageView) mPrimaryCallInfo.findViewById(R.id.inCallSubIcon);
+        }
+        mSubInfo = (TextView) mPrimaryCallInfo.findViewById(R.id.subInfo);
+        mCallStateSubIcon = (ImageView) mPrimaryCallInfo.findViewById(R.id.callStateSubIcon);
+
+        doUpdate(cm);
     }
 
    // TODO need to find proper way to do this
@@ -71,7 +98,20 @@ public class MSimCallCard extends CallCard {
 
         activeSub = PhoneUtils.getActiveSubscription();
         mSubInfo.setText(sub[activeSub]);
-        mSubInfo.setVisibility(View.VISIBLE);
+
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        Call.State state = cm.getActiveFgCall().getState();
+        if (!cm.hasActiveRingingCall() && state == Call.State.ACTIVE) {
+            mInCallSubIcon.setImageDrawable(PhoneUtils.getMultiSimIcon(mContext, activeSub));
+            mInCallSubIcon.setVisibility(View.VISIBLE);
+            mCallStateSubIcon.setVisibility(View.GONE);
+        } else {
+            mCallStateSubIcon.setImageDrawable(PhoneUtils.getMultiSimIcon(mContext, activeSub));
+            mCallStateSubIcon.setVisibility(View.VISIBLE);
+            if (mInCallSubIcon != null) {
+                mInCallSubIcon.setVisibility(View.GONE);
+            }
+        }
 
         log(" Updating SUB info " + sub[activeSub]);
     }
