@@ -12,6 +12,7 @@ import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.util.Log;
 import android.view.MenuItem;
+import android.telephony.MSimTelephonyManager;
 
 import java.util.ArrayList;
 
@@ -173,6 +174,18 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         final int itemId = item.getItemId();
         if (itemId == android.R.id.home) {  // See ActionBar#setDisplayHomeAsUpEnabled()
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                Intent intent = new Intent();
+                intent.setAction("android.intent.action.MAIN");
+                intent.setClassName("com.android.settings", "com.android.settings.multisimsettings.MultiSimSettingTab");
+                intent.putExtra(SelectSubscription.PACKAGE, "com.android.phone");
+                intent.putExtra(SelectSubscription.TARGET_CLASS,
+                        "com.android.phone.MSimCallFeaturesSubSetting");
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+                startActivity(intent);
+                finish();
+            }else
             CallFeaturesSetting.goUpToTopLevelSetting(this);
             return true;
         }

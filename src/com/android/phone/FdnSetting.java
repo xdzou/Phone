@@ -656,6 +656,7 @@ public class FdnSetting extends PreferenceActivity
                 intent.putExtra(SelectSubscription.TARGET_CLASS,
                         "com.android.phone.MSimCallFeaturesSubSetting");
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
                 startActivity(intent);
                 finish();
             }else

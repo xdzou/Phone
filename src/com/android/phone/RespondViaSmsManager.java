@@ -45,8 +45,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.telephony.MSimTelephonyManager;
 
 import java.util.Arrays;
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * Helper class to manage the "Respond via SMS" feature for incoming calls.
@@ -388,6 +390,9 @@ public class RespondViaSmsManager {
      */
     public static class Settings extends PreferenceActivity
             implements Preference.OnPreferenceChangeListener {
+
+        private int mSubscription = 0;
+            
         @Override
         protected void onCreate(Bundle icicle) {
             super.onCreate(icicle);
@@ -405,6 +410,9 @@ public class RespondViaSmsManager {
             //
             // Also, listen for change events (since we'll need to update the
             // title any time the user edits one of the strings.)
+
+            mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
+                            PhoneGlobals.getInstance().getDefaultSubscription());
 
             addPreferencesFromResource(R.xml.respond_via_sms_settings);
 
@@ -470,6 +478,18 @@ public class RespondViaSmsManager {
         public boolean onOptionsItemSelected(MenuItem item) {
             final int itemId = item.getItemId();
             if (itemId == android.R.id.home) {  // See ActionBar#setDisplayHomeAsUpEnabled()
+                if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                    Intent intent = new Intent();
+                    intent.setAction("android.intent.action.MAIN");
+                    intent.setClassName("com.android.settings", "com.android.settings.multisimsettings.MultiSimSettingTab");
+                    intent.putExtra(SelectSubscription.PACKAGE, "com.android.phone");
+                    intent.putExtra(SelectSubscription.TARGET_CLASS,
+                            "com.android.phone.MSimCallFeaturesSubSetting");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+                    startActivity(intent);
+                    finish();
+                }else
                 CallFeaturesSetting.goUpToTopLevelSetting(this);
                 return true;
             }

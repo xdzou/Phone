@@ -1533,6 +1533,9 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         mSubscriptionPrefFDN.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mSubscriptionPrefGSM.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mSubscriptionPrefCDMA.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
+        
+        PreferenceScreen  respondsmsPref = (PreferenceScreen) findPreference("button_respond_via_sms_key");
+        respondsmsPref.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
 
         log("settings onCreate subscription =" + mSubscription);
         mPhone = PhoneGlobals.getInstance().getPhone(mSubscription);

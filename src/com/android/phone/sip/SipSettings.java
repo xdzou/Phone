@@ -20,6 +20,8 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.phone.CallFeaturesSetting;
+import com.android.phone.MSimCallFeaturesSetting;
+
 import com.android.phone.R;
 import com.android.phone.SipUtil;
 
@@ -54,6 +56,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import android.telephony.MSimTelephonyManager;
 
 /**
  * The PreferenceActivity class for managing sip profile preferences.
@@ -501,6 +504,9 @@ public class SipSettings extends PreferenceActivity {
         final int itemId = item.getItemId();
         switch (itemId) {
             case android.R.id.home: {
+                if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                    MSimCallFeaturesSetting.goUpToTopLevelSetting(this);
+                }else
                 CallFeaturesSetting.goUpToTopLevelSetting(this);
                 return true;
             }
