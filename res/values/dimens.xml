@@ -38,15 +38,6 @@
          numbers won't overlap the elapsed time indication. -->
     <dimen name="call_banner_name_number_right_padding">50sp</dimen>
 
-    <!-- Top padding for number and city fields in the call banner. -->
-    <dimen name="call_banner_text_top_padding">3dp</dimen>
-
-    <!-- The padding between two textviews in the call banner. -->
-    <dimen name="call_banner_text_left_right_padding">14dp</dimen>
-
-    <!-- The padding between call state label and the sub icon. -->
-    <dimen name="call_state_label_left_padding">6dp</dimen>
-
     <!-- Height of the main row of in-call buttons. -->
     <dimen name="in_call_button_height">76dp</dimen>
 

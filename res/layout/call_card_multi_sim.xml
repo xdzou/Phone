@@ -44,13 +44,7 @@
 
     <!-- Primary "Call info" block, for the foreground call. -->
     <include android:id="@+id/msim_primary_call_info"
-         layout="@layout/msim_primary_call_info"
-         android:visibility="gone" />
-
-    <!-- Primary "Call info" block, for the incoming call. -->
-    <include android:id="@+id/msim_primary_incoming_call_info"
-         layout="@layout/msim_primary_incoming_call_info"
-         android:visibility="gone" />
+         layout="@layout/msim_primary_call_info" />
 
     <!-- Secondary "Call info" block , for the background ("on hold") call. -->
     <ViewStub android:id="@+id/secondary_call_info"
