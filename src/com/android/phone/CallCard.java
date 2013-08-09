@@ -772,8 +772,12 @@ public class CallCard extends LinearLayout
             mPhoneNumber.setTextColor(getResources().getColor(mIncomingCallWidgetHintColorResId));
             mPhoneNumber.setVisibility(View.VISIBLE);
             mLabel.setVisibility(View.GONE);
-            mPrefixOfLabel.setVisibility(View.GONE);
-            mSuffixOfLabel.setVisibility(View.GONE);
+            if (mPrefixOfLabel != null) {
+                mPrefixOfLabel.setVisibility(View.GONE);
+            }
+            if (mSuffixOfLabel != null) {
+                mSuffixOfLabel.setVisibility(View.GONE);
+            }
         }
         // If we don't have a hint to display, just don't touch
         // mPhoneNumber and mLabel. (Their text / color / visibility have
@@ -1704,9 +1708,15 @@ public class CallCard extends LinearLayout
         mName.setText(R.string.card_title_in_call);
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
-        mPrefixOfLabel.setVisibility(View.GONE);
-        mSuffixOfLabel.setVisibility(View.GONE);
-        mCityName.setVisibility(View.GONE);
+        if (mPrefixOfLabel != null) {
+            mPrefixOfLabel.setVisibility(View.GONE);
+        }
+        if (mSuffixOfLabel != null) {
+            mSuffixOfLabel.setVisibility(View.GONE);
+        }
+        if (mCityName != null) {
+            mCityName.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -1730,24 +1740,33 @@ public class CallCard extends LinearLayout
 
         if (TextUtils.isEmpty(label)) {
             mLabel.setVisibility(View.GONE);
-            mPrefixOfLabel.setVisibility(View.GONE);
-            mSuffixOfLabel.setVisibility(View.GONE);
+            if (mPrefixOfLabel != null) {
+                mPrefixOfLabel.setVisibility(View.GONE);
+            }
+            if (mSuffixOfLabel != null) {
+                mSuffixOfLabel.setVisibility(View.GONE);
+            }
         } else {
             mLabel.setText(label);
-            mPrefixOfLabel.setText(getResources().getString(R.string.prefix_of_label));
-            mSuffixOfLabel.setText(getResources().getString(R.string.suffix_of_label));
             mLabel.setVisibility(View.VISIBLE);
-            mPrefixOfLabel.setVisibility(View.VISIBLE);
-            mSuffixOfLabel.setVisibility(View.VISIBLE);
+            if (mPrefixOfLabel != null) {
+                mPrefixOfLabel.setText(getResources().getString(R.string.prefix_of_label));
+                mPrefixOfLabel.setVisibility(View.VISIBLE);
+            }
+            if (mSuffixOfLabel != null) {
+                mSuffixOfLabel.setText(getResources().getString(R.string.suffix_of_label));
+                mSuffixOfLabel.setVisibility(View.VISIBLE);
+            }
         }
-
-        boolean showHomeLocation = Settings.System.getInt(mInCallScreen.getContentResolver(),
-                Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
-        if (!showHomeLocation || TextUtils.isEmpty(cityName)) {
-            mCityName.setVisibility(View.GONE);
-        } else {
-            mCityName.setText(cityName);
-            mCityName.setVisibility(View.VISIBLE);
+        if (mCityName != null) {
+            boolean showHomeLocation = Settings.System.getInt(mInCallScreen.getContentResolver(),
+                    Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
+            if (!showHomeLocation || TextUtils.isEmpty(cityName)) {
+                mCityName.setVisibility(View.GONE);
+            } else {
+                mCityName.setText(cityName);
+                mCityName.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -1798,9 +1817,15 @@ public class CallCard extends LinearLayout
         // But for now, just hide it:
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
-        mPrefixOfLabel.setVisibility(View.GONE);
-        mSuffixOfLabel.setVisibility(View.GONE);
-        mCityName.setVisibility(View.GONE);
+        if (mPrefixOfLabel != null) {
+            mPrefixOfLabel.setVisibility(View.GONE);
+        }
+        if (mSuffixOfLabel != null) {
+            mSuffixOfLabel.setVisibility(View.GONE);
+        }
+        if (mCityName != null) {
+            mCityName.setVisibility(View.GONE);
+        }
 
         // Other text fields:
         updateCallTypeLabel(call);
