@@ -52,6 +52,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
@@ -414,6 +415,12 @@ public class OutgoingCallBroadcaster extends Activity
 
             return;
         }
+        
+        //display the when screen locked,especially at sub select dialog.
+        int flags = WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
+        WindowManager.LayoutParams lp = getWindow().getAttributes();
+        lp.flags |= flags;
+        getWindow().setAttributes(lp);
 
         processIntent(intent);
 
