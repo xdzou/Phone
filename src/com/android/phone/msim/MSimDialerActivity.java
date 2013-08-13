@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.MSimTelephonyManager;
 import android.view.LayoutInflater;
@@ -171,7 +172,6 @@ public class MSimDialerActivity extends Activity {
 
         Button[] callButton = new Button[mPhoneCount];
         int[] callMark = {R.id.callmark1, R.id.callmark2, R.id.callmark3};
-        int[] subString = {R.string.sub_1, R.string.sub_2, R.string.sub_3};
         int index = 0;
         SubscriptionManager subManager = SubscriptionManager.getInstance();
 
@@ -184,7 +184,7 @@ public class MSimDialerActivity extends Activity {
 
         for (index = 0; index < mPhoneCount; index++) {
             callButton[index] =  (Button) layout.findViewById(callMark[index]);
-            callButton[index].setText(subString[index]);
+            callButton[index].setText(getMultiSimName(index));
             callButton[index].setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     mAlertDialog.dismiss();
@@ -209,6 +209,11 @@ public class MSimDialerActivity extends Activity {
         }
 
         mAlertDialog.show();
+    }
+
+    private String getMultiSimName(int subscription) {
+        return Settings.System.getString(getApplicationContext().getContentResolver(),
+                        Settings.System.MULTI_SIM_NAME[subscription]);
     }
 
     private void startOutgoingCall(int subscription) {
