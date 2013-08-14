@@ -20,7 +20,9 @@
 package com.android.phone;
 
 import android.content.Context;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -31,6 +33,7 @@ import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
@@ -152,6 +155,12 @@ public class MSimCallCard extends CallCard {
         return true;
     }
 
+    @Override
+    protected boolean isEmergencyNumberWithoutSIMCard(Connection c) {
+        return PhoneNumberUtils.isEmergencyNumber(c.getAddress()) &&
+                (MSimTelephonyManager.getDefault().getSimState(c.getCall().getPhone()
+                        .getSubscription()) == TelephonyManager.SIM_STATE_ABSENT);
+    }
 
     // Debugging / testing code
 

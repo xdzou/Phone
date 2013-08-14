@@ -34,6 +34,7 @@ import android.os.SystemProperties;
 import android.provider.ContactsContract.Contacts;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.AttributeSet;
@@ -1505,7 +1506,11 @@ public class CallCard extends LinearLayout
                     break;
 
                 case OUT_OF_SERVICE:
-                    resID = R.string.callFailed_outOfService;
+                    if (isEmergencyNumberWithoutSIMCard(c)) {
+                        resID = R.string.card_title_call_ended;
+                    } else {
+                        resID = R.string.callFailed_outOfService;
+                    }
                     break;
 
                 case INVALID_NUMBER:
@@ -1519,6 +1524,11 @@ public class CallCard extends LinearLayout
             }
         }
         return getContext().getString(resID);
+    }
+
+    protected boolean isEmergencyNumberWithoutSIMCard(Connection c) {
+        return PhoneNumberUtils.isEmergencyNumber(c.getAddress()) &&
+                (TelephonyManager.getDefault().getSimState() == TelephonyManager.SIM_STATE_ABSENT);
     }
 
     /**
