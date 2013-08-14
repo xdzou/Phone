@@ -355,9 +355,6 @@
     <string name="proximity_mode_title">打開距離傳感器</string>
     <string name="proximity_on_summary">接聽電話時，屏幕會關閉，從而節省電量</string>
     <string name="proximity_off_summary">接聽電話時，屏幕保持開啟狀態</string>
-    <string name="display_home_location_title">"顯示來去電歸屬地"</string>
-    <string name="home_location_enable_summary">"顯示來去電歸屬地"</string>
-    <string name="home_location_disable_summary">"不顯示來去電歸屬地"</string>
     <string name="menu_add" msgid="1882023737425114762">"新增聯絡人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"編輯聯絡人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"刪除聯絡人"</string>
