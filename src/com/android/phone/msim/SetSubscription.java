@@ -79,6 +79,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private SubscriptionData mUserSelSub;
     private SubscriptionManager mSubscriptionManager;
     private CardSubscriptionManager mCardSubscriptionManager;
+    private AirplaneModeBroadcastReceiver mAirplaneModeBroadcastReceiver;
     //mIsForeground is added to track if activity is in foreground
     private boolean mIsForeground = false;
 
@@ -144,9 +145,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
             }
         }
+        mAirplaneModeBroadcastReceiver = new AirplaneModeBroadcastReceiver();
         IntentFilter intentFilter =
                 new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        registerReceiver(new AirplaneModeBroadcastReceiver(), intentFilter);
+        registerReceiver(mAirplaneModeBroadcastReceiver, intentFilter);
     }
 
     /**
@@ -181,6 +183,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         super.onDestroy();
         mCardSubscriptionManager.unRegisterForSimStateChanged(mHandler);
         mSubscriptionManager.unRegisterForSetSubscriptionCompleted(mHandler);
+        if(mAirplaneModeBroadcastReceiver != null) {
+            unregisterReceiver(mAirplaneModeBroadcastReceiver);
+        }
     }
 
     private boolean isAirplaneModeOn() {
