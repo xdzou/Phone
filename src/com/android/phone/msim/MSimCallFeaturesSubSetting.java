@@ -183,6 +183,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private Intent mContactListIntent;
 
+    private int[] mRingtones = {
+            RingtoneManager.TYPE_RINGTONE, RingtoneManager.TYPE_RINGTONE_2
+    };
+
     /** Event for Async voicemail change call */
     private static final int EVENT_VOICEMAIL_CHANGED        = 500;
     private static final int EVENT_FORWARDING_CHANGED       = 501;
@@ -241,7 +245,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         }
     };
 
-    private Preference mRingtonePreference;
+    private DefaultRingtonePreference mRingtonePreference;
     private CheckBoxPreference mVibrateWhenRinging;
     private ListPreference mVoicemailProviders;
     private PreferenceScreen mVoicemailSettings;
@@ -1506,7 +1510,9 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             mSubMenuVoicemailSettings.setDialogTitle(R.string.voicemail_settings_number_label);
         }
 
-        mRingtonePreference = findPreference(BUTTON_RINGTONE_KEY);
+        mRingtonePreference = (DefaultRingtonePreference) findPreference(BUTTON_RINGTONE_KEY);
+        // Set the type whose default sound should be set.
+        mRingtonePreference.setRingtoneType(mRingtones[mSubscription]);
         mVibrateWhenRinging = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_ON_RING);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
@@ -1588,7 +1594,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             @Override
             public void run() {
                 if (mRingtonePreference != null) {
-                    updateRingtoneName(RingtoneManager.TYPE_RINGTONE, mRingtonePreference,
+                    updateRingtoneName(mRingtones[mSubscription], mRingtonePreference,
                             MSG_UPDATE_RINGTONE_SUMMARY);
                 }
             }
