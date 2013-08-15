@@ -775,9 +775,10 @@ public class CallNotifier extends Handler
             }
         }
         if (shouldStartQuery) {
-            // Reset the ringtone to the default first.
-            mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
-
+            Phone phone = c.getCall().getPhone();
+            mRinger.setCustomRingtoneUri(phone.getSubscription() == 0 ?
+                                        Settings.System.DEFAULT_RINGTONE_URI
+                                        : Settings.System.DEFAULT_RINGTONE_URI_2);
             // query the callerinfo to try to get the ringer.
             PhoneUtils.CallerInfoToken cit = PhoneUtils.startGetCallerInfo(
                     mApplication, c, this, this);
