@@ -1656,7 +1656,9 @@ public class CallFeaturesSetting extends PreferenceActivity
             }
         }
 
-        if (mButtonProximity != null) {
+        boolean supportsProximitySensor =
+            getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_PROXIMITY);
+        if (supportsProximitySensor && mButtonProximity != null) {
             mButtonProximity.setOnPreferenceChangeListener(this);
         } else {
             prefSet.removePreference(mButtonProximity);
