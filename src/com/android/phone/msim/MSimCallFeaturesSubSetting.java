@@ -47,6 +47,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.MediaStore;
@@ -168,6 +169,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private static final String BUTTON_FDN_KEY   = "button_fdn_key";
     private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key";
     private static final String BUTTON_RESPOND_VIA_SMS_KEY   = "button_respond_via_sms_key";
+    private static final String BUTTON_VIBRATE_CONNECTED_KEY = "button_vibrate_after_connected";
 
     private static final String BUTTON_RINGTONE_KEY    = "button_ringtone_key";
     private static final String BUTTON_VIBRATE_ON_RING = "button_vibrate_on_ring";
@@ -250,6 +252,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private ListPreference mVoicemailProviders;
     private PreferenceScreen mVoicemailSettings;
     private ListPreference mVoicemailNotificationVibrateWhen;
+    private CheckBoxPreference mVibrateAfterConnected;
 
     private int mSubscription = 0;
 
@@ -533,6 +536,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             boolean doVibrate = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
                     Settings.System.VIBRATE_WHEN_RINGING, doVibrate ? 1 : 0);
+        } else if (preference == mVibrateAfterConnected) {
+            boolean doVibrate = (Boolean) objValue;
+            PhoneGlobals.getInstance().setVibrateAfterConnected(mSubscription,
+                    doVibrate ? Constants.VIBRATE_ON : Constants.VIBRATE_OFF);
         } else if (preference == mVoicemailProviders) {
             final String newProviderKey = (String) objValue;
             if (DBG) {
@@ -1514,6 +1521,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         // Set the type whose default sound should be set.
         mRingtonePreference.setRingtoneType(mRingtones[mSubscription]);
         mVibrateWhenRinging = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_ON_RING);
+        mVibrateAfterConnected = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_CONNECTED_KEY);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
@@ -1533,6 +1541,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                 prefSet.removePreference(mVibrateWhenRinging);
                 mVibrateWhenRinging = null;
             }
+        }
+
+        if (mVibrateAfterConnected != null) {
+            mVibrateAfterConnected.setOnPreferenceChangeListener(this);
         }
 
         if (!getResources().getBoolean(R.bool.world_phone)) {
@@ -1653,6 +1665,13 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         if (mVibrateWhenRinging != null) {
             mVibrateWhenRinging.setChecked(getVibrateWhenRinging(this));
         }
+
+        if (mVibrateAfterConnected != null) {
+            boolean checked = (PhoneGlobals.getInstance().getVibrateAfterConnected(mSubscription)
+                    == Constants.VIBRATE_ON);
+            mVibrateAfterConnected.setChecked(checked);
+        }
+
         lookupRingtoneName();
     }
 

@@ -36,6 +36,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -2131,5 +2132,26 @@ public class PhoneGlobals extends ContextWrapper
         if (mInCallScreen != null) {
             mInCallScreen.showCallDurationDialog(duration);
         }
+    }
+
+    /**
+     * Set vibrate after connected setting
+     */
+    public void setVibrateAfterConnected(int subscription, int vibrateSetting) {
+       SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(
+               getApplicationContext());
+       SharedPreferences.Editor editor = preference.edit();
+       editor.putInt(Constants.VIBRATE_AFTER_CONNECTED[subscription], vibrateSetting);
+       editor.commit();
+    }
+
+    /**
+     * Get vibrate setting user has set
+     */
+    public int getVibrateAfterConnected(int subscription) {
+        SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(
+                getApplicationContext());
+        return preference.getInt(Constants.VIBRATE_AFTER_CONNECTED[subscription],
+                Constants.VIBRATE_ON);
     }
 }
