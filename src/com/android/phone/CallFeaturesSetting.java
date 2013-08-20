@@ -186,7 +186,6 @@ public class CallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_PROXIMITY_KEY   = "button_proximity_key";
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
-    private static final String DISPLAY_HOME_LOCATION_KEY = "display_home_location_key";
     private static final String SHOW_DURATION_KEY      = "duration_enable_key";
     private static final String BUTTON_DIALPAD_AUTOCOMPLETE = "button_dialpad_autocomplete";
 
@@ -285,7 +284,6 @@ public class CallFeaturesSetting extends PreferenceActivity
     private CheckBoxPreference mButtonProximity;
     private ListPreference mButtonDTMF;
     private ListPreference mButtonTTY;
-    private CheckBoxPreference mDisplayHomeLocation;
     private CheckBoxPreference mShowDurationCheckBox;
     private ListPreference mButtonSipCallOptions;
     private ListPreference mVoicemailProviders;
@@ -611,12 +609,6 @@ public class CallFeaturesSetting extends PreferenceActivity
                     android.provider.Settings.System.PROXIMITY_SENSOR, checked ? 1 : 0);
             mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
                     : R.string.proximity_off_summary);
-        } else if (preference == mDisplayHomeLocation) {
-            boolean checked = (Boolean) objValue;
-            Settings.System.putInt(mPhone.getContext().getContentResolver(),
-                    Settings.System.DISPLAY_HOME_LOCATION, checked ? 1 : 0);
-            mDisplayHomeLocation.setSummary(checked ? R.string.home_location_enable_summary
-                    : R.string.home_location_disable_summary);
         } else if (preference == mShowDurationCheckBox) {
             boolean checked = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
@@ -1586,7 +1578,6 @@ public class CallFeaturesSetting extends PreferenceActivity
         mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
-        mDisplayHomeLocation = (CheckBoxPreference)findPreference(DISPLAY_HOME_LOCATION_KEY);
         mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
@@ -1678,10 +1669,6 @@ public class CallFeaturesSetting extends PreferenceActivity
                 prefSet.removePreference(mButtonTTY);
                 mButtonTTY = null;
             }
-        }
-
-        if (mDisplayHomeLocation != null) {
-            mDisplayHomeLocation.setOnPreferenceChangeListener(this);
         }
 
         if (mShowDurationCheckBox != null) {
@@ -1910,14 +1897,6 @@ public class CallFeaturesSetting extends PreferenceActivity
                     Phone.TTY_MODE_OFF);
             mButtonTTY.setValue(Integer.toString(settingsTtyMode));
             updatePreferredTtyModeSummary(settingsTtyMode);
-        }
-
-        if (mDisplayHomeLocation != null) {
-            boolean checked = Settings.System.getInt(getContentResolver(),
-                    Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
-            mDisplayHomeLocation.setChecked(checked);
-            mDisplayHomeLocation.setSummary(checked ? R.string.home_location_enable_summary
-                    : R.string.home_location_disable_summary);
         }
 
         if (mShowDurationCheckBox != null) {

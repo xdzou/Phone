@@ -1759,9 +1759,7 @@ public class CallCard extends LinearLayout
             }
         }
         if (mCityName != null) {
-            boolean showHomeLocation = Settings.System.getInt(mInCallScreen.getContentResolver(),
-                    Settings.System.DISPLAY_HOME_LOCATION, 1) == 1;
-            if (!showHomeLocation || TextUtils.isEmpty(cityName)) {
+            if (TextUtils.isEmpty(cityName)) {
                 mCityName.setVisibility(View.GONE);
             } else {
                 mCityName.setText(cityName);
