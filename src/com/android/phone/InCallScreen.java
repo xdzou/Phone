@@ -2982,6 +2982,9 @@ public class InCallScreen extends Activity
         boolean newSpeakerState = !PhoneUtils.isSpeakerOn(this);
         log("toggleSpeaker(): newSpeakerState = " + newSpeakerState);
 
+        if(mCallCard !=null)
+            mCallCard.updateVoluemBoostStatus(false);
+
         if (newSpeakerState && isBluetoothAvailable() && isBluetoothAudioConnected()) {
             disconnectBluetoothAudio();
         }
@@ -3107,6 +3110,9 @@ public class InCallScreen extends Activity
         // mode" button might need to change its appearance based on the
         // new audio state.)
         updateInCallTouchUi();
+
+        if(mCallCard != null)
+            mCallCard.updateVoluemBoostStatus(false);
     }
 
     /**

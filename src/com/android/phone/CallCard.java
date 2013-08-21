@@ -133,6 +133,7 @@ public class CallCard extends LinearLayout
     private Button mVolumeBoost;
     private AudioManager mAudioManager;
     private String mVolumeBoostEnabled;
+    private Toast mVolumeBoostNotify;
 
     // The main block of info about the "primary" or "active" call,
     // including photo / name / phone number / etc.
@@ -303,39 +304,54 @@ public class CallCard extends LinearLayout
             mVolumeBoost.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View arg0) {
+                    boolean mHeadsetPlugged = PhoneGlobals.getInstance().isHeadsetPlugged();
+                    boolean mBluetoothHeadsetAudioOn =
+                            PhoneGlobals.getInstance().isBluetoothHeadsetAudioOn();
+
                     mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                    if(((!mAudioManager.isMicrophoneMute()) || mAudioManager.isSpeakerphoneOn())
-                            &&(!mVolumeBoostEnabled.contains("=on"))) {
-                        mAudioManager.setParameters(VOLUME_BOOST + "=on");
-                        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                        if(mVolumeBoostEnabled.contains("=on")) {
-                            showVolumeBoostNotify(true);
-                        }
-                    } else {
-                        mAudioManager.setParameters(VOLUME_BOOST + "=off");
-                        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-                        if(mVolumeBoostEnabled.contains("=off")) {
-                            showVolumeBoostNotify(false);
-                        }
+
+                    if(mVolumeBoostEnabled.contains("=on")) {
+                        updateVoluemBoostStatus(false);
+                    } else if(!mHeadsetPlugged && !mBluetoothHeadsetAudioOn) {
+                        updateVoluemBoostStatus(true);
                     }
                 }
             });
         }
     }
 
+    public void updateVoluemBoostStatus(boolean enabled){
+        if(enabled) {
+            mAudioManager.setParameters(VOLUME_BOOST + "=on");
+
+            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+
+            if(mVolumeBoostEnabled.contains("=on"))
+                showVolumeBoostNotify(true);
+        } else {
+            mAudioManager.setParameters(VOLUME_BOOST + "=off");
+
+            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+
+            if(mVolumeBoostEnabled.contains("=off"))
+                showVolumeBoostNotify(false);
+        }
+    }
+
     private void showVolumeBoostNotify(boolean enabled) {
-        Toast mToast;
+        if(mVolumeBoostNotify != null)
+            mVolumeBoostNotify.cancel();
 
         if(enabled) {
             mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
-            mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_enabled,
+            mVolumeBoostNotify = Toast.makeText(getContext(), R.string.volume_boost_notify_enabled,
                 Toast.LENGTH_SHORT);
         } else {
             mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
-            mToast = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
+            mVolumeBoostNotify = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
                 Toast.LENGTH_SHORT);
         }
-        mToast.show();
+        mVolumeBoostNotify.show();
     }
 
     /**
@@ -1065,6 +1081,7 @@ public class CallCard extends LinearLayout
             case ACTIVE:
                 mVolumeBoost.setVisibility(View.VISIBLE);
                 mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+
                 if(mVolumeBoostEnabled.contains("=on")) {
                     mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
                 } else {
@@ -1108,6 +1125,10 @@ public class CallCard extends LinearLayout
             case DISCONNECTED:
                 callStateLabel = getCallFailedString(call);
                 mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+
+                if(mVolumeBoostNotify != null)
+                    mVolumeBoostNotify.cancel();
+
                 mVolumeBoost.setVisibility(View.INVISIBLE);
                 if(mVolumeBoostEnabled.contains("=on")) {
                     mAudioManager.setParameters(VOLUME_BOOST + "=off");
