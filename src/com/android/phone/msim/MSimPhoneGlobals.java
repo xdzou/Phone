@@ -243,6 +243,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // in.)
             notifier = MSimCallNotifier.init(this, phone, ringer, callLogger);
 
+            // Create the Managed Roaming singleton class, used to show popup
+            // to user for initiating network search when location update is rejected
+            mManagedRoam = ManagedRoaming.init(this);
+
             XDivertUtility.init(this, phone, (MSimCallNotifier)notifier, this);
 
             // register for ICC status
@@ -312,10 +316,8 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             PhoneUtils.setAudioMode(mCM);
         }
 
-        if (TelephonyCapabilities.supportsOtasp(phone)) {
-            for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
-                updatePhoneAppCdmaVariables(i);
-            }
+        for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+            updatePhoneAppCdmaVariables(i);
         }
 
         // XXX pre-load the SimProvider so that it's ready
@@ -613,7 +615,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
 
     // updates cdma variables of PhoneApp
     private void updatePhoneAppCdmaVariables(int subscription) {
-        Log.v(LOG_TAG,"updatePhoneAppCdmaVariables" + subscription);
+        Log.v(LOG_TAG,"updatePhoneAppCdmaVariables for SUB" + subscription);
         MSPhone msPhone = getMSPhone(subscription);
 
         if ((msPhone != null) &&(msPhone.mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
@@ -756,6 +758,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     /*
      * Gets User preferred Data subscription setting
      */
+    @Override
     public int getDataSubscription() {
         return MSimPhoneFactory.getDataSubscription();
     }

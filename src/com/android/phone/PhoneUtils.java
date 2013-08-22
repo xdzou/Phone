@@ -66,6 +66,7 @@ import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.cdma.CdmaConnection;
 import com.android.internal.telephony.sip.SipPhone;
 import com.google.android.collect.Maps;
+import com.android.internal.util.Objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +80,7 @@ import java.util.Map.Entry;
  * Misc utilities for the Phone app.
  */
 public class PhoneUtils {
+    private static final int IMS_MEDIA_INIT_SUCCESS = 0;
     private static final String LOG_TAG = "PhoneUtils";
     private static final boolean DBG = (PhoneGlobals.DBG_LEVEL >= 2);
 
@@ -181,6 +183,25 @@ public class PhoneUtils {
                         cn = cnlist.next();
                         if (!fgConnections.contains(cn) && !bgConnections.contains(cn)) {
                             if (DBG) log("connection '" + cn + "' not accounted for, removing.");
+                            for (Connection fgcn : fgConnections) {
+                                if(Objects.equal(cn.getAddress(), fgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating fg conn '"+fgcn +"' wth mute value: "+bMute+
+                                                                 " address: "+fgcn.getAddress());
+                                   sConnectionMuteTable.put(fgcn, bMute);
+                                   break;
+                                }
+                            }
+
+                            for (Connection bgcn : bgConnections) {
+                                if(Objects.equal(cn.getAddress(), bgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating bg conn '"+bgcn+"' wth mute value: "+bMute+
+                                                                 " address: "+bgcn.getAddress());
+                                   sConnectionMuteTable.put(bgcn, bMute);
+                                   break;
+                                }
+                            }
                             cnlist.remove();
                         }
                     }
@@ -641,6 +662,9 @@ public class PhoneUtils {
         if (DBG) {
             log("placeCall '" + number + "' GW:'" + gatewayUri + "'" + " CallType:" + callType);
         }
+        // The phone on whilch dial request is initiated set it as active subscription
+        setActiveSubscription(phone.getSubscription());
+
         final PhoneGlobals app = PhoneGlobals.getInstance();
 
         boolean useGateway = false;
@@ -687,8 +711,8 @@ public class PhoneUtils {
         if (callType == Phone.CALL_TYPE_VT
                 || callType == Phone.CALL_TYPE_VT_TX
                 || callType == Phone.CALL_TYPE_VT_RX) {
-            int error = mediaInit();
-            if (error != 0) {
+            int error = earlyMediaInit();
+            if (error != IMS_MEDIA_INIT_SUCCESS) {
                 //Dpl init failed so continue with VoLTE call
                 callType = Phone.CALL_TYPE_VOICE;
                 Log.e(LOG_TAG, "videocall init failed. Downgrading to VoLTE call");
@@ -2046,11 +2070,15 @@ public class PhoneUtils {
     /**
      * Do DPL initialization if the call is a VT call
      */
-    /* package */static int mediaInit() {
+    /* package */static int earlyMediaInit() {
         if (DBG) Log.d(LOG_TAG, "mediaInit()...");
         Context context = PhoneGlobals.getInstance().getApplicationContext();
         VideoCallManager mVideoCallManager = VideoCallManager.getInstance(context);
-        return mVideoCallManager.mediaInit();
+        int error = mVideoCallManager.mediaInit();
+        if (error == VideoCallManager.MEDIA_INIT_SUCCESS) {
+            mVideoCallManager.setFarEndSurface();
+        }
+        return error;
     }
 
     /* package */ static void setAudioMode() {
@@ -2897,6 +2925,13 @@ public class PhoneUtils {
     }
 
     /**
+     * Returns true if Android supports Csvt calls
+     */
+    public static boolean isCallOnCsvtEnabled() {
+        return CallManager.isCallOnCsvtEnabled();
+    }
+
+    /**
      * If the intent is not  already the IMS intent, conert the intent to the
      * IMS intent
      */
@@ -3060,11 +3095,10 @@ public class PhoneUtils {
         int count = MSimTelephonyManager.getDefault().getPhoneCount();
         CallManager cm = MSimPhoneGlobals.getInstance().mCM;
 
-        Log.d(LOG_TAG, "is other sub active = " + subscription + count);
+        if (DBG) Log.d(LOG_TAG, "isAnyOtherSubActive: sub = " + subscription + " count = " + count);
         for (int i = 0; i < count; i++) {
-            Log.d(LOG_TAG, "Count ** " + i);
             if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
-                Log.d(LOG_TAG, "got other active sub  = " + i );
+                Log.d(LOG_TAG, "isAnyOtherSubActive: active sub  = " + i );
                 state = true;
                 break;
             }
@@ -3083,21 +3117,50 @@ public class PhoneUtils {
         int count = MSimTelephonyManager.getDefault().getPhoneCount();
         CallManager cm = MSimPhoneGlobals.getInstance().mCM;
 
-        Log.d(LOG_TAG, "in switch to other active sub = " + subscription + count);
+        Log.d(LOG_TAG, "switchToOtherActiveSub: sub = " + subscription +  " count = "+ count);
         for (int i = 0; i < count; i++) {
-            Log.d(LOG_TAG, "Count  ******  " + i);
             if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
                 setActiveSubscription(i);
-                switchToLocalHold(i, true);
-                Log.d(LOG_TAG, "Switchin to other active sub  = " + i );
+
+                // Since active subscription got changed, call setAudioMode
+                // which informs LCH state to RIL and updates audio state of subs.
+                // This required to update the call audio states when switch sub
+                // triggered from UI.
+                cm.setAudioMode();
+
+                // There is a change in active subscription, need switch playing
+                // LCH/SCH tones on new active subscription.
+                final MSimCallNotifier notifier =
+                        (MSimCallNotifier)PhoneGlobals.getInstance().notifier;
+                notifier.manageMSimInCallTones(true);
+
+                Log.d(LOG_TAG, "Switching to other active sub  = " + i );
                 break;
             }
         }
     }
 
-    // This method is called when user does which SUB from UI.
-    public static void switchToLocalHold(int subscription, boolean switchTo) {
-        Log.d(LOG_TAG, "Switch to local hold  = " );
-        MSimPhoneGlobals.getInstance().mCM.switchToLocalHold(subscription, switchTo);
+    public static boolean isCsvtCallActive() {
+        boolean isActive = false;
+
+        try {
+            isActive =  PhoneGlobals.mCsvtService != null &&
+                      ! PhoneGlobals.mCsvtService.isIdle();
+        } catch(RemoteException e) {
+            Log.d(LOG_TAG, "Failed to retrieve Csvt call state. " + e);
+        }
+        return isActive;
+    }
+
+    public static boolean shouldShowAddParticipant() {
+        final PhoneGlobals app = PhoneGlobals.getInstance();
+        boolean value = false;
+        try {
+            value = ((isCallOnImsEnabled()) && (app.mImsService != null) &&
+                    (app.mImsService.isAddParticipantAllowed()));
+        } catch (RemoteException ex) {
+            Log.e(LOG_TAG, "Ims Service isAddParticipantAllowed exception", ex);
+        }
+        return value;
     }
 }

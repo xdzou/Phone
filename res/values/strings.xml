@@ -1175,6 +1175,8 @@
     <!-- Text for the onscreen "Subscription" button that lets you switch
          between the available scubscriptions [CHAR LIMIT=20] -->
     <string name="onscreenSwitchText">Switch Subscription</string>
+    <!-- Text for the onscreen "Add Participant" button -->
+    <string name="onscreenAddParticipant">Add Participant</string>
 
     <!-- Menu item label in SIM Contacts: Import a single contact entry from the SIM card -->
     <string name="importSimEntry">Import</string>
@@ -1252,6 +1254,9 @@
 
     <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
     <string name="managed_roaming_title">Managed Roaming</string>
+    <string name="managed_roaming_title_sub1">Managed Roaming (SUB1)</string>
+    <string name="managed_roaming_title_sub2">Managed Roaming (SUB2)</string>
+    <string name="managed_roaming_title_sub3">Managed Roaming (SUB3)</string>
     <string name="managed_roaming_dialog_content">Network with Limited Service found. Do you want to initiate a Network Search?</string>
     <string name="managed_roaming_dialog_ok_button">Yes</string>
     <string name="managed_roaming_dialog_cancel_button">No</string>
@@ -1863,6 +1868,10 @@
     <string name="set_sub_deactivate_success">Deactivate success</string>
     <!-- Set Subscription screen: Subscription activate failed -->
     <string name="set_sub_activate_failed">Activate failed</string>
+    <!-- Set Subscription screen: Subscription Global activate failed -->
+    <string name="set_sub_global_activate_failed">Activate global failed</string>
+    <!-- Set Subscription screen: Subscription Global deactivate failed -->
+    <string name="set_sub_global_deactivate_failed">Deactivate global failed</string>
     <!-- Set Subscription screen: Subscription deactivate failed -->
     <string name="set_sub_deactivate_failed">Deactivate failed</string>
     <!-- Set Subscription screen: Subscription activate not supported -->

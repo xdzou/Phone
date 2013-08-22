@@ -28,9 +28,12 @@
 
 package com.android.phone;
 
+import android.content.Context;
 import android.graphics.SurfaceTexture;
+import android.hardware.SensorManager;
 import android.os.Handler;
 import android.util.Log;
+import android.view.OrientationEventListener;
 
 /**
  * Provides an interface to handle the media part of the video telephony call
@@ -51,13 +54,44 @@ public class MediaHandler extends Handler {
     private static native void nativeDeInit();
     private static native void nativeHandleRawFrame(byte[] frame);
     private static native int nativeSetSurface(SurfaceTexture st);
+    private static native void nativeSetDeviceOrientation(int orientation);
     private static native short nativeGetNegotiatedFPS();
     private static native int nativeGetNegotiatedHeight();
     private static native int nativeGetNegotiatedWidth();
+    private static native int nativeGetUIOrientationMode();
     private static native void nativeRegisterForMediaEvents(MediaHandler instance);
 
     public static final int PARAM_READY_EVT = 1;
     public static final int START_READY_EVT = 2;
+    public static final int DISPLAY_MODE_EVT = 5;
+
+    private static int ORIENTATION_ANGLE_0 = 0;
+    private static int ORIENTATION_ANGLE_90 = 1;
+    private static int ORIENTATION_ANGLE_180 = 2;
+    private static int ORIENTATION_ANGLE_270 = 3;
+    private static int ORIENTATION_MODE_THRESHOLD = 45;
+
+    /**
+     * Phone orientation angle which can take one of the 4 values
+     * ORIENTATION_ANGLE_0, ORIENTATION_ANGLE_90, ORIENTATION_ANGLE_180,
+     * ORIENTATION_ANGLE_270
+     */
+    private int mCurrentOrientation = 0;
+    Context context = PhoneGlobals.getInstance().getApplicationContext();
+    OrientationEventListener mOrientationEventListener =
+            new OrientationEventListener(context,
+                    SensorManager.SENSOR_DELAY_NORMAL) {
+                @Override
+                public void onOrientationChanged(int angle) {
+                    int newOrientation = calculateDeviceOrientation(angle);
+                    detectOrientationChangedAndSendCvo(newOrientation);
+                }
+            };
+
+    // UI Orientation Modes
+    private static final int LANDSCAPE_MODE = 1;
+    private static final int PORTRAIT_MODE = 2;
+    private static final int CVO_MODE = 3;
 
     /*
      * Initializing default negotiated parameters to a working set of valuesso
@@ -66,27 +100,30 @@ public class MediaHandler extends Handler {
      */
     private static int mNegotiatedHeight = 240;
     private static int mNegotiatedWidth = 320;
+    private static int mUIOrientationMode = PORTRAIT_MODE;
     private static short mNegotiatedFps = 20;
 
     private MediaEventListener mMediaEventListener;
 
-    private static boolean mIsReadyToReceivePreview = false;
-
     public interface MediaEventListener {
         void onParamReadyEvent();
+        void onDisplayModeEvent();
+        void onStartReadyEvent();
     }
 
     static {
         System.loadLibrary("vt_jni");
     }
 
-    /*
+    /**
      * Initialize Media
+     * @return
+       DPL_INIT_SUCCESSFUL         0  initialization is successful.
+       DPL_INIT_FAILURE   -1  error in initialization of QMI or other components.
+       DPL_INIT_MULTIPLE   -2  trying to initialize an already initialized library.
      */
     public int init() {
         if (!mInitCalledFlag) {
-            //Initialize mIsReadyToReceivePreview to false to begin with
-            mIsReadyToReceivePreview = false;
             int error = nativeInit();
             Log.d(TAG, "init called error = " + error);
             switch (error) {
@@ -119,6 +156,66 @@ public class MediaHandler extends Handler {
         mInitCalledFlag = false;
     }
 
+    public void startOrientationListener() {
+        Log.d(TAG, "startOrientationListener");
+        if (mOrientationEventListener.canDetectOrientation()) {
+            mOrientationEventListener.enable();
+        } else {
+            Log.d(TAG, "Cannot detect orientation");
+        }
+    }
+
+    public void stopOrientationListener() {
+        Log.d(TAG, "stopOrientationListener");
+        mOrientationEventListener.disable();
+
+    }
+
+    /** For CVO mode handling, phone is expected to have only 4 orientations
+     * The orientation sensor gives every degree change angle. This needs to
+     * be categorized to one of the 4 angles. This method does this calculation.
+     * @param angle
+     * @return one of the 4 orientation angles ORIENTATION_ANGLE_0, ORIENTATION_ANGLE_90,
+     * ORIENTATION_ANGLE_180, ORIENTATION_ANGLE_270
+     */
+    private int calculateDeviceOrientation(int angle) {
+        int newOrientation = ORIENTATION_ANGLE_0;
+        if ((angle >= 0
+                && angle < 0 + ORIENTATION_MODE_THRESHOLD) ||
+                (angle >= 360 - ORIENTATION_MODE_THRESHOLD &&
+                angle < 360)) {
+            newOrientation = ORIENTATION_ANGLE_0;
+        } else if (angle >= 90 - ORIENTATION_MODE_THRESHOLD
+                && angle < 90 + ORIENTATION_MODE_THRESHOLD) {
+            newOrientation = ORIENTATION_ANGLE_90;
+        } else if (angle >= 180 - ORIENTATION_MODE_THRESHOLD
+                && angle < 180 + ORIENTATION_MODE_THRESHOLD) {
+            newOrientation = ORIENTATION_ANGLE_180;
+        } else if (angle >= 270 - ORIENTATION_MODE_THRESHOLD
+                && angle < 270 + ORIENTATION_MODE_THRESHOLD) {
+            newOrientation = ORIENTATION_ANGLE_270;
+        }
+        return newOrientation;
+    }
+
+    /**
+     * Detect change in device orientation and send newOrientation to IMS
+     * library
+     *
+     * @param newOrientation
+     */
+    private void detectOrientationChangedAndSendCvo(int newOrientation) {
+        if (newOrientation != mCurrentOrientation) {
+            mCurrentOrientation = newOrientation;
+            sendCvoInfo(mCurrentOrientation);
+        }
+    }
+
+    private void sendCvoInfo(int orientation) {
+        Log.d(TAG, "sendCvoInfo orientation=" + orientation);
+        nativeSetDeviceOrientation(orientation);
+    }
+
     /**
      * Send the camera preview frames to the media module to be sent to the far
      * end party
@@ -133,7 +230,7 @@ public class MediaHandler extends Handler {
      * @param st
      */
     public static void setSurface(SurfaceTexture st) {
-        Log.d(TAG, "setSurface(" + st + ")");
+        Log.d(TAG, "setSurface(SurfaceTexture " + st + ")");
         mSurface = st;
         nativeSetSurface(st);
     }
@@ -152,14 +249,6 @@ public class MediaHandler extends Handler {
     }
 
     /**
-     * Get Negotiated FPS
-     */
-    public static short getNegotiatedFPS() {
-        Log.d(TAG, "Negotiated FPS = " + mNegotiatedFps);
-        return mNegotiatedFps;
-    }
-
-    /**
      * Get Negotiated Height
      */
     public static int getNegotiatedHeight() {
@@ -175,13 +264,16 @@ public class MediaHandler extends Handler {
         return mNegotiatedWidth;
     }
 
-    public static synchronized boolean canSendPreview() {
-        return MediaHandler.mIsReadyToReceivePreview;
+    /**
+     * Get Negotiated Width
+     */
+    public int getUIOrientationMode() {
+        Log.d(TAG, "UI Orientation Mode = " + mUIOrientationMode);
+        return mUIOrientationMode;
     }
 
-    public static synchronized void setIsReadyToReceivePreview(boolean flag) {
-        Log.d(TAG, "setIsReadyToReceivePreview = " + flag);
-        MediaHandler.mIsReadyToReceivePreview = flag;
+    public static short getNegotiatedFps() {
+        return mNegotiatedFps;
     }
 
     /**
@@ -214,11 +306,31 @@ public class MediaHandler extends Handler {
                 break;
             case START_READY_EVT:
                 Log.d(TAG, "Received START_READY_EVT. Camera frames can be sent now");
-                setIsReadyToReceivePreview(true);
+                if (mMediaEventListener != null) {
+                    mMediaEventListener.onStartReadyEvent();
+                }
                 break;
+            case DISPLAY_MODE_EVT:
+                mUIOrientationMode = nativeGetUIOrientationMode();
+                processUIOrientationMode();
+                if (mMediaEventListener != null) {
+                    mMediaEventListener.onDisplayModeEvent();
+                }
             default:
                 Log.e(TAG, "Received unknown event id=" + eventId);
         }
 
+    }
+
+    private void processUIOrientationMode() {
+        if(isCvoModeEnabled()) {
+            startOrientationListener();
+        } else {
+            stopOrientationListener();
+        }
+    }
+
+    public boolean isCvoModeEnabled() {
+        return mUIOrientationMode == CVO_MODE;
     }
 }
