@@ -165,6 +165,7 @@ public class OutgoingCallBroadcaster extends Activity
             String number;
             String originalUri;
 
+            boolean isConferenceUri = intent.getBooleanExtra(EXTRA_DIAL_CONFERENCE_URI, false);
             alreadyCalled = intent.getBooleanExtra(
                     OutgoingCallBroadcaster.EXTRA_ALREADY_CALLED, false);
             if (alreadyCalled) {
@@ -219,8 +220,10 @@ public class OutgoingCallBroadcaster extends Activity
             // NEW_OUTGOING_CALL broadcast.  But we need to do it again here
             // too, since the number might have been modified/rewritten during
             // the broadcast (and may now contain letters or separators again.)
-            number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
-            number = PhoneNumberUtils.stripSeparators(number);
+            if (!isConferenceUri) {
+                number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
+                number = PhoneNumberUtils.stripSeparators(number);
+            }
 
             if (DBG) Log.v(TAG, "doReceive: proceeding with call...");
             if (VDBG) Log.v(TAG, "- uri: " + uri);
@@ -488,11 +491,12 @@ public class OutgoingCallBroadcaster extends Activity
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
         Log.d(TAG, "outGoingcallBroadCaster action is"+ action);
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
+        boolean isConferenceUri = intent.getBooleanExtra(EXTRA_DIAL_CONFERENCE_URI, false);
         Log.d(TAG, " number from Intent : "+ number);
         // Check the number, don't convert for sip uri
         // TODO put uriNumber under PhoneNumberUtils
         if (number != null) {
-            if (!PhoneNumberUtils.isUriNumber(number)) {
+            if (!PhoneNumberUtils.isUriNumber(number) && !isConferenceUri) {
                 number = PhoneNumberUtils.convertKeypadLettersToDigits(number);
                 number = PhoneNumberUtils.stripSeparators(number);
             }
