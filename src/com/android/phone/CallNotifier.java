@@ -603,7 +603,7 @@ public class CallNotifier extends Handler
         Phone phone = ringing.getPhone();
 
         // Check for a few cases where we totally ignore incoming calls.
-        if (ignoreAllIncomingCalls(phone)) {
+        if (ignoreAllIncomingCalls(phone)||PhoneGlobals.getInstance().isCsvtActive()) {
             // Immediately reject the call, without even indicating to the user
             // that an incoming call occurred.  (This will generally send the
             // caller straight to voicemail, just as if we *had* shown the

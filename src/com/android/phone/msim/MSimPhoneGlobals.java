@@ -69,6 +69,7 @@ import java.util.ArrayList;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
+
 /**
  * Top-level Application class for the Phone app.
  */
@@ -162,6 +163,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // Set Default PhoneApp variables
             setDefaultPhone(mDefaultSubscription);
             mCM.registerPhone(phone);
+
+            createImsService();
+
+            createCsvtService();
 
             // Create the NotificationMgr singleton, which is used to display
             // status bar icons and control other status bar behavior.
