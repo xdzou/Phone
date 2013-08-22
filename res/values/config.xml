@@ -119,4 +119,5 @@
     <bool name="config_apn_expand" translatable="false">true</bool>
     <bool name="config_operator_selection_expand" translatable="false">true</bool>
     <bool name="config_prefer_2g" translatable="false">true</bool>
+    <integer name="volume_boost_toast_position">180</integer>
 </resources>

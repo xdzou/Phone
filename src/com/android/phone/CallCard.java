@@ -135,6 +135,7 @@ public class CallCard extends LinearLayout
     private AudioManager mAudioManager;
     private String mVolumeBoostEnabled;
     private Toast mVolumeBoostNotify;
+    private int VOLUME_BOOST_POSITION;
 
     // The main block of info about the "primary" or "active" call,
     // including photo / name / phone number / etc.
@@ -234,6 +235,8 @@ public class CallCard extends LinearLayout
 
         mDensity = getResources().getDisplayMetrics().density;
         if (DBG) log("- Density: " + mDensity);
+
+        VOLUME_BOOST_POSITION = getResources().getInteger(R.integer.volume_boost_toast_position);
 
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
@@ -352,6 +355,9 @@ public class CallCard extends LinearLayout
             mVolumeBoostNotify = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
                 Toast.LENGTH_SHORT);
         }
+
+        mVolumeBoostNotify.setGravity(Gravity.TOP, 0, VOLUME_BOOST_POSITION);
+
         mVolumeBoostNotify.show();
     }
 
