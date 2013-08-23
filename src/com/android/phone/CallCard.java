@@ -1131,14 +1131,16 @@ public class CallCard extends LinearLayout
 
             case DISCONNECTED:
                 callStateLabel = getCallFailedString(call);
-                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                PhoneConstants.State ps = mApplication.mCM.getState();
+                if(ps != PhoneConstants.State.OFFHOOK) {
+                    mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
 
-                if(mVolumeBoostNotify != null)
-                    mVolumeBoostNotify.cancel();
+                    if(mVolumeBoostNotify != null)
+                        mVolumeBoostNotify.cancel();
 
-                mVolumeBoost.setVisibility(View.INVISIBLE);
-                if(mVolumeBoostEnabled.contains("=on")) {
-                    mAudioManager.setParameters(VOLUME_BOOST + "=off");
+                    mVolumeBoost.setVisibility(View.INVISIBLE);
+                    if(mVolumeBoostEnabled.contains("=on"))
+                        mAudioManager.setParameters(VOLUME_BOOST + "=off");
                 }
                 break;
 
