@@ -564,7 +564,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public boolean isRadioOn() {
-        return mPhone.getServiceState().getVoiceRegState() != ServiceState.STATE_POWER_OFF;
+        return mPhone.isRadioOn();
     }
 
     public void toggleRadioOnOff() {
@@ -573,7 +573,7 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
     public boolean setRadio(boolean turnOn) {
         enforceModifyPermission();
-        if ((mPhone.getServiceState().getVoiceRegState() != ServiceState.STATE_POWER_OFF) != turnOn) {
+        if (mPhone.isRadioOn() != turnOn) {
             toggleRadioOnOff();
         }
         return true;
@@ -629,11 +629,13 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
     }
 
     public int getDataState() {
-        return DefaultPhoneNotifier.convertDataState(mPhone.getDataConnectionState());
+        Phone phone = mApp.getPhone(mApp.getDataSubscription());
+        return DefaultPhoneNotifier.convertDataState(phone.getDataConnectionState());
     }
 
     public int getDataActivity() {
-        return DefaultPhoneNotifier.convertDataActivityState(mPhone.getDataActivityState());
+        Phone phone = mApp.getPhone(mApp.getDataSubscription());
+        return DefaultPhoneNotifier.convertDataActivityState(phone.getDataActivityState());
     }
 
     @Override

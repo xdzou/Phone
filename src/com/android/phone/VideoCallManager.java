@@ -32,12 +32,9 @@ import java.io.IOException;
 
 import android.content.Context;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.util.Log;
 import com.android.phone.CameraHandler.CameraState;
-
-import java.util.List;
 
 /**
  * Provides an interface for the applications to interact with Camera for the
@@ -49,6 +46,8 @@ public class VideoCallManager {
     private static VideoCallManager mInstance; // Use a singleton
     private CameraHandler mCameraHandler;
     private MediaHandler mMediaHandler;
+
+    public static final int MEDIA_INIT_SUCCESS = 0;
 
     /** @hide */
     private VideoCallManager(Context context) {
@@ -113,18 +112,21 @@ public class VideoCallManager {
     }
 
     /**
+     * Get negotiated width
+     */
+    public int getUIOrientationMode() {
+        return mMediaHandler.getUIOrientationMode();
+    }
+
+    /**
      * Get negotiated FPS
      */
-    public int getNegotiatedFPS() {
-        return MediaHandler.getNegotiatedFPS();
+    public short getNegotiatedFps() {
+        return MediaHandler.getNegotiatedFps();
     }
 
-    public static boolean isMediaReadyToReceivePreview() {
-        return MediaHandler.canSendPreview();
-    }
-
-    public static void setIsMediaReadyToReceivePreview(boolean flag) {
-        MediaHandler.setIsReadyToReceivePreview(flag);
+    public boolean isCvoModeEnabled() {
+        return mMediaHandler.isCvoModeEnabled();
     }
 
     /**
@@ -173,25 +175,6 @@ public class VideoCallManager {
     }
 
     /**
-     * Return the camera parameters that specifies the current settings of the
-     * camera
-     *
-     * @return camera parameters
-     */
-    public Parameters getCameraParameters() {
-        return mCameraHandler.getCameraParameters();
-    }
-
-    /**
-     * Set the camera parameters
-     *
-     * @param parameters to be set
-     */
-    public void setCameraParameters(Parameters parameters) {
-        mCameraHandler.setCameraParameters(parameters);
-    }
-
-    /**
      * Get the camera ID for the back camera
      *
      * @return camera ID
@@ -228,43 +211,6 @@ public class VideoCallManager {
     }
 
     /**
-     * Gets the camera preview size that matches the given width or height to
-     * preserve the aspect ratio.
-     *
-     * @param size specifies height or width of the camera surface
-     * @param isHeight specifies if the given size is height if true or width
-     *            if false
-     * @return width and height of camera preview as a Point
-     *         point.x = width
-     *         point.y = height
-     */
-    public Size getCameraPreviewSize(int targetSize, boolean isHeight) {
-        double minDiff = Double.MAX_VALUE;
-        Size optimalSize = null;
-
-        List<Size> mSupportedPreviewSizes = mCameraHandler.getSupportedPreviewSizes();
-        if (mSupportedPreviewSizes == null) return null; // Camera not yet open
-
-        // Try to find a size that matches closely with the required height or
-        // width
-        for (Size size : mSupportedPreviewSizes) {
-            int srcSize = 0;
-            if (isHeight) {
-                srcSize = size.height;
-            }
-            else {
-                srcSize = size.width;
-            }
-
-            if (Math.abs(srcSize - targetSize) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(srcSize - targetSize);
-            }
-        }
-        return optimalSize;
-    }
-
-    /**
      * Returns the direction of the currently open camera
      *
      * @return one of the following possible values
@@ -284,8 +230,28 @@ public class VideoCallManager {
         mCameraHandler.setDisplayOrientation();
     }
 
+    public ImsCamera getImsCameraInstance() {
+        return mCameraHandler.getImsCameraInstance();
+    }
+
+    public void startCameraRecording() {
+        mCameraHandler.startCameraRecording();
+    }
+
+    public void stopCameraRecording() {
+        mCameraHandler.stopCameraRecording();
+    }
+
     public void setOnParamReadyListener(VideoCallPanel.ParamReadyListener listener) {
         mMediaHandler.setMediaEventListener(listener);
+    }
+
+    public void startOrientationListener() {
+        mMediaHandler.startOrientationListener();
+    }
+
+    public void stopOrientationListener() {
+        mMediaHandler.stopOrientationListener();
     }
 
     private void log(String msg) {

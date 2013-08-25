@@ -59,8 +59,13 @@ public class MSimCallNotifier extends CallNotifier {
     private static final boolean VDBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
     private static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 54;
+    private static final int PHONE_START_MSIM_INCALL_TONE = 55;
 
     private static final String XDIVERT_STATUS = "xdivert_status_key";
+
+    private InCallTonePlayer mLocalCallReminderTonePlayer = null;
+    private InCallTonePlayer mSupervisoryCallHoldTonePlayer = null;
+    private InCallTonePlayer mLocalCallWaitingTonePlayer = null;
 
     /**
      * Initialize the singleton CallNotifier instance.
@@ -87,6 +92,24 @@ public class MSimCallNotifier extends CallNotifier {
     @Override
     public void handleMessage(Message msg) {
         switch (msg.what) {
+            case PHONE_INCOMING_RING:
+                // repeat the ring when requested by the RIL, when the user has NOT
+                // specifically requested silence and when there in no active call
+                // on other subscription.
+                if (msg.obj != null && ((AsyncResult) msg.obj).result != null) {
+                    PhoneBase pb =  (PhoneBase)((AsyncResult)msg.obj).result;
+
+                    if ((pb.getState() == PhoneConstants.State.RINGING)
+                            && (mSilentRingerRequested == false)
+                            && !mCM.hasActiveFgCallAnyPhone()) {
+                        if (DBG) log("RINGING... (PHONE_INCOMING_RING event)");
+                        mRinger.ring();
+                    } else {
+                        if (DBG) log("Skipping generating Ring tone, state = " + pb.getState()
+                                + " silence requested = " + mSilentRingerRequested);
+                    }
+                }
+                break;
             case PHONE_MWI_CHANGED:
                 Phone phone = (Phone)msg.obj;
                 onMwiChanged(mApplication.phone.getMessageWaitingIndicator(), phone);
@@ -97,6 +120,12 @@ public class MSimCallNotifier extends CallNotifier {
                 AsyncResult r = (AsyncResult) msg.obj;
                 log(" Change in subscription " + (Integer) r.result);
                 break;
+
+            case PHONE_START_MSIM_INCALL_TONE:
+                if (DBG) log("PHONE_START_MSIM_INCALL_TONE...");
+                startMSimInCallTones();
+                break;
+
             default:
                 super.handleMessage(msg);
         }
@@ -110,8 +139,8 @@ public class MSimCallNotifier extends CallNotifier {
 
     @Override
     protected void listen() {
-        TelephonyManager telephonyManager = (TelephonyManager)mApplication.
-                getSystemService(Context.TELEPHONY_SERVICE);
+        MSimTelephonyManager telephonyManager = (MSimTelephonyManager)mApplication.
+                getSystemService(Context.MSIM_TELEPHONY_SERVICE);
         for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
             telephonyManager.listen(getPhoneStateListener(i),
                     PhoneStateListener.LISTEN_MESSAGE_WAITING_INDICATOR
@@ -261,8 +290,16 @@ public class MSimCallNotifier extends CallNotifier {
         // showIncomingCall().)
         if (VDBG) log("Holding wake lock on new incoming connection.");
         mApplication.requestWakeState(PhoneGlobals.WakeState.PARTIAL);
-        log("Setting Active sub : '" + subscription + "'");
 
+        int activeSub = PhoneUtils.getActiveSubscription();
+        if (activeSub != subscription && state == Call.State.INCOMING &&
+                PhoneGlobals.getInstance().mCM.hasActiveFgCall(activeSub)) {
+            // Received incoming call on non-active subscription
+            // play the local call waiting tone.
+            startLocalCallWaitingTone();
+        }
+
+        log("Setting Active sub : '" + subscription + "'");
         PhoneUtils.setActiveSubscription(subscription);
 
         // - don't ring for call waiting connections
@@ -332,6 +369,69 @@ public class MSimCallNotifier extends CallNotifier {
         }
     }
 
+    void manageMSimInCallTones(boolean isSubSwitch) {
+        if (VDBG) log(" entered manageMSimInCallTones ");
+
+        if (PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription())) {
+            //If sub switch happens re-start the tones with a delay of 100msec.
+            if (isSubSwitch) {
+                log(" manageMSimInCallTones: re-start playing tones ");
+                stopMSimInCallTones();
+                Message message = Message.obtain(this, PHONE_START_MSIM_INCALL_TONE);
+                sendMessageDelayed(message, 100);
+            } else {
+                startMSimInCallTones();
+            }
+        } else {
+            stopMSimInCallTones();
+        }
+    }
+
+    private void startMSimInCallTones() {
+        if (mLocalCallReminderTonePlayer == null) {
+            if (DBG) log(" Play local call hold reminder tone ");
+            mLocalCallReminderTonePlayer = new InCallTonePlayer(InCallTonePlayer.TONE_HOLD_RECALL);
+            mLocalCallReminderTonePlayer.start();
+        }
+        if (mSupervisoryCallHoldTonePlayer == null) {
+            log(" startMSimInCallTones: Supervisory call hold tone ");
+            mSupervisoryCallHoldTonePlayer =
+                    new InCallTonePlayer(InCallTonePlayer.TONE_SUPERVISORY_CH);
+            mSupervisoryCallHoldTonePlayer.start();
+        }
+    }
+
+    private void stopMSimInCallTones() {
+        if (mLocalCallReminderTonePlayer != null) {
+            if (DBG) log(" stopMSimInCallTones: local call hold reminder tone ");
+            mLocalCallReminderTonePlayer.stopTone();
+            mLocalCallReminderTonePlayer = null;
+        }
+        if (mSupervisoryCallHoldTonePlayer != null) {
+            log(" stopMSimInCallTones: Supervisory call hold tone ");
+            mSupervisoryCallHoldTonePlayer.stopTone();
+            mSupervisoryCallHoldTonePlayer = null;
+        }
+    }
+
+
+    private void startLocalCallWaitingTone() {
+        if (DBG) log("startLocalCallWaitingTone: Local call waiting tone ");
+
+        if (mLocalCallWaitingTonePlayer == null) {
+            mLocalCallWaitingTonePlayer = new InCallTonePlayer(InCallTonePlayer.TONE_LOCAL_CW);
+            mLocalCallWaitingTonePlayer.start();
+        }
+    }
+
+    private void stopLocalCallWaitingTone() {
+        if (mLocalCallWaitingTonePlayer != null) {
+            log(" Stop playing LCW tone ");
+            mLocalCallWaitingTonePlayer.stopTone();
+            mLocalCallWaitingTonePlayer = null;
+        }
+    }
+
     /**
      * Updates the phone UI in response to phone state changes.
      *
@@ -377,6 +477,7 @@ public class MSimCallNotifier extends CallNotifier {
         // listens for phone state changes itself.
         mApplication.updateBluetoothIndication(false);
 
+        manageMSimInCallTones(false);
 
         // Update the phone state and other sensor/lock.
         mApplication.updatePhoneState(state);
@@ -387,6 +488,8 @@ public class MSimCallNotifier extends CallNotifier {
                 mCallWaitingTonePlayer.stopTone();
                 mCallWaitingTonePlayer = null;
             }
+
+            stopLocalCallWaitingTone();
 
             if (VDBG) log("onPhoneStateChanged: OFF HOOK");
             // make sure audio is in in-call mode now
@@ -582,6 +685,8 @@ public class MSimCallNotifier extends CallNotifier {
             mCallWaitingTonePlayer.stopTone();
             mCallWaitingTonePlayer = null;
         }
+
+        stopLocalCallWaitingTone();
 
         // If this is the end of an OTASP call, pass it on to the PhoneApp.
         if (c != null && TelephonyCapabilities.supportsOtasp(c.getCall().getPhone())) {
