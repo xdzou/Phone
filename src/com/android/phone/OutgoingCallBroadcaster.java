@@ -666,8 +666,9 @@ public class OutgoingCallBroadcaster extends Activity
              * Convert the emergency call intent to the IMS intent if IMS is enabled
              * emergency calls should go in auto domain not PS domain
              * TODO: Pass Calltype from UI for OEMs that support video emergency calls
+             * Since IMS call won't work now, so comment out this feature temporarily.
              */
-            if (PhoneUtils.isCallOnImsEnabled()) {
+            if (/*PhoneUtils.isCallOnImsEnabled()*/ false) {
                 Log.d(TAG, "IMS is enabled , place IMS emergency call");
                 PhoneUtils.convertCallToIMS(intent, Phone.CALL_TYPE_VOICE);
                 emergencyOnIms = true;
