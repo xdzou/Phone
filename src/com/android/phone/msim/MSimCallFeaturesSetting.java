@@ -26,6 +26,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
@@ -268,7 +269,9 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             }
         }
 
-        if (mButtonProximity != null) {
+        boolean supportsProximitySensor =
+            getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_PROXIMITY);
+        if (supportsProximitySensor && mButtonProximity != null) {
             mButtonProximity.setOnPreferenceChangeListener(this);
         } else {
             prefSet.removePreference(mButtonProximity);
