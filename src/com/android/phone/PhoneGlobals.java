@@ -80,7 +80,11 @@ import com.android.server.sip.SipService;
 import org.codeaurora.ims.IImsService;
 import com.android.recorder.ICallRecorder;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+import org.codeaurora.ims.csvt.CallForwardInfoP;
 import org.codeaurora.ims.csvt.ICsvtService;
+import org.codeaurora.ims.csvt.ICsvtServiceListener;
+
+import java.util.List;
 
 /**
  * Global state for the telephony subsystem when running in the primary
@@ -811,10 +815,35 @@ public class PhoneGlobals extends ContextWrapper
         public void onServiceConnected(ComponentName name, IBinder service) {
             mCsvtService = ICsvtService.Stub.asInterface(service);
             Log.d(LOG_TAG,"Csvt Service Connected: " + mCsvtService);
+            if (mCsvtService != null) {
+                try{
+                    mCsvtService.registerListener(mCsvtServiceListener);
+                    Log.d(LOG_TAG, "Csvt Service register ICsvtServiceListener");
+                } catch (RemoteException e) {
+                    Log.e(LOG_TAG, Log.getStackTraceString(new Throwable()));
+                }
+            }
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
             Log.w(LOG_TAG,"Csvt Service onServiceDisconnected");
+        }
+    };
+
+    private static ICsvtServiceListener mCsvtServiceListener = new ICsvtServiceListener.Stub() {
+        public void onPhoneStateChanged(int state) {
+            Log.d(LOG_TAG, "onPhoneStateChanged");
+            Intent intent = new Intent("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED");
+            PhoneGlobals.getInstance().sendBroadcast(intent);
+        }
+
+        public void onCallStatus(int result) {
+        }
+
+        public void onCallWaiting(boolean enabled) {
+        }
+
+        public void onCallForwardingOptions(List<CallForwardInfoP> fi) {
         }
     };
 
