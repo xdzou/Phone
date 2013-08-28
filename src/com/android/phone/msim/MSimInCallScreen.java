@@ -52,6 +52,8 @@ public class MSimInCallScreen extends InCallScreen {
             (MSimPhoneGlobals.DBG_LEVEL >= 1) && (SystemProperties.getInt("ro.debuggable", 0) == 1);
     private static final boolean VDBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
+    private static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 131;
+
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -108,10 +110,9 @@ public class MSimInCallScreen extends InCallScreen {
                     break;
 
                 case PHONE_CDMA_CALL_WAITING:
-                   //TODO:
                     AsyncResult ar = (AsyncResult) msg.obj;
-                    int subscription = Integer.valueOf((String) ar.userObj).intValue();
-                    if (DBG) log("Received PHONE_CDMA_CALL_WAITING event ...");
+                    int subscription = (Integer) ar.userObj;
+                    if (DBG) log("Received PHONE_CDMA_CALL_WAITING event sub = " + subscription);
                     Connection cn = mCM.getFirstActiveRingingCall(subscription).
                             getLatestConnection();
 
@@ -130,6 +131,15 @@ public class MSimInCallScreen extends InCallScreen {
 
                 case PHONE_NEW_RINGING_CONNECTION:
                     onNewRingingConnection();
+                    break;
+
+                case PHONE_ACTIVE_SUBSCRIPTION_CHANGE:
+                    if (DBG) log("PHONE_ACTIVE_SUBSCRIPTION_CHANGE...");
+                    AsyncResult r = (AsyncResult) msg.obj;
+                    log(" Change in subscription " + (Integer) r.result);
+                    // SUB switched, update the screen to display latest
+                    // sub info
+                    updateScreen();
                     break;
 
                 default:
@@ -683,11 +693,19 @@ public class MSimInCallScreen extends InCallScreen {
             // We'll listen for that message too, so that we can finish
             // the activity at the same time.
             mCM.registerForMmiComplete(mHandler, PhoneGlobals.MMI_COMPLETE, null);
-            mCM.registerForCallWaiting(mHandler, PHONE_CDMA_CALL_WAITING, null);
+            for (Phone phone : mCM.getAllPhones()) {
+                if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA ) {
+                    log("register for cdma call waiting " + phone.getSubscription());
+                    mCM.registerForCallWaiting(mHandler, PHONE_CDMA_CALL_WAITING,
+                            phone.getSubscription());
+                    break;
+                }
+            }
             mCM.registerForPostDialCharacter(mHandler, POST_ON_DIAL_CHARS, null);
             mCM.registerForSuppServiceFailed(mHandler, SUPP_SERVICE_FAILED, null);
             mCM.registerForIncomingRing(mHandler, PHONE_INCOMING_RING, null);
             mCM.registerForNewRingingConnection(mHandler, PHONE_NEW_RINGING_CONNECTION, null);
+            mCM.registerForSubscriptionChange(mHandler, PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
             mRegisteredForPhoneStates = true;
         }
     }
