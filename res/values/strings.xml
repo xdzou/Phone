@@ -1945,6 +1945,7 @@
     <string name="invalid_username_or_hostname">Invalid username or host parameters</string>
     <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
     <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
+    <string name="volume_boost_notify_unavailable">"Extra volume is not available when Wired/Blue tooth headset is used."</string>
     <string name="speed_dial_setting">Speed dial settings</string>
     <string name="preferred_duration_title">Display duration</string>
     <string name="duration_enable_summary">Display duration is ON</string>
