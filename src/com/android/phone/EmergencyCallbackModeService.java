@@ -65,6 +65,7 @@ public class EmergencyCallbackModeService extends Service {
     private Phone mPhone = null;
     private boolean mInEmergencyCall = false;
     private int mSubscription = 0;
+    private boolean mIsImsPhone = false;
 
     private static final int ECM_TIMER_RESET = 1;
 
@@ -191,6 +192,7 @@ public class EmergencyCallbackModeService extends Service {
 
         Intent intent = new Intent(EmergencyCallbackModeExitDialog.ACTION_SHOW_ECM_EXIT_DIALOG);
         intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        intent.putExtra("ims_phone", mIsImsPhone);
 
         // PendingIntent to launch Emergency Callback Mode Exit activity if the user selects
         // this notification
