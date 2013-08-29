@@ -264,4 +264,11 @@ public class EmergencyCallbackModeService extends Service {
     public boolean getEmergencyCallbackModeCallState() {
         return mInEmergencyCall;
     }
+
+    /**
+     * Returns true if ECBM is on IMS phone
+     */
+    public boolean isEcbmOnIms() {
+        return mIsImsPhone;
+    }
 }
