@@ -552,7 +552,7 @@ public class InCallScreen extends Activity
         }
         getWindow().setAttributes(lp);
 
-        setPhone(mApp.phone);  // Sets mPhone
+        setPhone(phone);  // Sets mPhone
 
         mCM =  mApp.mCM;
         log("- onCreate: phone state = " + mCM.getState());
