@@ -36,6 +36,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -79,6 +80,11 @@ import com.android.server.sip.SipService;
 import org.codeaurora.ims.IImsService;
 import com.android.recorder.ICallRecorder;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+import org.codeaurora.ims.csvt.CallForwardInfoP;
+import org.codeaurora.ims.csvt.ICsvtService;
+import org.codeaurora.ims.csvt.ICsvtServiceListener;
+
+import java.util.List;
 
 /**
  * Global state for the telephony subsystem when running in the primary
@@ -190,6 +196,7 @@ public class PhoneGlobals extends ContextWrapper
     static boolean sVoiceCapable = true;
 
     public static IImsService mImsService;
+    public static ICsvtService mCsvtService;
 
     private boolean mIsMediaInitialized = false;
 
@@ -481,6 +488,8 @@ public class PhoneGlobals extends ContextWrapper
 
             createImsService();
 
+            createCsvtService();
+
             // Create the NotificationMgr singleton, which is used to display
             // status bar icons and control other status bar behavior.
             notificationMgr = NotificationMgr.init(this);
@@ -750,7 +759,7 @@ public class PhoneGlobals extends ContextWrapper
     }
 
     public void createImsService() {
-        if (PhoneUtils.isCallOnImsEnabled()) {
+        if ( PhoneUtils.isCallOnImsEnabled() ) {
             try {
                 // send intent to start ims service n get phone from ims service
                 boolean bound = bindService(new Intent("org.codeaurora.ims.IImsService"),
@@ -771,6 +780,70 @@ public class PhoneGlobals extends ContextWrapper
 
         public void onServiceDisconnected(ComponentName arg0) {
             Log.w(LOG_TAG,"Ims Service onServiceDisconnected");
+        }
+    };
+
+    public boolean isCsvtActive(){
+        boolean result = false;
+        if (mCsvtService != null){
+            try{
+                result = mCsvtService.isActive();
+                Log.d(LOG_TAG, "mCsvtService.isActive = " + result);
+            } catch (RemoteException e) {
+                Log.e(LOG_TAG, Log.getStackTraceString(new Throwable()));
+            }
+        }
+        return result;
+    }
+
+    public void createCsvtService() {
+        // feature.
+        if (PhoneUtils.isCallOnCsvtEnabled()) {
+            try {
+                Intent intent = new Intent("org.codeaurora.ims.csvt.ICsvtService");
+                boolean bound = bindService(intent,
+                        mCsvtServiceConnection, Context.BIND_AUTO_CREATE);
+                Log.d(LOG_TAG, "ICsvtService bound request : " + bound);
+            } catch (NoClassDefFoundError e) {
+                Log.w(LOG_TAG, "Ignoring ICsvtService class not found exception "
+            + e);
+            }
+        }
+    }
+
+    private static ServiceConnection mCsvtServiceConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mCsvtService = ICsvtService.Stub.asInterface(service);
+            Log.d(LOG_TAG,"Csvt Service Connected: " + mCsvtService);
+            if (mCsvtService != null) {
+                try{
+                    mCsvtService.registerListener(mCsvtServiceListener);
+                    Log.d(LOG_TAG, "Csvt Service register ICsvtServiceListener");
+                } catch (RemoteException e) {
+                    Log.e(LOG_TAG, Log.getStackTraceString(new Throwable()));
+                }
+            }
+        }
+
+        public void onServiceDisconnected(ComponentName arg0) {
+            Log.w(LOG_TAG,"Csvt Service onServiceDisconnected");
+        }
+    };
+
+    private static ICsvtServiceListener mCsvtServiceListener = new ICsvtServiceListener.Stub() {
+        public void onPhoneStateChanged(int state) {
+            Log.d(LOG_TAG, "onPhoneStateChanged");
+            Intent intent = new Intent("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED");
+            PhoneGlobals.getInstance().sendBroadcast(intent);
+        }
+
+        public void onCallStatus(int result) {
+        }
+
+        public void onCallWaiting(boolean enabled) {
+        }
+
+        public void onCallForwardingOptions(List<CallForwardInfoP> fi) {
         }
     };
 
@@ -2077,6 +2150,13 @@ public class PhoneGlobals extends ContextWrapper
         return DEFAULT_SUBSCRIPTION;
     }
 
+    /*
+     * Gets User preferred Data subscription setting
+     */
+    public int getDataSubscription() {
+        return DEFAULT_SUBSCRIPTION;
+    }
+
     /**
      * Return an Intent that can be used to bring up the in-call screen.
      *
@@ -2085,5 +2165,35 @@ public class PhoneGlobals extends ContextWrapper
      */
     /* package */ Intent createInCallIntent(int subscription) {
         return PhoneGlobals.createInCallIntent();
+    }
+
+    /**
+     * Show call duration when diconnect
+     */
+    void showCallDuration(long duration) {
+        if (mInCallScreen != null) {
+            mInCallScreen.showCallDurationDialog(duration);
+        }
+    }
+
+    /**
+     * Set vibrate after connected setting
+     */
+    public void setVibrateAfterConnected(int subscription, int vibrateSetting) {
+       SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(
+               getApplicationContext());
+       SharedPreferences.Editor editor = preference.edit();
+       editor.putInt(Constants.VIBRATE_AFTER_CONNECTED[subscription], vibrateSetting);
+       editor.commit();
+    }
+
+    /**
+     * Get vibrate setting user has set
+     */
+    public int getVibrateAfterConnected(int subscription) {
+        SharedPreferences preference = PreferenceManager.getDefaultSharedPreferences(
+                getApplicationContext());
+        return preference.getInt(Constants.VIBRATE_AFTER_CONNECTED[subscription],
+                Constants.VIBRATE_ON);
     }
 }

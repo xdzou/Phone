@@ -7,15 +7,20 @@ import android.app.ActionBar;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MenuItem;
 
 import java.util.ArrayList;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import static com.android.internal.telephony.MSimConstants.SUB1;
+
 
 public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
     private static final String LOG_TAG = "GsmUmtsCallForwardOptions";
@@ -62,10 +67,23 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
         mButtonCFNRy = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFNRY_KEY);
         mButtonCFNRc = (CallForwardEditPreference) prefSet.findPreference(BUTTON_CFNRC_KEY);
 
+        if(SystemProperties.getBoolean("persist.env.phone.jointforward", false)){
+           if(mSubscription == SUB1){
+               int phoneType = getPhoneTypeBySubscription(mSubscription);
+               if(TelephonyManager.PHONE_TYPE_GSM == phoneType && mButtonCFNRc != null){
+                   prefSet.removePreference(mButtonCFNRc);
+               }
+            }
+        }
         mButtonCFU.setParentActivity(this, mButtonCFU.reason);
         mButtonCFB.setParentActivity(this, mButtonCFB.reason);
         mButtonCFNRy.setParentActivity(this, mButtonCFNRy.reason);
         mButtonCFNRc.setParentActivity(this, mButtonCFNRc.reason);
+
+        if(SystemProperties.getBoolean("persist.env.phone.callfwd.name", false)) {
+            mButtonCFNRc.setTitle(getString(R.string.labelCFNRc_CTA));
+            mButtonCFNRc.setDialogTitle(getString(R.string.labelCFNRc_CTA));
+        }
 
         mPreferences.add(mButtonCFU);
         mPreferences.add(mButtonCFB);
@@ -85,6 +103,14 @@ public class GsmUmtsCallForwardOptions extends TimeConsumingPreferenceActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
+
+    private int getPhoneTypeBySubscription(int subscription){
+        int phoneType = MSimTelephonyManager.getDefault().isMultiSimEnabled() ?
+                MSimTelephonyManager.getDefault().getCurrentPhoneType(subscription) :
+                TelephonyManager.getDefault().getCurrentPhoneType();
+        return phoneType;
+    }
+
 
     @Override
     public void onResume() {

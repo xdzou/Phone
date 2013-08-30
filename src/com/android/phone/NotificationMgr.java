@@ -997,7 +997,6 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                         call.getPhone().getPhoneType()) && call.isDialingOrAlerting()) {
                   contextTextId = R.string.notification_dialing;
                 }
-
                 builder.setContentText(mContext.getString(contextTextId));
             }
         } else if (DBG) {

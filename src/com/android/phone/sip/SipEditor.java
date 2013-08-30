@@ -117,7 +117,13 @@ public class SipEditor extends PreferenceActivity
         void setValue(String value) {
             if (preference instanceof EditTextPreference) {
                 String oldValue = getValue();
-                ((EditTextPreference) preference).setText(value);
+                // If display name is equal to user name or null, that set display name's
+                // edit text to user name.
+                if ("".equals(value) && this == DisplayName) {
+                    ((EditTextPreference) preference).setText(getDefaultDisplayName());
+                } else {
+                    ((EditTextPreference) preference).setText(value);
+                }
                 if (this != Password) {
                     Log.v(TAG, this + ": setValue() " + value + ": " + oldValue
                             + " --> " + getValue());
@@ -190,7 +196,6 @@ public class SipEditor extends PreferenceActivity
         Log.v(TAG, "SipEditor onPause(): finishing? " + isFinishing());
         if (!isFinishing()) {
             mHomeButtonClicked = true;
-            validateAndSetResult();
         }
         super.onPause();
     }
@@ -340,7 +345,12 @@ public class SipEditor extends PreferenceActivity
                             }
                     }
                 } else if (key == PreferenceKey.Port) {
-                    int port = Integer.parseInt(PreferenceKey.Port.getValue());
+                    int port = 0;
+                    try {
+                        port = Integer.parseInt(PreferenceKey.Port.getValue());
+                    } catch (NumberFormatException e) {
+                        Log.e(TAG, "Get port failed", e);
+                    }
                     if ((port < 1000) || (port > 65534)) {
                         showAlert(getString(R.string.not_a_valid_port));
                         return;
@@ -368,7 +378,7 @@ public class SipEditor extends PreferenceActivity
             // do finish() in replaceProfile() in a background thread
         } catch (Exception e) {
             Log.w(TAG, "Can not create new SipProfile", e);
-            showAlert(e);
+            showAlert(getString(R.string.invalid_username_or_hostname));
         }
     }
 
@@ -453,6 +463,23 @@ public class SipEditor extends PreferenceActivity
         if (pref == PreferenceKey.DisplayName.preference) {
             ((EditTextPreference) pref).setText(value);
             checkIfDisplayNameSet();
+        }
+
+        // If display name is equal to user name or null, that set display name's
+        // edit text to user name.
+        if (pref == PreferenceKey.Username.preference) {
+            PreferenceKey.Username.setValue(value);
+            for (PreferenceKey key : PreferenceKey.values()) {
+                Preference p = key.preference;
+                if (p instanceof EditTextPreference) {
+                    EditTextPreference prefer = (EditTextPreference) p;
+                    boolean fieldEmpty = isEditTextEmpty(key);
+                    // use default value if display name is empty
+                    if (fieldEmpty && key == PreferenceKey.DisplayName) {
+                        prefer.setText(getDefaultDisplayName());
+                    }
+                }
+            }
         }
 
         // SAVE menu should be enabled once the user modified some preference.

@@ -174,6 +174,16 @@
     <string name="preferred_network_mode_global_summary" msgid="1633134285545730364">"慣用網路模式：通用"</string>
     <string name="preferred_network_mode_lte_wcdma_summary" msgid="9180775701594742750">"慣用網路模式：LTE/WCDMA"</string>
   <string-array name="preferred_network_mode_choices">
+    <item>TD-SCDMA/LTE/GSM/WCDMA/CDMA/EVDO </item>
+    <item>TD-SCDMA/GSM/WCDMA/CDMA/EVDO </item>
+    <item>TD-SCDMA/GSM/WCDMA/LTE</item>
+    <item>TD-SCDMA/WCDMA/LTE</item>
+    <item>TD-SCDMA/GSM/WCDMA</item>
+    <item>TD-SCDMA/GSM/LTE</item>
+    <item>TD-SCDMA/GSM</item>
+    <item>TD-SCDMA/LTE</item>
+    <item>TD-SCDMA/WCDMA</item>
+    <item>TD-SCDMA only</item>
     <item msgid="7886739962255042385">"LTE/WCDMA"</item>
     <item msgid="577652050447385699">"LTE"</item>
     <item msgid="6813597571293773656">"通用"</item>
@@ -342,6 +352,9 @@
     <string name="tty_mode_option_summary" msgid="1073835131534808732">"設定 TTY 模式"</string>
     <string name="auto_retry_mode_title" msgid="4073265511427813322">"自動重試"</string>
     <string name="auto_retry_mode_summary" msgid="4973886004067532288">"啟用自動重試模式"</string>
+    <string name="proximity_mode_title">打開距離傳感器</string>
+    <string name="proximity_on_summary">接聽電話時，屏幕會關閉，從而節省電量</string>
+    <string name="proximity_off_summary">接聽電話時，屏幕保持開啟狀態</string>
     <string name="menu_add" msgid="1882023737425114762">"新增聯絡人"</string>
     <string name="menu_edit" msgid="7143003705504672374">"編輯聯絡人"</string>
     <string name="menu_delete" msgid="3977150783449642851">"刪除聯絡人"</string>
@@ -349,6 +362,7 @@
     <string name="name" msgid="7329028332786872378">"名稱"</string>
     <string name="number" msgid="7905950798349903858">"號碼"</string>
     <string name="save" msgid="4094274636321939086">"儲存"</string>
+    <string name="fdn_empty_number">"FDN 未更新：號碼不能為空。"</string>
     <string name="add_fdn_contact" msgid="2481915899633353976">"新增固定撥號"</string>
     <string name="adding_fdn_contact" msgid="7627379633721940991">"正在新增固定撥號…"</string>
     <string name="fdn_contact_added" msgid="7458335758501736665">"已新增固定撥號。"</string>
@@ -623,6 +637,11 @@
     <string name="description_target_answer" msgid="7205604197797472471">"解答"</string>
     <string name="description_target_send_sms" msgid="2098326025587950144">"傳送簡訊"</string>
     <string name="description_target_decline" msgid="4789834364389731957">"拒絕"</string>
+    <string name="ipcall">"IP電話設置"</string>
+    <string name="ipcall_sub_title">"IP電話設置"</string>
+    <string name="ipcall_sub_summery">"修改IP電話前綴"</string>
+    <string name="ipcall_dialog_title">"IP電話設置"</string>
+    <string name="ipcall_dialog_edit_hint">"請輸入IP電話前綴"</string>
     <string name="voicemail_notification_vibrate_when_title" msgid="8361970092063604886">"震動"</string>
     <string name="voicemail_notification_vibarte_when_dialog_title" msgid="5739583146522136440">"震動"</string>
     <string name="voicemail_notification_ringtone_title" msgid="2609519527849101590">"音效"</string>
@@ -632,9 +651,16 @@
     <item msgid="1595097872875714252">"僅在靜音時啟用"</item>
     <item msgid="1458182414036878616">"永不啟用"</item>
   </string-array>
+    <string name="invalid_username_or_hostname">"用戶名或服務器參數設置無效"</string>
     <string name="ringtone_title" msgid="6374978286202084684">"手機鈴聲"</string>
     <string name="vibrate_on_ring_title" msgid="9197564612065258960">"鈴響時震動"</string>
     <string name="dtmf_tone_enable_title" msgid="827601042915852989">"撥號鍵盤觸控音效"</string>
     <string name="dial_pad_autocomplete" msgid="494525952035761075">"撥號鍵盤自動完成"</string>
     <string name="preference_category_ringtone" msgid="5197960752529332721">"鈴聲與震動"</string>
+    <!-- In-call screen: status label for incoming call forwarded from other remote party -->
+    <string name="card_title_forwarded_MTcall">"被轉來電"</string>
+    <string name="speed_dial_setting">"快速撥號設置"</string>
+    <!-- Set dual dialer for MultiSim -->
+    <string name="call_number">"撥至: "</string>
+    <string name="cancel_call">取消</string>
 </resources>

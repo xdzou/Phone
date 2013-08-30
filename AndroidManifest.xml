@@ -546,7 +546,7 @@
         <!-- MSim Call Feature Sub Settings -->
         <activity android:name="MSimCallFeaturesSubSetting"
             android:label="@string/call_settings"
-            android:configChanges="orientation|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@android:style/Theme.Holo.DialogWhenLarge">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -558,7 +558,7 @@
         <!-- Select Subscription -->
         <activity android:name="SelectSubscription"
             android:label="@string/callind_multi_sim"
-            android:configChanges="orientation|keyboardHidden"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@android:style/Theme.Holo.DialogWhenLarge">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -680,6 +680,14 @@
             android:configChanges="orientation|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="EmergencyCallList"
+                android:label="@string/emergency_call_list_title">
+           <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

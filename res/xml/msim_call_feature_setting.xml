@@ -20,6 +20,16 @@
     xmlns:phone="http://schemas.android.com/apk/res/com.android.phone"
         android:title="@string/call_settings">
 
+    <PreferenceScreen
+        android:key="emergency_call_list"
+        android:title="@string/emergency_call_list_title"
+        android:persistent="false">
+        <intent
+            android:action="android.intent.action.MAIN"
+            android:targetPackage="com.android.phone"
+            android:targetClass="com.android.phone.EmergencyCallList" />
+    </PreferenceScreen>
+
     <!-- target class is com.android.phone.MultiSimSetting -->
     <PreferenceScreen
         android:key="button_call_independent_serv"
@@ -42,11 +52,17 @@
       android:persistent="false"
       android:defaultValue="true" />
 
-  <CheckBoxPreference
+  <!-- <CheckBoxPreference
       android:key="button_dialpad_autocomplete"
       android:title="@string/dial_pad_autocomplete"
       android:persistent="false"
-      android:defaultValue="false" />
+      android:defaultValue="false" /> -->
+
+    <CheckBoxPreference
+        android:key="button_proximity_key"
+        android:title="@string/proximity_mode_title"
+        android:persistent="false"
+        android:summary="@string/proximity_on_summary" />
 
     <CheckBoxPreference
         android:key="button_auto_retry_key"
@@ -81,4 +97,20 @@
         android:summary="@string/xdivert_summary"
         android:persistent="false">
     </PreferenceScreen>
+
+    <PreferenceScreen
+        android:key="speed_dial_settings"
+        android:title="@string/speed_dial_setting"
+        android:persistent="false">
+        <intent android:action="android.intent.action.MAIN"
+            android:targetPackage="com.android.dialer"
+            android:targetClass="com.android.dialer.SpeedDialListActivity"/>
+    </PreferenceScreen>
+
+    <CheckBoxPreference
+        android:key="duration_enable_key"
+        android:persistent="false"
+        android:title="@string/preferred_duration_title"
+        android:summaryOn="@string/duration_enable_summary"
+        android:summaryOff="@string/duration_disable_summary" />
 </PreferenceScreen>

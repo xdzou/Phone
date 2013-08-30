@@ -79,6 +79,9 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     private SubscriptionData mUserSelSub;
     private SubscriptionManager mSubscriptionManager;
     private CardSubscriptionManager mCardSubscriptionManager;
+    private AirplaneModeBroadcastReceiver mAirplaneModeBroadcastReceiver;
+    //mIsForeground is added to track if activity is in foreground
+    private boolean mIsForeground = false;
 
     //String keys for preference lookup
     private static final String PREF_PARENT_KEY = "subscr_parent";
@@ -142,9 +145,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                         mHandler, EVENT_SET_SUBSCRIPTION_DONE, null);
             }
         }
+        mAirplaneModeBroadcastReceiver = new AirplaneModeBroadcastReceiver();
         IntentFilter intentFilter =
                 new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        registerReceiver(new AirplaneModeBroadcastReceiver(), intentFilter);
+        registerReceiver(mAirplaneModeBroadcastReceiver, intentFilter);
     }
 
     /**
@@ -163,10 +167,25 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        mIsForeground = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mIsForeground = false;
+    }
+
     protected void onDestroy () {
         super.onDestroy();
         mCardSubscriptionManager.unRegisterForSimStateChanged(mHandler);
         mSubscriptionManager.unRegisterForSetSubscriptionCompleted(mHandler);
+        if(mAirplaneModeBroadcastReceiver != null) {
+            unregisterReceiver(mAirplaneModeBroadcastReceiver);
+        }
     }
 
     private boolean isAirplaneModeOn() {
@@ -420,11 +439,17 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             } else {
                 boolean ret = mSubscriptionManager.setSubscription(mUserSelSub);
                 if (ret) {
-                    showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                    if(mIsForeground){
+                       showDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                    }
                     mSubscriptionManager.registerForSetSubscriptionCompleted(mHandler,
                             EVENT_SET_SUBSCRIPTION_DONE, null);
                 } else {
-                    //TODO: Already some set sub in progress. Display a Toast?
+                    // Show a toast to prompt the user that nothing is changed
+                    Toast toast = Toast.makeText(getApplicationContext(),
+                            R.string.set_sub_no_change,
+                            Toast.LENGTH_SHORT);
+                    toast.show();
                 }
             }
         }
@@ -477,7 +502,8 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
                 case EVENT_SET_SUBSCRIPTION_DONE:
                     Log.d(TAG, "EVENT_SET_SUBSCRIPTION_DONE");
                     mSubscriptionManager.unRegisterForSetSubscriptionCompleted(mHandler);
-                    dismissDialog(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+                    dismissDialogSafely(DIALOG_SET_SUBSCRIPTION_IN_PROGRESS);
+
                     getPreferenceScreen().setEnabled(true);
                     ar = (AsyncResult) msg.obj;
 
@@ -556,6 +582,10 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             retStr = getResources().getString(R.string.set_sub_deactivate_not_supported);
         } else if (status.equals(SubscriptionManager.SUB_ACTIVATE_FAILED)) {
             retStr = getResources().getString(R.string.set_sub_activate_failed);
+        } else if (status.equals(SubscriptionManager.SUB_GLOBAL_ACTIVATE_FAILED)) {
+            retStr = getResources().getString(R.string.set_sub_global_activate_failed);
+        } else if (status.equals(SubscriptionManager.SUB_GLOBAL_DEACTIVATE_FAILED)) {
+            retStr = getResources().getString(R.string.set_sub_global_deactivate_failed);
         } else if (status.equals(SubscriptionManager.SUB_ACTIVATE_NOT_SUPPORTED)) {
             retStr = getResources().getString(R.string.set_sub_activate_not_supported);
         } else if (status.equals(SubscriptionManager.SUB_NOT_CHANGED)) {
@@ -614,5 +644,17 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
             finish();
         }
         updateCheckBoxes();
+    }
+
+
+    private void dismissDialogSafely(int id) {
+        Log.d(TAG, "dismissDialogSafely: id = " + id);
+        try {
+            dismissDialog(id);
+        } catch (IllegalArgumentException e) {
+            // This is expected in the case where we were in the background
+            // at the time we would normally have shown the dialog, so we didn't
+            // show it.
+        }
     }
 }

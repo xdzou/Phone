@@ -194,7 +194,12 @@ public class TimeConsumingPreferenceActivity extends PreferenceActivity
         if (mIsForeground) {
             showDialog(error);
         }
-        preference.setEnabled(false);
+
+        // About all phone settings. If this is not response error,
+        // set the preference unable.
+        if (RESPONSE_ERROR != error) {
+            preference.setEnabled(false);
+        }
     }
 
     @Override

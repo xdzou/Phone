@@ -22,8 +22,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.IBluetoothHeadsetPhone;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.IBinder;
@@ -135,6 +137,13 @@ public class BluetoothPhoneService extends Service {
                                                PRECISE_CALL_STATE_CHANGED, null);
         mCM.registerForCallWaiting(mHandler,
                                    PHONE_CDMA_CALL_WAITING, null);
+
+        if (mCM.isCallOnCsvtEnabled()) {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED");
+            PhoneGlobals.getInstance().registerReceiver(mCsvtCallStateReceiver, filter);
+        }
+
         // TODO(BT) registerForIncomingRing?
         // TODO(BT) registerdisconnection?
         mClccTimestamps = new long[GSM_MAX_CONNECTIONS];
@@ -156,6 +165,9 @@ public class BluetoothPhoneService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mCM.isCallOnCsvtEnabled()) {
+            PhoneGlobals.getInstance().unregisterReceiver(mCsvtCallStateReceiver);
+        }
         if (DBG) log("Stopping Bluetooth BluetoothPhoneService Service");
     }
 
@@ -705,18 +717,54 @@ public class BluetoothPhoneService extends Service {
         }
     }
 
+    private final BroadcastReceiver mCsvtCallStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if ("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED".equals(action)) {
+                handlePreciseCallStateChange(null);
+            }
+        }
+    };
+
+    private boolean answerCsvtCall() {
+        if (VDBG) log("answerCsvtCall");
+        Intent intent = new Intent("com.borqs.videocall.action.answerCall");
+        PhoneGlobals.getInstance().sendBroadcast(intent);
+        return true;
+    }
+
+    private boolean hangupCsvtCall( ) {
+        if (VDBG) log("hangupCsvtCall");
+        Intent intent = new Intent("com.borqs.videocall.action.StopVTCall");
+        PhoneGlobals.getInstance().sendBroadcast(intent);
+        return true;
+    }
+
     private final IBluetoothHeadsetPhone.Stub mBinder = new IBluetoothHeadsetPhone.Stub() {
         public boolean answerCall() {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
-            return PhoneUtils.answerCall(mCM.getFirstActiveRingingCall());
+            if (PhoneUtils.isImsVideoCall(mCM.getFirstActiveRingingCall())) {
+                return answerCsvtCall();
+            } else {
+                return PhoneUtils.answerCall(mCM.getFirstActiveRingingCall());
+            }
         }
 
         public boolean hangupCall() {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
             if (mCM.hasActiveFgCall()) {
-                return PhoneUtils.hangupActiveCall(mCM.getActiveFgCall());
+                if (PhoneUtils.isImsVideoCall(mCM.getActiveFgCall())) {
+                    return hangupCsvtCall();
+                } else {
+                    return PhoneUtils.hangupActiveCall(mCM.getActiveFgCall());
+                }
             } else if (mCM.hasActiveRingingCall()) {
-                return PhoneUtils.hangupRingingCall(mCM.getFirstActiveRingingCall());
+                if (PhoneUtils.isImsVideoCall(mCM.getFirstActiveRingingCall())) {
+                    return hangupCsvtCall();
+                } else {
+                    return PhoneUtils.hangupRingingCall(mCM.getFirstActiveRingingCall());
+                }
             } else if (mCM.hasActiveBgCall()) {
                 return PhoneUtils.hangupHoldingCall(mCM.getFirstActiveBgCall());
             }

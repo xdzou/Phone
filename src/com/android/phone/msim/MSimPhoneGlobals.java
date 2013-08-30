@@ -32,7 +32,9 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Handler;
 import android.os.IPowerManager;
+import android.os.Message;
 import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -50,6 +52,7 @@ import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.MmiCode;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
@@ -65,6 +68,7 @@ import com.codeaurora.telephony.msim.MSimTelephonyIntents;
 import java.util.ArrayList;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+
 
 /**
  * Top-level Application class for the Phone app.
@@ -101,6 +105,11 @@ public class MSimPhoneGlobals extends PhoneGlobals {
 
     /* Array of MSPhone Objects to store each phoneproxy and associated objects */
     private static MSPhone[] mMSPhones;
+
+    private static final int EVENT_SET_DATA_SUBSCRIPTION_DONE = 1;
+    private static final String PROP_DATA_DISABLE_SUB2 = "persit.env.data.disable.sub2";
+    private static final String MCC_CHINA = "460";
+    private static final String MCC_MACAU = "455";
 
     private int mDefaultSubscription = 0;
 
@@ -154,6 +163,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // Set Default PhoneApp variables
             setDefaultPhone(mDefaultSubscription);
             mCM.registerPhone(phone);
+
+            createImsService();
+
+            createCsvtService();
 
             // Create the NotificationMgr singleton, which is used to display
             // status bar icons and control other status bar behavior.
@@ -243,6 +256,10 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             // in.)
             notifier = MSimCallNotifier.init(this, phone, ringer, callLogger);
 
+            // Create the Managed Roaming singleton class, used to show popup
+            // to user for initiating network search when location update is rejected
+            mManagedRoam = ManagedRoaming.init(this);
+
             XDivertUtility.init(this, phone, (MSimCallNotifier)notifier, this);
 
             // register for ICC status
@@ -312,10 +329,8 @@ public class MSimPhoneGlobals extends PhoneGlobals {
             PhoneUtils.setAudioMode(mCM);
         }
 
-        if (TelephonyCapabilities.supportsOtasp(phone)) {
-            for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
-                updatePhoneAppCdmaVariables(i);
-            }
+        for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+            updatePhoneAppCdmaVariables(i);
         }
 
         // XXX pre-load the SimProvider so that it's ready
@@ -614,7 +629,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
 
     // updates cdma variables of PhoneApp
     private void updatePhoneAppCdmaVariables(int subscription) {
-        Log.v(LOG_TAG,"updatePhoneAppCdmaVariables" + subscription);
+        Log.v(LOG_TAG,"updatePhoneAppCdmaVariables for SUB" + subscription);
         MSPhone msPhone = getMSPhone(subscription);
 
         if ((msPhone != null) &&(msPhone.mPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA)) {
@@ -645,6 +660,70 @@ public class MSimPhoneGlobals extends PhoneGlobals {
         if (ss != null) {
             int state = ss.getState();
             notificationMgr.updateNetworkSelection(state, phone);
+
+            Log.d(LOG_TAG, "state is:" + state);
+
+            // property persist.env.data.disable.sub2 is true and preferred data
+            // channel is SUB2 ,we need fall back it to SUB1 when in China
+            // Mainland and Macau.
+            if (SystemProperties.getBoolean(PROP_DATA_DISABLE_SUB2, false)
+                    && state == ServiceState.STATE_IN_SERVICE) {
+                // anyway need to change preferred data to SUB1 in China or
+                // Macau.
+                boolean inChina = false;
+                String operatorNumberic = ss.getOperatorNumeric();
+                Log.d(LOG_TAG, "operatorNumber is:" + operatorNumberic);
+                if (null != operatorNumberic && operatorNumberic.length() >= 3) {
+                    String mcc = (String) operatorNumberic.subSequence(0, 3);
+                    // China mainland and Macau
+                    Log.d(LOG_TAG, "mcc is:" + mcc);
+                    if (mcc.equals(MCC_CHINA) || mcc.equals(MCC_MACAU)) {
+                        inChina = true;
+                    }
+                }
+
+                if (inChina) {
+                    int userPref = MSimPhoneFactory.getPrioritySubscription();
+                    if (userPref != MSimConstants.SUB1) {
+                        Handler setDDSHandler = new Handler() {
+                            public void handleMessage(Message msg) {
+                                AsyncResult ar;
+                                switch (msg.what) {
+                                case EVENT_SET_DATA_SUBSCRIPTION_DONE:
+                                    Log.d(LOG_TAG, "set dds done");
+                                    ar = (AsyncResult) msg.obj;
+                                    if (ar.exception != null) {
+                                        Log.d(LOG_TAG, "exception occur");
+                                        break;
+                                    }
+                                    boolean result = (Boolean) ar.result;
+                                    if (result) {
+                                        // change preferred dds to SUB1
+                                        if (msg.arg1 == MSimConstants.SUB1) {
+                                            Log.d(LOG_TAG, "dds to SUB1");
+                                            MSimPhoneFactory
+                                                    .setDataSubscription(msg.arg1);
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                        Message setDdsMsg = Message.obtain(setDDSHandler,
+                                EVENT_SET_DATA_SUBSCRIPTION_DONE,
+                                MSimConstants.SUB1, 0);
+                        SubscriptionManager subManager = SubscriptionManager
+                                .getInstance();
+                        Log.d(LOG_TAG, "getDataSubscription:"
+                                + getDataSubscription());
+                        if (subManager != null
+                                && subManager.isSubActive(MSimConstants.SUB1)
+                                && getDataSubscription() != MSimConstants.SUB1) {
+                            subManager.setDataSubscription(MSimConstants.SUB1,
+                                    setDdsMsg);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -757,6 +836,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
     /*
      * Gets User preferred Data subscription setting
      */
+    @Override
     public int getDataSubscription() {
         return MSimPhoneFactory.getDataSubscription();
     }

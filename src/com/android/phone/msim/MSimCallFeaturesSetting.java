@@ -26,9 +26,11 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.net.sip.SipManager;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -81,11 +83,13 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private static final String BUTTON_PLAY_DTMF_TONE  = "button_play_dtmf_tone";
     private static final String BUTTON_DTMF_KEY        = "button_dtmf_settings";
     private static final String BUTTON_RETRY_KEY       = "button_auto_retry_key";
+    private static final String BUTTON_PROXIMITY_KEY   = "button_proximity_key";
     private static final String BUTTON_TTY_KEY         = "button_tty_mode_key";
     private static final String BUTTON_HAC_KEY         = "button_hac_key";
     private static final String BUTTON_DIALPAD_AUTOCOMPLETE = "button_dialpad_autocomplete";
     private static final String BUTTON_SELECT_SUB_KEY  = "button_call_independent_serv";
     private static final String BUTTON_XDIVERT_KEY     = "button_xdivert";
+    private static final String SHOW_DURATION_KEY      = "duration_enable_key";
 
     private static final String BUTTON_SIP_CALL_OPTIONS =
             "sip_call_options_key";
@@ -112,14 +116,17 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
     private CheckBoxPreference mDialpadAutocomplete;
     private CheckBoxPreference mButtonAutoRetry;
     private CheckBoxPreference mButtonHAC;
+    private CheckBoxPreference mButtonProximity;
     private ListPreference mButtonDTMF;
     private ListPreference mButtonTTY;
     private ListPreference mButtonSipCallOptions;
     private SipSharedPreferences mSipSharedPreferences;
-
     private PreferenceScreen mButtonXDivert;
+    private CheckBoxPreference mShowDurationCheckBox;
     private int mNumPhones;
     private SubscriptionManager mSubManager;
+    private PreferenceScreen mEmergencyCall;
+    private static final String BUTTON_EMERGENCY_CALL_KEY = "emergency_call_list";
 
     /*
      * Click Listeners, handle click based on objects attached to UI.
@@ -152,7 +159,11 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         } else if (preference == mButtonXDivert) {
             processXDivert();
             return true;
-        }
+        } else if (preference == mPlayDtmfTone) {
+            Settings.System.putInt(getContentResolver(), Settings.System.DTMF_TONE_WHEN_DIALING,
+            mPlayDtmfTone.isChecked() ? 1 : 0);
+            return true;
+         }
         return false;
     }
 
@@ -176,8 +187,20 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                     Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, index);
         } else if (preference == mButtonTTY) {
             handleTTYChange(preference, objValue);
+        } else if (preference == mButtonProximity) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.PROXIMITY_SENSOR, checked ? 1 : 0);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
         } else if (preference == mButtonSipCallOptions) {
             handleSipCallOptionsChange(objValue);
+        } else if (preference == mShowDurationCheckBox) {
+            boolean checked = (Boolean) objValue;
+            Settings.System.putInt(mPhone.getContext().getContentResolver(),
+                    android.provider.Settings.System.SHOW_CALL_DURATION, checked ? 1 : 0);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
         }
         // always let the preference setting proceed.
         return true;
@@ -206,11 +229,17 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         mDialpadAutocomplete = (CheckBoxPreference) findPreference(BUTTON_DIALPAD_AUTOCOMPLETE);
         mButtonDTMF = (ListPreference) findPreference(BUTTON_DTMF_KEY);
         mButtonAutoRetry = (CheckBoxPreference) findPreference(BUTTON_RETRY_KEY);
+        mButtonProximity = (CheckBoxPreference) findPreference(BUTTON_PROXIMITY_KEY);
         mButtonHAC = (CheckBoxPreference) findPreference(BUTTON_HAC_KEY);
         mButtonTTY = (ListPreference) findPreference(BUTTON_TTY_KEY);
         mButtonXDivert = (PreferenceScreen) findPreference(BUTTON_XDIVERT_KEY);
+        mShowDurationCheckBox = (CheckBoxPreference) findPreference(SHOW_DURATION_KEY);
 
         final ContentResolver contentResolver = getContentResolver();
+        mEmergencyCall = (PreferenceScreen) findPreference(BUTTON_EMERGENCY_CALL_KEY);
+        if (!SystemProperties.getBoolean("persist.env.phone.ecclist", false)) {
+            prefSet.removePreference(mEmergencyCall);
+        }
 
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(contentResolver,
@@ -238,6 +267,15 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
                 prefSet.removePreference(mButtonAutoRetry);
                 mButtonAutoRetry = null;
             }
+        }
+
+        boolean supportsProximitySensor =
+            getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_PROXIMITY);
+        if (supportsProximitySensor && mButtonProximity != null) {
+            mButtonProximity.setOnPreferenceChangeListener(this);
+        } else {
+            prefSet.removePreference(mButtonProximity);
+            mButtonProximity = null;
         }
 
         if (mButtonHAC != null) {
@@ -279,6 +317,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         if (mButtonXDivert != null) {
             mButtonXDivert.setOnPreferenceChangeListener(this);
         }
+
+        if (mShowDurationCheckBox != null) {
+            mShowDurationCheckBox.setOnPreferenceChangeListener(this);
+        }
     }
 
     private boolean isAllSubActive() {
@@ -307,7 +349,12 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
         String[] line1Numbers = new String[mNumPhones];
         for (int i = 0; i < mNumPhones; i++) {
             Phone phone = MSimPhoneGlobals.getInstance().getPhone(i);
-            line1Numbers[i] = PhoneNumberUtils.formatNumber(phone.getLine1Number());
+            String msisdn = phone.getLine1Number();  // may be null or empty
+            if (!TextUtils.isEmpty(msisdn)) {
+                //Populate the line1Numbers only if it is not null
+                line1Numbers[i] = PhoneNumberUtils.formatNumber(msisdn);
+            }
+
             Log.d(LOG_TAG, "SUB:" + i + " phonetype = " + phone.getPhoneType()
                     + " isSubActive = " + mSubManager.isSubActive(i)
                     + " line1Number = " + line1Numbers[i]);
@@ -420,6 +467,14 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             mButtonAutoRetry.setChecked(autoretry != 0);
         }
 
+        if (mButtonProximity != null) {
+            boolean checked = Settings.System.getInt(getContentResolver(),
+                    Settings.System.PROXIMITY_SENSOR, 1) == 1;
+            mButtonProximity.setChecked(checked);
+            mButtonProximity.setSummary(checked ? R.string.proximity_on_summary
+                    : R.string.proximity_off_summary);
+        }
+
         if (mButtonHAC != null) {
             int hac = Settings.System.getInt(getContentResolver(), Settings.System.HEARING_AID, 0);
             mButtonHAC.setChecked(hac != 0);
@@ -435,6 +490,18 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
 
         if (mButtonXDivert != null) {
             if (!isAllSubActive()) mButtonXDivert.setEnabled(false);
+        }
+
+        if (mShowDurationCheckBox != null) {
+            boolean checked = Settings.System.getInt(getContentResolver(),
+                    Settings.System.SHOW_CALL_DURATION, 1) == 1;
+            mShowDurationCheckBox.setChecked(checked);
+            mShowDurationCheckBox.setSummary(checked ? R.string.duration_enable_summary
+                    : R.string.duration_disable_summary);
+        }
+        if (mPlayDtmfTone != null) {
+            mPlayDtmfTone.setChecked(Settings.System.getInt(getContentResolver(),
+                    Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
         }
     }
 

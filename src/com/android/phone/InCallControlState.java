@@ -98,6 +98,9 @@ public class InCallControlState {
     // should be visible.
     public boolean canHold;
 
+    // IMS add participant
+    public boolean addParticipantEnabled;
+    public boolean addParticipantVisible;
 
     public InCallControlState(InCallScreen inCallScreen, CallManager cm) {
         if (DBG) log("InCallControlState constructor...");
@@ -234,6 +237,15 @@ public class InCallControlState {
             modifyCallEnabled = false;
         }
 
+        // IMS add participant
+        if (PhoneUtils.shouldShowAddParticipant() && canAddCall) {
+            addParticipantVisible = true;
+            addParticipantEnabled = true;
+        } else {
+            addParticipantVisible = false;
+            addParticipantEnabled = false;
+        }
+
         if (DBG) dumpState();
     }
 
@@ -257,6 +269,8 @@ public class InCallControlState {
         log("  dialpadVisible: " + dialpadVisible);
         log("  onHold: " + onHold);
         log("  canHold: " + canHold);
+        log("  addParticipantVisible: " + addParticipantVisible);
+        log("  addParticipantEnabled: " + addParticipantEnabled);
     }
 
     private void log(String msg) {
