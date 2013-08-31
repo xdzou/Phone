@@ -27,6 +27,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.RILConstants;
+import com.android.internal.telephony.PhoneConstants;
 
 public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     private static final String LOG_TAG = "Use2GOnlyCheckBoxPreference";
@@ -61,7 +63,12 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     protected void  onClick() {
         super.onClick();
 
-        int networkType = isChecked() ? Phone.NT_MODE_GSM_ONLY : getDefaultNetworkMode();
+        int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
+        if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {
+            preferredNetworkMode = Phone.NT_MODE_GLOBAL;
+        }
+
+        int networkType = isChecked() ? Phone.NT_MODE_GSM_ONLY : preferredNetworkMode;
         Log.i(LOG_TAG, "set preferred network type="+networkType);
         android.telephony.MSimTelephonyManager.putIntAtIndex(
                 mPhone.getContext().getContentResolver(),

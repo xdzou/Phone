@@ -370,6 +370,7 @@
 
     <!-- Call forwarding settings screen, setting option name -->
     <string name="labelCFNRc">Forward when unreachable</string>
+    <string name="labelCFNRc_CTA">Forward Implicitly </string>
     <!-- Call forwarding dialog box, text field label -->
     <string name="messageCFNRc">Number when unreachable</string>
     <!-- Call forwarding settings screen, setting summary text when forwarding to a specific number when unreachable-->
@@ -844,6 +845,9 @@
     <string name="tty_mode_option_summary">Set TTY mode</string>
     <string name="auto_retry_mode_title">Auto-retry</string>
     <string name="auto_retry_mode_summary">Enable Auto-retry mode</string>
+    <string name="proximity_mode_title">Turn on proximity sensor</string>
+    <string name="proximity_on_summary">When you answer a call, the screen will be turned off to save power.</string>
+    <string name="proximity_off_summary">When you answer a call, the screen will be turned on always.</string>
 
     <!-- FDN list screen: menu item label -->
     <string name="menu_add">Add contact</string>
@@ -861,6 +865,7 @@
     <string name="number">Number</string>
     <!-- "Edit FDN Contact" screen: Button label for "save" action -->
     <string name="save">Save</string>
+    <string name="fdn_empty_number">FDN not updated: number cannot be empty.</string>
     <!-- Title of "Edit FDN Contact" screen for a new contact -->
     <string name="add_fdn_contact">Add fixed dialing number</string>
     <!-- "Edit FDN Contact" screen: status message displayed in a popup (toast) -->
@@ -1175,6 +1180,8 @@
     <!-- Text for the onscreen "Subscription" button that lets you switch
          between the available scubscriptions [CHAR LIMIT=20] -->
     <string name="onscreenSwitchText">Switch Subscription</string>
+    <!-- Text for the onscreen "Add Participant" button -->
+    <string name="onscreenAddParticipant">Add Participant</string>
 
     <!-- Menu item label in SIM Contacts: Import a single contact entry from the SIM card -->
     <string name="importSimEntry">Import</string>
@@ -1252,6 +1259,9 @@
 
     <!-- Shown in "Managed Roaming" dialog when registration is denied with rejCode 10. -->
     <string name="managed_roaming_title">Managed Roaming</string>
+    <string name="managed_roaming_title_sub1">Managed Roaming (SUB1)</string>
+    <string name="managed_roaming_title_sub2">Managed Roaming (SUB2)</string>
+    <string name="managed_roaming_title_sub3">Managed Roaming (SUB3)</string>
     <string name="managed_roaming_dialog_content">Network with Limited Service found. Do you want to initiate a Network Search?</string>
     <string name="managed_roaming_dialog_ok_button">Yes</string>
     <string name="managed_roaming_dialog_cancel_button">No</string>
@@ -1763,6 +1773,11 @@
     <string name="description_direction_down_left">Down Left</string>
     <string name="description_direction_down_right">Down Right</string>
 
+    <!-- Description of the bubble content in the incoming call screen -->
+    <string name="incall_hangup_active_alert">
+        If you answer the incoming call,\nyou will hang up on the %s call.
+    </string>
+
     <!-- Dialog title for the vibration settings for voicemail notifications [CHAR LIMIT=40] -->
     <string name="voicemail_notification_vibrate_when_title" msgid="8731372580674292759">Vibrate</string>
     <!-- Dialog title for the vibration settings for voice mail notifications [CHAR LIMIT=40]-->
@@ -1806,6 +1821,10 @@
          the phone.
          [CHAR LIMIT=40] -->
     <string name="vibrate_on_ring_title">Vibrate when ringing</string>
+
+    <!-- Setting option name to enable or disable vibration after connected -->
+    <string name="vibrate_after_connected_title">Vibrating after connected</string>
+    <string name="vibrate_after_connected_summary">Vibrate when answers</string>
 
     <!-- Setting option name to enable or disable DTMF tone sound
          [CHAR LIMIT=40] -->
@@ -1863,6 +1882,10 @@
     <string name="set_sub_deactivate_success">Deactivate success</string>
     <!-- Set Subscription screen: Subscription activate failed -->
     <string name="set_sub_activate_failed">Activate failed</string>
+    <!-- Set Subscription screen: Subscription Global activate failed -->
+    <string name="set_sub_global_activate_failed">Activate global failed</string>
+    <!-- Set Subscription screen: Subscription Global deactivate failed -->
+    <string name="set_sub_global_deactivate_failed">Deactivate global failed</string>
     <!-- Set Subscription screen: Subscription deactivate failed -->
     <string name="set_sub_deactivate_failed">Deactivate failed</string>
     <!-- Set Subscription screen: Subscription activate not supported -->
@@ -1881,6 +1904,20 @@
     <string name="set_sub_not_supported_phone_in_call">Activate or Deactivate subscription is not allowed while phone in call.</string>
     <string name="menu_call_record">Call record</string>
     <string name="menu_show_record">Show recorder</string>
+    <string name="emergency_call_list_title">Emergency Call List</string>
+    <string name="emergency_call">Call</string>
+    <string name="new_emergency_number">New Emergency Number</string>
+    <string name="delete_emergency_number">Delete Emergency Number</string>
+    <string name="emergency_call_number">Emergency Call Number</string>
+    <string name="emergency_number_exist">Emergency Number has existed !</string>
+    <string name="emergency_number_save_error">Emergency Number is too long !</string>
+
+    <!-- IP call related strings -->
+    <string name="ipcall">IP call setting</string>
+    <string name="ipcall_sub_title">IP call setting</string>
+    <string name="ipcall_sub_summery">Edit the IP prefix for IP call</string>
+    <string name="ipcall_dialog_title">IP call setting</string>
+    <string name="ipcall_dialog_edit_hint">Please input the IP prefix</string>
 
     <!-- Sim contacts management -->
     <string name="ContactScreen"> Add/Edit SIM Contact</string>
@@ -1905,4 +1942,21 @@
     <string name="exportAllcontatsSuccess">Succesfully exported all contacts to SIM </string>
     <string name="exportAllcontatsFailed"> Failed to export all contacts to SIM !!!</string>
     <string name="cursorError"> Cursor is not having proper data !!! </string>
+    <string name="invalid_username_or_hostname">Invalid username or host parameters</string>
+    <string name="volume_boost_notify_enabled">"Volume boost ON."</string>
+    <string name="volume_boost_notify_disabled">"Volume boost OFF."</string>
+    <string name="speed_dial_setting">Speed dial settings</string>
+    <string name="preferred_duration_title">Display duration</string>
+    <string name="duration_enable_summary">Display duration is ON</string>
+    <string name="duration_disable_summary">Display duration is OFF</string>
+    <!-- The strings used for call duration dialog -->
+    <string name="title_dialog_duration">Duration</string>
+    <string name="duration_format">
+        <xliff:g id="minutes" example="42">%s</xliff:g> mins
+        <xliff:g id="seconds" example="28">%s</xliff:g> secs
+    </string>
+    <string name="network_forbidden">(Forbidden)</string>
+
+    <string name="prefix_of_label">(</string>
+    <string name="suffix_of_label">)</string>
 </resources>

@@ -21,10 +21,13 @@ package com.android.phone;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,8 +37,13 @@ import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.provider.Settings.SettingNotFoundException;
+import android.provider.Settings;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -73,6 +81,8 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private static final String BUTTON_DATA_ENABLED_KEY = "button_data_enabled_key";
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
+    private static final String BUTTON_MANAGE_SUB_KEY = "button_settings_manage_sub";
+    private static final String BUTTON_CDMA_LTE_DATA_SERVICE_KEY = "cdma_lte_data_service_key";
 
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
@@ -85,6 +95,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private ListPreference mButtonPreferredNetworkMode;
     private CheckBoxPreference mButtonDataRoam;
     private CheckBoxPreference mButtonDataEnabled;
+    private Preference mLteDataServicePref;
 
     private static final String iface = "rmnet0"; //TODO: this will go away
 
@@ -92,6 +103,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private MyHandler mHandler;
     private boolean mOkClicked;
     private int mSubscription;
+    private BroadcastReceiver mReceiver;
 
     //GsmUmts options and Cdma options
     GsmUmtsOptions mGsmUmtsOptions;
@@ -175,6 +187,24 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             int settingsNetworkMode = getPreferredNetworkMode();
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
             return true;
+        } else if (preference == mLteDataServicePref) {
+            String tmpl = android.provider.Settings.Global.getString(getContentResolver(),
+                    android.provider.Settings.Global.SETUP_PREPAID_DATA_SERVICE_URL);
+            if (!TextUtils.isEmpty(tmpl)) {
+                MSimTelephonyManager tm = (MSimTelephonyManager) getSystemService(
+                        Context.MSIM_TELEPHONY_SERVICE);
+                String imsi = tm.getSubscriberId(mSubscription);
+                if (imsi == null) {
+                    imsi = "";
+                }
+                final String url = TextUtils.isEmpty(tmpl) ? null
+                        : TextUtils.expandTemplate(tmpl, imsi).toString();
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                startActivity(intent);
+            } else {
+                android.util.Log.e(LOG_TAG, "Missing SETUP_PREPAID_DATA_SERVICE_URL");
+            }
+            return true;
         } else {
             // if the button is anything but the simple toggle preference,
             // we'll need to disable all preferences to reject all click
@@ -182,6 +212,16 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             preferenceScreen.setEnabled(false);
             // Let the intents be launched by the Preference manager
             return false;
+        }
+    }
+
+    /**
+     * Receiver for intent broadcasts the Phone app cares about.
+     */
+    protected class PhoneAppBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            setScreenState();
         }
     }
 
@@ -197,11 +237,24 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mPhone = app.getPhone(mSubscription);
         mHandler = new MyHandler();
 
+        //Register for intent broadcasts
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+
+        mReceiver = new PhoneAppBroadcastReceiver();
+        registerReceiver(mReceiver, intentFilter);
+
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
 
+        PreferenceCategory pcSettingsLabel = new PreferenceCategory(this);
+        pcSettingsLabel.setTitle(R.string.settings_label);
+        prefSet.addPreference(pcSettingsLabel);
+
         mButtonDataEnabled = (CheckBoxPreference) prefSet.findPreference(BUTTON_DATA_ENABLED_KEY);
-        mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
+        //Move data enable button to setting root screen
+        prefSet.removePreference(mButtonDataEnabled);
+
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
 
@@ -242,15 +295,35 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
             // android.R.id.home will be triggered in onOptionsItemSelected()
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
+        //add preference category
+        PreferenceCategory pcDataSettings = new PreferenceCategory(this);
+        pcDataSettings.setTitle(R.string.title_data_settings);
+        prefSet.addPreference(pcDataSettings);
+
+        this.addPreferencesFromResource(R.xml.msim_network_setting);
+        //remove manage sub button
+        prefSet.removePreference(prefSet.findPreference(BUTTON_MANAGE_SUB_KEY));
+
+        mButtonDataRoam = (CheckBoxPreference) prefSet.findPreference(BUTTON_ROAMING_KEY);
+        mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
+
+        boolean isSimLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
+
+        final boolean missingDataServiceUrl = TextUtils.isEmpty(
+                android.provider.Settings.Global.getString(getContentResolver(),
+                android.provider.Settings.Global.SETUP_PREPAID_DATA_SERVICE_URL));
+        if (!isSimLteOnCdma || missingDataServiceUrl) {
+            prefSet.removePreference(mLteDataServicePref);
+        } else {
+            android.util.Log.d(LOG_TAG, "keep ltePref");
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        // upon resumption from the sub-activity, make sure we re-enable the
-        // preferences.
-        getPreferenceScreen().setEnabled(true);
+        setScreenState();
 
         // Set UI state in onResume because a user could go home, launch some
         // app to change this setting's backend, and re-launch this settings app
@@ -263,6 +336,12 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
         if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
+
+    }
+
+    private void setScreenState() {
+        int simState = MSimTelephonyManager.getDefault().getSimState(mSubscription);
+        getPreferenceScreen().setEnabled(simState == TelephonyManager.SIM_STATE_READY);
     }
 
     @Override

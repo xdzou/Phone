@@ -47,6 +47,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
+import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.MediaStore;
@@ -56,7 +57,9 @@ import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.ListAdapter;
 
 import com.android.internal.telephony.CallForwardInfo;
@@ -164,7 +167,9 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     /* package */ static final String BUTTON_VOICEMAIL_NOTIFICATION_RINGTONE_KEY =
             "button_voicemail_notification_ringtone_key";
     private static final String BUTTON_FDN_KEY   = "button_fdn_key";
+    private static final String BUTTON_IPPREFIX_KEY = "button_ipprefix_key";
     private static final String BUTTON_RESPOND_VIA_SMS_KEY   = "button_respond_via_sms_key";
+    private static final String BUTTON_VIBRATE_CONNECTED_KEY = "button_vibrate_after_connected";
 
     private static final String BUTTON_RINGTONE_KEY    = "button_ringtone_key";
     private static final String BUTTON_VIBRATE_ON_RING = "button_vibrate_on_ring";
@@ -179,6 +184,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     private static final String VM_NUMBERS_SHARED_PREFERENCES_NAME = "vm_numbers";
 
     private Intent mContactListIntent;
+
+    private int[] mRingtones = {
+            RingtoneManager.TYPE_RINGTONE, RingtoneManager.TYPE_RINGTONE_2
+    };
 
     /** Event for Async voicemail change call */
     private static final int EVENT_VOICEMAIL_CHANGED        = 500;
@@ -219,6 +228,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
 
     private PreferenceScreen mSubscriptionPrefFDN;
     private PreferenceScreen mSubscriptionPrefGSM;
+    private PreferenceScreen mSubscriptionIPPrefix;
     private PreferenceScreen mSubscriptionPrefCDMA;
     private PreferenceScreen mSubscriptionPrefEXPAND;
     private PreferenceScreen mSubscriptionPrefMOREEXPAND;
@@ -237,11 +247,12 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         }
     };
 
-    private Preference mRingtonePreference;
+    private DefaultRingtonePreference mRingtonePreference;
     private CheckBoxPreference mVibrateWhenRinging;
     private ListPreference mVoicemailProviders;
     private PreferenceScreen mVoicemailSettings;
     private ListPreference mVoicemailNotificationVibrateWhen;
+    private CheckBoxPreference mVibrateAfterConnected;
 
     private int mSubscription = 0;
 
@@ -446,7 +457,37 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
     // Click listener for all toggle events
     @Override
     public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
-        if (preference == mSubMenuVoicemailSettings) {
+        if (preference == mSubscriptionIPPrefix) {
+            View v = getLayoutInflater().inflate(R.layout.ip_prefix, null);
+            final EditText edit = (EditText) v.findViewById(R.id.ip_prefix_dialog_edit);
+            String ip_prefix = Settings.System.getString(getContentResolver(),
+                    Settings.System.IPCALL_PREFIX[mSubscription]);
+            edit.setText(ip_prefix);
+
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.ipcall_dialog_title)
+                    .setIcon(android.R.drawable.ic_dialog_info)
+                    .setView(v)
+                    .setPositiveButton(android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    String ip_prefix = edit.getText().toString();
+                                    Settings.System.putString(getContentResolver(),
+                                            Settings.System.IPCALL_PREFIX[mSubscription],
+                                            ip_prefix);
+                                    if (TextUtils.isEmpty(ip_prefix)) {
+                                        mSubscriptionIPPrefix.setSummary(
+                                                R.string.ipcall_sub_summery);
+                                    } else {
+                                        mSubscriptionIPPrefix.setSummary(edit.getText());
+                                    }
+                                    onResume();
+                                }
+                            })
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show();
+            return true;
+        } else if (preference == mSubMenuVoicemailSettings) {
             return true;
         } else if (preference == mVoicemailSettings) {
             if (DBG) log("onPreferenceTreeClick: Voicemail Settings Preference is clicked.");
@@ -495,6 +536,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             boolean doVibrate = (Boolean) objValue;
             Settings.System.putInt(mPhone.getContext().getContentResolver(),
                     Settings.System.VIBRATE_WHEN_RINGING, doVibrate ? 1 : 0);
+        } else if (preference == mVibrateAfterConnected) {
+            boolean doVibrate = (Boolean) objValue;
+            PhoneGlobals.getInstance().setVibrateAfterConnected(mSubscription,
+                    doVibrate ? Constants.VIBRATE_ON : Constants.VIBRATE_OFF);
         } else if (preference == mVoicemailProviders) {
             final String newProviderKey = (String) objValue;
             if (DBG) {
@@ -1442,6 +1487,16 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         mSubscription = getIntent().getIntExtra(SUBSCRIPTION_KEY, 0);
 
         mSubscriptionPrefFDN  = (PreferenceScreen) findPreference(BUTTON_FDN_KEY);
+        mSubscriptionIPPrefix = (PreferenceScreen) findPreference(BUTTON_IPPREFIX_KEY);
+        if (mSubscriptionIPPrefix != null) {
+            String ip_prefix = Settings.System.getString(getContentResolver(),
+                    Settings.System.IPCALL_PREFIX[mSubscription]);
+            if (TextUtils.isEmpty(ip_prefix)) {
+                mSubscriptionIPPrefix.setSummary(R.string.ipcall_sub_summery);
+            } else {
+                mSubscriptionIPPrefix.setSummary(ip_prefix);
+            }
+        }
         mSubscriptionPrefGSM  = (PreferenceScreen) findPreference(BUTTON_GSM_UMTS_OPTIONS);
         mSubscriptionPrefCDMA = (PreferenceScreen) findPreference(BUTTON_CDMA_OPTIONS);
         mSubscriptionPrefFDN.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
@@ -1462,8 +1517,11 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             mSubMenuVoicemailSettings.setDialogTitle(R.string.voicemail_settings_number_label);
         }
 
-        mRingtonePreference = findPreference(BUTTON_RINGTONE_KEY);
+        mRingtonePreference = (DefaultRingtonePreference) findPreference(BUTTON_RINGTONE_KEY);
+        // Set the type whose default sound should be set.
+        mRingtonePreference.setRingtoneType(mRingtones[mSubscription]);
         mVibrateWhenRinging = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_ON_RING);
+        mVibrateAfterConnected = (CheckBoxPreference) findPreference(BUTTON_VIBRATE_CONNECTED_KEY);
         mVoicemailProviders = (ListPreference) findPreference(BUTTON_VOICEMAIL_PROVIDER_KEY);
         if (mVoicemailProviders != null) {
             mVoicemailProviders.setOnPreferenceChangeListener(this);
@@ -1483,6 +1541,10 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
                 prefSet.removePreference(mVibrateWhenRinging);
                 mVibrateWhenRinging = null;
             }
+        }
+
+        if (mVibrateAfterConnected != null) {
+            mVibrateAfterConnected.setOnPreferenceChangeListener(this);
         }
 
         if (!getResources().getBoolean(R.bool.world_phone)) {
@@ -1544,7 +1606,7 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
             @Override
             public void run() {
                 if (mRingtonePreference != null) {
-                    updateRingtoneName(RingtoneManager.TYPE_RINGTONE, mRingtonePreference,
+                    updateRingtoneName(mRingtones[mSubscription], mRingtonePreference,
                             MSG_UPDATE_RINGTONE_SUMMARY);
                 }
             }
@@ -1603,6 +1665,13 @@ public class MSimCallFeaturesSubSetting extends PreferenceActivity
         if (mVibrateWhenRinging != null) {
             mVibrateWhenRinging.setChecked(getVibrateWhenRinging(this));
         }
+
+        if (mVibrateAfterConnected != null) {
+            boolean checked = (PhoneGlobals.getInstance().getVibrateAfterConnected(mSubscription)
+                    == Constants.VIBRATE_ON);
+            mVibrateAfterConnected.setChecked(checked);
+        }
+
         lookupRingtoneName();
     }
 

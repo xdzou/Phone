@@ -73,6 +73,22 @@ interface IImsService {
     void hangupUri(int connectionId, String userUri, String confUri);
 
     /**
+     * Hangup for rejecting incoming call with a reason
+     * This api will be used for following two scenarios -
+     * - Reject incoming call
+     * - While on active call, receive incoming call. Reject this
+     *   incoming call.
+     * connectionId - call id for the call
+     * userUri - dial string or uri
+     * confUri - uri associated with conference/multiparty call
+     * mpty - true for conference/multiparty call
+     * failCause - reason for hangup. Refer to CallFailCause.java for details
+     * errorInfo - extra information associated with hangup
+     */
+    void hangupWithReason(int connectionId, String userUri, String confUri,
+            boolean mpty, in int failCause, in String errorInfo);
+
+    /**
      * Get the Call Details extras for the Call ID
      * @param callId - ID of the Call
      */
@@ -94,5 +110,22 @@ interface IImsService {
      * Get the Service State for SMS service
      */
     boolean isVTModifyAllowed();
+
+    /**
+     * Returns true if the current phone supports the ability to add participant
+     *
+     */
+    boolean isAddParticipantAllowed();
+
+    /**
+     * Api for adding participant
+     * dialString - can be either a number or single or multiple uri
+     * clir - will be default value. This is for future usage
+     * callType - will be UNKNOWN. But in ImsPhone, this will take value of fg call.
+     *            This is for future usage, in case call type should be passed through UI
+     * String[] - can be made Parcelable incase its being used across process boundaries,
+     *            which currently is not the case.
+     */
+    void addParticipant(String dialString, int clir, int callType, in String[] extra);
 }
 

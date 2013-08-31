@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -66,6 +67,7 @@ import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.cdma.CdmaConnection;
 import com.android.internal.telephony.sip.SipPhone;
 import com.google.android.collect.Maps;
+import com.android.internal.util.Objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,6 +184,25 @@ public class PhoneUtils {
                         cn = cnlist.next();
                         if (!fgConnections.contains(cn) && !bgConnections.contains(cn)) {
                             if (DBG) log("connection '" + cn + "' not accounted for, removing.");
+                            for (Connection fgcn : fgConnections) {
+                                if(Objects.equal(cn.getAddress(), fgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating fg conn '"+fgcn +"' wth mute value: "+bMute+
+                                                                 " address: "+fgcn.getAddress());
+                                   sConnectionMuteTable.put(fgcn, bMute);
+                                   break;
+                                }
+                            }
+
+                            for (Connection bgcn : bgConnections) {
+                                if(Objects.equal(cn.getAddress(), bgcn.getAddress())) {
+                                   Boolean bMute = sConnectionMuteTable.get(cn);
+                                   log("updating bg conn '"+bgcn+"' wth mute value: "+bMute+
+                                                                 " address: "+bgcn.getAddress());
+                                   sConnectionMuteTable.put(bgcn, bMute);
+                                   break;
+                                }
+                            }
                             cnlist.remove();
                         }
                     }
@@ -642,6 +663,9 @@ public class PhoneUtils {
         if (DBG) {
             log("placeCall '" + number + "' GW:'" + gatewayUri + "'" + " CallType:" + callType);
         }
+        // The phone on whilch dial request is initiated set it as active subscription
+        setActiveSubscription(phone.getSubscription());
+
         final PhoneGlobals app = PhoneGlobals.getInstance();
 
         boolean useGateway = false;
@@ -674,10 +698,13 @@ public class PhoneUtils {
 
         // Remember if the phone state was in IDLE state before this call.
         // After calling CallManager#dial(), getState() will return different state.
-        boolean initiallyIdle = false;
+        boolean initiallyIdle = true;
         if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
             for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
-                initiallyIdle = initiallyIdle || (app.mCM.getState(i) == PhoneConstants.State.IDLE);
+                if (app.mCM.getState(i) != PhoneConstants.State.IDLE) {
+                    initiallyIdle = false;
+                    break;
+                }
             }
         } else {
             initiallyIdle = app.mCM.getState() == PhoneConstants.State.IDLE;
@@ -912,6 +939,7 @@ public class PhoneUtils {
                 // Set the Phone Call State to conference
                 app.cdmaPhoneCallState.setCurrentCallState(
                         CdmaPhoneCallState.PhoneCallState.CONF_CALL);
+                app.cdmaPhoneCallState.setConferenceCallMergedState(true);
 
                 // Send flash cmd
                 // TODO: Need to change the call from switchHoldingAndActive to
@@ -2233,8 +2261,9 @@ public class PhoneUtils {
             // CDMA: "Swap" is enabled only when the phone reaches a *generic*.
             // state by either accepting a Call Waiting or by merging two calls
             PhoneGlobals app = PhoneGlobals.getInstance();
-            return (app.cdmaPhoneCallState.getCurrentCallState()
-                    == CdmaPhoneCallState.PhoneCallState.CONF_CALL);
+            return ((app.cdmaPhoneCallState.getCurrentCallState()
+                    == CdmaPhoneCallState.PhoneCallState.CONF_CALL)
+                    && !app.cdmaPhoneCallState.getConferenceCallMergedState());
         } else if ((phoneType == PhoneConstants.PHONE_TYPE_GSM)
                 || (phoneType == PhoneConstants.PHONE_TYPE_SIP)
                 || (phoneType == PhoneConstants.PHONE_TYPE_IMS)) {
@@ -2704,7 +2733,9 @@ public class PhoneUtils {
         PhoneGlobals app = PhoneGlobals.getInstance();
         sVoipSupported = SipManager.isVoipSupported(app)
                 && app.getResources().getBoolean(com.android.internal.R.bool.config_built_in_sip_phone)
-                && app.getResources().getBoolean(com.android.internal.R.bool.config_voice_capable);
+                && app.getResources().getBoolean(com.android.internal.R.bool.config_voice_capable)
+                // need hide Voip for CTA test
+                && !SystemProperties.getBoolean("persist.env.phone.hidevoip", false);
     }
 
     /**
@@ -2902,6 +2933,13 @@ public class PhoneUtils {
     }
 
     /**
+     * Returns true if Android supports Csvt calls
+     */
+    public static boolean isCallOnCsvtEnabled() {
+        return CallManager.isCallOnCsvtEnabled();
+    }
+
+    /**
      * If the intent is not  already the IMS intent, conert the intent to the
      * IMS intent
      */
@@ -3044,7 +3082,22 @@ public class PhoneUtils {
      * @param subscription the sub id which needs to be active one.
      */
     public static void setActiveSubscription(int subscription) {
-        PhoneGlobals.getInstance().mCM.setActiveSubscription(subscription);
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        int activeSub = getActiveSubscription();
+
+        if (activeSub != subscription) {
+            if ((cm.getState(subscription) == PhoneConstants.State.OFFHOOK) &&
+                    (cm.getState(activeSub) == PhoneConstants.State.OFFHOOK)) {
+                // If there is a change in active subscription while both the
+                // subscriptions are in active state, need to siwtch the
+                // playing of LCH/SCH tone to new LCH subscription.
+                final MSimCallNotifier notifier =
+                        (MSimCallNotifier)PhoneGlobals.getInstance().notifier;
+                notifier.manageMSimInCallTones(true);
+            }
+
+            cm.setActiveSubscription(subscription);
+        }
     }
 
     /**
@@ -3061,20 +3114,7 @@ public class PhoneUtils {
     *  if yes it returns true.
      */
     public static boolean isAnyOtherSubActive(int subscription) {
-        boolean state = false;
-        int count = MSimTelephonyManager.getDefault().getPhoneCount();
-        CallManager cm = MSimPhoneGlobals.getInstance().mCM;
-
-        Log.d(LOG_TAG, "is other sub active = " + subscription + count);
-        for (int i = 0; i < count; i++) {
-            Log.d(LOG_TAG, "Count ** " + i);
-            if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
-                Log.d(LOG_TAG, "got other active sub  = " + i );
-                state = true;
-                break;
-            }
-        }
-        return state;
+        return (getOtherActiveSub(subscription) != -1) ? true : false;
     }
 
     /**
@@ -3088,21 +3128,94 @@ public class PhoneUtils {
         int count = MSimTelephonyManager.getDefault().getPhoneCount();
         CallManager cm = MSimPhoneGlobals.getInstance().mCM;
 
-        Log.d(LOG_TAG, "in switch to other active sub = " + subscription + count);
+        Log.d(LOG_TAG, "switchToOtherActiveSub: sub = " + subscription +  " count = "+ count);
         for (int i = 0; i < count; i++) {
-            Log.d(LOG_TAG, "Count  ******  " + i);
             if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
                 setActiveSubscription(i);
-                switchToLocalHold(i, true);
-                Log.d(LOG_TAG, "Switchin to other active sub  = " + i );
+                // Since active subscription got changed, call setAudioMode
+                // which informs LCH state to RIL and updates audio state of subs.
+                // This required to update the call audio states when switch sub
+                // triggered from UI.
+                cm.setAudioMode();
+                Log.d(LOG_TAG, "Switching to other active sub  = " + i );
                 break;
             }
         }
+    }
+
+    /**
+     * Check whether any other sub is in active state other than
+     * provided subscription, if yes return the other active sub.
+     * @return subscription which is active, if no other sub is in
+     * active state return -1.
+     */
+    public static int getOtherActiveSub(int subscription) {
+        int otherSub = -1;
+        int count = MSimTelephonyManager.getDefault().getPhoneCount();
+        CallManager cm = MSimPhoneGlobals.getInstance().mCM;
+
+        if (DBG) Log.d(LOG_TAG, "getOtherActiveSub: sub = " + subscription + " count = " + count);
+        for (int i = 0; i < count; i++) {
+            if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
+                Log.d(LOG_TAG, "getOtherActiveSub: active sub  = " + i );
+                otherSub = i;
+                break;
+            }
+        }
+        return otherSub;
+    }
+
+    public static boolean isCsvtCallActive() {
+        boolean isActive = false;
+
+        try {
+            isActive =  PhoneGlobals.mCsvtService != null &&
+                      ! PhoneGlobals.mCsvtService.isIdle();
+        } catch(RemoteException e) {
+            Log.d(LOG_TAG, "Failed to retrieve Csvt call state. " + e);
+        }
+        return isActive;
     }
 
     // This method is called when user does which SUB from UI.
     public static void switchToLocalHold(int subscription, boolean switchTo) {
         Log.d(LOG_TAG, "Switch to local hold  = " );
         MSimPhoneGlobals.getInstance().mCM.switchToLocalHold(subscription, switchTo);
+    }
+
+    /**
+     * @return the user preferred sim icon.
+     */
+    public static Drawable getMultiSimIcon(Context context, int subscription) {
+        if (context == null) {
+            // If the context is null, return null as no resource found.
+            return null;
+        }
+
+        TypedArray icons = context.getResources().obtainTypedArray(
+                com.android.internal.R.array.sim_icons);
+        String simIconIndex = Settings.System.getString(context.getContentResolver(),
+                Settings.System.PREFERRED_SIM_ICON_INDEX);
+        if (TextUtils.isEmpty(simIconIndex)) {
+            return icons.getDrawable(subscription);
+        } else {
+            String[] indexs = simIconIndex.split(",");
+            if (subscription >= indexs.length) {
+                return null;
+            }
+            return icons.getDrawable(Integer.parseInt(indexs[subscription]));
+        }
+    }
+
+    public static boolean shouldShowAddParticipant() {
+        final PhoneGlobals app = PhoneGlobals.getInstance();
+        boolean value = false;
+        try {
+            value = ((isCallOnImsEnabled()) && (app.mImsService != null) &&
+                    (app.mImsService.isAddParticipantAllowed()));
+        } catch (RemoteException ex) {
+            Log.e(LOG_TAG, "Ims Service isAddParticipantAllowed exception", ex);
+        }
+        return value;
     }
 }

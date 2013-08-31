@@ -434,6 +434,7 @@ public class NetworkSetting extends PreferenceActivity
                 for (OperatorInfo ni : result) {
                     Preference carrier = new Preference(this, null);
                     carrier.setTitle(getNetworkTitle(ni));
+                    carrier.setEnabled(ni.getState() != OperatorInfo.State.FORBIDDEN);
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
@@ -455,15 +456,17 @@ public class NetworkSetting extends PreferenceActivity
      * @return Long Name if not null/empty, otherwise Short Name if not null/empty,
      * else MCCMNC string.
      */
-
     private String getNetworkTitle(OperatorInfo ni) {
+        String title = ni.getOperatorNumeric();
         if (!TextUtils.isEmpty(ni.getOperatorAlphaLong())) {
-            return ni.getOperatorAlphaLong();
+            title = ni.getOperatorAlphaLong();
         } else if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
-            return ni.getOperatorAlphaShort();
-        } else {
-            return ni.getOperatorNumeric();
+            title = ni.getOperatorAlphaShort();
         }
+        if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
+            title += getString(R.string.network_forbidden);
+        }
+        return title;
     }
 
     private void clearList() {

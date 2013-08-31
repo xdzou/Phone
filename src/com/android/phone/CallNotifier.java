@@ -39,6 +39,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
@@ -46,6 +47,7 @@ import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.SystemVibrator;
 import android.os.Vibrator;
@@ -133,7 +135,7 @@ public class CallNotifier extends Handler
     private static final int PHONE_NEW_RINGING_CONNECTION = 2;
     private static final int PHONE_DISCONNECT = 3;
     private static final int PHONE_UNKNOWN_CONNECTION_APPEARED = 4;
-    private static final int PHONE_INCOMING_RING = 5;
+    protected static final int PHONE_INCOMING_RING = 5;
     private static final int PHONE_STATE_DISPLAYINFO = 6;
     private static final int PHONE_STATE_SIGNALINFO = 7;
     private static final int PHONE_CDMA_CALL_WAITING = 8;
@@ -158,12 +160,20 @@ public class CallNotifier extends Handler
     private static final int EMERGENCY_TONE_ALERT = 1;
     private static final int EMERGENCY_TONE_VIBRATE = 2;
 
+    // Vibrate after connected related defines:
+    protected Call.State mPreviousCallState = Call.State.IDLE;
+
+    // Show call duration related defines:
+    protected static final int SHOW_CALL_DURATION_OFF = 0;
+    protected static final int SHOW_CALL_DURATION_ON = 1;
+    protected PhoneConstants.State mLastPhoneState = PhoneConstants.State.IDLE;
+
     protected PhoneGlobals mApplication;
     protected CallManager mCM;
     protected Ringer mRinger;
     protected BluetoothHeadset mBluetoothHeadset;
     protected CallLogger mCallLogger;
-    private boolean mSilentRingerRequested;
+    protected boolean mSilentRingerRequested;
 
     // ToneGenerator instance for playing SignalInfo tones
     private ToneGenerator mSignalInfoToneGenerator;
@@ -593,7 +603,7 @@ public class CallNotifier extends Handler
         Phone phone = ringing.getPhone();
 
         // Check for a few cases where we totally ignore incoming calls.
-        if (ignoreAllIncomingCalls(phone)) {
+        if (ignoreAllIncomingCalls(phone)||PhoneGlobals.getInstance().isCsvtActive()) {
             // Immediately reject the call, without even indicating to the user
             // that an incoming call occurred.  (This will generally send the
             // caller straight to voicemail, just as if we *had* shown the
@@ -770,9 +780,10 @@ public class CallNotifier extends Handler
             }
         }
         if (shouldStartQuery) {
-            // Reset the ringtone to the default first.
-            mRinger.setCustomRingtoneUri(Settings.System.DEFAULT_RINGTONE_URI);
-
+            Phone phone = c.getCall().getPhone();
+            mRinger.setCustomRingtoneUri(phone.getSubscription() == 0 ?
+                                        Settings.System.DEFAULT_RINGTONE_URI
+                                        : Settings.System.DEFAULT_RINGTONE_URI_2);
             // query the callerinfo to try to get the ringer.
             PhoneUtils.CallerInfoToken cit = PhoneUtils.startGetCallerInfo(
                     mApplication, c, this, this);
@@ -935,6 +946,7 @@ public class CallNotifier extends Handler
     protected void onPhoneStateChanged(AsyncResult r) {
         PhoneConstants.State state = mCM.getState();
         if (VDBG) log("onPhoneStateChanged: state = " + state);
+        mLastPhoneState = state;
 
         // Turn status bar notifications on or off depending upon the state
         // of the phone.  Notification Alerts (audible or vibrating) should
@@ -956,6 +968,10 @@ public class CallNotifier extends Handler
             }
             mPreviousCdmaCallState = fgPhone.getForegroundCall().getState();
         }
+
+        int vibrateSetting = PhoneGlobals.getInstance().getVibrateAfterConnected(0);
+        vibrateAfterCallConnected(fgPhone, vibrateSetting);
+        mPreviousCallState = fgPhone.getForegroundCall().getState();
 
         // Have the PhoneApp recompute its mShowBluetoothIndication
         // flag based on the (new) telephony state.
@@ -1057,6 +1073,19 @@ public class CallNotifier extends Handler
                     mInCallRingbackTonePlayer = null;
                 }
             }
+        }
+    }
+
+    protected void vibrateAfterCallConnected(Phone fgPhone, int vibrateSetting) {
+        if ((fgPhone.getForegroundCall().getState() == Call.State.ACTIVE)
+                && ((mPreviousCallState == Call.State.DIALING)
+                || (mPreviousCallState == Call.State.ALERTING))
+                && (vibrateSetting == Constants.VIBRATE_ON)) {
+            Vibrator mSystemVibrator = new SystemVibrator();
+            int nVibratorLength = 100;
+            mSystemVibrator.vibrate(nVibratorLength);
+            SystemClock.sleep(nVibratorLength);
+            mSystemVibrator.cancel();
         }
     }
 
@@ -1218,6 +1247,9 @@ public class CallNotifier extends Handler
             autoretrySetting = android.provider.Settings.Global.getInt(mApplication.
                     getContentResolver(),android.provider.Settings.Global.CALL_AUTO_RETRY, 0);
         }
+
+        // Show the call duration dialog
+        showCallDuration(c);
 
         // Stop any signalInfo tone being played when a call gets ended
         stopSignalInfoTone();
@@ -1413,6 +1445,15 @@ public class CallNotifier extends Handler
         }
     }
 
+    protected void showCallDuration(Connection connection) {
+        int showCallDurationSetting = Settings.System.getInt(mApplication.
+                getContentResolver(), Settings.System.SHOW_CALL_DURATION, SHOW_CALL_DURATION_OFF);
+        if (mLastPhoneState == PhoneConstants.State.OFFHOOK && connection != null
+                && showCallDurationSetting == SHOW_CALL_DURATION_ON) {
+            mApplication.showCallDuration(connection.getDurationMillis());
+        }
+    }
+
     /**
      * Resets the audio mode and speaker state when a call ends.
      */
@@ -1535,6 +1576,10 @@ public class CallNotifier extends Handler
         public static final int TONE_RING_BACK = 12;
         public static final int TONE_UNOBTAINABLE_NUMBER = 13;
 
+        public static final int TONE_LOCAL_CW = 14;
+        public static final int TONE_HOLD_RECALL = 15;
+        public static final int TONE_SUPERVISORY_CH = 16;
+
         // The tone volume relative to other sounds in the stream
         static final int TONE_RELATIVE_VOLUME_EMERGENCY = 100;
         static final int TONE_RELATIVE_VOLUME_HIPRI = 80;
@@ -1647,6 +1692,24 @@ public class CallNotifier extends Handler
                     toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
                     toneLengthMillis = 4000;
                     break;
+                case TONE_LOCAL_CW:
+                    toneType = ToneGenerator.TONE_LOCAL_CW;
+                    toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
+                    // Local call waiting tone is stopped by stopTone() method
+                    toneLengthMillis = Integer.MAX_VALUE - TONE_TIMEOUT_BUFFER;
+                    break;
+                case TONE_HOLD_RECALL:
+                    toneType = ToneGenerator.TONE_HOLD_RECALL;
+                    toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
+                    // Call hold recall tone is stopped by stopTone() method
+                    toneLengthMillis = Integer.MAX_VALUE - TONE_TIMEOUT_BUFFER;
+                    break;
+                case TONE_SUPERVISORY_CH:
+                    toneType = ToneGenerator.TONE_SUPERVISORY_CH;
+                    toneVolume = TONE_RELATIVE_VOLUME_HIPRI;
+                    // Supervisory call held tone is stopped by stopTone() method
+                    toneLengthMillis = Integer.MAX_VALUE - TONE_TIMEOUT_BUFFER;
+                    break;
                 default:
                     throw new IllegalArgumentException("Bad toneId: " + mToneId);
             }
@@ -1662,6 +1725,13 @@ public class CallNotifier extends Handler
                 } else {
                     stream = AudioManager.STREAM_VOICE_CALL;
                 }
+
+                // As supervisory tone played in-band, phoneapp need to
+                // set the stream type as INCALL_MUSIC.
+                if (toneType == ToneGenerator.TONE_SUPERVISORY_CH) {
+                    stream = AudioManager.STREAM_INCALL_MUSIC;
+                }
+
                 toneGenerator = new ToneGenerator(stream, toneVolume);
                 // if (DBG) log("- created toneGenerator: " + toneGenerator);
             } catch (RuntimeException e) {

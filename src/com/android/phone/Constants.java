@@ -143,4 +143,9 @@ public class Constants {
     // Dtmf tone type setting value for CDMA phone
     public static final int DTMF_TONE_TYPE_NORMAL = 0;
     public static final int DTMF_TONE_TYPE_LONG   = 1;
+
+    // Vibrate after connected related constants
+    public static final int VIBRATE_OFF = 0;
+    public static final int VIBRATE_ON = 1;
+    public static final String[] VIBRATE_AFTER_CONNECTED = {"vibrate1", "vibrate2"};
 }

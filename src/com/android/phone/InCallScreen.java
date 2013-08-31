@@ -110,6 +110,10 @@ public class InCallScreen extends Activity
     // TODO: Should be EXTRA_SHOW_DIALPAD for consistency.
     static final String SHOW_DIALPAD_EXTRA = "com.android.phone.ShowDialpad";
 
+    /** Identifier for the "Add Participant" intent extra. */
+    static final String ADD_CALL_MODE_KEY = "add_call_mode";
+    static final String ADD_PARTICIPANT_KEY = "add_participant";
+
     /**
      * Intent extra to specify the package name of the gateway
      * provider.  Used to get the name displayed in the in-call screen
@@ -212,16 +216,19 @@ public class InCallScreen extends Activity
      * eg. from VOLTE to VT-TX, consent is needed so
      * row 0, col 1 is set to 1
      *
+     * User consent is needed for all upgrades and not
+     * needed for downgrades
+     *
      *         VOLTE     VT-TX      VT-RX      VT
-     * VOLTE |   0    |    0   |     1   |     1
-     * VT-TX |   0    |    0   |     0   |     0
-     * VT-RX |   0    |    0   |     0   |     1
+     * VOLTE |   0    |    1   |     1   |     1
+     * VT-TX |   0    |    0   |     1   |     1
+     * VT-RX |   0    |    1   |     0   |     1
      * VT    |   0    |    0   |     0   |     0
      */
 
-    private int[][] mVideoConsentTable = {{0, 0, 1, 1},
-                                          {0, 0, 0, 0},
-                                          {0, 0, 0, 1},
+    private int[][] mVideoConsentTable = {{0, 1, 1, 1},
+                                          {0, 0, 1, 1},
+                                          {0, 1, 0, 1},
                                           {0, 0, 0, 0}};
     protected boolean mRegisteredForPhoneStates;
 
@@ -270,6 +277,7 @@ public class InCallScreen extends Activity
     protected AlertDialog mPausePromptDialog;
     private AlertDialog mExitingECMDialog;
     private AlertDialog mModifyCallPromptDialog;
+    private AlertDialog mCallDurationDialog;
     // NOTE: if you add a new dialog here, be sure to add it to dismissAllDialogs() also.
 
     // ProgressDialog created by showProgressIndication()
@@ -544,7 +552,7 @@ public class InCallScreen extends Activity
         }
         getWindow().setAttributes(lp);
 
-        setPhone(mApp.phone);  // Sets mPhone
+        setPhone(phone);  // Sets mPhone
 
         mCM =  mApp.mCM;
         log("- onCreate: phone state = " + mCM.getState());
@@ -2977,6 +2985,9 @@ public class InCallScreen extends Activity
         boolean newSpeakerState = !PhoneUtils.isSpeakerOn(this);
         log("toggleSpeaker(): newSpeakerState = " + newSpeakerState);
 
+        if(mCallCard !=null)
+            mCallCard.updateVoluemBoostStatus(false);
+
         if (newSpeakerState && isBluetoothAvailable() && isBluetoothAudioConnected()) {
             disconnectBluetoothAudio();
         }
@@ -3102,6 +3113,9 @@ public class InCallScreen extends Activity
         // mode" button might need to change its appearance based on the
         // new audio state.)
         updateInCallTouchUi();
+
+        if(mCallCard != null)
+            mCallCard.updateVoluemBoostStatus(false);
     }
 
     /**
@@ -3193,6 +3207,9 @@ public class InCallScreen extends Activity
                 // Show the Manage Conference panel.
                 setInCallScreenMode(InCallScreenMode.MANAGE_CONFERENCE);
                 requestUpdateScreen();
+                break;
+            case R.id.addParticipant:
+                onAddParticipant();
                 break;
 
             default:
@@ -3573,6 +3590,11 @@ public class InCallScreen extends Activity
             if (DBG) log("- DISMISSING mModifyCallPromptDialog.");
             mModifyCallPromptDialog.dismiss();
             mModifyCallPromptDialog = null;
+        }
+        if (mCallDurationDialog != null) {
+            if (DBG) log("- DISMISSING mCallDurationDialog.");
+            mCallDurationDialog.dismiss();
+            mCallDurationDialog = null;
         }
     }
 
@@ -4349,6 +4371,25 @@ public class InCallScreen extends Activity
         }
     }
 
+    private void onAddParticipant() {
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        // when we request the dialer come up, we also want to inform
+        // it that we're going through the "add participant" option from the
+        // InCallScreen.
+        intent.putExtra(ADD_CALL_MODE_KEY, true);
+        intent.putExtra(ADD_PARTICIPANT_KEY, true);
+        try {
+            mApp.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // This is rather rare but possible.
+            // Note: this method is used even when the phone is encrypted. At that moment
+            // the system may not find any Activity which can accept this Intent.
+            Log.e(LOG_TAG, "Activity for adding calls isn't found.");
+        }
+    }
+
     /**
      * @return true if we're in restricted / emergency dialing only mode.
      */
@@ -4986,9 +5027,7 @@ public class InCallScreen extends Activity
     }
 
     private boolean isUserConsentRequired(int callType, int prevCallType) {
-        boolean isConsentRequired;
-        isConsentRequired = mVideoConsentTable[prevCallType][callType] == 1;
-        return isConsentRequired;
+        return mVideoConsentTable[prevCallType][callType] == 1;
     }
 
     private void log(String msg) {
@@ -5015,5 +5054,54 @@ public class InCallScreen extends Activity
      */
     public boolean isQuickResponseDialogShowing() {
         return mRespondViaSmsManager != null && mRespondViaSmsManager.isShowingPopup();
+    }
+
+    /**
+     * Returns the CallCard object which contains the caller information.
+     */
+    public CallCard getCallCard() {
+        return mCallCard;
+    }
+
+    /**
+     * Show call duration dialog when diconnect
+     */
+    void showCallDurationDialog(long duration) {
+        if (mCallDurationDialog != null) {
+            if (DBG) {
+                log("- DISMISSING mCallDurationDialog.");
+            }
+            // Safe even if it is already dismissed
+            mCallDurationDialog.dismiss();
+            mCallDurationDialog = null;
+        }
+
+        duration = duration / 1000;
+        long minutes = 0;
+        long seconds = 0;
+
+        if (duration >= 60) {
+            minutes = duration / 60;
+            duration -= minutes * 60;
+        }
+        seconds = duration;
+
+        mCallDurationDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.title_dialog_duration)
+                .setMessage(getString(R.string.duration_format, minutes, seconds))
+                .create();
+
+        mCallDurationDialog.show();
+        new Handler().postDelayed(new Runnable() {
+            public void run() {
+                if (mCallDurationDialog != null) {
+                    if (DBG) {
+                        log("- DISMISSING mCallDurationDialog.");
+                    }
+                    mCallDurationDialog.dismiss();
+                    mCallDurationDialog = null;
+                }
+            }
+        }, 1000);
     }
 }
