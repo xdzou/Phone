@@ -663,6 +663,7 @@
     <string name="card_title_forwarded_MTcall">"被转来电"</string>
     <string name="volume_boost_notify_enabled">"开启音效增强"</string>
     <string name="volume_boost_notify_disabled">"关闭音效增强"</string>
+    <string name="volume_boost_notify_unavailable">"有线/蓝牙耳机连接时，音效增强不可用。"</string>
     <string name="speed_dial_setting">快速拨号设置</string>
     <string name="preferred_duration_title">挂机显示通话时长</string>
     <string name="duration_enable_summary">挂机显示通话时长已开启</string>
