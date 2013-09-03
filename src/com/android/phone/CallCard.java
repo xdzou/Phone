@@ -336,8 +336,12 @@ public class CallCard extends LinearLayout
     }
 
     public void updateVoluemBoostStatus(boolean enabled, boolean showToast) {
+        if(null == mVolumeBoost) return;
+
         mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
         if(isVolumeBoostAvalible()) {
+            mVolumeBoost.setEnabled(true);
+
             if(enabled) {
                 mAudioManager.setParameters(VOLUME_BOOST + "=on");
                 mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
@@ -350,6 +354,8 @@ public class CallCard extends LinearLayout
                     showVolumeBoostNotify(false, showToast);
             }
         } else {
+            mVolumeBoost.setEnabled(false);
+
             if (mVolumeBoostEnabled.contains("=on"))
                 mAudioManager.setParameters(VOLUME_BOOST + "=off");
             showVolumeBoostNotify(false, showToast);
@@ -1120,8 +1126,10 @@ public class CallCard extends LinearLayout
                     } else {
                         mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
                     }
+                    mVolumeBoost.setEnabled(true);
                 } else {
                     mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_unavailable);
+                    mVolumeBoost.setEnabled(false);
                 }
                 // We normally don't show a "call state label" at all in
                 // this state (but see below for some special cases).
