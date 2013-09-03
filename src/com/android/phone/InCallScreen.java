@@ -353,6 +353,10 @@ public class InCallScreen extends Activity
                     // headset" or "Handset earpiece" depending on whether the
                     // headset is plugged in or not.
                     mInCallTouchUi.refreshAudioModePopup();  // safe even if the popup's not active
+                    if(msg.arg1 != 0 || !PhoneUtils.isSpeakerOn(InCallScreen.this)) {
+                        if(mCallCard != null)
+                            mCallCard.updateVoluemBoostStatus(false, false);
+                    }
 
                     break;
 
@@ -2985,8 +2989,6 @@ public class InCallScreen extends Activity
         boolean newSpeakerState = !PhoneUtils.isSpeakerOn(this);
         log("toggleSpeaker(): newSpeakerState = " + newSpeakerState);
 
-        if(mCallCard !=null)
-            mCallCard.updateVoluemBoostStatus(false);
 
         if (newSpeakerState && isBluetoothAvailable() && isBluetoothAudioConnected()) {
             disconnectBluetoothAudio();
@@ -2997,6 +2999,8 @@ public class InCallScreen extends Activity
         // button might need to change its appearance based on the new
         // audio state.)
         updateInCallTouchUi();
+        if(mCallCard !=null)
+            mCallCard.updateVoluemBoostStatus(false, false);
     }
 
     /*
@@ -3115,7 +3119,7 @@ public class InCallScreen extends Activity
         updateInCallTouchUi();
 
         if(mCallCard != null)
-            mCallCard.updateVoluemBoostStatus(false);
+            mCallCard.updateVoluemBoostStatus(false, false);
     }
 
     /**

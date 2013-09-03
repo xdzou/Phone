@@ -41,6 +41,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.accessibility.AccessibilityEvent;
@@ -219,6 +220,23 @@ public class CallCard extends LinearLayout
         }
     };
 
+    private OnClickListener mVolumeBoostOnclickListener = new OnClickListener() {
+        @Override
+        public void onClick(View arg0) {
+            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+
+            if(isVolumeBoostAvalible()) {
+                if(mVolumeBoostEnabled.contains("=on")) {
+                    updateVoluemBoostStatus(false, true);
+                } else {
+                    updateVoluemBoostStatus(true, true);
+                }
+            } else {
+                showVolumeBoostNotify(true, true);
+            }
+        }
+    };
+
     public CallCard(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -305,60 +323,67 @@ public class CallCard extends LinearLayout
         mVolumeBoost = (Button) mPrimaryCallInfo.findViewById(R.id.volumeBoost);
         if (mVolumeBoost != null) {
             mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-            mVolumeBoost.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View arg0) {
-                    boolean mHeadsetPlugged = PhoneGlobals.getInstance().isHeadsetPlugged();
-                    boolean mBluetoothHeadsetAudioOn =
-                            PhoneGlobals.getInstance().isBluetoothHeadsetAudioOn();
-
-                    mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-
-                    if(mVolumeBoostEnabled.contains("=on")) {
-                        updateVoluemBoostStatus(false);
-                    } else if(!mHeadsetPlugged && !mBluetoothHeadsetAudioOn) {
-                        updateVoluemBoostStatus(true);
-                    }
-                }
-            });
+            mVolumeBoost.setOnClickListener(mVolumeBoostOnclickListener);
         }
     }
 
-    public void updateVoluemBoostStatus(boolean enabled){
-        if(enabled) {
-            mAudioManager.setParameters(VOLUME_BOOST + "=on");
+    private boolean isVolumeBoostAvalible() {
+        boolean isHeadsetPlugged = PhoneGlobals.getInstance().isHeadsetPlugged();
+        boolean isBluetoothHeadsetAudioOn = PhoneGlobals.getInstance().isBluetoothHeadsetAudioOn();
+        boolean isSpeakerOn = mAudioManager.isSpeakerphoneOn();
 
-            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+        return isSpeakerOn || (!isHeadsetPlugged && !isBluetoothHeadsetAudioOn);
+    }
 
-            if(mVolumeBoostEnabled.contains("=on"))
-                showVolumeBoostNotify(true);
+    public void updateVoluemBoostStatus(boolean enabled, boolean showToast) {
+        mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+        if(isVolumeBoostAvalible()) {
+            if(enabled) {
+                mAudioManager.setParameters(VOLUME_BOOST + "=on");
+                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                if(mVolumeBoostEnabled.contains("=on"))
+                    showVolumeBoostNotify(true, showToast);
+            } else {
+                mAudioManager.setParameters(VOLUME_BOOST + "=off");
+                mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
+                if(mVolumeBoostEnabled.contains("=off"))
+                    showVolumeBoostNotify(false, showToast);
+            }
         } else {
-            mAudioManager.setParameters(VOLUME_BOOST + "=off");
-
-            mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
-
-            if(mVolumeBoostEnabled.contains("=off"))
-                showVolumeBoostNotify(false);
+            if (mVolumeBoostEnabled.contains("=on"))
+                mAudioManager.setParameters(VOLUME_BOOST + "=off");
+            showVolumeBoostNotify(false, showToast);
         }
     }
 
-    private void showVolumeBoostNotify(boolean enabled) {
+    private void showVolumeBoostNotify(boolean enabled, boolean showToast) {
         if(mVolumeBoostNotify != null)
             mVolumeBoostNotify.cancel();
 
-        if(enabled) {
-            mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
-            mVolumeBoostNotify = Toast.makeText(getContext(), R.string.volume_boost_notify_enabled,
-                Toast.LENGTH_SHORT);
+        if(isVolumeBoostAvalible()) {
+            if(enabled) {
+                mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
+                mVolumeBoostNotify = Toast.makeText(getContext(),
+                        R.string.volume_boost_notify_enabled,
+                        Toast.LENGTH_SHORT);
+            } else {
+                mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+                mVolumeBoostNotify = Toast.makeText(getContext(),
+                        R.string.volume_boost_notify_disabled,
+                        Toast.LENGTH_SHORT);
+            }
         } else {
-            mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
-            mVolumeBoostNotify = Toast.makeText(getContext(), R.string.volume_boost_notify_disabled,
-                Toast.LENGTH_SHORT);
+            mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_unavailable);
+            mVolumeBoostNotify = Toast.makeText(getContext(),
+                    R.string.volume_boost_notify_unavailable,
+                    Toast.LENGTH_SHORT);
         }
 
         mVolumeBoostNotify.setGravity(Gravity.TOP, 0, VOLUME_BOOST_POSITION);
 
-        mVolumeBoostNotify.show();
+        if(showToast) {
+            mVolumeBoostNotify.show();
+        }
     }
 
     /**
@@ -1089,10 +1114,14 @@ public class CallCard extends LinearLayout
                 mVolumeBoost.setVisibility(View.VISIBLE);
                 mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
 
-                if(mVolumeBoostEnabled.contains("=on")) {
-                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
+                if(isVolumeBoostAvalible()) {
+                    if(mVolumeBoostEnabled.contains("=on")) {
+                        mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_sel);
+                    } else {
+                        mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+                    }
                 } else {
-                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_nor);
+                    mVolumeBoost.setBackgroundResource(R.drawable.volume_in_boost_unavailable);
                 }
                 // We normally don't show a "call state label" at all in
                 // this state (but see below for some special cases).
