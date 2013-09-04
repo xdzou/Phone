@@ -202,7 +202,7 @@ public class GsmUmtsOptions {
     }
 
     private void updateOperatorSelectionVisibility() {
-        log("updateOperatorSelectionVisibility.");
+        log("updateOperatorSelectionVisibility. mPhone = " + mPhone.getPhoneName());
         Resources res = mPrefActivity.getResources();
         if (mButtonOperatorSelectionExpand == null) {
             android.util.Log.e(LOG_TAG, "mButtonOperatorSelectionExpand is null");
