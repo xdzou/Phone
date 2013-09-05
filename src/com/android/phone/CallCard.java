@@ -2179,8 +2179,12 @@ public class CallCard extends LinearLayout
      * updateState() call sequence.
      */
     public void hideCallCardElements() {
-        mPrimaryCallInfo.setVisibility(View.GONE);
-        mSecondaryCallInfo.setVisibility(View.GONE);
+        if (mPrimaryCallInfo != null) {
+            mPrimaryCallInfo.setVisibility(View.GONE);
+        }
+        if (mSecondaryCallInfo != null) {
+            mSecondaryCallInfo.setVisibility(View.GONE);
+        }
     }
 
     /*
