@@ -1084,7 +1084,10 @@ public class NotificationMgr implements CallerInfoAsyncQuery.OnQueryCompleteList
                 // TODO: there should be a cleaner way of avoiding this
                 // problem (see discussion in bug 3184149.)
                 Call ringingCall = mCM.getFirstActiveRingingCall();
-                if ((ringingCall.getState() == Call.State.WAITING) && !mApp.isShowingCallScreen()) {
+                if (((ringingCall.getState() == Call.State.WAITING)
+                        || ((ringingCall.getState() == Call.State.INCOMING)
+                        && mCM.hasActiveFgCall()))
+                        && !mApp.isShowingCallScreen()) {
                     Log.i(LOG_TAG, "updateInCallNotification: call-waiting! force relaunch...");
                     // Cancel the IN_CALL_NOTIFICATION immediately before
                     // (re)posting it; this seems to force the
