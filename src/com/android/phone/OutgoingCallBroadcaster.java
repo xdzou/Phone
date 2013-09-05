@@ -484,6 +484,7 @@ public class OutgoingCallBroadcaster extends Activity
 
     private void processMSimIntent(Intent intent) {
         String action = intent.getAction();
+        intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
         intent.putExtra(PhoneConstants.IP_CALL, mIPCall);
         String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
         boolean isConferenceUri = intent.getBooleanExtra(EXTRA_DIAL_CONFERENCE_URI, false);

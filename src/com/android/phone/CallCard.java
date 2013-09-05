@@ -336,6 +336,8 @@ public class CallCard extends LinearLayout
     }
 
     public void updateVoluemBoostStatus(boolean enabled, boolean showToast) {
+        if(null == mVolumeBoost) return;
+
         mVolumeBoostEnabled = mAudioManager.getParameters(VOLUME_BOOST);
         if(isVolumeBoostAvalible()) {
             if(enabled) {
