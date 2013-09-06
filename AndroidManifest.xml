@@ -493,7 +493,8 @@
         </activity>
 
         <activity android:name="XDivertSetting"
-                android:label="@string/xdivert_setting">
+                android:label="@string/xdivert_setting"
+                android:configChanges="orientation|screenSize|keyboardHidden">
         </activity>
 
         <activity android:name="DataRoamingReenable" android:label="@string/android:dialog_alert_title"
