@@ -205,14 +205,12 @@ public class MSimNotificationMgr extends NotificationMgr {
                     .setSound(ringtoneUri);
             Notification notification = builder.getNotification();
 
-            String vibrateWhen = prefs.getString(
-                    CallFeaturesSetting.BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_WHEN_KEY, "never");
-            boolean vibrateAlways = vibrateWhen.equals("always");
-            boolean vibrateSilent = vibrateWhen.equals("silent");
-            AudioManager audioManager =
-                    (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-            boolean nowSilent = audioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE;
-            if (vibrateAlways || (vibrateSilent && nowSilent)) {
+            MSimCallFeaturesSubSetting.migrateVoicemailVibrationSettingsIfNeeded(prefs,
+                    phone.getSubscription());
+            final boolean vibrate = prefs.getBoolean(
+                    MSimCallFeaturesSubSetting.BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY
+                            + phone.getSubscription(), false);
+            if (vibrate) {
                 notification.defaults |= Notification.DEFAULT_VIBRATE;
             }
 
@@ -687,7 +685,10 @@ public class MSimNotificationMgr extends NotificationMgr {
                 // TODO: there should be a cleaner way of avoiding this
                 // problem (see discussion in bug 3184149.)
                 Call ringingCall = mCM.getFirstActiveRingingCall(subscription);
-                if ((ringingCall.getState() == Call.State.WAITING) && !mApp.isShowingCallScreen()) {
+                if (((ringingCall.getState() == Call.State.WAITING)
+                        || ((ringingCall.getState() == Call.State.INCOMING)
+                        && hasActiveFgCall()))
+                        && !mApp.isShowingCallScreen()) {
                     Log.i(LOG_TAG, "updateInCallNotification: call-waiting! force relaunch...");
                     // Cancel the IN_CALL_NOTIFICATION immediately before
                     // (re)posting it; this seems to force the
@@ -716,6 +717,15 @@ public class MSimNotificationMgr extends NotificationMgr {
         // speaker state).
         updateSpeakerNotification();
         updateMuteNotification(subscription);
+    }
+
+    private boolean hasActiveFgCall() {
+        for (int i = 0; i < MSimTelephonyManager.getDefault().getPhoneCount(); i++) {
+            if (mCM.hasActiveFgCall(i)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
