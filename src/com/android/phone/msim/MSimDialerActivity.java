@@ -119,7 +119,7 @@ public class MSimDialerActivity extends Activity {
                 (ViewGroup) findViewById(R.id.layout_root));
 
         AlertDialog.Builder builder = new AlertDialog.Builder(MSimDialerActivity.this);
-        builder.setView(layout);
+        builder.setView(layout).setCancelable(false);
         builder.setOnKeyListener(new DialogInterface.OnKeyListener() {
             public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
                 Log.d(TAG, "key code is :" + keyCode);
