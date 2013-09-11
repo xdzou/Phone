@@ -80,6 +80,8 @@ public class CallCard extends LinearLayout
     private static final int TOKEN_DO_NOTHING = 1;
     private static final String VOLUME_BOOST = "volume_boost";
 
+    protected static final boolean sDsdaEnabled = PhoneUtils.isDsdaEnabled();
+
     /**
      * Used with {@link ContactsAsyncHelper#startObtainPhotoAsync(int, Context, Uri,
      * ContactsAsyncHelper.OnImageLoadCompleteListener, Object)}
@@ -126,7 +128,7 @@ public class CallCard extends LinearLayout
 
     // "Call state" widgets
     private TextView mCallStateLabel;
-    private TextView mElapsedTime;
+    protected TextView mElapsedTime;
 
     // Text colors, used for various labels / titles
     private int mTextColorCallTypeSip;
@@ -150,7 +152,7 @@ public class CallCard extends LinearLayout
     private TextView mPrefixOfLabel;
     private TextView mSuffixOfLabel;
     private TextView mCallTypeLabel;
-    private TextView mCityName;
+    protected TextView mCityName;
     // private TextView mSocialStatus;
 
     /**
@@ -161,7 +163,7 @@ public class CallCard extends LinearLayout
 
     // Info about the "secondary" call, which is the "call on hold" when
     // two lines are in use.
-    private TextView mSecondaryCallName;
+    protected TextView mSecondaryCallName;
     private ImageView mSecondaryCallPhoto;
     private View mSecondaryCallPhotoDimEffect;
 
@@ -297,7 +299,7 @@ public class CallCard extends LinearLayout
         mSecondaryCallInfo = (ViewStub) findViewById(R.id.secondary_call_info);
     }
 
-    private void setWidget() {
+    protected void setWidget() {
         // "Caller info" area, including photo / name / phone numbers / etc
         mPhoto = (ImageView) mPrimaryCallInfo.findViewById(R.id.photo);
         mPhotoDimEffect = mPrimaryCallInfo.findViewById(R.id.dim_effect_for_primary_photo);
@@ -569,14 +571,14 @@ public class CallCard extends LinearLayout
      * first, this would behave a bit odd (since the first one still appears as the
      * "last disconnected").
      */
-    private void updateAlreadyDisconnected(CallManager cm) {
+    protected void updateAlreadyDisconnected(CallManager cm) {
         // For the foreground call, we manually set up every component based on previous state.
         mPrimaryCallInfo.setVisibility(View.VISIBLE);
         mSecondaryInfoContainer.setLayoutTransition(null);
         mProviderInfo.setVisibility(View.GONE);
         mCallStateLabel.setVisibility(View.VISIBLE);
         mCallStateLabel.setText(mContext.getString(R.string.card_title_call_ended));
-        mElapsedTime.setVisibility(View.VISIBLE);
+        if (!sDsdaEnabled) mElapsedTime.setVisibility(View.VISIBLE);
         mCallTime.cancelTimer();
 
         // Just hide it.
@@ -1100,7 +1102,7 @@ public class CallCard extends LinearLayout
      * Updates the "call state label" and the elapsed time widget based on the
      * current state of the call.
      */
-    private void updateCallStateWidgets(Call call) {
+    protected void updateCallStateWidgets(Call call) {
         if (DBG) log("updateCallStateWidgets(call " + call + ")...");
         final Call.State state = call.getState();
         final Context context = getContext();
@@ -1266,7 +1268,7 @@ public class CallCard extends LinearLayout
             case ACTIVE:
             case DISCONNECTING:
                 // Show the time with fade-in animation.
-                AnimationUtils.Fade.show(mElapsedTime);
+                if (!sDsdaEnabled) AnimationUtils.Fade.show(mElapsedTime);
                 updateElapsedTimeWidget(call);
                 break;
 
@@ -1275,7 +1277,8 @@ public class CallCard extends LinearLayout
                 // visible, but don't touch it (so we continue to see the
                 // elapsed time of the call that just ended.)
                 // Check visibility to keep possible fade-in animation.
-                if (mElapsedTime.getVisibility() != View.VISIBLE) {
+                if ((mElapsedTime.getVisibility() != View.VISIBLE)
+                        && (!sDsdaEnabled)) {
                     mElapsedTime.setVisibility(View.VISIBLE);
                 }
                 break;
@@ -1321,7 +1324,7 @@ public class CallCard extends LinearLayout
     /**
      * Updates mElapsedTime based on the specified number of seconds.
      */
-    private void updateElapsedTimeWidget(long timeElapsed) {
+    protected void updateElapsedTimeWidget(long timeElapsed) {
         // if (DBG) log("updateElapsedTimeWidget: " + timeElapsed);
         mElapsedTime.setText(DateUtils.formatElapsedTime(timeElapsed));
     }
@@ -1333,7 +1336,7 @@ public class CallCard extends LinearLayout
      * Or, clear out the "on hold" box if the specified call
      * is null or idle.
      */
-    private void displaySecondaryCallStatus(CallManager cm, Call call) {
+    protected void displaySecondaryCallStatus(CallManager cm, Call call) {
         if (DBG) log("displayOnHoldCallStatus(call =" + call + ")...");
 
         if ((call == null) || (PhoneGlobals.getInstance().isOtaCallInActiveState())) {
@@ -1452,7 +1455,7 @@ public class CallCard extends LinearLayout
         }
     }
 
-    private void showSecondaryCallInfo() {
+    protected void showSecondaryCallInfo() {
         // This will call ViewStub#inflate() when needed.
         mSecondaryCallInfo.setVisibility(View.VISIBLE);
         if (mSecondaryCallName == null) {
@@ -1778,7 +1781,7 @@ public class CallCard extends LinearLayout
     /**
      * Updates the info portion of the UI to be generic.  Used for CDMA 3-way calls.
      */
-    private void updateGenericInfoUi() {
+    protected void updateGenericInfoUi() {
         mName.setText(R.string.card_title_in_call);
         mPhoneNumber.setVisibility(View.GONE);
         mLabel.setVisibility(View.GONE);
@@ -1796,7 +1799,7 @@ public class CallCard extends LinearLayout
     /**
      * Updates the info portion of the call card with passed in values.
      */
-    private void updateInfoUi(String displayName, String displayNumber,
+    protected void updateInfoUi(String displayName, String displayNumber,
             String label, String cityName) {
         mName.setText(displayName);
         mName.setVisibility(View.VISIBLE);
@@ -1849,7 +1852,7 @@ public class CallCard extends LinearLayout
      * If the current call has only a single connection, use
      * updateDisplayForPerson() instead.
      */
-    private void updateDisplayForConference(Call call) {
+    protected void updateDisplayForConference(Call call) {
         if (DBG) log("updateDisplayForConference()...");
 
         int phoneType = call.getPhone().getPhoneType();
@@ -2130,7 +2133,7 @@ public class CallCard extends LinearLayout
      * layer might allow each pluggable "provider" to specify a string
      * and/or icon to be displayed here.)
      */
-    private void updateCallTypeLabel(Call call) {
+    protected void updateCallTypeLabel(Call call) {
         int phoneType = (call != null) ? call.getPhone().getPhoneType() :
                 PhoneConstants.PHONE_TYPE_NONE;
         if (phoneType == PhoneConstants.PHONE_TYPE_SIP) {

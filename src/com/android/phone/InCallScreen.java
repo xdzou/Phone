@@ -3,9 +3,6 @@
  * Not a Contribution
  *
  * Copyright (C) 2006 The Android Open Source Project
- * Copyright (c) 2011-2013 The Linux Foundation. All rights reserved.
- *
- * Not a Contribution.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -567,7 +564,10 @@ public class InCallScreen extends Activity
                                     BluetoothProfile.HEADSET);
         }
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        if (!PhoneUtils.isDsdaEnabled()) {
+            requestWindowFeature(Window.FEATURE_NO_TITLE);
+        }
+
 
         // Inflate everything in incall_screen.xml and add it to the screen.
         if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
