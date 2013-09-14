@@ -1688,6 +1688,7 @@ public class CallCard extends LinearLayout
                     if (DBG) log("  ==> valid name, but presentation not allowed!"
                                  + " displayName = " + displayName);
                 } else {
+                    info.updateGeoDescription(mContext, number);
                     displayName = info.name;
                     displayNumber = number;
                     cityName = info.geoDescription;
