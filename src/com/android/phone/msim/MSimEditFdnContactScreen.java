@@ -19,16 +19,26 @@
 
 package com.android.phone;
 
+import java.util.Set;
+
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.telephony.MSimTelephonyManager;
 import android.text.TextUtils;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.android.internal.telephony.IccCardConstants;
+import com.android.internal.telephony.MSimConstants;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.android.internal.telephony.TelephonyIntents;
+
 
 /**
  * Activity to let the user add or edit an FDN contact.
@@ -39,10 +49,53 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
 
     private static int mSubscription = 0;
 
+    private BroadcastReceiver mSimStateChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null
+                    && intent.getAction().equals(
+                            TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
+                String stateExtra = intent
+                        .getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+                // Obtain the subscription info from intent.
+                int sub = intent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY,
+                        MSimConstants.DEFAULT_SUBSCRIPTION);
+                // Check is the intent is for this subscription
+                if (sub != mSubscription) {
+                    return;
+                }
+
+                if (IccCardConstants.INTENT_VALUE_ICC_ABSENT.equals(stateExtra)) {
+                    String absentReason = intent
+                            .getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                    if (!IccCardConstants.INTENT_VALUE_ABSENT_ON_PERM_DISABLED
+                            .equals(absentReason)) {
+                        Toast.makeText(context, R.string.fdn_service_unavailable,
+                                Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter(
+                TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+        registerReceiver(mSimStateChangedReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mSimStateChangedReceiver);
     }
 
     @Override
