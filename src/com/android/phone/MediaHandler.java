@@ -28,6 +28,7 @@
 
 package com.android.phone;
 
+import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.graphics.SurfaceTexture;
 import android.os.AsyncResult;
@@ -36,6 +37,7 @@ import android.os.Message;
 import android.os.Registrant;
 import android.os.RegistrantList;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  * Provides an interface to handle the media part of the video telephony call
@@ -49,6 +51,7 @@ public class MediaHandler extends Handler {
     private static final String TAG = "VideoCall_MediaHandler";
 
     private static SurfaceTexture mSurface;
+    private static Context mContext;
 
     private static boolean mInitCalledFlag = false;
 
@@ -65,6 +68,8 @@ public class MediaHandler extends Handler {
 
     public static final int PARAM_READY_EVT = 1;
     public static final int START_READY_EVT = 2;
+    public static final int PLAYER_START_EVENT = 3;
+    public static final int PLAYER_STOP_EVENT = 4;
     public static final int DISPLAY_MODE_EVT = 5;
 
     protected final RegistrantList mDisplayModeEventRegistrants
@@ -105,6 +110,8 @@ public class MediaHandler extends Handler {
      * Private constructor for MediaHandler
      */
     private MediaHandler() {
+        // Used to display a toast message.
+        mContext = PhoneGlobals.getInstance().getApplicationContext();
     }
 
     public interface MediaEventListener {
@@ -265,10 +272,15 @@ public class MediaHandler extends Handler {
                 // post a message back to the current process.
                 sendEmptyMessage(DISPLAY_MODE_EVT);
                 break;
+            case PLAYER_START_EVENT:
+                sendEmptyMessage(PLAYER_START_EVENT);
+                break;
+            case PLAYER_STOP_EVENT:
+                sendEmptyMessage(PLAYER_STOP_EVENT);
+                break;
             default:
                 Log.e(TAG, "Received unknown event id=" + eventId);
         }
-
     }
 
     private synchronized boolean updatePreviewParams() {
@@ -287,14 +299,28 @@ public class MediaHandler extends Handler {
     }
 
     public void handleMessage(Message msg) {
-        switch(msg.what) {
+        switch (msg.what) {
+            case PLAYER_START_EVENT:
+                displayToastMessage("PLAYER_START");
+                break;
+            case PLAYER_STOP_EVENT:
+                displayToastMessage("PLAYER_STOP");
+                break;
             case DISPLAY_MODE_EVT:
                 mDisplayModeEventRegistrants.notifyRegistrants(
-                        new AsyncResult (null, convertMediaMode(mUIOrientationMode), null));
+                        new AsyncResult(null, convertMediaMode(mUIOrientationMode), null));
                 break;
 
             default:
                 Log.e(TAG, "Received unknown msg id = " + msg.what);
+        }
+    }
+
+    // Displays a toast message.
+    private void displayToastMessage(String msg) {
+        log(msg);
+        if (mContext != null) {
+            Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -345,5 +371,9 @@ public class MediaHandler extends Handler {
                 Log.d(TAG,"Received unknown mode = " + mode);
                 return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
         }
+    }
+
+    private void log(String msg) {
+        Log.d(TAG, msg);
     }
 }
