@@ -60,12 +60,15 @@ import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.google.android.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * Helper class to manage the "Respond via Message" feature for incoming calls.
@@ -127,6 +130,8 @@ public class RespondViaSmsManager {
     private static final String KEY_PREFERRED_PACKAGE = "preferred_package_pref";
     private static final String KEY_INSTANT_TEXT_DEFAULT_COMPONENT = "instant_text_def_component";
 
+    private int mSubscription;
+
     /**
      * RespondViaSmsManager constructor.
      */
@@ -185,9 +190,10 @@ public class RespondViaSmsManager {
         // chooses a response.)
 
         Connection c = ringingCall.getLatestConnection();
+        Phone p = ringingCall.getPhone();
         if (VDBG) log("- connection: " + c);
 
-        if (c == null) {
+        if (c == null || p == null) {
             // Uh oh -- the "ringingCall" doesn't have any connections any more.
             // (In other words, it's no longer ringing.)  This is rare, but can
             // happen if the caller hangs up right at the exact moment the user
@@ -205,6 +211,7 @@ public class RespondViaSmsManager {
         // first place.)
 
         String phoneNumber = c.getAddress();
+        mSubscription = p.getSubscription();
         if (VDBG) log("- phoneNumber: " + phoneNumber);
         lv.setOnItemClickListener(new RespondViaSmsItemClickListener(phoneNumber));
 
@@ -578,9 +585,12 @@ public class RespondViaSmsManager {
      */
     private void sendText(String phoneNumber, String message, ComponentName component) {
         if (VDBG) log("sendText: number "
-                      + phoneNumber + ", message '" + message + "'");
+                      + phoneNumber + ", message '" + message + "'"
+                      + ", subscription" + mSubscription);
 
-        mInCallScreen.startService(getInstantTextIntent(phoneNumber, message, component));
+        Intent intent = getInstantTextIntent(phoneNumber, message, component);
+        intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
+        mInCallScreen.startService(intent);
     }
 
     private void onPostMessageSent() {
@@ -607,9 +617,11 @@ public class RespondViaSmsManager {
      * Brings up the standard SMS compose UI.
      */
     private void launchSmsCompose(String phoneNumber) {
-        if (VDBG) log("launchSmsCompose: number " + phoneNumber);
+        if (VDBG) log("launchSmsCompose: number " + phoneNumber
+                + ", subscription" + mSubscription);
 
         Intent intent = getInstantTextIntent(phoneNumber, null, null);
+        intent.putExtra(SUBSCRIPTION_KEY, mSubscription);
 
         if (VDBG) log("- Launching SMS compose UI: " + intent);
         mInCallScreen.startService(intent);
