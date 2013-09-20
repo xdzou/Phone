@@ -278,8 +278,8 @@ public class NetworkSetting extends PreferenceActivity
             //disable data service
             Message onCompleteMsg = mHandler.obtainMessage(EVENT_NETWOKK_DISCONNECT_DATA_DONE);
             if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-                MSimProxyManager.getInstance().enableDataConnectivity(
-                        MSimPhoneFactory.getDataSubscription());
+                MSimProxyManager.getInstance().disableDataConnectivity(
+                        MSimPhoneFactory.getDataSubscription(),onCompleteMsg);
             }
         }else if (which == DialogInterface.BUTTON_NEGATIVE){
             if(DBG) log("network search,do nothing");
