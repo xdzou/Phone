@@ -209,10 +209,8 @@ public class EmergencyCallHelper extends Handler {
         // - STATE_EMERGENCY_ONLY    // Phone is locked; only emergency numbers are allowed
         // - STATE_POWER_OFF         // Radio is explicitly powered off (airplane mode)
 
-        // Once we reach either STATE_IN_SERVICE or STATE_EMERGENCY_ONLY,
-        // it's finally OK to place the emergency call.
-        boolean okToCall = (state.getState() == ServiceState.STATE_IN_SERVICE)
-                || (state.getState() == ServiceState.STATE_EMERGENCY_ONLY);
+        // It's finally OK to place the emergency call once we successfully got out of airplane mode.
+        boolean okToCall = (state.getState() != ServiceState.STATE_POWER_OFF);
 
         if (okToCall) {
             // Woo hoo!  It's OK to actually place the call.
