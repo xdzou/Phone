@@ -286,6 +286,13 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
             } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
                 mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet, mSubscription);
+                if (isLteOnCdma) {
+                    mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+
+                    int settingsNetworkMode = getPreferredNetworkMode();
+                    mButtonPreferredNetworkMode.setValue(
+                            Integer.toString(settingsNetworkMode));
+                }
             } else {
                 throw new IllegalStateException("Unexpected phone type: " + phoneType);
             }
