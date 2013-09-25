@@ -496,8 +496,12 @@ public class MobileNetworkSettings extends PreferenceActivity
                     resetNetworkModeToDefault();
                 }
                 //Update '2GOnly checkbox' based on recent preferred network type selection.
-                Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                int phoneType = mPhone.getPhoneType();
+                if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                  Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                 }
             }
+
         }
 
         private void handleSetPreferredNetworkTypeResponse(Message msg) {
