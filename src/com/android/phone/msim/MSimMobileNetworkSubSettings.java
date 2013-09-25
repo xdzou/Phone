@@ -482,7 +482,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     resetNetworkModeToDefault();
                 }
                 // Update '2GOnly checkbox' based on recent preferred network type selection.
-                Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                if (mGsmUmtsOptions != null) {
+                    Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                }
             }
         }
 
@@ -494,7 +496,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
                 // Update '2GOnly checkbox' based on recent preferred network type selection.
-                Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                if (mGsmUmtsOptions != null) {
+                    Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
