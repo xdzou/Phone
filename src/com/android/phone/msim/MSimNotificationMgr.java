@@ -61,6 +61,8 @@ public class MSimNotificationMgr extends NotificationMgr {
     static final int VOICEMAIL_NOTIFICATION_SUB2 = 20;
     static final int CALL_FORWARD_NOTIFICATION_SUB2 = 21;
     static final int CALL_FORWARD_XDIVERT = 22;
+    static final int VOICEMAIL_NOTIFICATION_SUB3 = 23;
+    static final int CALL_FORWARD_NOTIFICATION_SUB3 = 24;
 
     /**
      * Private constructor (this is a singleton).
@@ -98,10 +100,13 @@ public class MSimNotificationMgr extends NotificationMgr {
      */
     /* package */
     void updateMwi(boolean visible, Phone phone) {
-        if (DBG) log("updateMwi(): " + visible);
-
-         if (visible) {
-            int resId = android.R.drawable.stat_notify_voicemail;
+        int subscription = phone.getSubscription();
+        if (DBG) log("updateMwi(): " + visible + " Subscription: "
+                + subscription);
+        int[] iconId = {R.drawable.stat_notify_voicemail_sub1,
+                R.drawable.stat_notify_voicemail_sub2, R.drawable.stat_notify_voicemail_sub3};
+        int resId = iconId[subscription];
+        if (visible) {
             // This Notification can get a lot fancier once we have more
             // information about the current voicemail messages.
             // (For example, the current voicemail system can't tell
@@ -200,14 +205,12 @@ public class MSimNotificationMgr extends NotificationMgr {
                     .setSound(ringtoneUri);
             Notification notification = builder.getNotification();
 
-            String vibrateWhen = prefs.getString(
-                    CallFeaturesSetting.BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_WHEN_KEY, "never");
-            boolean vibrateAlways = vibrateWhen.equals("always");
-            boolean vibrateSilent = vibrateWhen.equals("silent");
-            AudioManager audioManager =
-                    (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-            boolean nowSilent = audioManager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE;
-            if (vibrateAlways || (vibrateSilent && nowSilent)) {
+            MSimCallFeaturesSubSetting.migrateVoicemailVibrationSettingsIfNeeded(prefs,
+                    phone.getSubscription());
+            final boolean vibrate = prefs.getBoolean(
+                    MSimCallFeaturesSubSetting.BUTTON_VOICEMAIL_NOTIFICATION_VIBRATE_KEY
+                            + phone.getSubscription(), false);
+            if (vibrate) {
                 notification.defaults |= Notification.DEFAULT_VIBRATE;
             }
 
@@ -227,10 +230,27 @@ public class MSimNotificationMgr extends NotificationMgr {
     /* package */ void updateCfi(boolean visible, int subscription) {
         if (DBG) log("updateCfi(): " + visible + "Sub: " + subscription);
         int [] callfwdIcon = {R.drawable.stat_sys_phone_call_forward_sub1,
-                R.drawable.stat_sys_phone_call_forward_sub2};
+                R.drawable.stat_sys_phone_call_forward_sub2,
+                R.drawable.stat_sys_phone_call_forward_sub3};
 
-        int notificationId = (subscription == 0) ? CALL_FORWARD_NOTIFICATION :
-                CALL_FORWARD_NOTIFICATION_SUB2;
+        int notificationId = CALL_FORWARD_NOTIFICATION;
+        switch (subscription) {
+            case 0:
+                notificationId =  CALL_FORWARD_NOTIFICATION;
+                break;
+            case 1:
+                notificationId =  CALL_FORWARD_NOTIFICATION_SUB2;
+                break;
+            case 2:
+                notificationId = CALL_FORWARD_NOTIFICATION_SUB3;
+                break;
+            default:
+                //subscription should always be a vaild value and case
+                //need to add in future for multiSIM (>3S) architecture, (if any).
+                //Here, this default case should not hit in any of multiSIM scenario.
+                Log.e(LOG_TAG, "updateCfi: This should not happen, subscription = "+subscription);
+                return;
+        }
 
         if (visible) {
             // If Unconditional Call Forwarding (forward all calls) for VOICE

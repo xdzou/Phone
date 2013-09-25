@@ -73,6 +73,22 @@ interface IImsService {
     void hangupUri(int connectionId, String userUri, String confUri);
 
     /**
+     * Hangup for rejecting incoming call with a reason
+     * This api will be used for following two scenarios -
+     * - Reject incoming call
+     * - While on active call, receive incoming call. Reject this
+     *   incoming call.
+     * connectionId - call id for the call
+     * userUri - dial string or uri
+     * confUri - uri associated with conference/multiparty call
+     * mpty - true for conference/multiparty call
+     * failCause - reason for hangup. Refer to CallFailCause.java for details
+     * errorInfo - extra information associated with hangup
+     */
+    void hangupWithReason(int connectionId, String userUri, String confUri,
+            boolean mpty, in int failCause, in String errorInfo);
+
+    /**
      * Get the Call Details extras for the Call ID
      * @param callId - ID of the Call
      */
@@ -94,6 +110,18 @@ interface IImsService {
      * Get the Service State for SMS service
      */
     boolean isVTModifyAllowed();
+
+    /**
+     * The system notifies about the failure (e.g. timeout) of the previous request to
+     * change the type of the connection by re-sending the modify connection type request
+     * with the status set to fail. After receiving an indication of call modify request
+     * it will be possible to query for the status of the request.(see
+     * {@link CallManager#registerForConnectionTypeChangeRequest(Handler, int, Object)}
+     * ) If no request has been received, this function returns false, no error.
+     *
+     * @return true if the proposed connection type request failed (e.g. timeout).
+     */
+    boolean getProposedConnectionFailed(int connIndex);
 
     /**
      * Returns true if the current phone supports the ability to add participant
