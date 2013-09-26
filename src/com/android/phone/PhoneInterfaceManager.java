@@ -299,6 +299,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
 
     private boolean showCallScreenInternal(boolean specifyInitialDialpadState,
                                            boolean initialDialpadState) {
+        if(PhoneGlobals.getInstance().isCsvtActive()) {
+            Log.d(LOG_TAG, "showCallScreenInternal: csvt is active");
+            Intent mIntent = new Intent("restore_video_call");
+            mApp.sendBroadcast(mIntent);
+            return false;
+        }
         if (!PhoneGlobals.sVoiceCapable) {
             // Never allow the InCallScreen to appear on data-only devices.
             return false;
