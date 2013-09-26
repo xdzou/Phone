@@ -98,6 +98,10 @@ public class MSimInCallTouchUi extends InCallTouchUi {
         } else {
             mSwitchButton.setVisibility(View.GONE);
         }
+
+        if (PhoneUtils.isDsdaEnabled()) {
+            mSwitchButton.setVisibility(View.GONE);
+        }
         log("updateSwitchButton count =" + phoneCount + " active count =" + activePhoneCount);
     }
 

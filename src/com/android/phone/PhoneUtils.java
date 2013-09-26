@@ -3218,4 +3218,11 @@ public class PhoneUtils {
         }
         return value;
     }
+
+    public static boolean isDsdaEnabled() {
+        boolean dsdaEnabled = MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                == MSimTelephonyManager.MultiSimVariants.DSDA;
+
+        return dsdaEnabled;
+    }
 }

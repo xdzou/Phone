@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2012 The Android Open Source Project
+<!-- Copyright (c) 2013 The Linux Foundation. All rights reserved.
+     Not a Contribution.
+
+     Copyright (C) 2012 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -40,20 +43,78 @@
          android:background="@drawable/clickable_dim_effect"
          android:visibility="gone" />
 
-    <!-- Name (or the phone number, if we don't have a name to display). -->
-    <TextView android:id="@+id/secondaryCallName"
-        style="@style/SecondaryCallInfoSecondaryCallName"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/call_banner_height"
-        android:gravity="top|start"
-        android:paddingStart="@dimen/call_banner_side_padding"
-        android:paddingEnd="@dimen/call_banner_side_padding"
-        android:paddingTop="@dimen/call_banner_top_bottom_padding"
-        android:paddingBottom="@dimen/call_banner_top_bottom_padding"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/incall_call_banner_text_color"
-        android:singleLine="true"
-        android:background="@color/incall_call_banner_background" />
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/call_banner_height"
+            android:background="@color/incall_call_banner_background" >
+
+       <LinearLayout android:id="@+id/secondaryCallBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" >
+
+            <!-- Name (or the phone number, if we don't have a name to display). -->
+            <TextView android:id="@+id/secondaryCallName"
+                style="@style/SecondaryCallInfoSecondaryCallName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="top|start"
+                android:paddingStart="@dimen/call_banner_side_padding"
+                android:paddingEnd="@dimen/call_banner_text_left_right_padding"
+                android:paddingTop="@dimen/call_banner_top_bottom_padding"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:singleLine="true"/>
+
+            <TextView
+                android:id="@+id/prefix_of_label_second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/call_banner_top_bottom_padding"
+                android:singleLine="true"
+                android:text="@string/prefix_of_label"
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <TextView
+                android:id="@+id/secondaryLabel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:paddingTop="@dimen/call_banner_top_bottom_padding"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:textAllCaps="true"
+                android:singleLine="true" />
+
+            <TextView android:id="@+id/suffix_of_label_second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/call_banner_top_bottom_padding"
+                android:text="@string/suffix_of_label"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceMedium"/>
+
+       </LinearLayout>
+
+       <RelativeLayout android:id="@+id/secondaryNumberAndCity"
+           android:layout_below="@id/secondaryCallBar"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content" >
+
+               <TextView
+               android:id="@+id/secondaryPhoneNumber"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:paddingStart="@dimen/call_banner_side_padding"
+               android:layout_alignParentLeft="true"
+               android:paddingTop="@dimen/call_banner_text_top_padding"
+               android:paddingRight="@dimen/call_banner_text_left_right_padding"
+               android:textAppearance="?android:attr/textAppearanceSmall"
+               android:textColor="@color/incall_call_banner_text_color"
+               android:singleLine="true" />
+        </RelativeLayout>
+
+    </RelativeLayout>
 
     <!-- Call status of the background call, usually the string "On hold". -->
     <TextView android:id="@+id/secondaryCallStatus"

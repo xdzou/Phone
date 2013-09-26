@@ -19,18 +19,31 @@
 
 package com.android.phone;
 
+import android.app.ActionBar;
 import android.app.ActivityOptions;
+import android.app.FragmentTransaction;
+import android.app.ActionBar.Tab;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.TypedArray;
 import android.os.AsyncResult;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.os.SystemProperties;
+import android.provider.Settings;
+import android.telephony.MSimTelephonyManager;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
@@ -38,6 +51,7 @@ import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
+import com.android.phone.PhoneUtils;
 import com.android.phone.InCallUiState.InCallScreenMode;
 import com.android.phone.OtaUtils.CdmaOtaScreenState;
 
@@ -53,6 +67,14 @@ public class MSimInCallScreen extends InCallScreen {
     private static final boolean VDBG = (MSimPhoneGlobals.DBG_LEVEL >= 2);
 
     private static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 131;
+
+    private Tab[] mDsdaTab = new Tab[2];
+    private boolean[] mDsdaTabAdd = {false, false};
+
+    private final int TAB_COUNT_ONE = 1;
+    private final int TAB_COUNT_TWO = 2;
+
+    private final int TAB_POSITION_FIRST = 0;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -826,5 +848,140 @@ public class MSimInCallScreen extends InCallScreen {
 
     private void log(String msg) {
         Log.d(LOG_TAG, msg);
+    }
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        if (PhoneUtils.isDsdaEnabled()) {
+            requestWindowFeature(Window.FEATURE_ACTION_BAR);
+
+            getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+            getActionBar().setDisplayShowTitleEnabled(false);
+            getActionBar().setDisplayShowHomeEnabled(false);
+        }
+
+        super.onCreate(savedInstanceState);
+
+        if (PhoneUtils.isDsdaEnabled()) {
+            initializeDsdaSwitchTab();
+        }
+    }
+
+
+    protected void updateScreen() {
+        super.updateScreen();
+
+        if (PhoneUtils.isDsdaEnabled()) {
+            updateDsdaTab();
+
+            updateDsdaTabSelection();
+        }
+    }
+
+
+    private void initializeDsdaSwitchTab() {
+        int phoneCount = MSimTelephonyManager.getDefault().getPhoneCount();
+
+        ActionBar bar = getActionBar();
+
+        View[] mDsdaTabLayout = new View[phoneCount];
+
+        TypedArray icons = getResources()
+                .obtainTypedArray(com.android.internal.R.array.sim_icons);
+
+        for (int i = 0; i < phoneCount; i++) {
+            mDsdaTabLayout[i] = getLayoutInflater()
+                    .inflate(R.layout.dsda_tab_sub_info, null);
+
+            ((ImageView)mDsdaTabLayout[i].findViewById(R.id.tabSubIcon))
+                    .setBackground(icons.getDrawable(i));
+
+            ((TextView)mDsdaTabLayout[i].findViewById(R.id.tabSubText))
+                    .setText(Settings.System.getString(getContentResolver(),
+                            Settings.System.MULTI_SIM_NAME[i]));
+
+            mDsdaTab[i] = bar.newTab().setCustomView(mDsdaTabLayout[i])
+                    .setTabListener(new TabListener(i));
+        }
+    }
+
+    private void updateDsdaTab() {
+        int phoneCount = MSimTelephonyManager.getDefault().getPhoneCount();
+        ActionBar bar = getActionBar();
+
+        for(int i = 0; i < phoneCount; i++) {
+            if (mApp.mCM.getState(i) != PhoneConstants.State.IDLE) {
+                if (!mDsdaTabAdd[i]) {
+                    addDsdaTab(i);
+                }
+            } else {
+                removeDsdaTab(i);
+            }
+        }
+    }
+
+    private void addDsdaTab(int simnumber) {
+        ActionBar bar = getActionBar();
+        int tabCount = bar.getTabCount();
+
+        if (tabCount < simnumber) {
+            bar.addTab(mDsdaTab[simnumber], false);
+        } else {
+            bar.addTab(mDsdaTab[simnumber], simnumber, false);
+        }
+
+        mDsdaTabAdd[simnumber] = true;
+    }
+
+    private void removeDsdaTab(int simnumber) {
+        ActionBar bar = getActionBar();
+        int tabCount = bar.getTabCount();
+
+        for (int i = 0; i < tabCount; i++) {
+            if (bar.getTabAt(i).equals(mDsdaTab[simnumber])) {
+                bar.removeTab(mDsdaTab[simnumber]);
+
+                mDsdaTabAdd[simnumber] = false;
+
+                return;
+            }
+        }
+    }
+
+    private void updateDsdaTabSelection() {
+
+        ActionBar bar = getActionBar();
+        int barCount = bar.getTabCount();
+
+        if (barCount == TAB_COUNT_ONE) {
+            bar.selectTab(bar.getTabAt(TAB_POSITION_FIRST));
+        } else if (barCount == TAB_COUNT_TWO){
+            bar.selectTab(bar.getTabAt(PhoneUtils.getActiveSubscription()));
+        }
+    }
+
+    private class TabListener implements ActionBar.TabListener {
+        int simnumber;
+
+        public TabListener(int simsub) {
+            simnumber = simsub;
+        }
+
+        public void onTabSelected(Tab tab, FragmentTransaction ft) {
+            ActionBar bar = getActionBar();
+
+            if (mApp.mCM.getState(simnumber) != PhoneConstants.State.IDLE) {
+                PhoneUtils.setActiveSubscription(simnumber);
+
+                mApp.mCM.setAudioMode();
+            }
+        }
+
+        public void onTabUnselected(Tab tab, FragmentTransaction ft) {
+        }
+
+        public void onTabReselected(Tab tab, FragmentTransaction ft) {
+        }
     }
 }
