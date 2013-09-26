@@ -24,6 +24,7 @@ import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaSignalInfoRec;
 import com.android.internal.telephony.cdma.SignalToneUtil;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
@@ -291,13 +292,7 @@ public class MSimCallNotifier extends CallNotifier {
         if (VDBG) log("Holding wake lock on new incoming connection.");
         mApplication.requestWakeState(PhoneGlobals.WakeState.PARTIAL);
 
-        int activeSub = PhoneUtils.getActiveSubscription();
-        if (activeSub != subscription && state == Call.State.INCOMING &&
-                PhoneGlobals.getInstance().mCM.hasActiveFgCall(activeSub)) {
-            // Received incoming call on non-active subscription
-            // play the local call waiting tone.
-            startLocalCallWaitingTone();
-        }
+        manageLocalCallWaitingTone();
 
         log("Setting Active sub : '" + subscription + "'");
         PhoneUtils.setActiveSubscription(subscription);
@@ -371,16 +366,24 @@ public class MSimCallNotifier extends CallNotifier {
 
     void manageMSimInCallTones(boolean isSubSwitch) {
         if (VDBG) log(" entered manageMSimInCallTones ");
+        int activeSub = PhoneUtils.getActiveSubscription();
+        int otherSub = PhoneUtils.getOtherActiveSub(activeSub);
 
-        if (PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription())) {
-            //If sub switch happens re-start the tones with a delay of 100msec.
-            if (isSubSwitch) {
-                log(" manageMSimInCallTones: re-start playing tones ");
-                stopMSimInCallTones();
-                Message message = Message.obtain(this, PHONE_START_MSIM_INCALL_TONE);
-                sendMessageDelayed(message, 100);
-            } else {
-                startMSimInCallTones();
+        // If there is no background active subscription available, stop playing the tones.
+        if (otherSub != MSimConstants.INVALID_SUBSCRIPTION) {
+            // Do not start/stop LCH/SCH tones when phone is in RINGING state.
+            if ((mCM.getState(activeSub) != PhoneConstants.State.RINGING) &&
+                    (mCM.getState(otherSub) != PhoneConstants.State.RINGING)) {
+                //If sub switch happens re-start the tones with a delay of 100msec.
+                if (isSubSwitch) {
+                    log(" manageMSimInCallTones: re-start playing tones, active sub = "
+                            + activeSub + " other sub = " + otherSub);
+                    stopMSimInCallTones();
+                    Message message = Message.obtain(this, PHONE_START_MSIM_INCALL_TONE);
+                    sendMessageDelayed(message, 100);
+                } else {
+                    startMSimInCallTones();
+                }
             }
         } else {
             stopMSimInCallTones();
@@ -414,6 +417,20 @@ public class MSimCallNotifier extends CallNotifier {
         }
     }
 
+    private void manageLocalCallWaitingTone() {
+        int activeSub = PhoneUtils.getActiveSubscription();
+        int otherSub = PhoneUtils.getOtherActiveSub(activeSub);
+
+        if ((otherSub != MSimConstants.INVALID_SUBSCRIPTION) &&
+             mCM.hasActiveFgCallAnyPhone() &&
+            ((mCM.getState(activeSub) == PhoneConstants.State.RINGING) ||
+            (mCM.getState(otherSub) == PhoneConstants.State.RINGING))) {
+            log(" manageLocalCallWaitingTone : start tone play");
+            startLocalCallWaitingTone();
+         } else {
+             stopLocalCallWaitingTone();
+         }
+    }
 
     private void startLocalCallWaitingTone() {
         if (DBG) log("startLocalCallWaitingTone: Local call waiting tone ");
@@ -489,7 +506,7 @@ public class MSimCallNotifier extends CallNotifier {
                 mCallWaitingTonePlayer = null;
             }
 
-            stopLocalCallWaitingTone();
+            manageLocalCallWaitingTone();
 
             if (VDBG) log("onPhoneStateChanged: OFF HOOK");
             // make sure audio is in in-call mode now
@@ -686,7 +703,7 @@ public class MSimCallNotifier extends CallNotifier {
             mCallWaitingTonePlayer = null;
         }
 
-        stopLocalCallWaitingTone();
+        manageLocalCallWaitingTone();
 
         // If this is the end of an OTASP call, pass it on to the PhoneApp.
         if (c != null && TelephonyCapabilities.supportsOtasp(c.getCall().getPhone())) {
