@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2013, The Linux Foundation. All rights reserved.
+ * Not a contribution.
+ *
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +46,10 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.CallManager;
+import android.telephony.MSimTelephonyManager;
+import com.android.internal.telephony.PhoneBase;
+
+
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -80,6 +87,8 @@ public class BluetoothPhoneService extends Service {
     int mNumActive;
     // number of background (held) calls
     int mNumHeld;
+    private BluetoothDsdaState mBluetoothDsda; //Handles DSDA state machine.
+    private boolean mIsBluetoothDsda = false;
 
     long mBgndEarliestConnectionTime = 0;
 
@@ -123,27 +132,43 @@ public class BluetoothPhoneService extends Service {
         mRingNumber = new CallNumber("", 0);;
         mRoam = false;
 
+        //Check whether we support DSDA or not
+        if ((MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+                == MSimTelephonyManager.MultiSimVariants.DSDA)) {
+            Log.d(TAG, "DSDA is enabled, create DSDA objects");
+            mBluetoothDsda = new BluetoothDsdaState(this);
+            mIsBluetoothDsda = true;
+        }
         updateServiceState(mCM.getDefaultPhone().getServiceState());
         handlePreciseCallStateChange(null);
 
-        if(VDBG) Log.d(TAG, "registerForServiceStateChanged");
+        if (VDBG) Log.d(TAG, "registerForServiceStateChanged");
         // register for updates
         // Use the service state of default phone as BT service state to
         // avoid situation such as no cell or wifi connection but still
         // reporting in service (since SipPhone always reports in service).
         mCM.getDefaultPhone().registerForServiceStateChanged(mHandler,
                                                              SERVICE_STATE_CHANGED, null);
+        Log.d(TAG, "registerForPreciseCallStateChanged start");
         mCM.registerForPreciseCallStateChanged(mHandler,
                                                PRECISE_CALL_STATE_CHANGED, null);
-        mCM.registerForCallWaiting(mHandler,
-                                   PHONE_CDMA_CALL_WAITING, null);
 
         if (mCM.isCallOnCsvtEnabled()) {
             IntentFilter filter = new IntentFilter();
             filter.addAction("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED");
             PhoneGlobals.getInstance().registerReceiver(mCsvtCallStateReceiver, filter);
         }
-
+        for (Phone phone : mCM.getAllPhones()) {
+            if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA ) {
+                log("register for cdma call waiting " + phone.getSubscription());
+                mCM.registerForCallWaiting(mHandler, PHONE_CDMA_CALL_WAITING,
+                                           phone.getSubscription());
+                break;
+            }
+        }
+        if (mIsBluetoothDsda == true)
+            mCM.registerForSubscriptionChange(mHandler,
+                      PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
         // TODO(BT) registerForIncomingRing?
         // TODO(BT) registerdisconnection?
         mClccTimestamps = new long[GSM_MAX_CONNECTIONS];
@@ -183,6 +208,7 @@ public class BluetoothPhoneService extends Service {
     private static final int QUERY_PHONE_STATE = 5;
     private static final int CDMA_SWAP_SECOND_CALL_STATE = 6;
     private static final int CDMA_SET_SECOND_CALL_STATE = 7;
+    private static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 8;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -194,12 +220,35 @@ public class BluetoothPhoneService extends Service {
                     updateServiceState(state);
                     break;
                 case PRECISE_CALL_STATE_CHANGED:
-                case PHONE_CDMA_CALL_WAITING:
                     Connection connection = null;
                     if (((AsyncResult) msg.obj).result instanceof Connection) {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
                     }
+                    if (mIsBluetoothDsda == true) {
+                        //Get the Sub on which call state change happened
+                        if (((AsyncResult) msg.obj).result instanceof PhoneBase) {
+                            PhoneBase pb =  (PhoneBase)((AsyncResult) msg.obj).result;
+                            int subscription = pb.getSubscription();
+                            log("SUB on which it happned: " + subscription);
+                            mBluetoothDsda.setCurrentSub(subscription);
+                        } else log("No PhoneBase object found");
+                    }
                     handlePreciseCallStateChange(connection);
+                    break;
+                case PHONE_CDMA_CALL_WAITING:
+                    Connection conn = null;
+                    if (mIsBluetoothDsda == true) {
+                        AsyncResult ar = (AsyncResult) msg.obj;
+                        int subscription = (Integer) ar.userObj;
+                        log("CDMA call waiting on sub: " + subscription);
+                        conn = mCM.getFirstActiveRingingCall(subscription).getLatestConnection();
+                        mBluetoothDsda.setCurrentSub(subscription);
+                    } else {
+                        if (((AsyncResult) msg.obj).result instanceof Connection) {
+                            conn = (Connection) ((AsyncResult) msg.obj).result;
+                        }
+                    }
+                    handlePreciseCallStateChange(conn);
                     break;
                 case LIST_CURRENT_CALLS:
                     handleListCurrentCalls();
@@ -213,6 +262,9 @@ public class BluetoothPhoneService extends Service {
                 case CDMA_SET_SECOND_CALL_STATE:
                     handleCdmaSetSecondCallState((Boolean) msg.obj);
                     break;
+                case PHONE_ACTIVE_SUBSCRIPTION_CHANGE:
+                    mBluetoothDsda.phoneSubChanged();
+                    break;
             }
         }
     };
@@ -224,14 +276,25 @@ public class BluetoothPhoneService extends Service {
         mCM.getDefaultPhone().unregisterForServiceStateChanged(mHandler);
         mCM.unregisterForPreciseCallStateChanged(mHandler);
         mCM.unregisterForCallWaiting(mHandler);
+        if (mIsBluetoothDsda == true)
+            mCM.unregisterForSubscriptionChange(mHandler);
 
         //Register all events new to the new active phone
         mCM.getDefaultPhone().registerForServiceStateChanged(mHandler,
                                                              SERVICE_STATE_CHANGED, null);
         mCM.registerForPreciseCallStateChanged(mHandler,
                                                PRECISE_CALL_STATE_CHANGED, null);
-        mCM.registerForCallWaiting(mHandler,
-                                   PHONE_CDMA_CALL_WAITING, null);
+        for (Phone phone : mCM.getAllPhones()) {
+            if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA ) {
+                log("register for cdma call waiting " + phone.getSubscription());
+                mCM.registerForCallWaiting(mHandler, PHONE_CDMA_CALL_WAITING,
+                                           phone.getSubscription());
+                break;
+            }
+        }
+        if (mIsBluetoothDsda == true)
+            mCM.registerForSubscriptionChange(mHandler,
+                     PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
     }
 
     private void updateServiceState(ServiceState state) {
@@ -246,6 +309,16 @@ public class BluetoothPhoneService extends Service {
     }
 
     private void handlePreciseCallStateChange(Connection connection) {
+
+        //Check whether we support DSDA or not
+        if (mIsBluetoothDsda == true) {
+            Log.d(TAG, "DSDA call operation, handle it separately");
+            //Handle call state changes of both subs separately
+            mBluetoothDsda.handleMultiSimPreciseCallStateChange();
+            return;
+        }
+
+        //Regular Single SUB call handling
         // get foreground call state
         int oldNumActive = mNumActive;
         int oldNumHeld = mNumHeld;
@@ -342,6 +415,7 @@ public class BluetoothPhoneService extends Service {
                     mBgndEarliestConnectionTime));
             mBgndEarliestConnectionTime = backgroundCall.getEarliestConnectTime();
         }
+        log("update the call states, active: " + mNumActive + "held" + mNumHeld);
 
         if (mNumActive != oldNumActive || mNumHeld != oldNumHeld ||
             mRingingCallState != oldRingingCallState ||
@@ -349,6 +423,7 @@ public class BluetoothPhoneService extends Service {
             !mRingNumber.equalTo(oldRingNumber) ||
             callsSwitched) {
             if (mBluetoothHeadset != null) {
+                log("update the headset");
                 mBluetoothHeadset.phoneStateChanged(mNumActive, mNumHeld,
                     convertCallState(mRingingCallState, mForegroundCallState),
                     mRingNumber.mNumber, mRingNumber.mType);
@@ -357,6 +432,10 @@ public class BluetoothPhoneService extends Service {
     }
 
     private void handleListCurrentCalls() {
+        if (mIsBluetoothDsda == true) {
+            mBluetoothDsda.handleListCurrentCalls();
+            return;
+        }
         Phone phone = mCM.getDefaultPhone();
         int phoneType = phone.getPhoneType();
 
@@ -375,6 +454,10 @@ public class BluetoothPhoneService extends Service {
     }
 
     private void handleQueryPhoneState() {
+        if (mIsBluetoothDsda == true) {
+            mBluetoothDsda.processQueryPhoneState();
+            return;
+        }
         if (mBluetoothHeadset != null) {
             mBluetoothHeadset.phoneStateChanged(mNumActive, mNumHeld,
                 convertCallState(mRingingCallState, mForegroundCallState),
@@ -469,7 +552,8 @@ public class BluetoothPhoneService extends Service {
             new BluetoothProfile.ServiceListener() {
         public void onServiceConnected(int profile, BluetoothProfile proxy) {
             mBluetoothHeadset = (BluetoothHeadset) proxy;
-        }
+            log("Got the profile proxy");
+         }
         public void onServiceDisconnected(int profile) {
             mBluetoothHeadset = null;
         }
@@ -704,12 +788,22 @@ public class BluetoothPhoneService extends Service {
 
     private void handleCdmaSwapSecondCallState() {
         if (VDBG) log("cdmaSwapSecondCallState: Toggling mCdmaIsSecondCallActive");
+        if (mIsBluetoothDsda) {
+            log("DSDA.handleCdmaSwapSecondCallState");
+            mBluetoothDsda.handleCdmaSwapSecondCallState();
+            return;
+        }
         mCdmaIsSecondCallActive = !mCdmaIsSecondCallActive;
         mCdmaCallsSwapped = true;
     }
 
     private void handleCdmaSetSecondCallState(boolean state) {
         if (VDBG) log("cdmaSetSecondCallState: Setting mCdmaIsSecondCallActive to " + state);
+        if (mIsBluetoothDsda) {
+            log("DSDA.handleCdmaSetSecondCallState");
+            mBluetoothDsda.handleCdmaSetSecondCallState(state);
+            return;
+        }
         mCdmaIsSecondCallActive = state;
 
         if (!mCdmaIsSecondCallActive) {
@@ -779,8 +873,13 @@ public class BluetoothPhoneService extends Service {
 
         public boolean processChld(int chld) {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
+            if (mIsBluetoothDsda) {
+                log("DSDA handling of CHLD");
+                return mBluetoothDsda.processDsdaChld(chld);
+            }
             Phone phone = mCM.getDefaultPhone();
             int phoneType = phone.getPhoneType();
+            log("processChld: " + chld + " for Phone type: " + phoneType);
             Call ringingCall = mCM.getFirstActiveRingingCall();
             Call backgroundCall = mCM.getFirstActiveBgCall();
 
@@ -861,6 +960,7 @@ public class BluetoothPhoneService extends Service {
                     Log.e(TAG, "GSG no call to add conference");
                     return false;
                 } else if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                    log("processChld fr CHLD = 3 for GSM, operate only on single sub");
                     if (mCM.hasActiveFgCall() && mCM.hasActiveBgCall()) {
                         PhoneUtils.mergeCalls();
                         return true;
@@ -879,16 +979,31 @@ public class BluetoothPhoneService extends Service {
         }
 
         public String getNetworkOperator() {
+            log("getNetworkOperator");
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
+            if (mIsBluetoothDsda == true) {
+                log("getNetworkOperator for DSDA");
+                int activeSub = mCM.getActiveSubscription();
+                Phone phone = MSimPhoneGlobals.getInstance().getPhone(activeSub);
+                return mCM.getFgPhone(activeSub).getServiceState().getOperatorAlphaLong();
+            }
             return mCM.getDefaultPhone().getServiceState().getOperatorAlphaLong();
         }
 
         public String getSubscriberNumber() {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
+            log("getSubscriberNumber");
+            if (mIsBluetoothDsda == true) {
+                log("getSubscriberNumber for DSDA");
+                int activeSub = mCM.getActiveSubscription();
+                Phone phone = MSimPhoneGlobals.getInstance().getPhone(activeSub);
+                return phone.getLine1Number();
+            }
             return mCM.getDefaultPhone().getLine1Number();
         }
 
         public boolean listCurrentCalls() {
+            log("listCurrentCalls");
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
             Message msg = Message.obtain(mHandler, LIST_CURRENT_CALLS);
             mHandler.sendMessage(msg);
@@ -896,6 +1011,7 @@ public class BluetoothPhoneService extends Service {
         }
 
         public boolean queryPhoneState() {
+            log("queryPhoneState");
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
             Message msg = Message.obtain(mHandler, QUERY_PHONE_STATE);
             mHandler.sendMessage(msg);

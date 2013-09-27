@@ -28,11 +28,9 @@
 
 package com.android.phone;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.hardware.Camera.Size;
 import android.os.SystemProperties;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -46,7 +44,6 @@ import com.android.internal.telephony.Phone;
 import com.android.phone.CameraHandler.CameraState;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Helper class to initialize and run the InCallScreen's "Video Call" UI.
@@ -81,6 +78,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     private int mFrontCameraId;
     private int mBackCameraId;
     private int mCameraId;
+
+    private int mTargetHeight = -1;
 
     // Property used to indicate that the Media running in loopback mode
     private boolean mIsMediaLoopback = false;
@@ -131,6 +130,17 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         @Override
         public void onStartReadyEvent() {
          // NO-OP
+        }
+
+    }
+
+    public class CvoListener implements CvoHandler.CvoEventListener {
+        @Override
+        public void onDeviceOrientationChanged(int rotation) {
+            int requiredSurfaceRotation = 360 - rotation;
+            if (DBG) log("onDeviceOrientationChanged: Local sensor rotation =" + rotation +
+                    " Rotate far end based on local sensor by " + requiredSurfaceRotation);
+            mFarEndView.setRotation(requiredSurfaceRotation);
         }
     }
 
@@ -191,6 +201,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
 
         // Set media event listener
         mVideoCallManager.setOnParamReadyListener(new ParamReadyListener());
+        mVideoCallManager.setCvoEventListener(new CvoListener());
     }
 
     public void setCameraNeeded(boolean mCameraNeeded) {
@@ -228,6 +239,7 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         if (DBG) log("onSizeChanged");
         if (DBG) log("Video Panel width:" + xNew + ", height:" + yNew);
 
+        mTargetHeight = yNew;
         // Resize preview window if the size of the view changed
         resizeCameraPreview(yNew);
         resizeFarEndView(xNew, yNew);
@@ -303,6 +315,9 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     private void startPreviewAndRecording() {
         try {
             mCameraPreview.setVisibility(View.VISIBLE);
+            if (mTargetHeight != -1) {
+                resizeCameraPreview(mTargetHeight);
+            }
             mVideoCallManager.startCameraPreview(mCameraSurface);
             mVideoCallManager.startCameraRecording();
         } catch (IOException ioe) {
@@ -475,42 +490,35 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
     }
 
     public void setPanelElementsVisibility(int callType) {
-        log("setPanelElementsVisibility: callType= " + callType);
         switch (callType) {
             case Phone.CALL_TYPE_VT:
-                mCameraPreview.setVisibility(VISIBLE);
-                mFarEndView.setVisibility(VISIBLE);
                 if (isCameraInitNeeded()) {
                     initializeCamera();
                 }
-                log("setPanelElementsVisibility: VT: mCameraPreview:VISIBLE, mFarEndView:VISIBLE");
                 break;
             case Phone.CALL_TYPE_VT_TX:
-                mCameraPreview.setVisibility(View.VISIBLE);
                 if (isCameraInitNeeded()) {
                     initializeCamera();
                 }
-                // Not setting mFarEndView to GONE as receiver side did not get the frames
-                log("setPanelElementsVisibility VT_TX: mCameraPreview:VISIBLE");
                 break;
             case Phone.CALL_TYPE_VT_RX:
-                mFarEndView.setVisibility(View.VISIBLE);
                 // Stop the preview and close the camera now because other
                 // activities may need to use it
                 if (mVideoCallManager.getCameraState() != CameraState.CAMERA_CLOSED) {
                     stopRecordingAndPreview();
                     closeCamera();
                 }
-                mCameraPreview.setVisibility(View.GONE);
-                log("setPanelElementsVisibility VT_RX: mCameraPreview:GONE mFarEndView:VISIBLE");
                 break;
             default:
-                log("setPanelElementsVisibility: Default: "
-                        + "VideoCallPanel is " + mVideoCallPanel.getVisibility()
-                        + "mCameraPreview is " + mCameraPreview.getVisibility()
-                        + "mFarEndView is " + mFarEndView.getVisibility());
+                log("setPanelElementsVisibility: callType=" + callType);
                 break;
         }
+        log("setPanelElementsVisibility: callType= " + callType
+                + " VideoCallPanel is " + mVideoCallPanel.getVisibility()
+                + " mCameraPreview is " + mCameraPreview.getVisibility() + " available="
+                + mCameraPreview.isAvailable() + " activated= " + mCameraPreview.isActivated()
+                + " mFarEndView is " + mFarEndView.getVisibility() + " available="
+                + mFarEndView.isAvailable() + " activated= " + mFarEndView.isActivated());
     }
 
     /**
@@ -585,20 +593,8 @@ public class VideoCallPanel extends RelativeLayout implements TextureView.Surfac
         }
     }
 
-    public void startOrientationListener() {
-        if (isCvoModeEnabled()) {
-            mVideoCallManager.startOrientationListener();
-        }
-    }
-
-    public void stopOrientationListener() {
-        if (isCvoModeEnabled()) {
-            mVideoCallManager.stopOrientationListener();
-        }
-    }
-
-    public boolean isCvoModeEnabled() {
-        return mVideoCallManager.isCvoModeEnabled();
+    public void startOrientationListener(boolean start) {
+        mVideoCallManager.startOrientationListener(start);
     }
 
     private void log(String msg) {
