@@ -696,6 +696,15 @@ public class PhoneUtils {
             numberToDial = number;
         }
 
+        // Return CALL_STATUS_FAILED when there are already two calls or conference call
+        if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
+            Call fgCall = app.mCM.getActiveFgCall();
+            if (isConferenceCall(fgCall)
+                    || (fgCall.getState() == Call.State.ACTIVE && app.mCM.hasActiveBgCall())) {
+                return CALL_STATUS_FAILED;
+            }
+        }
+
         // Remember if the phone state was in IDLE state before this call.
         // After calling CallManager#dial(), getState() will return different state.
         boolean initiallyIdle = true;
