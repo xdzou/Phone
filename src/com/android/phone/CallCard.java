@@ -52,7 +52,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
-import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.CallerInfo;
@@ -60,7 +59,6 @@ import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.TelephonyProperties;
 
 import java.util.List;
 
@@ -920,7 +918,7 @@ public class CallCard extends LinearLayout
 
         mVideoCallPanel.setVisibility(View.VISIBLE);
         mVideoCallPanel.setPanelElementsVisibility(callType);
-        mVideoCallPanel.startOrientationListener();
+        mVideoCallPanel.startOrientationListener(true);
     }
 
     /**
@@ -936,7 +934,7 @@ public class CallCard extends LinearLayout
             mPhoto.setVisibility(View.VISIBLE);
             mVideoCallPanel.setVisibility(View.GONE);
             mVideoCallPanel.setCameraNeeded(false);
-            mVideoCallPanel.stopOrientationListener();
+            mVideoCallPanel.startOrientationListener(false);
         }
     }
 
