@@ -85,7 +85,7 @@ public class VideoCallManager {
         log("Instantiating VideoCallManager");
         mCameraHandler = CameraHandler.getInstance(context);
         mMediaHandler = MediaHandler.getInstance();
-        mCvoHandler = CvoHandler.getInstance(context);
+        mCvoHandler = new CvoHandler(context);
         mMediaHandler.registerForCvoModeRequestChanged(mHandler, CVO_MODE_REQUEST_CHANGED, null);
         mCvoHandler.registerForCvoInfoChange(mHandler, CVO_INFO_CHANGED, null);
     }
