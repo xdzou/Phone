@@ -477,7 +477,6 @@ public class OutgoingCallBroadcaster extends Activity
         } else {
             mSubscription = intent.getIntExtra(SUBSCRIPTION_KEY,
                     PhoneGlobals.getInstance().getVoiceSubscription());
-            PhoneUtils.setActiveSubscription(mSubscription);
             Log.d(TAG, "subscription when there is (from Extra):" + mSubscription);
             processMSimIntent(intent);
         }

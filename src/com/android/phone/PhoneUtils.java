@@ -59,6 +59,7 @@ import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.MmiCode;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
@@ -323,6 +324,8 @@ public class PhoneUtils {
                 app.mCM.acceptCall(ringingCall, answerCallType);
                 answered = true;
 
+                handleWaitingCallOnLchSub(phone.getSubscription(), true);
+
                 // Always reset to "unmuted" for a freshly-answered call
                 setMute(false);
 
@@ -430,6 +433,7 @@ public class PhoneUtils {
                 notifier.sendCdmaCallWaitingReject();
                 return true;
             } else {
+                handleWaitingCallOnLchSub(ringing.getPhone().getSubscription(), false);
                 // Otherwise, the regular hangup() API works for
                 // call-waiting calls too.
                 log("hangupRingingCall(): call-waiting call: hangup()");
@@ -519,6 +523,10 @@ public class PhoneUtils {
     static void hangup(Connection c) {
         try {
             if (c != null) {
+                if (c.getCall().getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA &&
+                        c.getCall().getState() == Call.State.WAITING) {
+                    handleWaitingCallOnLchSub(c.getCall().getPhone().getSubscription(), false);
+                }
                 c.hangup();
             }
         } catch (CallStateException ex) {
@@ -662,8 +670,6 @@ public class PhoneUtils {
         if (DBG) {
             log("placeCall '" + number + "' GW:'" + gatewayUri + "'" + " CallType:" + callType);
         }
-        // The phone on whilch dial request is initiated set it as active subscription
-        setActiveSubscription(phone.getSubscription());
 
         final PhoneGlobals app = PhoneGlobals.getInstance();
 
@@ -746,6 +752,9 @@ public class PhoneUtils {
                 status = CALL_STATUS_FAILED;
             }
         } else {
+            // The phone on whilch dial request for voice call is initiated
+            // set it as active subscription
+            setActiveSubscription(phone.getSubscription());
             if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                 updateCdmaCallStateOnNewOutgoingCall(app);
             }
@@ -3179,5 +3188,32 @@ public class PhoneUtils {
             Log.e(LOG_TAG, "Ims Service isAddParticipantAllowed exception", ex);
         }
         return value;
+    }
+
+    public static void handleWaitingCallOnLchSub(int activeSub, boolean isAccepted) {
+        CallManager cm = PhoneGlobals.getInstance().mCM;
+        boolean lchStatus = cm.getLocalCallHoldStatus(activeSub);
+        int otherActiveSub = getOtherActiveSub(activeSub);
+
+        if ((lchStatus == true) && (activeSub == getActiveSubscription()) &&
+                (otherActiveSub != MSimConstants.INVALID_SUBSCRIPTION) &&
+                (cm.getState(otherActiveSub) != PhoneConstants.State.IDLE)) {
+            if (isAccepted) {
+                Log.i(LOG_TAG, " re-start playing SCH tone, sub = " + otherActiveSub);
+                // While two subscriptions have active voice calls and if user
+                // accepts new waiting call call on LCH subscription, then
+                // stop playing of LCH/SCH tone in that subscription. When call
+                // is connected the tones will switch to new LCH subscription.
+                final MSimCallNotifier msimNotifier =
+                        (MSimCallNotifier)PhoneGlobals.getInstance().notifier;
+                msimNotifier.stopMSimInCallTones();
+            } else {
+                Log.i(LOG_TAG, " Switching back to active sub = " + otherActiveSub);
+                // While two subscriptions have active voice calls and if user
+                // rejects new waiting call on LCH subscription, bring back the
+                // subscription to foreground on which user currently speaking.
+                setActiveSubscription(otherActiveSub);
+            }
+        }
     }
 }
