@@ -223,7 +223,9 @@ public class MSimInCallScreen extends InCallScreen {
                         && (cause != Connection.DisconnectCause.INCOMING_MISSED)
                         && (cause != Connection.DisconnectCause.NORMAL)
                         && (cause != Connection.DisconnectCause.LOCAL)
-                        && (cause != Connection.DisconnectCause.INCOMING_REJECTED)) {
+                        && (cause != Connection.DisconnectCause.INCOMING_REJECTED)
+                        && (cause != Connection.DisconnectCause.EMERGENCY_TEMP_FAILURE)
+                        && (cause != Connection.DisconnectCause.EMERGENCY_PERM_FAILURE)) {
 
                 if (mApp.inCallUiState.needToShowCallLostDialog) {
                     // Show the dialog now since the call that just failed was a retry.
