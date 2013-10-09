@@ -148,6 +148,7 @@ public class MSimDialerActivity extends Activity {
         });
 
         mAlertDialog = builder.create();
+        mAlertDialog.setCanceledOnTouchOutside(false);
 
         mTextNumber = (TextView)layout.findViewById(R.id.CallNumber);
 
