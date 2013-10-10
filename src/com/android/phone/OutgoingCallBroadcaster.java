@@ -927,9 +927,7 @@ public class OutgoingCallBroadcaster extends Activity
                     && (!isIntentFromBluetooth(intent)) && (!isSIPCall(number, intent))
                     && !isEmergency) {
                 int subscription = -1;
-                if (SystemProperties.getBoolean("persist.env.phone.smartdialer", true)) {
                     subscription = intent.getIntExtra("dial_widget_switched", -1);
-                }
                 if (subscription >= MSimConstants.SUB1) {
                     mSubscription = subscription;
                 } else if (!promptEnabled) {
