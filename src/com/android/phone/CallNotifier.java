@@ -36,6 +36,7 @@ import com.android.internal.telephony.cdma.SignalToneUtil;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.app.ActivityManagerNative;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
@@ -633,6 +634,14 @@ public class CallNotifier extends Handler
         log("onNewRingingConnection(): state = " + mCM.getState() + ", conn = { " + c + " }");
         Call ringing = c.getCall();
         Phone phone = ringing.getPhone();
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.RINGING && ussdRespDialog != null
+                && ussdRespDialog.isShowing()) {
+            if (true)
+                log("hide ussd dialog...");
+            ussdRespDialog.hide();
+        }
 
         // Check for a few cases where we totally ignore incoming calls.
         if (ignoreAllIncomingCalls(phone)||PhoneGlobals.getInstance().isCsvtActive()) {
@@ -1263,6 +1272,13 @@ public class CallNotifier extends Handler
 
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.IDLE && ussdRespDialog != null) {
+            if (VDBG)
+                log("show ussd dialog...");
+            ussdRespDialog.show();
+        }
 
         mVoicePrivacyState = false;
         Connection c = (Connection) r.result;

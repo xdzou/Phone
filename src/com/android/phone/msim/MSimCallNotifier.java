@@ -31,6 +31,7 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.TelephonyCapabilities;
 
 import android.app.ActivityManagerNative;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncResult;
@@ -234,6 +235,14 @@ public class MSimCallNotifier extends CallNotifier {
                 " subscription = " + subscription);
         Call ringing = c.getCall();
         Phone phone = ringing.getPhone();
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.RINGING && ussdRespDialog != null
+                && ussdRespDialog.isShowing()) {
+            if (VDBG)
+                log("hide ussd dialog...");
+            ussdRespDialog.hide();
+        }
 
         // Check for a few cases where we totally ignore incoming calls.
         if (ignoreAllIncomingCalls(phone)||MSimPhoneGlobals.getInstance().isCsvtActive()) {
@@ -646,6 +655,13 @@ public class MSimCallNotifier extends CallNotifier {
     @Override
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.IDLE && ussdRespDialog != null) {
+            if (VDBG)
+                log("show ussd dialog...");
+            ussdRespDialog.show();
+        }
 
         mVoicePrivacyState = false;
         Connection c = (Connection) r.result;

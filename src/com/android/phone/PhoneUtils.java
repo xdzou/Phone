@@ -1253,6 +1253,7 @@ public class PhoneUtils {
 
                 // now show the dialog!
                 newDialog.show();
+                app.setUSSDResponseDialog(newDialog);
             }
         }
     }
