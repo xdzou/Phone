@@ -131,7 +131,9 @@ public class MSimCallCard extends CallCard {
         }
 
         if (sDsdaEnabled) {
-            mInCallSubIcon.setVisibility(View.GONE);
+            if (mInCallSubIcon != null) {
+                mInCallSubIcon.setVisibility(View.GONE);
+            }
             mCallStateSubIcon.setVisibility(View.GONE);
         }
 
