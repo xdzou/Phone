@@ -73,6 +73,9 @@ public class CdmaOptions {
 
         mButtonAPNExpand = (PreferenceScreen) mPrefScreen.findPreference(BUTTON_APN_EXPAND_KEY);
         mButtonAPNExpand.getIntent().putExtra(MSimConstants.SUBSCRIPTION_KEY, mSubscription);
+        if (mPrefActivity.getResources().getBoolean(R.bool.world_phone) == true) {
+            mPrefScreen.removePreference(mButtonAPNExpand);
+        }
 
         mButtonCdmaSystemSelect = (CdmaSystemSelectListPreference)mPrefScreen
                 .findPreference(BUTTON_CDMA_SYSTEM_SELECT_KEY);
