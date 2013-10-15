@@ -483,7 +483,6 @@ public class OutgoingCallBroadcaster extends Activity
                 startActivityForResult(intentMSim, requestCode);
             }
         } else {
-            PhoneUtils.setActiveSubscription(mSubscription);
             Log.d(TAG, "subscription: " + mSubscription);
             processMSimIntent(intent);
         }
