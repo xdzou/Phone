@@ -24,6 +24,7 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
@@ -51,6 +52,7 @@ import android.os.SystemVibrator;
 import android.os.Vibrator;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -1904,6 +1906,9 @@ public class CallNotifier extends Handler
         removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
         removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
 
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            PhoneUtils.setActiveSubscription(MSimConstants.SUB1);
+        }
         // Set the Phone Call State to SINGLE_ACTIVE as there is only one connection
         // else we would not have received Call waiting
         mApplication.cdmaPhoneCallState.setCurrentCallState(
