@@ -413,7 +413,7 @@ public class MSimCallNotifier extends CallNotifier {
         }
     }
 
-    private void stopMSimInCallTones() {
+    void stopMSimInCallTones() {
         if (mLocalCallReminderTonePlayer != null) {
             if (DBG) log(" stopMSimInCallTones: local call hold reminder tone ");
             mLocalCallReminderTonePlayer.stopTone();
