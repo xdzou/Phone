@@ -47,6 +47,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
@@ -225,6 +226,19 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         }
     }
 
+    /**
+     * Receiver for intent broadcasts CSVT call state.
+     */
+    private final BroadcastReceiver mCsvtCallStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if ("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED".equals(action)) {
+                enableOrDisableUseOnly2GNetworks();
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -243,6 +257,12 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
 
         mReceiver = new PhoneAppBroadcastReceiver();
         registerReceiver(mReceiver, intentFilter);
+
+        if (PhoneUtils.isCallOnCsvtEnabled()) {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED");
+            registerReceiver(mCsvtCallStateReceiver, filter);
+        }
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -342,11 +362,31 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private void setScreenState() {
         int simState = MSimTelephonyManager.getDefault().getSimState(mSubscription);
         getPreferenceScreen().setEnabled(simState == TelephonyManager.SIM_STATE_READY);
+        enableOrDisableUseOnly2GNetworks();
+    }
+
+    private void enableOrDisableUseOnly2GNetworks() {
+        CheckBoxPreference mButtonPrefer2g =
+                (CheckBoxPreference) findPreference("button_prefer_2g_key");
+        if (PhoneUtils.isCsvtCallActive() && mSubscription == MSimConstants.SUB1) {
+            mButtonPrefer2g.setEnabled(false);
+        } else {
+            mButtonPrefer2g.setEnabled(true);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (PhoneUtils.isCallOnCsvtEnabled()) {
+            unregisterReceiver(mCsvtCallStateReceiver);
+        }
     }
 
     /**
