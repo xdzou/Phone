@@ -438,8 +438,10 @@ public class MSimCallCard extends CallCard {
     public void clear() {
         super.clear();
 
-        mElapsedTimeSec.setVisibility(View.GONE);
-        mElapsedTimeSec.setText(null);
+        if (mElapsedTimeSec != null) {
+            mElapsedTimeSec.setVisibility(View.GONE);
+            mElapsedTimeSec.setText(null);
+        }
     }
 
     // Debugging / testing code
