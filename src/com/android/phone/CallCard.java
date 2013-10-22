@@ -21,6 +21,7 @@ package com.android.phone;
 
 import android.animation.LayoutTransition;
 import android.content.ContentUris;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.media.AudioManager;
@@ -328,11 +329,23 @@ public class CallCard extends LinearLayout
     }
 
     private boolean isVolumeBoostAvalible() {
+        int settingsTtyMode = Settings.Secure.getInt(getContext().getContentResolver(),
+                Settings.Secure.PREFERRED_TTY_MODE,
+                Phone.TTY_MODE_OFF);
+
+        boolean isTTYHCO = (settingsTtyMode == Phone.TTY_MODE_HCO);
         boolean isHeadsetPlugged = PhoneGlobals.getInstance().isHeadsetPlugged();
         boolean isBluetoothHeadsetAudioOn = PhoneGlobals.getInstance().isBluetoothHeadsetAudioOn();
         boolean isSpeakerOn = mAudioManager.isSpeakerphoneOn();
 
-        return isSpeakerOn || (!isHeadsetPlugged && !isBluetoothHeadsetAudioOn);
+        // volume boost in Mic or Speaker
+        boolean mMicOrSpekaerOn = isSpeakerOn
+                || (!isHeadsetPlugged && !isBluetoothHeadsetAudioOn);
+
+        // volume boost in TTY HCO mode, in this mode need headset plugged.
+        boolean mTTY_HCO_On = isTTYHCO && isHeadsetPlugged;
+
+        return mMicOrSpekaerOn || mTTY_HCO_On;
     }
 
     public void updateVoluemBoostStatus(boolean enabled, boolean showToast) {
