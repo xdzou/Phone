@@ -1602,7 +1602,9 @@ public class PhoneGlobals extends ContextWrapper
             // need to be refreshed based on the new state.
             if (isShowingCallScreen()) mInCallScreen.requestUpdateBluetoothIndication();
             if (DBG) Log.d (LOG_TAG, "- updating in-call notification for BT state change...");
-            mHandler.sendEmptyMessage(EVENT_UPDATE_INCALL_NOTIFICATION);
+            if (!isCsvtActive()){
+                mHandler.sendEmptyMessage(EVENT_UPDATE_INCALL_NOTIFICATION);
+            }
         }
 
         // Update the Proximity sensor based on Bluetooth audio state
