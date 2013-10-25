@@ -117,6 +117,14 @@
                 android:singleLine="true"
                 android:layout_marginStart="6dp" />
         </LinearLayout>
+        <TextView android:id="@+id/cityName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/labelAndNumber"
+                android:paddingTop="@dimen/call_banner_text_top_padding"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:singleLine="true" />
 
         <!-- Elapsed time indication for a call in progress. -->
         <TextView android:id="@+id/elapsedTime"
