@@ -59,6 +59,7 @@ import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.MmiCode;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
@@ -3179,5 +3180,13 @@ public class PhoneUtils {
             Log.e(LOG_TAG, "Ims Service isAddParticipantAllowed exception", ex);
         }
         return value;
+    }
+
+    public static int getNextSubscriptionId(int curSub) {
+        int nextSub =  curSub + 1;
+        if (nextSub >= MSimTelephonyManager.getDefault().getPhoneCount()) {
+            nextSub = MSimConstants.SUB1;
+        }
+        return nextSub;
     }
 }
