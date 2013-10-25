@@ -20,6 +20,7 @@
 package com.android.phone;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
@@ -33,6 +34,8 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -213,6 +216,7 @@ public class PhoneGlobals extends ContextWrapper
     // the foreground.
     protected Activity mPUKEntryActivity;
     private ProgressDialog mPUKEntryProgressDialog;
+    private Dialog mUSSDResponseDialog;
 
     private boolean mIsSimPinEnabled;
     private String mCachedSimPin;
@@ -1168,6 +1172,18 @@ public class PhoneGlobals extends ContextWrapper
         return mPUKEntryProgressDialog;
     }
 
+    void setUSSDResponseDialog(Dialog USSDResponseDialog){
+        mUSSDResponseDialog = USSDResponseDialog;
+        mUSSDResponseDialog.setOnDismissListener(new OnDismissListener(){
+            public void onDismiss(DialogInterface dialog) {
+                mUSSDResponseDialog = null;
+            }});
+    }
+
+    Dialog getUSSDResponseDialog() {
+        return mUSSDResponseDialog;
+    }
+
     /**
      * Controls whether or not the screen is allowed to sleep.
      *
@@ -1602,7 +1618,9 @@ public class PhoneGlobals extends ContextWrapper
             // need to be refreshed based on the new state.
             if (isShowingCallScreen()) mInCallScreen.requestUpdateBluetoothIndication();
             if (DBG) Log.d (LOG_TAG, "- updating in-call notification for BT state change...");
-            mHandler.sendEmptyMessage(EVENT_UPDATE_INCALL_NOTIFICATION);
+            if (!isCsvtActive()){
+                mHandler.sendEmptyMessage(EVENT_UPDATE_INCALL_NOTIFICATION);
+            }
         }
 
         // Update the Proximity sensor based on Bluetooth audio state

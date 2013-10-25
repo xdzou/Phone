@@ -31,6 +31,7 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.TelephonyCapabilities;
 
 import android.app.ActivityManagerNative;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncResult;
@@ -235,6 +236,14 @@ public class MSimCallNotifier extends CallNotifier {
         Call ringing = c.getCall();
         Phone phone = ringing.getPhone();
 
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.RINGING && ussdRespDialog != null
+                && ussdRespDialog.isShowing()) {
+            if (VDBG)
+                log("hide ussd dialog...");
+            ussdRespDialog.hide();
+        }
+
         // Check for a few cases where we totally ignore incoming calls.
         if (ignoreAllIncomingCalls(phone)||MSimPhoneGlobals.getInstance().isCsvtActive()) {
             // Immediately reject the call, without even indicating to the user
@@ -404,7 +413,7 @@ public class MSimCallNotifier extends CallNotifier {
         }
     }
 
-    private void stopMSimInCallTones() {
+    void stopMSimInCallTones() {
         if (mLocalCallReminderTonePlayer != null) {
             if (DBG) log(" stopMSimInCallTones: local call hold reminder tone ");
             mLocalCallReminderTonePlayer.stopTone();
@@ -465,6 +474,12 @@ public class MSimCallNotifier extends CallNotifier {
         PhoneConstants.State state = mCM.getState(subscription);
         if (VDBG) log("onPhoneStateChanged: state = " + state +
                 " subscription = " + subscription);
+        log("onPhoneStateChanged: state = " + state);
+        if(MSimPhoneGlobals.getInstance().isCsvtActive() &&
+            state == PhoneConstants.State.OFFHOOK ) {
+            log("onPhoneStateChanged: CSVT is active");
+            return;
+        }
         mLastPhoneState = state;
 
         // Turn status bar notifications on or off depending upon the state
@@ -640,6 +655,13 @@ public class MSimCallNotifier extends CallNotifier {
     @Override
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.IDLE && ussdRespDialog != null) {
+            if (VDBG)
+                log("show ussd dialog...");
+            ussdRespDialog.show();
+        }
 
         mVoicePrivacyState = false;
         Connection c = (Connection) r.result;
@@ -869,6 +891,12 @@ public class MSimCallNotifier extends CallNotifier {
     protected void resetAudioStateAfterDisconnect() {
         if (VDBG) log("resetAudioStateAfterDisconnect()...");
 
+        // If other subscription has active voice call, do not reset the audio.
+        if (PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription())) {
+            if (DBG) log(" Other sub has active call, Do not reset audio ");
+            return;
+        }
+
         if (mBluetoothHeadset != null) {
             mBluetoothHeadset.disconnectAudio();
         }
@@ -877,12 +905,7 @@ public class MSimCallNotifier extends CallNotifier {
         // is already off to reset user requested speaker state.
         PhoneUtils.turnOnSpeaker(mApplication, false, true);
 
-        // setAudioMode will set the mode to IDLE, in this case since
-        // other sub is active, do not call setAudioMode().
-        // When sub switch happens, we will take care of calling setAudioMode()
-        if (!(PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription()))) {
-            PhoneUtils.setAudioMode(mCM);
-        }
+        PhoneUtils.setAudioMode(mCM);
     }
 
     /**

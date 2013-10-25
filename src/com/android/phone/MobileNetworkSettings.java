@@ -23,11 +23,9 @@ import com.android.internal.telephony.TelephonyProperties;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.AsyncResult;
@@ -89,8 +87,6 @@ public class MobileNetworkSettings extends PreferenceActivity
     private Phone mPhone;
     private MyHandler mHandler;
     private boolean mOkClicked;
-
-    private BroadcastReceiver mReceiver;
 
     //GsmUmts options and Cdma options
     GsmUmtsOptions mGsmUmtsOptions;
@@ -203,16 +199,6 @@ public class MobileNetworkSettings extends PreferenceActivity
         }
     }
 
-    /**
-     * Receiver for intent broadcasts the Phone app cares about.
-     */
-    protected class PhoneAppBroadcastReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            setScreenState();
-        }
-    }
-
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -221,13 +207,6 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         mPhone = PhoneGlobals.getPhone();
         mHandler = new MyHandler();
-
-        // Register for intent broadcasts
-        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-        intentFilter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
-
-        mReceiver = new PhoneAppBroadcastReceiver();
-        registerReceiver(mReceiver, intentFilter);
 
         //get UI object references
         PreferenceScreen prefSet = getPreferenceScreen();
@@ -297,7 +276,9 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         // upon resumption from the sub-activity, make sure we re-enable the
         // preferences.
-        setScreenState();
+        // TODO: BUG: This will reenable all preferences, including ones that
+        // are supposed to be disabled (operator selection button is one example)
+        getPreferenceScreen().setEnabled(true);
         // TODO: Call this to redisable preferences due to bug above
         if (mGsmUmtsOptions != null) mGsmUmtsOptions.onResume();
 
@@ -314,11 +295,6 @@ public class MobileNetworkSettings extends PreferenceActivity
             mPhone.getPreferredNetworkType(mHandler.obtainMessage(
                     MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
         }
-    }
-
-    private void setScreenState() {
-        int simState = TelephonyManager.getDefault().getSimState();
-        getPreferenceScreen().setEnabled(simState == TelephonyManager.SIM_STATE_READY);
     }
 
     @Override
@@ -392,12 +368,6 @@ public class MobileNetworkSettings extends PreferenceActivity
 
         // always let the preference setting proceed.
         return true;
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mReceiver);
     }
 
     private class MyHandler extends Handler {
@@ -510,7 +480,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                         android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
                         networkMode );
                 //Update '2GOnly checkbox' based on recent preferred network type selection.
-                Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                if (mGsmUmtsOptions != null) {
+                    Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
+                }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }

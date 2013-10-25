@@ -95,6 +95,7 @@
     <uses-permission android:name="android.permission.UPDATE_APP_OPS_STATS" />
     <uses-permission android:name="android.permission.CONNECTIVITY_INTERNAL" />
     <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="com.android.firewall.READ_GRAVITY" />
 
     <!-- This tells the activity manager to not delay any of our activity
          start requests, even if they happen immediately after the user
@@ -315,7 +316,7 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:screenOrientation="nosensor"
-            android:configChanges="keyboardHidden"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:exported="false">
         </activity>
 
@@ -698,6 +699,14 @@
            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="CdmaCallForwardOptions"
+            android:label="@string/labelCF"
+            android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
 

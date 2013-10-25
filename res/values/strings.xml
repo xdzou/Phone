@@ -900,6 +900,7 @@
     <string name="pin2_or_fdn_invalid">FDN wasn\'t updated. The PIN2 was incorrect, or the phone number was rejected.</string>
     <!-- FDN settings: error message displayed in a popup (toast) -->
     <string name="fdn_failed">FDN operation failed.</string>
+    <string name="fdn_service_unavailable">FDN service is not available.</string>
 
     <!-- ADN related strings -->
     <!-- Placeholder text displayed while loading the list of SIM contacts -->
@@ -2001,4 +2002,8 @@
 
     <string name="prefix_of_label">(</string>
     <string name="suffix_of_label">)</string>
+    <string name="CFActivate">Activate</string>
+    <string name="CFDeactivate">Deactivate</string>
+    <string name="null_phone_number">Phone number cannot be null !</string>
+    <string name="labelCFDeactAll">Deactivate All</string>
 </resources>
