@@ -845,6 +845,9 @@ public class PhoneGlobals extends ContextWrapper
 
         public void onCallForwardingOptions(List<CallForwardInfoP> fi) {
         }
+
+        public void onRingbackTone(boolean playTone) {
+        }
     };
 
     public void onConfigurationChanged(Configuration newConfig) {
