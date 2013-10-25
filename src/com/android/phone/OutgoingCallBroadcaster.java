@@ -469,14 +469,20 @@ public class OutgoingCallBroadcaster extends Activity
         otaCleanup();
 
         if (launchMSimDialerOrNot(intent)) {
-            Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
-            Intent intentMSim = new Intent(this, MSimDialerActivity.class);
-            intentMSim.setData(intent.getData());
-            intentMSim.setAction(intent.getAction());
-            int requestCode = 1;
-            startActivityForResult(intentMSim, requestCode);
+            boolean promptEnabled = MSimPhoneFactory.isPromptEnabled();
+            String number = PhoneNumberUtils.getNumberFromIntent(intent, this);
+            boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(number);
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled() && promptEnabled &&
+               (activeSubCount() > 1) && (!isIntentFromBluetooth(intent)) &&
+                       (!isSIPCall(number, intent)) && (!isEmergency)) { 
+                Log.d(TAG, "Start multisimdialer activity and get the sub selected by user");
+                Intent intentMSim = new Intent(this, MSimDialerActivity.class);
+                intentMSim.setData(intent.getData());
+                intentMSim.setAction(intent.getAction());
+                int requestCode = 1;
+                startActivityForResult(intentMSim, requestCode);
+            }
         } else {
-            PhoneUtils.setActiveSubscription(mSubscription);
             Log.d(TAG, "subscription: " + mSubscription);
             processMSimIntent(intent);
         }
@@ -927,9 +933,7 @@ public class OutgoingCallBroadcaster extends Activity
                     && (!isIntentFromBluetooth(intent)) && (!isSIPCall(number, intent))
                     && !isEmergency) {
                 int subscription = -1;
-                if (SystemProperties.getBoolean("persist.env.phone.smartdialer", true)) {
                     subscription = intent.getIntExtra("dial_widget_switched", -1);
-                }
                 if (subscription >= MSimConstants.SUB1) {
                     mSubscription = subscription;
                 } else if (!promptEnabled) {

@@ -24,6 +24,7 @@ import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.CallerInfo;
 import com.android.internal.telephony.CallerInfoAsyncQuery;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
@@ -35,15 +36,18 @@ import com.android.internal.telephony.cdma.SignalToneUtil;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 
 import android.app.ActivityManagerNative;
+import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
@@ -53,6 +57,7 @@ import android.os.SystemVibrator;
 import android.os.Vibrator;
 import android.provider.CallLog.Calls;
 import android.provider.Settings;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
@@ -183,6 +188,11 @@ public class CallNotifier extends Handler
     // The tone volume relative to other sounds in the stream SignalInfo
     private static final int TONE_RELATIVE_VOLUME_SIGNALINFO = 80;
 
+    private static final Uri FIREWALL_PROVIDER_URI = Uri
+            .parse("content://com.android.firewall");
+    private static final String EXTRA_NUMBER = "phonenumber";
+    private static final String IS_FORBIDDEN = "isForbidden";
+
     protected Call.State mPreviousCdmaCallState;
     protected boolean mVoicePrivacyState = false;
     protected boolean mIsCdmaRedialCall = false;
@@ -272,6 +282,30 @@ public class CallNotifier extends Handler
         switch (msg.what) {
             case PHONE_NEW_RINGING_CONNECTION:
                 log("RINGING... (new)");
+
+                // Add to check the firewall when firewall provider is built.
+                AsyncResult r = (AsyncResult) msg.obj;
+                Connection c = (Connection) r.result;
+                Phone phone = c.getCall().getPhone();
+                final ContentResolver cr = mApplication.getContentResolver();
+                if (cr.acquireProvider(FIREWALL_PROVIDER_URI) != null) {
+                    if (c != null && c.isRinging()) {
+                        String number = c.getAddress();
+                        int subscription = phone.getSubscription();
+
+                        Bundle extras = new Bundle();
+                        extras.putInt(MSimConstants.SUBSCRIPTION_KEY, subscription);
+                        extras.putString(EXTRA_NUMBER, number);
+                        extras = cr.call(FIREWALL_PROVIDER_URI, IS_FORBIDDEN, null, extras);
+                        if (extras != null) {
+                            boolean isForbidden= extras.getBoolean(IS_FORBIDDEN);
+                            if (isForbidden) {
+                                PhoneUtils.hangupRingingCall(c.getCall());
+                                return;
+                            }
+                        }
+                    }
+                }
                 onNewRingingConnection((AsyncResult) msg.obj);
                 mSilentRingerRequested = false;
                 break;
@@ -601,6 +635,14 @@ public class CallNotifier extends Handler
         log("onNewRingingConnection(): state = " + mCM.getState() + ", conn = { " + c + " }");
         Call ringing = c.getCall();
         Phone phone = ringing.getPhone();
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.RINGING && ussdRespDialog != null
+                && ussdRespDialog.isShowing()) {
+            if (true)
+                log("hide ussd dialog...");
+            ussdRespDialog.hide();
+        }
 
         // Check for a few cases where we totally ignore incoming calls.
         if (ignoreAllIncomingCalls(phone)||PhoneGlobals.getInstance().isCsvtActive()) {
@@ -1231,6 +1273,13 @@ public class CallNotifier extends Handler
 
     protected void onDisconnect(AsyncResult r) {
         if (VDBG) log("onDisconnect()...  CallManager state: " + mCM.getState());
+
+        Dialog ussdRespDialog = mApplication.getUSSDResponseDialog();
+        if (mCM.getState() == PhoneConstants.State.IDLE && ussdRespDialog != null) {
+            if (VDBG)
+                log("show ussd dialog...");
+            ussdRespDialog.show();
+        }
 
         mVoicePrivacyState = false;
         Connection c = (Connection) r.result;
@@ -1945,6 +1994,9 @@ public class CallNotifier extends Handler
         removeMessages(CALLWAITING_CALLERINFO_DISPLAY_DONE);
         removeMessages(CALLWAITING_ADDCALL_DISABLE_TIMEOUT);
 
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            PhoneUtils.setActiveSubscription(MSimConstants.SUB1);
+        }
         // Set the Phone Call State to SINGLE_ACTIVE as there is only one connection
         // else we would not have received Call waiting
         mApplication.cdmaPhoneCallState.setCurrentCallState(

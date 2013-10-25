@@ -83,7 +83,6 @@ public class MSimCallController extends CallController {
         if (DBG) log("placeCallInternal()...  intent = " + intent);
         int sub = intent.getIntExtra(SUBSCRIPTION_KEY, mApp.getVoiceSubscription());
 
-        PhoneUtils.setActiveSubscription(sub);
         return super.placeCallInternal(intent);
     }
 

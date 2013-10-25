@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2011 The Android Open Source Project
+<!-- Copyright 2013, The Linux Foundation. All rights reserved.
+     Not a Contribution.
+
+     Copyright (C) 2011 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -66,6 +69,10 @@
          holding the phone, *before* moving it up to your face and having
          the prox sensor kick in.) -->
     <dimen name="button_cluster_side_padding">20dp</dimen>
+
+    <!-- Dimensions for DSDA switch tab -->
+    <dimen name="dsda_sub_icon_marginTop">14dp</dimen>
+    <dimen name="dsda_sub_text_marginTop">12dp</dimen>
 
 
     <!-- Dimensions for OTA Call Card -->

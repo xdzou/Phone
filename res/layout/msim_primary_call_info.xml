@@ -138,6 +138,16 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"/>
             </LinearLayout>
 
+            <!-- Elapsed time indication for a call in progress for DSDA. -->
+            <TextView android:id="@+id/elapsedTimeSec"
+                android:layout_alignParentRight="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:singleLine="true"
+                android:visibility="invisible" />
+
             <ImageView android:id="@+id/inCallSubIcon"
                 android:layout_alignParentRight="true"
                 android:layout_width="wrap_content"
@@ -170,6 +180,17 @@
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/incall_call_banner_text_color"
                 android:singleLine="true" />
+
+            <!-- Phone number attribute for DSDA -->
+            <TextView android:id="@+id/cityNameSec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:paddingTop="@dimen/call_banner_text_top_padding"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="@color/incall_call_banner_text_color"
+                android:singleLine="true"
+                android:visibility="invisible" />
 
             <!-- Elapsed time indication for a call in progress. -->
             <TextView android:id="@+id/elapsedTime"

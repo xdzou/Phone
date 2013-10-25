@@ -19,16 +19,31 @@
 
 package com.android.phone;
 
+import java.util.Set;
+
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.telephony.MSimTelephonyManager;
+import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.android.internal.telephony.IccCardConstants;
+import com.android.internal.telephony.MSimConstants;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.android.internal.telephony.TelephonyIntents;
+
+
+import com.codeaurora.telephony.msim.MSimPhoneFactory;
 
 /**
  * Activity to let the user add or edit an FDN contact.
@@ -39,10 +54,54 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
 
     private static int mSubscription = 0;
 
+    private BroadcastReceiver mSimStateChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null
+                    && intent.getAction().equals(
+                            TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
+                String stateExtra = intent
+                        .getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+                // Obtain the subscription info from intent.
+                int sub = intent.getIntExtra(MSimConstants.SUBSCRIPTION_KEY,
+                        MSimConstants.DEFAULT_SUBSCRIPTION);
+                // Check is the intent is for this subscription
+                if (sub != mSubscription) {
+                    return;
+                }
+
+                if (IccCardConstants.INTENT_VALUE_ICC_ABSENT.equals(stateExtra)) {
+                    String absentReason = intent
+                            .getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                    if (!IccCardConstants.INTENT_VALUE_ABSENT_ON_PERM_DISABLED
+                            .equals(absentReason)) {
+                        Toast.makeText(context, R.string.fdn_service_unavailable,
+                                Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+            }
+        }
+    };
+    private Handler mHandler = new Handler();
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter(
+                TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+        registerReceiver(mSimStateChangedReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mSimStateChangedReceiver);
     }
 
     @Override
@@ -71,7 +130,9 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
     protected void addContact() {
         if (DBG) log("addContact");
 
-        if (!isValidNumber(getNumberFromTextField())) {
+        final String number = PhoneNumberUtils.convertAndStrip(getNumberFromTextField());
+
+        if (!isValidNumber(number)) {
             handleResult(false, true);
             return;
         }
@@ -80,7 +141,7 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
 
         ContentValues bundle = new ContentValues(4);
         bundle.put("tag", getNameFromTextField());
-        bundle.put("number", getNumberFromTextField());
+        bundle.put("number", number);
         bundle.put("pin2", mPin2);
         bundle.put(SUBSCRIPTION_KEY, mSubscription);
 
@@ -94,7 +155,10 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
     protected void updateContact() {
         if (DBG) log("updateContact");
 
-        if (!isValidNumber(getNumberFromTextField())) {
+        final String name = getNameFromTextField();
+        final String number = PhoneNumberUtils.convertAndStrip(getNumberFromTextField());
+
+        if (!isValidNumber(number)) {
             handleResult(false, true);
             return;
         }
@@ -103,8 +167,8 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
         ContentValues bundle = new ContentValues();
         bundle.put("tag", mName);
         bundle.put("number", mNumber);
-        bundle.put("newTag", getNameFromTextField());
-        bundle.put("newNumber", getNumberFromTextField());
+        bundle.put("newTag", name);
+        bundle.put("newNumber", number);
         bundle.put("pin2", mPin2);
         bundle.put(SUBSCRIPTION_KEY, mSubscription);
 
@@ -129,6 +193,42 @@ public class MSimEditFdnContactScreen extends EditFdnContactScreen {
             startActivity(intent);
         }
         finish();
+    }
+
+    /**
+     * This method will handleResult for MSIM cases
+    */
+    @Override
+    protected void handleResult(boolean success, boolean invalidNumber) {
+        if (success) {
+            if (DBG) log("handleResult: success!");
+            showStatus(getResources().getText(mAddContact ?
+                    R.string.fdn_contact_added : R.string.fdn_contact_updated));
+        } else {
+            if (DBG) log("handleResult: failed!");
+            if (invalidNumber) {
+                showStatus(getResources().getText(R.string.fdn_invalid_number));
+            } else {
+                if (MSimPhoneFactory.getPhone(mSubscription).getIccCard().getIccPin2Blocked()) {
+                    showStatus(getResources().getText(R.string.fdn_enable_puk2_requested));
+                } else if (MSimPhoneFactory.getPhone(mSubscription).getIccCard()
+                        .getIccPuk2Blocked()) {
+                    showStatus(getResources().getText(R.string.puk2_blocked));
+                } else {
+                    // There's no way to know whether the failure is due to incorrect PIN2 or
+                    // an inappropriate phone number.
+                    showStatus(getResources().getText(R.string.pin2_or_fdn_invalid));
+                }
+            }
+        }
+
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, 2000);
+
     }
 
     @Override

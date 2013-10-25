@@ -702,4 +702,8 @@
     <!-- Set dual dialer for MultiSim -->
     <string name="call_number">拨至: </string>
     <string name="cancel_call">取消</string>
+    <string name="CFActivate">激活</string>
+    <string name="CFDeactivate">禁用</string>
+    <string name="null_phone_number">输入的电话号码不能为空!</string>
+    <string name="labelCFDeactAll">全部禁用</string>
 </resources>

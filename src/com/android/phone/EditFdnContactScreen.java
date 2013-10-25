@@ -21,9 +21,12 @@ import static android.view.Window.PROGRESS_VISIBILITY_ON;
 
 import android.app.Activity;
 import android.content.AsyncQueryHandler;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -50,7 +53,10 @@ import android.widget.Toast;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneFactory;
 
+import com.android.internal.telephony.IccCardConstants;
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+import com.android.internal.telephony.TelephonyIntents;
+
 
 /**
  * Activity to let the user add or edit an FDN contact.
@@ -97,6 +103,28 @@ public class EditFdnContactScreen extends Activity {
     }
     /** flag to track saving state */
     private boolean mDataBusy;
+
+    private BroadcastReceiver mSimStateChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent != null
+                    && intent.getAction().equals(
+                            TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
+                String stateExtra = intent
+                        .getStringExtra(IccCardConstants.INTENT_KEY_ICC_STATE);
+
+                if (IccCardConstants.INTENT_VALUE_ICC_ABSENT.equals(stateExtra)) {
+                    String absentReason = intent
+                            .getStringExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON);
+                    if (!IccCardConstants.INTENT_VALUE_ABSENT_ON_PERM_DISABLED
+                            .equals(absentReason)) {
+                        Toast.makeText(context, R.string.fdn_service_unavailable,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle icicle) {
@@ -158,6 +186,20 @@ public class EditFdnContactScreen extends Activity {
                 mNumberField.setText(cursor.getString(1));
                 break;
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter filter = new IntentFilter(
+                TelephonyIntents.ACTION_SIM_STATE_CHANGED);
+        registerReceiver(mSimStateChangedReceiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mSimStateChangedReceiver);
     }
 
     /**
