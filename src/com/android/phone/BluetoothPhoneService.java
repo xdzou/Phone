@@ -166,6 +166,7 @@ public class BluetoothPhoneService extends Service {
                 break;
             }
         }
+        mCM.registerForDisconnect(mHandler, PHONE_ON_DISCONNECT, null);
         if (mIsBluetoothDsda == true)
             mCM.registerForSubscriptionChange(mHandler,
                       PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
@@ -209,6 +210,7 @@ public class BluetoothPhoneService extends Service {
     private static final int CDMA_SWAP_SECOND_CALL_STATE = 6;
     private static final int CDMA_SET_SECOND_CALL_STATE = 7;
     private static final int PHONE_ACTIVE_SUBSCRIPTION_CHANGE = 8;
+    private static final int PHONE_ON_DISCONNECT = 9;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -220,6 +222,7 @@ public class BluetoothPhoneService extends Service {
                     updateServiceState(state);
                     break;
                 case PRECISE_CALL_STATE_CHANGED:
+                case PHONE_ON_DISCONNECT:
                     Connection connection = null;
                     if (((AsyncResult) msg.obj).result instanceof Connection) {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
@@ -276,6 +279,7 @@ public class BluetoothPhoneService extends Service {
         mCM.getDefaultPhone().unregisterForServiceStateChanged(mHandler);
         mCM.unregisterForPreciseCallStateChanged(mHandler);
         mCM.unregisterForCallWaiting(mHandler);
+        mCM.unregisterForDisconnect(mHandler);
         if (mIsBluetoothDsda == true)
             mCM.unregisterForSubscriptionChange(mHandler);
 
@@ -292,6 +296,7 @@ public class BluetoothPhoneService extends Service {
                 break;
             }
         }
+        mCM.registerForDisconnect(mHandler, PHONE_ON_DISCONNECT, null);
         if (mIsBluetoothDsda == true)
             mCM.registerForSubscriptionChange(mHandler,
                      PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
