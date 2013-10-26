@@ -332,6 +332,10 @@ public class OutgoingCallBroadcaster extends Activity
             Log.i(TAG, "- number: " + number);
         }
 
+        if (SystemProperties.getBoolean("persist.env.phone.checkica", false)) {
+            number = checkInternationalAccessCode(number);
+        }
+
         // Create a copy of the original CALL intent that started the whole
         // outgoing-call sequence.  This intent will ultimately be passed to
         // CallController.placeCall() after the SipCallOptionHandler step.
@@ -357,6 +361,18 @@ public class OutgoingCallBroadcaster extends Activity
         }
         context.startActivity(selectPhoneIntent);
         // ...and see SipCallOptionHandler.onCreate() for the next step of the sequence.
+    }
+
+    private String checkInternationalAccessCode (String number) {
+        String prefixArray[] = getResources().getStringArray(R.array.phone_number_prefix);
+        if (!TextUtils.isEmpty(number)) {
+            for (String prefix: prefixArray) {
+                if (number.indexOf(prefix) == 0) {
+                    return "+" + number.substring(prefix.length());
+                }
+            }
+        }
+        return number;
     }
 
     /**
