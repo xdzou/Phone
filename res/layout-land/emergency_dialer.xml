@@ -19,8 +19,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_marginStart="@dimen/dialpad_horizontal_margin"
-    android:layout_marginEnd="@dimen/dialpad_horizontal_margin">
+    android:layout_marginLeft="@dimen/dialpad_horizontal_margin"
+    android:layout_marginRight="@dimen/dialpad_horizontal_margin">
 
     <!-- Text field above the keypad where the digits are displayed -->
     <LinearLayout
@@ -30,6 +30,7 @@
         android:layout_marginTop="@dimen/dialpad_vertical_margin"
         android:layout_marginBottom="69dip"
         android:gravity="center"
+        android:layoutDirection="ltr"
         android:background="@drawable/dialpad_background" >
 
         <EditText

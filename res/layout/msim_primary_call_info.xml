@@ -26,7 +26,7 @@
 
     <!-- Contact photo for primary call info -->
     <ImageView android:id="@+id/photo"
-         android:layout_alignParentLeft="true"
+         android:layout_alignParentStart="true"
          android:layout_alignParentTop="true"
          android:layout_width="match_parent"
          android:layout_height="match_parent"
@@ -66,7 +66,7 @@
          TODO: try that. It may be smoother with slower devices.
       -->
     <View android:id="@+id/dim_effect_for_primary_photo"
-         android:layout_alignParentLeft="true"
+         android:layout_alignParentStart="true"
          android:layout_alignParentTop="true"
          android:layout_width="match_parent"
          android:layout_height="match_parent"
@@ -83,8 +83,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="@dimen/call_banner_height"
-        android:paddingLeft="@dimen/call_banner_side_padding"
-        android:paddingRight="@dimen/call_banner_side_padding"
+        android:paddingStart="@dimen/call_banner_side_padding"
+        android:paddingEnd="@dimen/call_banner_side_padding"
         android:paddingTop="@dimen/call_banner_top_bottom_padding"
         android:paddingBottom="@dimen/call_banner_top_bottom_padding"
         android:background="@color/incall_call_banner_background">
@@ -113,7 +113,7 @@
                 <TextView
                     android:id="@+id/prefix_of_label"
                     android:layout_width="wrap_content"
-                    android:paddingLeft="@dimen/call_banner_text_left_right_padding"
+                    android:paddingStart="@dimen/call_banner_text_left_right_padding"
                     android:layout_height="wrap_content"
                     android:text="@string/prefix_of_label"
                     android:singleLine="true"
@@ -140,7 +140,7 @@
 
             <!-- Elapsed time indication for a call in progress for DSDA. -->
             <TextView android:id="@+id/elapsedTimeSec"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
@@ -149,7 +149,7 @@
                 android:visibility="invisible" />
 
             <ImageView android:id="@+id/inCallSubIcon"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </RelativeLayout>
@@ -164,9 +164,9 @@
                 android:id="@+id/phoneNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
                 android:paddingTop="@dimen/call_banner_text_top_padding"
-                android:paddingRight="@dimen/call_banner_text_left_right_padding"
+                android:paddingEnd="@dimen/call_banner_text_left_right_padding"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/incall_call_banner_text_color"
                 android:singleLine="true" />
@@ -175,7 +175,7 @@
             <TextView android:id="@+id/cityName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_toRightOf="@id/phoneNumber"
+                android:layout_toEndOf="@id/phoneNumber"
                 android:paddingTop="@dimen/call_banner_text_top_padding"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/incall_call_banner_text_color"
@@ -185,7 +185,7 @@
             <TextView android:id="@+id/cityNameSec"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:paddingTop="@dimen/call_banner_text_top_padding"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/incall_call_banner_text_color"
@@ -194,7 +194,7 @@
 
             <!-- Elapsed time indication for a call in progress. -->
             <TextView android:id="@+id/elapsedTime"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceMedium"
@@ -221,7 +221,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:visibility="gone"
-            android:layout_alignParentRight="true" />
+            android:layout_alignParentEnd="true" />
     </RelativeLayout>  <!-- End of call_banner -->
 
     <!-- Volume boost and Volume enhancements in-call UI -->
@@ -237,7 +237,7 @@
         android:layout_below="@id/primary_call_banner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|right"
+        android:layout_gravity="center_vertical|end"
         android:orientation="vertical"
         android:background="@color/incall_secondary_info_background"
         android:animateLayoutChanges="true">
@@ -248,9 +248,9 @@
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/provider_info_top_bottom_padding"
             android:paddingBottom="@dimen/provider_info_top_bottom_padding"
-            android:paddingLeft="@dimen/call_banner_side_padding"
-            android:paddingRight="@dimen/call_banner_side_padding"
-            android:gravity="right"
+            android:paddingStart="@dimen/call_banner_side_padding"
+            android:paddingEnd="@dimen/call_banner_side_padding"
+            android:gravity="end"
             android:orientation="horizontal"
             android:background="@android:color/transparent">
             <TextView android:id="@+id/providerLabel"
@@ -266,8 +266,8 @@
                 android:layout_width="0px"
                 android:layout_height="wrap_content"
                 android:layout_weight="4"
-                android:gravity="right"
-                android:paddingLeft="8dp"
+                android:gravity="end"
+                android:paddingStart="8dp"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textAllCaps="true"
                 android:textColor="@color/incall_call_banner_text_color"
@@ -286,12 +286,12 @@
             <TextView android:id="@+id/callStateLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
                 android:paddingTop="@dimen/provider_info_top_bottom_padding"
                 android:paddingBottom="@dimen/provider_info_top_bottom_padding"
-                android:paddingLeft="@dimen/call_state_label_left_padding"
-                android:paddingRight="@dimen/call_banner_side_padding"
-                android:gravity="right"
+                android:paddingStart="@dimen/call_state_label_left_padding"
+                android:paddingEnd="@dimen/call_banner_side_padding"
+                android:gravity="end"
                 android:textAppearance="?android:attr/textAppearanceSmall"
                 android:textColor="@color/incall_call_banner_text_color"
                 android:textAllCaps="true"
@@ -300,7 +300,7 @@
                 android:ellipsize="end" />
 
             <ImageView android:id="@+id/callStateSubIcon"
-                android:layout_toLeftOf="@id/callStateLabel"
+                android:layout_toStartOf="@id/callStateLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true" />
