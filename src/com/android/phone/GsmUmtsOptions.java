@@ -20,17 +20,25 @@
 
 package com.android.phone;
 
+import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
+
+import java.util.List;
+
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.res.Resources;
 import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
-import android.content.res.Resources;
+import android.telephony.MSimTelephonyManager;
+import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.PhoneFactory;
-
-import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
 
 /**
  * List of Network-specific settings screens.
@@ -76,6 +84,51 @@ public class GsmUmtsOptions {
         enableScreen();
     }
 
+    /**
+     * check whether NetworkSetting apk exist in system, if true, replace the
+     * intent of the NetworkSetting Activity with the intent of NetworkSetting
+     */
+    private void enablePlmnIncSearch() {
+        if (mButtonOperatorSelectionExpand != null) {
+            PackageManager pm = mButtonOperatorSelectionExpand.getContext().getPackageManager();
+
+            // check whether the target handler exist in system
+            List<ResolveInfo> list = pm.queryIntentActivities(new Intent(
+                    "org.codeaurora.settings.NETWORK_OPERATOR_SETTINGS_ASYNC"), 0);
+            for (ResolveInfo resolveInfo : list) {
+
+                // check is it installed in system.img, exclude the application
+                // installed by user
+                if ((resolveInfo.activityInfo.applicationInfo.flags &
+                        ApplicationInfo.FLAG_SYSTEM) != 0) {
+
+                    // set the target intent
+                    mButtonOperatorSelectionExpand.setIntent(new Intent().setClassName(
+                            resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name)
+                            .putExtra(SUBSCRIPTION_KEY, mSubscription));
+
+                    // get current SPN
+                    MSimTelephonyManager mtm = MSimTelephonyManager.getDefault();
+                    TelephonyManager tm = TelephonyManager.getDefault();
+                    String spn = null;
+                    if (mtm.isMultiSimEnabled()) {
+                        spn = mtm.getNetworkOperatorName(mSubscription);
+                    } else {
+                        spn = tm.getNetworkOperatorName();
+                    }
+
+                    // set current SPN as the summary of the preference view
+                    if (!TextUtils.isEmpty(spn) && !"null".equals(spn)) {
+                        mButtonOperatorSelectionExpand.setSummary(spn);
+                    } else {
+                        mButtonOperatorSelectionExpand.setSummary(R.string.sum_carrier_select);
+                    }
+                    return;
+                }
+            }
+        }
+    }
+
     public void onResume() {
         updateOperatorSelectionVisibility();
     }
@@ -117,6 +170,8 @@ public class GsmUmtsOptions {
             android.util.Log.e(LOG_TAG, "mButtonOperatorSelectionExpand is null");
             return;
         }
+
+        enablePlmnIncSearch();
         if (!mPhone.isManualNetSelAllowed()) {
             log("Manual network selection not allowed.Disabling Operator Selection menu.");
             mButtonOperatorSelectionExpand.setEnabled(false);
