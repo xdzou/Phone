@@ -113,4 +113,7 @@
 
     <!-- Dimensions for Video Call Panel -->
     <dimen name="indicator_bar_width">38dp</dimen>
+
+    <!-- Dimension for contact photo inside the in-call screen -->
+    <dimen name="contact_photo_size">130dp</dimen>
 </resources>
