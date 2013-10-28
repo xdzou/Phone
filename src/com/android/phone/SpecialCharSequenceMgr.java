@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.WindowManager;
 
@@ -210,10 +211,14 @@ public class SpecialCharSequenceMgr {
             Phone phone = app.phone;
 
             if (app instanceof com.android.phone.MSimPhoneGlobals) {
-                // In multisim case, handle PIN/PUK MMI commands on
-                // voice preferred sub.
-                int voiceSub = app.getVoiceSubscription();
-                phone = app.getPhone(voiceSub);
+                int numPhones = MSimTelephonyManager.getDefault().getPhoneCount();
+                for (int i = 0; i < numPhones; i++) {
+                    if (MSimTelephonyManager.getDefault().getSimState(i)
+                            == TelephonyManager.SIM_STATE_PIN_REQUIRED) {
+                        phone = app.getPhone(i);
+                        break;
+                    }
+                }
             }
             boolean isMMIHandled = phone.handlePinMmi(input);
 
