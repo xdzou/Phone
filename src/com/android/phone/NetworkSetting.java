@@ -22,11 +22,14 @@ package com.android.phone;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.ConnectivityManager;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -45,6 +48,8 @@ import android.util.Log;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.OperatorInfo;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.TelephonyIntents;
 
 import com.codeaurora.telephony.msim.MSimPhoneFactory;
 import com.codeaurora.telephony.msim.MSimProxyManager;
@@ -81,14 +86,19 @@ public class NetworkSetting extends PreferenceActivity
     private static final String BUTTON_SRCH_NETWRKS_KEY = "button_srch_netwrks_key";
     private static final String BUTTON_AUTO_SELECT_KEY = "button_auto_select_key";
 
+    // Broadcast receiver for ANY_DATA_CONNECTION_STATE_CHANGED
+    private final BroadcastReceiver mReceiver = new NetworkSettingBroadcastReceiver();
+
     //map of network controls to the network data.
     private HashMap<Preference, OperatorInfo> mNetworkMap;
 
     //map of RAT type values to user understandable strings
     private HashMap<String, String> mRatMap;
 
+    private ConnectivityManager mCm;
     Phone mPhone;
     protected boolean mIsForeground = false;
+    private boolean mNetworkSearchDataDisconnecting = false;
 
     /** message for network selection */
     String mNetworkSelectMsg;
@@ -117,11 +127,15 @@ public class NetworkSetting extends PreferenceActivity
                     } catch (IllegalArgumentException e1) {
                         log("RemoteException[stopQuery]: " + e1);
                     }
-                    if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-                        MSimProxyManager.getInstance().enableDataConnectivity(
-                                MSimPhoneFactory.getDataSubscription());
+                    if (mNetworkSearchDataDisabled)
+                    {
+                        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                            MSimProxyManager.getInstance().enableDataConnectivity(
+                                    MSimPhoneFactory.getDataSubscription());
+                        } else {
+                            mCm.setMobileDataEnabled(true);
+                        }
                     }
-
                     mNetworkSearchDataDisabled = false;
                     getPreferenceScreen().setEnabled(true);
                     break;
@@ -231,8 +245,14 @@ public class NetworkSetting extends PreferenceActivity
         boolean handled = false;
 
         if (preference == mSearchButton) {
-            showDialog(DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM);
-            handled = true;
+            if (mPhone.getDataConnectionState() == PhoneConstants.DataState.CONNECTED) {
+                showDialog(DIALOG_NETWORK_DISCONNECT_DATA_CONFIRM);
+                handled = true;
+            } else {
+                showDialog(DIALOG_NETWORK_LIST_LOAD);
+                loadNetworksList();
+                handled = true;
+            }
         } else if (preference == mAutoSelect) {
             selectNetworkAutomatic();
             handled = true;
@@ -257,10 +277,7 @@ public class NetworkSetting extends PreferenceActivity
     public void onCancel(DialogInterface dialog) {
         if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
             mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            MSimProxyManager.getInstance().enableDataConnectivity(
-                    MSimPhoneFactory.getDataSubscription());
-        }
+
         // request that the service stop the query with this callback object.
         try {
             mNetworkQueryService.stopNetworkQuery(mCallback);
@@ -280,7 +297,11 @@ public class NetworkSetting extends PreferenceActivity
             if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
                 MSimProxyManager.getInstance().disableDataConnectivity(
                         MSimPhoneFactory.getDataSubscription(),onCompleteMsg);
+            } else {
+                mNetworkSearchDataDisconnecting = true;
+                mCm.setMobileDataEnabled(false);
             }
+
         }else if (which == DialogInterface.BUTTON_NEGATIVE){
             if(DBG) log("network search,do nothing");
         }
@@ -302,7 +323,6 @@ public class NetworkSetting extends PreferenceActivity
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-
         addPreferencesFromResource(R.xml.carrier_select);
 
         int subscription = getIntent().getIntExtra(SUBSCRIPTION_KEY,
@@ -311,12 +331,13 @@ public class NetworkSetting extends PreferenceActivity
         mPhone = MSimPhoneGlobals.getInstance().getPhone(subscription);
         Intent intent = new Intent(this, NetworkQueryService.class);
         intent.putExtra(SUBSCRIPTION_KEY, subscription);
-
+        IntentFilter intentFilter  = new IntentFilter();
+        intentFilter.addAction(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED);
         mNetworkList = (PreferenceGroup) getPreferenceScreen().findPreference(LIST_NETWORKS_KEY);
         mNetworkMap = new HashMap<Preference, OperatorInfo>();
         mRatMap = new HashMap<String, String>();
         initRatMap();
-
+        mCm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
         mSearchButton = getPreferenceScreen().findPreference(BUTTON_SRCH_NETWRKS_KEY);
         mAutoSelect = getPreferenceScreen().findPreference(BUTTON_AUTO_SELECT_KEY);
 
@@ -328,6 +349,7 @@ public class NetworkSetting extends PreferenceActivity
         startService (intent);
         bindService (new Intent(this, NetworkQueryService.class), mNetworkQueryServiceConnection,
                 Context.BIND_AUTO_CREATE);
+        registerReceiver(mReceiver, intentFilter);
     }
 
     @Override
@@ -350,9 +372,18 @@ public class NetworkSetting extends PreferenceActivity
     protected void onDestroy() {
         // unbind the service.
         unbindService(mNetworkQueryServiceConnection);
+        unregisterReceiver(mReceiver);
 
         if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
             mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
+        if (mNetworkSearchDataDisabled) {
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                MSimProxyManager.getInstance().enableDataConnectivity(
+                        MSimPhoneFactory.getDataSubscription());
+            } else {
+                mCm.setMobileDataEnabled(true);
+            }
+        }
         super.onDestroy();
     }
 
@@ -505,13 +536,16 @@ public class NetworkSetting extends PreferenceActivity
 
         if (mHandler.hasMessages(EVENT_SCAN_TIME_OUT))
             mHandler.removeMessages(EVENT_SCAN_TIME_OUT);
-        //enable data service
-        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
-            MSimProxyManager.getInstance().enableDataConnectivity(
-                    MSimPhoneFactory.getDataSubscription());
+        if (mNetworkSearchDataDisabled) {
+            //enable data service
+            if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+                MSimProxyManager.getInstance().enableDataConnectivity(
+                        MSimPhoneFactory.getDataSubscription());
+            } else {
+                mCm.setMobileDataEnabled(true);
+            }
         }
         mNetworkSearchDataDisabled = false;
-
         getPreferenceScreen().setEnabled(true);
         clearList();
 
@@ -606,4 +640,26 @@ public class NetworkSetting extends PreferenceActivity
     private void log(String msg) {
         Log.d(LOG_TAG, "[NetworksList] " + msg);
     }
+
+    /**
+     * Receiver for ANY_DATA_CONNECTION_STATE_CHANGED
+     */
+    protected class NetworkSettingBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if ((!MSimTelephonyManager.getDefault().isMultiSimEnabled()) &&
+                    mNetworkSearchDataDisconnecting) {
+                if (action.equals(TelephonyIntents.ACTION_ANY_DATA_CONNECTION_STATE_CHANGED)) {
+                    if (mPhone.getDataConnectionState() == PhoneConstants.DataState.DISCONNECTED) {
+                        if (DBG) log("network disconnect data done");
+                        mNetworkSearchDataDisabled = true;
+                        loadNetworksList();
+                        mNetworkSearchDataDisconnecting = false;
+                    }
+                }
+            }
+        }
+    }
 }
+
