@@ -217,6 +217,17 @@ public class MobileNetworkSettings extends PreferenceActivity
                 BUTTON_PREFERED_NETWORK_MODE);
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
 
+        if (SystemProperties.getInt("persist.env.c.phone.networkmode", 0) == 2) {
+            mButtonPreferredNetworkMode
+                    .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
+            mButtonPreferredNetworkMode
+                    .setEntries(R.array.preferred_network_mode_choices_cmcc);
+            mButtonPreferredNetworkMode
+                    .setEntryValues(R.array.preferred_network_mode_values_cmcc);
+        } else if (SystemProperties.getInt("persist.env.c.phone.networkmode", 0) == 1) {
+            prefSet.removePreference(mButtonPreferredNetworkMode);
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
@@ -516,8 +527,13 @@ public class MobileNetworkSettings extends PreferenceActivity
                         R.string.preferred_network_mode_wcdma_only_summary);
                 break;
             case Phone.NT_MODE_GSM_UMTS:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_gsm_wcdma_summary);
+                if (SystemProperties.getInt("persist.env.c.phone.networkmode", 0) == 2) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_3g_2g_summary);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_CDMA:
                 switch (mPhone.getLteOnCdmaMode()) {
@@ -545,8 +561,13 @@ public class MobileNetworkSettings extends PreferenceActivity
                         R.string.preferred_network_mode_lte_summary);
                 break;
             case Phone.NT_MODE_LTE_GSM_WCDMA:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                if (SystemProperties.getInt("persist.env.c.phone.networkmode", 0) == 2) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_4g_3g_2g_summary);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_LTE_CDMA_AND_EVDO:
                 mButtonPreferredNetworkMode.setSummary(
