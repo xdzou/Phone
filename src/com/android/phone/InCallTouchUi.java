@@ -221,10 +221,8 @@ public class InCallTouchUi extends FrameLayout
         mAddParticipant = (Button) mInCallControls.findViewById(R.id.addParticipant);
         if (mAddParticipant != null) {
             mAddParticipant.setVisibility(View.GONE);
-            if (PhoneUtils.shouldShowAddParticipant()) {
-                mAddParticipant.setOnClickListener(this);
-                mAddParticipant.setOnLongClickListener(this);
-            }
+            mAddParticipant.setOnClickListener(this);
+            mAddParticipant.setOnLongClickListener(this);
         }
 
         // TODO: Back when these buttons had text labels, we changed
