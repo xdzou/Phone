@@ -38,6 +38,7 @@ import android.os.UserHandle;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.CellInfo;
 import android.telephony.ServiceState;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -883,7 +884,12 @@ public class PhoneInterfaceManager extends ITelephony.Stub {
      */
     @Override
     public int getNetworkType() {
-        return mPhone.getServiceState().getDataNetworkType();
+        int dataType = mPhone.getServiceState().getDataNetworkType();
+        if(dataType != TelephonyManager.NETWORK_TYPE_UNKNOWN){
+            return dataType;
+        }else{
+            return mPhone.getServiceState().getVoiceNetworkType();
+        }
     }
 
     /**
