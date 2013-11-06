@@ -309,9 +309,20 @@ public class MSimNotificationMgr extends NotificationMgr {
         mQueryHandler = new QueryHandler(mContext.getContentResolver());
 
         // setup query spec, look for all Missed calls that are new.
-        StringBuilder where = new StringBuilder("type=");
-        where.append(Calls.MISSED_TYPE);
-        where.append(" AND new=1");
+        StringBuilder where = null;
+        if (PhoneUtils.isCallOnCsvtEnabled()) {
+            where = new StringBuilder("(type=");
+            where.append(Calls.MISSED_TYPE);
+            where.append(" OR ");
+            where.append("type=");
+            where.append(MISSED_CSVT_TYPE);
+            where.append(")");
+            where.append(" AND new=1");
+        } else {
+            where = new StringBuilder("type=");
+            where.append(Calls.MISSED_TYPE);
+            where.append(" AND new=1");
+        }
 
         // start the query
         if (DBG) log("- start call log query...");

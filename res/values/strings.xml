@@ -773,6 +773,18 @@
         <item>"2"</item>
     </string-array>
 
+    <!-- Notification strings for video call -->
+    <string name="notification_missedVideoCallTitle">Missed video call</string>
+    <string name="notification_missedVideoCallsTitle">Missed video calls</string>
+    <string name="notification_missedVideoCallsMsg">
+        <xliff:g id="num_missed_calls">%1$s</xliff:g>
+        Missed video calls
+    </string>
+    <string name="notification_missedVideoCallTicker">
+        Missed video call from
+        <xliff:g id="missed_call_from">%1$s</xliff:g>
+    </string>
+
     <string name="cdma_subscription_title">CDMA subscription</string>
     <string name="cdma_subscription_summary">Change between RUIM/SIM and NV</string>
     <string name="cdma_subscription_dialogtitle">subscription</string>
