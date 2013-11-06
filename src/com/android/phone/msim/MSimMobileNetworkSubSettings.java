@@ -278,6 +278,11 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
 
+        if (SystemProperties.getBoolean("persist.env.network.mode", false))
+        {
+            mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_global_mode_gms);
+            mButtonPreferredNetworkMode.setEntryValues(R.array.preferred_network_mode_values_global_mode_gms);
+        }
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             // set the listener for the mButtonPreferredNetworkMode list preference so we can issue

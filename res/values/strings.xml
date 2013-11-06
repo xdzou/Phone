@@ -2006,4 +2006,21 @@
     <string name="CFDeactivate">Deactivate</string>
     <string name="null_phone_number">Phone number cannot be null !</string>
     <string name="labelCFDeactAll">Deactivate All</string>
+    <!-- Mobile network mode select for gms mode -->
+    <string-array name="preferred_network_mode_choices_global_mode_gms">
+        <item>GSM/WCDMA auto</item>
+        <item>WCDMA only</item>
+        <item>GSM only</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_global_mode_gms" translatable="false">
+        <item>"3"</item>
+        <item>"2"</item>
+        <item>"1"</item>
+    </string-array>
+    <string-array name="preferred_network_mode_choices_gsm_or_wcdma">
+        <item>GSM/WCDMA auto</item>
+    </string-array>
+    <string-array name="preferred_network_mode_values_gsm_or_wcdma" translatable="false">
+        <item>"3"</item>
+    </string-array>
 </resources>

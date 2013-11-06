@@ -35,6 +35,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.MSimTelephonyManager;
@@ -186,6 +187,20 @@ public class MSimDialerActivity extends Activity {
         for (index = 0; index < mPhoneCount; index++) {
             callButton[index] =  (Button) layout.findViewById(callMark[index]);
             callButton[index].setText(getMultiSimName(index));
+            if (SystemProperties.getBoolean("persist.env.operator.sim", false))
+            {
+                String operatorname = SystemProperties.get("gsm.operator.alpha", null);
+                if (operatorname != null)
+                {
+                    callButton[index].setPadding(15, 0, 15, 0);
+                    callButton[index].setTextSize(15f);
+                    String[] operatornames = operatorname.split(",");
+                    if (operatorname != null && operatornames.length > 0&& index < operatornames.length)
+                        callButton[index].setText(operatornames[index]);
+                }
+                if ((callButton[index].getText() == null) || ("".equals(callButton[index].getText())))
+                    callButton[index].setText(getMultiSimName(index));
+            }
             callButton[index].setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     mAlertDialog.dismiss();
