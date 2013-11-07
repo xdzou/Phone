@@ -2124,10 +2124,8 @@ public class PhoneGlobals extends ContextWrapper
             intent.setClassName(DEFAULT_CALL_ORIGIN_PACKAGE, inCallUiState.latestActiveCallOrigin);
             return intent;
         } else {
-            if (VDBG) Log.d(LOG_TAG, "Current latestActiveCallOrigin ("
-                    + inCallUiState.latestActiveCallOrigin + ") is not valid. "
-                    + "Just use CallLog as a default destination.");
-            return PhoneGlobals.createCallLogIntent();
+            final Intent intent = new Intent();
+            return intent;
         }
     }
 

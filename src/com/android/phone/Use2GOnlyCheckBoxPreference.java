@@ -53,8 +53,9 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
     }
 
     private int getDefaultNetworkMode() {
-        int mode = SystemProperties.getInt("ro.telephony.default_network",
-                Phone.PREFERRED_NT_MODE);
+        int mode =
+            SystemProperties.getInt("persist.radio.default_network",
+                    SystemProperties.getInt("ro.telephony.default_network", Phone.PREFERRED_NT_MODE));
         Log.i(LOG_TAG, "getDefaultNetworkMode: mode=" + mode);
         return mode;
     }
@@ -65,7 +66,10 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
 
         int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
         if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {
-            preferredNetworkMode = Phone.NT_MODE_GLOBAL;
+            if (SystemProperties.getBoolean("persist.env.network.mode", false))
+                preferredNetworkMode = Phone.NT_MODE_GSM_UMTS;
+            else
+                preferredNetworkMode = Phone.NT_MODE_GLOBAL;
         }
 
         int networkType = isChecked() ? Phone.NT_MODE_GSM_ONLY : preferredNetworkMode;
