@@ -241,6 +241,10 @@ public class MSimCallFeaturesSetting extends PreferenceActivity
             prefSet.removePreference(mEmergencyCall);
         }
 
+        if (!SystemProperties.getBoolean("persist.env.phone.xdivert", false)) {
+            prefSet.removePreference(mButtonXDivert);
+        }
+
         if (mPlayDtmfTone != null) {
             mPlayDtmfTone.setChecked(Settings.System.getInt(contentResolver,
                     Settings.System.DTMF_TONE_WHEN_DIALING, 1) != 0);
