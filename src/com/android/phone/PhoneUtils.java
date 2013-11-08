@@ -702,9 +702,10 @@ public class PhoneUtils {
             numberToDial = number;
         }
 
-        // Return CALL_STATUS_FAILED when there are already two calls or conference call
-        if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
-            Call fgCall = app.mCM.getActiveFgCall();
+        // Return CALL_STATUS_FAILED when there are already two calls or
+        // conference call
+        Call fgCall = app.mCM.getActiveFgCall();
+        if (fgCall != null && fgCall.getPhone().getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             if (isConferenceCall(fgCall)
                     || (fgCall.getState() == Call.State.ACTIVE && app.mCM.hasActiveBgCall())) {
                 return CALL_STATUS_FAILED;
@@ -3270,5 +3271,13 @@ public class PhoneUtils {
                 setActiveSubscription(otherActiveSub);
             }
         }
+    }
+
+    public static int getNextSubscriptionId(int curSub) {
+        int nextSub =  curSub + 1;
+        if (nextSub >= MSimTelephonyManager.getDefault().getPhoneCount()) {
+            nextSub = MSimConstants.SUB1;
+        }
+        return nextSub;
     }
 }

@@ -39,8 +39,8 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         android:layout_marginLeft="@dimen/otalistenprogress_layout_marginTop"
         android:layout_marginTop="@dimen/otalistenprogress_layout_marginTop"
         android:layout_alignParentTop="true"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
+        android:layout_width="@dimen/contact_photo_size"
+        android:layout_height="@dimen/contact_photo_size"
         android:gravity="top|center_horizontal"
         android:scaleType="centerCrop"
         android:contentDescription="@string/contactPhoto" />

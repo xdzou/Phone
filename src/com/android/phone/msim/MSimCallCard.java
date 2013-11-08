@@ -195,7 +195,9 @@ public class MSimCallCard extends CallCard {
         super.updateAlreadyDisconnected(cm);
 
         if (sDsdaEnabled) {
-            mElapsedTimeSec.setVisibility(View.VISIBLE);
+            if (mElapsedTimeSec != null) {
+                mElapsedTimeSec.setVisibility(View.VISIBLE);
+            }
             mElapsedTime.setVisibility(View.GONE);
         }
     }
@@ -211,7 +213,7 @@ public class MSimCallCard extends CallCard {
         case ACTIVE:
         case DISCONNECTING:
             if (sDsdaEnabled) {
-                AnimationUtils.Fade.show(mElapsedTimeSec);
+                if (mElapsedTimeSec != null) AnimationUtils.Fade.show(mElapsedTimeSec);
             }
 
             updateElapsedTimeWidget(call);
@@ -222,7 +224,7 @@ public class MSimCallCard extends CallCard {
             // visible, but don't touch it (so we continue to see the
             // elapsed time of the call that just ended.)
             // Check visibility to keep possible fade-in animation.
-            if (sDsdaEnabled) {
+            if ((mElapsedTimeSec != null) && sDsdaEnabled) {
                 if (mElapsedTimeSec.getVisibility() != View.VISIBLE) {
                     mElapsedTimeSec.setVisibility(View.VISIBLE);
                 }
@@ -234,7 +236,7 @@ public class MSimCallCard extends CallCard {
             // INCOMING, or WAITING.
             // In all of these states, the "elapsed time" is meaningless, so
             // don't show it.
-            if (sDsdaEnabled && mElapsedTimeSec != null) {
+            if ((mElapsedTimeSec != null) && sDsdaEnabled) {
                 AnimationUtils.Fade.hide(mElapsedTimeSec, View.INVISIBLE);
             }
             break;
@@ -246,7 +248,9 @@ public class MSimCallCard extends CallCard {
         super.updateElapsedTimeWidget(timeElapsed);
 
         if (sDsdaEnabled) {
-            mElapsedTimeSec.setText(DateUtils.formatElapsedTime(timeElapsed));
+            if (mElapsedTimeSec != null) {
+                mElapsedTimeSec.setText(DateUtils.formatElapsedTime(timeElapsed));
+            }
             mElapsedTime.setVisibility(View.GONE);
         }
     }
@@ -438,8 +442,10 @@ public class MSimCallCard extends CallCard {
     public void clear() {
         super.clear();
 
-        mElapsedTimeSec.setVisibility(View.GONE);
-        mElapsedTimeSec.setText(null);
+        if (mElapsedTimeSec != null) {
+            mElapsedTimeSec.setVisibility(View.GONE);
+            mElapsedTimeSec.setText(null);
+        }
     }
 
     // Debugging / testing code
