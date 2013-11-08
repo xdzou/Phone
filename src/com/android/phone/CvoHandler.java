@@ -36,6 +36,7 @@ import android.os.Registrant;
 import android.os.RegistrantList;
 import android.util.Log;
 import android.view.OrientationEventListener;
+import android.view.WindowManager;
 
 /**
  * Provides an interface to handle the CVO - Coordinated Video Orientation part
@@ -45,55 +46,40 @@ public class CvoHandler extends Handler {
 
     private static final String TAG = "VideoCall_CvoHandler";
     private static final boolean DBG = true;
+
     private static final int ORIENTATION_ANGLE_0 = 0;
     private static final int ORIENTATION_ANGLE_90 = 1;
     private static final int ORIENTATION_ANGLE_180 = 2;
     private static final int ORIENTATION_ANGLE_270 = 3;
     private static final int ORIENTATION_MODE_THRESHOLD = 45;
 
-    // Use a singleton.
-    private static CvoHandler mInstance;
-
     /**
      * Phone orientation angle which can take one of the 4 values
      * ORIENTATION_ANGLE_0, ORIENTATION_ANGLE_90, ORIENTATION_ANGLE_180,
      * ORIENTATION_ANGLE_270
      */
-    private int mCurrentOrientation = 0;
-    private Context mContext;
-    OrientationEventListener mOrientationEventListener;
-    public RegistrantList mCvoRegistrants = new RegistrantList();
+    private int mCurrentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+    private RegistrantList mCvoRegistrants = new RegistrantList();
 
-    private CvoHandler(Context context) {
+    private Context mContext;
+    private WindowManager mWindowManager; // Used to get display rotation.
+
+    private OrientationEventListener mOrientationEventListener;
+
+    public CvoHandler(Context context) {
         mContext = context;
-        mOrientationEventListener =
-                new OrientationEventListener(mContext,
-                        SensorManager.SENSOR_DELAY_NORMAL) {
-                    @Override
-                    public void onOrientationChanged(int angle) {
-                        int newOrientation = calculateDeviceOrientation(angle);
-                        if (hasDeviceOrientationChanged(newOrientation)) {
-                            notifyCvoClient(newOrientation);
-                        }
-                    }
-                };
+
+        mOrientationEventListener = createOrientationListener();
+        startOrientationListener(false);
+
+        mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
         log("CvoHandler created");
     }
 
-    /**
-     * This method returns the single instance of CvoHandler object *
-     */
-    public static synchronized CvoHandler getInstance(Context context) {
-        if (mInstance == null) {
-            mInstance = new CvoHandler(context);
-        }
-        return mInstance;
-    }
 
     public interface CvoEventListener {
         /**
-         * This callback method will be invoked when the device orientation
-         * changes.
+         * This callback method will be invoked when the device orientation changes.
          */
         void onDeviceOrientationChanged(int rotation);
     }
@@ -116,15 +102,25 @@ public class CvoHandler extends Handler {
      * Enable sensor to listen for device orientation changes
      */
     public void startOrientationListener(boolean start) {
-        Log.d(TAG, "startOrientationListener " + start);
+        log("startOrientationListener " + start);
         if (start) {
             if (mOrientationEventListener.canDetectOrientation()) {
+                notifyInitialOrientation();
                 mOrientationEventListener.enable();
             } else {
-                Log.d(TAG, "Cannot detect orientation");
+                log("Cannot detect orientation");
             }
         } else {
             mOrientationEventListener.disable();
+            mCurrentOrientation = OrientationEventListener.ORIENTATION_UNKNOWN;
+        }
+    }
+
+    /* Protected to facilitate unittesting.*/
+    protected void doOnOrientationChanged(int angle) {
+        final int newOrientation = calculateDeviceOrientation(angle);
+        if (hasDeviceOrientationChanged(newOrientation)) {
+            notifyCvoClient(newOrientation);
         }
     }
 
@@ -137,7 +133,7 @@ public class CvoHandler extends Handler {
      *         ORIENTATION_ANGLE_90, ORIENTATION_ANGLE_180,
      *         ORIENTATION_ANGLE_270
      */
-    private int calculateDeviceOrientation(int angle) {
+    protected static int calculateDeviceOrientation(int angle) {
         int newOrientation = ORIENTATION_ANGLE_0;
         if ((angle >= 0
                 && angle < 0 + ORIENTATION_MODE_THRESHOLD) ||
@@ -180,9 +176,9 @@ public class CvoHandler extends Handler {
         mCvoRegistrants.notifyRegistrants(ar);
     }
 
-    public int convertMediaOrientationToActualAngle(int mCurrentOrientation) {
+    static public int convertMediaOrientationToActualAngle(int newOrientation) {
         int angle = 0;
-        switch (mCurrentOrientation) {
+        switch (newOrientation) {
             case ORIENTATION_ANGLE_0:
                 angle = 0;
                 break;
@@ -201,11 +197,40 @@ public class CvoHandler extends Handler {
         return angle;
     }
 
-    private void log(String msg) {
+    private void notifyInitialOrientation() {
+        final int angle = getCurrentOrientation();
+        log("Current orientation is: " + angle);
+        if ( angle != OrientationEventListener.ORIENTATION_UNKNOWN ) {
+            doOnOrientationChanged( convertMediaOrientationToActualAngle(angle) );
+        } else {
+            log("Initial orientation is ORIENTATION_UNKNOWN");
+        }
+    }
+
+    private int getCurrentOrientation() {
+        if (mWindowManager != null) {
+            return mWindowManager.getDefaultDisplay().getRotation();
+        } else {
+            loge("WindowManager not available.");
+            return OrientationEventListener.ORIENTATION_UNKNOWN;
+        }
+    }
+
+    private OrientationEventListener createOrientationListener() {
+        return new OrientationEventListener(
+                mContext, SensorManager.SENSOR_DELAY_NORMAL) {
+            @Override
+            public void onOrientationChanged(int angle) {
+                doOnOrientationChanged(angle);
+            }
+        };
+    }
+
+    private static void log(String msg) {
         Log.d(TAG, msg);
     }
 
-    private void loge(String msg) {
+    private static void loge(String msg) {
         Log.e(TAG, msg);
     }
 
