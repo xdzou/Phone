@@ -888,7 +888,12 @@ public class MSimPhoneInterfaceManager extends ITelephonyMSim.Stub {
      * Returns the network type for a subscription
      */
     public int getNetworkType(int subscription) {
-        return getPhone(subscription).getServiceState().getDataNetworkType();
+        int dataType = getPhone(subscription).getServiceState().getDataNetworkType();
+        if(dataType != TelephonyManager.NETWORK_TYPE_UNKNOWN){
+            return dataType;
+        }else{
+            return getPhone(subscription).getServiceState().getVoiceNetworkType();
+        }
     }
 
     /**
