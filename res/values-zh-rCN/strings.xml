@@ -143,6 +143,7 @@
     <string name="sum_voicemail_choose_provider" msgid="59911196126278922">"选择语音信箱服务"</string>
     <string name="voicemail_default" msgid="5902099213882352338">"我的运营商"</string>
     <string name="mobile_networks" msgid="5540397602919106177">"移动网络设置"</string>
+    <string name="title_data_settings">移动数据设置</string>
     <string name="label_available" msgid="1181658289009300430">"可用网络"</string>
     <string name="load_networks_progress" msgid="5230707536168902952">"正在搜索..."</string>
     <string name="disconnect_data_confirm">"这个动作会暂时关闭数据连接。您确定要这样么？"</string>
