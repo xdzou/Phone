@@ -4065,8 +4065,7 @@ public class InCallScreen extends Activity
             return;
         }
 
-        int numConnections = connections.size();
-        if (numConnections <= 1) {
+        if (!PhoneUtils.isConferenceCall(mCM.getActiveFgCall())) {
             if (VDBG) log("==> foreground call no longer a conference!");
             // Hide the Manage Conference panel, return to NORMAL mode.
             setInCallScreenMode(InCallScreenMode.NORMAL);
@@ -4082,6 +4081,7 @@ public class InCallScreen extends Activity
             return;
         }
 
+        int numConnections = connections.size();
         // TODO: the test to see if numConnections has changed can go in
         // updateManageConferencePanel(), rather than here.
         if (numConnections != mManageConferenceUtils.getNumCallersInConference()) {
