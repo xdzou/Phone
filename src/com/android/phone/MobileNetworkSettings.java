@@ -68,6 +68,7 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_PREFERED_NETWORK_MODE = "preferred_network_mode_key";
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_CDMA_LTE_DATA_SERVICE_KEY = "cdma_lte_data_service_key";
+    private static final String BUTTON_UPLMN_KEY = "button_uplmn_key";
 
     private static final int NETWORK_MODE_DEFAULT = 0;
     private static final int NETWORK_MODE_HIDE = 1;
@@ -256,6 +257,13 @@ public class MobileNetworkSettings extends PreferenceActivity
         // set the listener for the mButtonPreferredNetworkMode list preference so we can issue
         // change Preferred Network Mode.
         mButtonPreferredNetworkMode.setOnPreferenceChangeListener(this);
+
+        if (!SystemProperties.getBoolean("persist.env.phone.plmn", false)) {
+            Preference mUPLMNPref = prefSet.findPreference(BUTTON_UPLMN_KEY);
+            prefSet.removePreference(mUPLMNPref);
+            mUPLMNPref = null;
+        }
+
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         int phoneType = mPhone.getPhoneType();
         if (getResources().getBoolean(R.bool.world_phone) == true) {
