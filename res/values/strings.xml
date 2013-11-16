@@ -632,8 +632,8 @@
         <item>3G/2G (auto)</item>
     </string-array>
     <string-array name="preferred_network_mode_values_cmcc"  translatable="false">
-        <item>"9"</item>
-        <item>"3"</item>
+        <item>"17"</item>
+        <item>"16"</item>
     </string-array>
     <!-- Mobile network settings screen, data enabling checkbox name -->
     <string name="data_enabled">Data enabled</string>
