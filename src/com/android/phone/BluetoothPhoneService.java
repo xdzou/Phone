@@ -86,7 +86,6 @@ public class BluetoothPhoneService extends Service {
     // number of background (held) calls
     int mNumHeld;
     private BluetoothDsdaState mBluetoothDsda; //Handles DSDA state machine.
-    private boolean mIsBluetoothDsda = false;
 
     long mBgndEarliestConnectionTime = 0;
 
@@ -131,11 +130,9 @@ public class BluetoothPhoneService extends Service {
         mRoam = false;
 
         //Check whether we support DSDA or not
-        if ((MSimTelephonyManager.getDefault().getMultiSimConfiguration()
-                == MSimTelephonyManager.MultiSimVariants.DSDA)) {
-            Log.d(TAG, "DSDA is enabled, create DSDA objects");
+        if (MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            Log.d(TAG, "MultiSim is enabled, create DSDA objects");
             mBluetoothDsda = new BluetoothDsdaState(this);
-            mIsBluetoothDsda = true;
         }
         updateServiceState(mCM.getDefaultPhone().getServiceState());
         handlePreciseCallStateChange(null);
@@ -159,7 +156,7 @@ public class BluetoothPhoneService extends Service {
             }
         }
         mCM.registerForDisconnect(mHandler, PHONE_ON_DISCONNECT, null);
-        if (mIsBluetoothDsda == true)
+        if (isDsdaEnabled())
             mCM.registerForSubscriptionChange(mHandler,
                       PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
         // TODO(BT) registerForIncomingRing?
@@ -216,7 +213,7 @@ public class BluetoothPhoneService extends Service {
                     if (((AsyncResult) msg.obj).result instanceof Connection) {
                         connection = (Connection) ((AsyncResult) msg.obj).result;
                     }
-                    if (mIsBluetoothDsda == true) {
+                    if (isDsdaEnabled()) {
                         //Get the Sub on which call state change happened
                         if (((AsyncResult) msg.obj).result instanceof PhoneBase) {
                             PhoneBase pb =  (PhoneBase)((AsyncResult) msg.obj).result;
@@ -229,7 +226,7 @@ public class BluetoothPhoneService extends Service {
                     break;
                 case PHONE_CDMA_CALL_WAITING:
                     Connection conn = null;
-                    if (mIsBluetoothDsda == true) {
+                    if (isDsdaEnabled()) {
                         AsyncResult ar = (AsyncResult) msg.obj;
                         int subscription = (Integer) ar.userObj;
                         log("CDMA call waiting on sub: " + subscription);
@@ -261,6 +258,16 @@ public class BluetoothPhoneService extends Service {
         }
     };
 
+    private boolean isDsdaEnabled() {
+        //Check whether we support DSDA or not
+        if ((MSimTelephonyManager.getDefault().getMultiSimConfiguration()
+            == MSimTelephonyManager.MultiSimVariants.DSDA)) {
+            Log.d(TAG, "DSDA is enabled");
+            return true;
+        }
+        return false;
+    }
+
     private void updateBtPhoneStateAfterRadioTechnologyChange() {
         if(VDBG) Log.d(TAG, "updateBtPhoneStateAfterRadioTechnologyChange...");
 
@@ -269,7 +276,7 @@ public class BluetoothPhoneService extends Service {
         mCM.unregisterForPreciseCallStateChanged(mHandler);
         mCM.unregisterForCallWaiting(mHandler);
         mCM.unregisterForDisconnect(mHandler);
-        if (mIsBluetoothDsda == true)
+        if (isDsdaEnabled())
             mCM.unregisterForSubscriptionChange(mHandler);
 
         //Register all events new to the new active phone
@@ -286,7 +293,7 @@ public class BluetoothPhoneService extends Service {
             }
         }
         mCM.registerForDisconnect(mHandler, PHONE_ON_DISCONNECT, null);
-        if (mIsBluetoothDsda == true)
+        if (isDsdaEnabled())
             mCM.registerForSubscriptionChange(mHandler,
                      PHONE_ACTIVE_SUBSCRIPTION_CHANGE, null);
     }
@@ -305,7 +312,7 @@ public class BluetoothPhoneService extends Service {
     private void handlePreciseCallStateChange(Connection connection) {
 
         //Check whether we support DSDA or not
-        if (mIsBluetoothDsda == true) {
+        if (isDsdaEnabled()) {
             Log.d(TAG, "DSDA call operation, handle it separately");
             //Handle call state changes of both subs separately
             mBluetoothDsda.handleMultiSimPreciseCallStateChange();
@@ -426,7 +433,7 @@ public class BluetoothPhoneService extends Service {
     }
 
     private void handleListCurrentCalls() {
-        if (mIsBluetoothDsda == true) {
+        if (isDsdaEnabled()) {
             mBluetoothDsda.handleListCurrentCalls();
             return;
         }
@@ -448,7 +455,7 @@ public class BluetoothPhoneService extends Service {
     }
 
     private void handleQueryPhoneState() {
-        if (mIsBluetoothDsda == true) {
+        if (isDsdaEnabled()) {
             mBluetoothDsda.processQueryPhoneState();
             return;
         }
@@ -782,7 +789,7 @@ public class BluetoothPhoneService extends Service {
 
     private void handleCdmaSwapSecondCallState() {
         if (VDBG) log("cdmaSwapSecondCallState: Toggling mCdmaIsSecondCallActive");
-        if (mIsBluetoothDsda) {
+        if (isDsdaEnabled()) {
             log("DSDA.handleCdmaSwapSecondCallState");
             mBluetoothDsda.handleCdmaSwapSecondCallState();
             return;
@@ -793,7 +800,7 @@ public class BluetoothPhoneService extends Service {
 
     private void handleCdmaSetSecondCallState(boolean state) {
         if (VDBG) log("cdmaSetSecondCallState: Setting mCdmaIsSecondCallActive to " + state);
-        if (mIsBluetoothDsda) {
+        if (isDsdaEnabled()) {
             log("DSDA.handleCdmaSetSecondCallState");
             mBluetoothDsda.handleCdmaSetSecondCallState(state);
             return;
@@ -831,7 +838,7 @@ public class BluetoothPhoneService extends Service {
 
         public boolean processChld(int chld) {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
-            if (mIsBluetoothDsda) {
+            if (isDsdaEnabled()) {
                 log("DSDA handling of CHLD");
                 return mBluetoothDsda.processDsdaChld(chld);
             }
@@ -939,7 +946,7 @@ public class BluetoothPhoneService extends Service {
         public String getNetworkOperator() {
             log("getNetworkOperator");
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
-            if (mIsBluetoothDsda == true) {
+            if (isDsdaEnabled()) {
                 log("getNetworkOperator for DSDA");
                 int activeSub = mCM.getActiveSubscription();
                 Phone phone = MSimPhoneGlobals.getInstance().getPhone(activeSub);
@@ -951,7 +958,7 @@ public class BluetoothPhoneService extends Service {
         public String getSubscriberNumber() {
             enforceCallingOrSelfPermission(MODIFY_PHONE_STATE, null);
             log("getSubscriberNumber");
-            if (mIsBluetoothDsda == true) {
+            if (isDsdaEnabled()) {
                 log("getSubscriberNumber for DSDA");
                 int activeSub = mCM.getActiveSubscription();
                 Phone phone = MSimPhoneGlobals.getInstance().getPhone(activeSub);
