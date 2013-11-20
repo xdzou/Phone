@@ -576,7 +576,13 @@ public class MSimInCallScreen extends InCallScreen {
         // If other sub is active, do not end the call screen.
         if (!stayHere && PhoneUtils.isAnyOtherSubActive(PhoneUtils.getActiveSubscription())) {
             if (DBG) log("- delayedCleanupAfterDisconnect: othe sub is active , switching");
-            PhoneUtils.switchToOtherActiveSub(PhoneUtils.getActiveSubscription());
+            if (mLastDisconnectCause == Connection.DisconnectCause.NORMAL) {
+                // if the call was ended by the remote party, we need to remain the
+                // other sub's Lch state.
+                PhoneUtils.switchToOtherActiveSubRemainInLch(PhoneUtils.getActiveSubscription());
+            } else {
+                PhoneUtils.switchToOtherActiveSub(PhoneUtils.getActiveSubscription());
+            }
             updateScreen();
             stayHere = true;
         }
