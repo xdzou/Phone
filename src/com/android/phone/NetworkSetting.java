@@ -564,7 +564,6 @@ public class NetworkSetting extends PreferenceActivity
                     Preference carrier = new Preference(this, null);
                     carrier.setTitle(getNetworkTitle(ni) + " "
                             + mRatMap.get(ni.getRadioTech()));
-                    carrier.setEnabled(ni.getState() != OperatorInfo.State.FORBIDDEN);
                     carrier.setPersistent(false);
                     mNetworkList.addPreference(carrier);
                     mNetworkMap.put(carrier, ni);
