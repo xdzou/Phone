@@ -69,6 +69,12 @@ public class MobileNetworkSettings extends PreferenceActivity
     private static final String BUTTON_ROAMING_KEY = "button_roaming_key";
     private static final String BUTTON_CDMA_LTE_DATA_SERVICE_KEY = "cdma_lte_data_service_key";
 
+    private static final int NETWORK_MODE_DEFAULT = 0;
+    private static final int NETWORK_MODE_HIDE = 1;
+    private static final int NETWORK_MODE_CMCC = 2;
+    private static final int NETWORK_MODE_TDCDMA = 3;
+    private static final int NETWORK_MODE_LTE = 4;
+
     static final int preferredNetworkMode = Phone.PREFERRED_NT_MODE;
 
     //Information about logical "up" Activity
@@ -216,6 +222,36 @@ public class MobileNetworkSettings extends PreferenceActivity
         mButtonPreferredNetworkMode = (ListPreference) prefSet.findPreference(
                 BUTTON_PREFERED_NETWORK_MODE);
         mLteDataServicePref = prefSet.findPreference(BUTTON_CDMA_LTE_DATA_SERVICE_KEY);
+
+        int networkFeature = SystemProperties.getInt("persist.env.c.phone.networkmode", 0);
+        switch (networkFeature) {
+            case NETWORK_MODE_HIDE:
+                prefSet.removePreference(mButtonPreferredNetworkMode);
+                break;
+            case NETWORK_MODE_CMCC:
+                mButtonPreferredNetworkMode
+                        .setDialogTitle(R.string.preferred_network_mode_dialogtitle_cmcc);
+                mButtonPreferredNetworkMode
+                        .setEntries(R.array.preferred_network_mode_choices_cmcc);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_cmcc);
+                break;
+            case NETWORK_MODE_TDCDMA:
+                mButtonPreferredNetworkMode
+                        .setEntries(R.array.preferred_network_mode_choices_tdscdma);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_tdscdma);
+                break;
+            case NETWORK_MODE_LTE:
+                mButtonPreferredNetworkMode
+                        .setEntries(R.array.preferred_network_mode_choices_lte);
+                mButtonPreferredNetworkMode
+                        .setEntryValues(R.array.preferred_network_mode_values_lte);
+                break;
+            case NETWORK_MODE_DEFAULT:
+            default:
+                break;
+        }
 
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
@@ -502,22 +538,47 @@ public class MobileNetworkSettings extends PreferenceActivity
     }
 
     private void UpdatePreferredNetworkModeSummary(int NetworkMode) {
+        int networkFeature = SystemProperties.getInt("persist.env.c.phone.networkmode", 0);
         switch(NetworkMode) {
             case Phone.NT_MODE_WCDMA_PREF:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_wcdma_perf_summary);
+                if (networkFeature == NETWORK_MODE_TDCDMA) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary_tdcdma);
+                } else if (networkFeature == NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary_lte);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_perf_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_ONLY:
                 mButtonPreferredNetworkMode.setSummary(
                         R.string.preferred_network_mode_gsm_only_summary);
                 break;
             case Phone.NT_MODE_WCDMA_ONLY:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_wcdma_only_summary);
+                if (networkFeature == NETWORK_MODE_TDCDMA) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_only_summary_tdcdma);
+                } else if (networkFeature == NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_only_summary_lte);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_wcdma_only_summary);
+                }
                 break;
             case Phone.NT_MODE_GSM_UMTS:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_gsm_wcdma_summary);
+                if (networkFeature == NETWORK_MODE_CMCC) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_3g_2g_summary);
+                } else if (networkFeature == NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_wcdma_summary_lte);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_CDMA:
                 switch (mPhone.getLteOnCdmaMode()) {
@@ -545,8 +606,16 @@ public class MobileNetworkSettings extends PreferenceActivity
                         R.string.preferred_network_mode_lte_summary);
                 break;
             case Phone.NT_MODE_LTE_GSM_WCDMA:
-                mButtonPreferredNetworkMode.setSummary(
-                        R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                if (networkFeature == NETWORK_MODE_CMCC) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_4g_3g_2g_summary);
+                } else if (networkFeature == NETWORK_MODE_LTE) {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary_lte);
+                } else {
+                    mButtonPreferredNetworkMode.setSummary(
+                            R.string.preferred_network_mode_lte_gsm_wcdma_summary);
+                }
                 break;
             case Phone.NT_MODE_LTE_CDMA_AND_EVDO:
                 mButtonPreferredNetworkMode.setSummary(
