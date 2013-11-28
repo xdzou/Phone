@@ -23,6 +23,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
 import android.content.DialogInterface;
+import android.net.Uri;
 import android.os.AsyncResult;
 import android.os.Bundle;
 import android.os.Handler;
@@ -42,6 +43,16 @@ public class CdmaCallOptions extends PreferenceActivity {
     private static final String BUTTON_VP_KEY = "button_voice_privacy_key";
     private CheckBoxPreference mButtonVoicePrivacy;
 
+    private PreferenceScreen prefCWAct;
+    private PreferenceScreen prefCWDeact;
+    private CdmaCallOptionsSetting mCallOptionSettings;
+
+    private static final String BUTTON_CW_ACT_KEY = "button_cw_act_key";
+    private static final String BUTTON_CW_DEACT_KEY = "button_cw_deact_key";
+    private static final String CDMA_SUPP_CALL = "Cdma_Supp";
+
+    public static final int CALL_WAITING = 100;
+
     @Override
     protected void onCreate(Bundle icicle) {
         super.onCreate(icicle);
@@ -54,12 +65,32 @@ public class CdmaCallOptions extends PreferenceActivity {
         Log.d(LOG_TAG, "Getting CDMACallOptions subscription =" + subscription);
         Phone phone = PhoneGlobals.getInstance().getPhone(subscription);
 
+        initCallWaitingPref(subscription);
+
         mButtonVoicePrivacy = (CheckBoxPreference) findPreference(BUTTON_VP_KEY);
         if (phone.getPhoneType() != PhoneConstants.PHONE_TYPE_CDMA
                 || getResources().getBoolean(R.bool.config_voice_privacy_disable)) {
             //disable the entire screen
             getPreferenceScreen().setEnabled(false);
         }
+    }
+
+    private void initCallWaitingPref(int subscription) {
+        prefCWAct = (PreferenceScreen)findPreference(BUTTON_CW_ACT_KEY);
+        prefCWDeact = (PreferenceScreen)findPreference(BUTTON_CW_DEACT_KEY);
+
+        mCallOptionSettings = new CdmaCallOptionsSetting(this, CALL_WAITING, subscription);
+
+        prefCWAct.getIntent().putExtra(SUBSCRIPTION_KEY, subscription)
+                .putExtra(CDMA_SUPP_CALL, true)
+                .setData(Uri.fromParts("tel", mCallOptionSettings.getActivateNumber(), null));
+        prefCWAct.setSummary(mCallOptionSettings.getActivateNumber());
+
+        prefCWDeact.getIntent().putExtra(SUBSCRIPTION_KEY, subscription)
+                .putExtra(CDMA_SUPP_CALL, true)
+                .setData(Uri.fromParts("tel", mCallOptionSettings.getDeactivateNumber(), null));
+        prefCWDeact.setSummary(mCallOptionSettings.getDeactivateNumber());
+
     }
 
     @Override
