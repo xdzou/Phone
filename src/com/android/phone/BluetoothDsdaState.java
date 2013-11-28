@@ -147,10 +147,6 @@ class BluetoothDsdaState {
         public void onServiceConnected(int profile, BluetoothProfile proxy) {
             Log.d(TAG, "Got the headset proxy for DSDA" );
             mBluetoothHeadset = (BluetoothHeadset) proxy;
-            if (mBluetoothHeadset != null) {
-                log("query phone state");
-                processQueryPhoneState();
-            }
         }
         public void onServiceDisconnected(int profile) {
             mBluetoothHeadset = null;

@@ -2059,6 +2059,22 @@ public class PhoneUtils {
      */
     static void setMute(boolean muted) {
         CallManager cm = PhoneGlobals.getInstance().mCM;
+        int activeSub = getActiveSubscription();
+
+        if (cm.getLocalCallHoldStatus(activeSub) == true) {
+            if (muted == false) {
+                // if the current active sub is in lch state and user
+                // has clicked the unmute button, deactivate this sub's
+                // lch state and set the audio mode accordingly.
+                cm.deactivateLchState(activeSub);
+                cm.setAudioMode();
+            }
+
+            // if any local hold tones are playing then they need to be stoped.
+            final MSimCallNotifier notifier =
+                (MSimCallNotifier) PhoneGlobals.getInstance().notifier;
+            notifier.manageMSimInCallTones(false);
+        }
 
         // make the call to mute the audio
         setMuteInternal(cm.getFgPhone(), muted);
@@ -3171,11 +3187,39 @@ public class PhoneUtils {
         for (int i = 0; i < count; i++) {
             if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
                 setActiveSubscription(i);
+                // make sure the Lch state of this sub is deactivated
+                cm.deactivateLchState(i);
                 // Since active subscription got changed, call setAudioMode
                 // which informs LCH state to RIL and updates audio state of subs.
                 // This required to update the call audio states when switch sub
                 // triggered from UI.
                 cm.setAudioMode();
+                Log.d(LOG_TAG, "Switching to other active sub  = " + i );
+                break;
+            }
+        }
+    }
+
+    /**
+     * This method does what switchToOtherActiveSub do except the following:
+     *  - does not call setAudioMode(), so the other active subscription's
+     *    current LCH state will not be changed.
+     *  - mute the other active subscription.
+     * This method is called when the call on current active subscription is
+     * ended by the remote party.
+     *
+     * @param subscription is the current active subscription.
+     */
+    public static void switchToOtherActiveSubRemainInLch(int subscription) {
+        int count = MSimTelephonyManager.getDefault().getPhoneCount();
+        CallManager cm = MSimPhoneGlobals.getInstance().mCM;
+
+        Log.d(LOG_TAG, "switchToOtherActiveSubRemainInLch: sub = " + subscription
+                +  " count = "+ count);
+        for (int i = 0; i < count; i++) {
+            if ((i != subscription) && (cm.getState(i) != PhoneConstants.State.IDLE)) {
+                setActiveSubscription(i);
+                setMute(true);
                 Log.d(LOG_TAG, "Switching to other active sub  = " + i );
                 break;
             }
