@@ -172,6 +172,10 @@ public class CdmaCallOptionsSetting {
                 callType = "cfda";
                 break;
             }
+            case CdmaCallOptions.CALL_WAITING: {
+                callType = "cw";
+                break;
+            }
             default: {
                 callType = "cfu";
             }
