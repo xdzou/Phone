@@ -398,10 +398,7 @@ public class MSimCallNotifier extends CallNotifier {
                 }
             }
         } else {
-            if (mCM.getLocalCallHoldStatus(activeSub) == false) {
-                // if the sub is not in Lch state, then stop playing the tones
-                stopMSimInCallTones();
-            }
+            stopMSimInCallTones();
         }
     }
 
