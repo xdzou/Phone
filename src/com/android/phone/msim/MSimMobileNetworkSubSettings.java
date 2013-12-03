@@ -373,6 +373,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         int simState = MSimTelephonyManager.getDefault().getSimState(mSubscription);
         getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
         enableOrDisableUseOnly2GNetworks();
+        if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
     }
 
     private void enableOrDisableUseOnly2GNetworks() {
