@@ -36,6 +36,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
@@ -590,6 +591,11 @@ public class NetworkSetting extends PreferenceActivity
         String title = ni.getOperatorNumeric();
         if (!TextUtils.isEmpty(ni.getOperatorAlphaLong())) {
             title = ni.getOperatorAlphaLong();
+            if (SystemProperties.getBoolean("persist.env.sys.shortplmn", false)) {
+                if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
+                    title = ni.getOperatorAlphaShort();
+                }
+            }
         } else if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
             title = ni.getOperatorAlphaShort();
         }
