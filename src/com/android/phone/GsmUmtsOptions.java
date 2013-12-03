@@ -173,8 +173,7 @@ public class GsmUmtsOptions {
 
     public void enableScreen() {
         if (mPhone.getPhoneType() != PhoneConstants.PHONE_TYPE_GSM) {
-            log("Not a GSM phone, disabling GSM preferences (apn, use2g, select operator)");
-            mButtonAPNExpand.setEnabled(false);
+            log("Not a GSM phone, disabling GSM preferences (use2g, select operator)");
             mButtonOperatorSelectionExpand.setEnabled(false);
             mButtonPrefer2g.setEnabled(false);
         } else {
