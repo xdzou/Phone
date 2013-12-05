@@ -29,15 +29,19 @@
 
 package com.android.phone;
 
+import android.app.ActionBar;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.provider.Settings;
 import android.telephony.MSimTelephonyManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
+import android.widget.TextView;
 import android.app.TabActivity;
 
 import static com.android.internal.telephony.MSimConstants.SUBSCRIPTION_KEY;
@@ -69,6 +73,9 @@ public class SelectSubscription extends  TabActivity {
 
         setContentView(R.layout.multi_sim_setting);
 
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+
         TabHost tabHost = getTabHost();
 
         Intent intent =  getIntent();
@@ -80,12 +87,27 @@ public class SelectSubscription extends  TabActivity {
         for (int i = 0; i < numPhones; i++) {
             log("Creating SelectSub activity = " + i);
             subscriptionPref = tabHost.newTabSpec(tabLabel[i]);
-            subscriptionPref.setIndicator(tabLabel[i]);
+            subscriptionPref.setIndicator(Settings.System.getString(getContentResolver(),
+                    Settings.System.MULTI_SIM_NAME[i]));
             intent = new Intent().setClassName(pkg, targetClass)
                     .setAction(intent.getAction()).putExtra(SUBSCRIPTION_KEY, i);
             subscriptionPref.setContent(intent);
             tabHost.addTab(subscriptionPref);
+            TextView tabSimName = (TextView) getTabHost().getTabWidget().getChildAt(i)
+                    .findViewById(com.android.internal.R.id.title);
+            tabSimName.setAllCaps(false);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
