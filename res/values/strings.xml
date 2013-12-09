@@ -561,8 +561,8 @@
     </string-array>
     <string-array name="preferred_network_mode_values_lte"  translatable="false">
         <item>"11"</item>
-        <item>"9"</item>
-        <item>"3"</item>
+        <item>"17"</item>
+        <item>"16"</item>
         <item>"2"</item>
         <item>"1"</item>
         <item>"0"</item>
