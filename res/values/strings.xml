@@ -553,22 +553,20 @@
 
     <string-array name="preferred_network_mode_choices_lte">
         <item>LTE</item>
-        <item>GSM/TDSCDMA/WCDMA/LTE</item>
-        <item>GSM/TDSCDMA/WCDMA auto</item>
-        <item>WCDMA/TDSCDMA only</item>
+        <item>GSM/TD-SCDMA/WCDMA/LTE</item>
+        <item>GSM/TD-SCDMA/WCDMA auto</item>
+        <item>TD-SCDMA/WCDMA only</item>
         <item>GSM only</item>
-        <item>GSM/WCDMA/TDSCDMA preferred</item>
     </string-array>
     <string-array name="preferred_network_mode_values_lte"  translatable="false">
         <item>"11"</item>
-        <item>"9"</item>
-        <item>"3"</item>
-        <item>"2"</item>
+        <item>"17"</item>
+        <item>"16"</item>
+        <item>"13"</item>
         <item>"1"</item>
-        <item>"0"</item>
     </string-array>
     <string-array name="preferred_network_mode_choices_tdscdma">
-        <item>TDS-CDMA only</item>
+        <item>TD-SCDMA only</item>
         <item>GSM only</item>
         <item>GSM/TDS-CDMA preferred</item>
     </string-array>
