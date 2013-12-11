@@ -358,7 +358,7 @@ public class InCallScreen extends Activity
                     // headset" or "Handset earpiece" depending on whether the
                     // headset is plugged in or not.
                     mInCallTouchUi.refreshAudioModePopup();  // safe even if the popup's not active
-                    if(msg.arg1 != 0 || !PhoneUtils.isSpeakerOn(InCallScreen.this)) {
+                    if(msg.arg1 != 0 && !PhoneUtils.isSpeakerOn(InCallScreen.this)) {
                         if(mCallCard != null)
                             mCallCard.updateVoluemBoostStatus(false, false);
                     }
