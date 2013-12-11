@@ -1192,11 +1192,6 @@ public class CallCard extends LinearLayout
                 callStateLabel = context.getString(R.string.card_title_redialing);
             }
         }
-        if (PhoneUtils.isPhoneInEcm(phone)) {
-            // In emergency callback mode (ECM), use a special label
-            // that shows your own phone number.
-            callStateLabel = getECMCardTitle(context, phone);
-        }
 
         final InCallUiState inCallUiState = mApplication.inCallUiState;
         if (DBG) {
