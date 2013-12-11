@@ -2853,10 +2853,13 @@ public class InCallScreen extends Activity
                 // - NORMAL: the other end hung up (after answering an incoming
                 //           call, or after making an outgoing call)
 
+                boolean backToPreviousApp = SystemProperties.getBoolean(
+                        "persist.env.phone.backtoapp", false);
                 if ((mLastDisconnectCause != Connection.DisconnectCause.INCOMING_MISSED)
                         && (mLastDisconnectCause != Connection.DisconnectCause.INCOMING_REJECTED)
                         && !isPhoneStateRestricted(phone)
-                        && PhoneGlobals.sVoiceCapable) {
+                        && PhoneGlobals.sVoiceCapable
+                        && !backToPreviousApp) {
                     final Intent intent = mApp.createPhoneEndIntentUsingCallOrigin();
                     ActivityOptions opts = ActivityOptions.makeCustomAnimation(this,
                             R.anim.activity_close_enter, R.anim.activity_close_exit);
