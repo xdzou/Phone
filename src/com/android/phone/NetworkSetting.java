@@ -593,6 +593,10 @@ public class NetworkSetting extends PreferenceActivity
         } else if (!TextUtils.isEmpty(ni.getOperatorAlphaShort())) {
             title = ni.getOperatorAlphaShort();
         }
+        // parse the string to current language
+        title = getLocalString(title,
+                com.android.internal.R.array.origin_carrier_names,
+                com.android.internal.R.array.locale_carrier_names);
         if (ni.getState() == OperatorInfo.State.FORBIDDEN) {
             title += getString(R.string.network_forbidden);
         }
