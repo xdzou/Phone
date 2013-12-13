@@ -980,9 +980,10 @@ public class MSimInCallScreen extends InCallScreen {
             ActionBar bar = getActionBar();
 
             if (mApp.mCM.getState(simnumber) != PhoneConstants.State.IDLE) {
-                PhoneUtils.setActiveSubscription(simnumber);
-
-                mApp.mCM.setAudioMode();
+                if (PhoneUtils.getActiveSubscription() != simnumber) {
+                    PhoneUtils.switchToOtherActiveSub(
+                            PhoneUtils.getActiveSubscription());
+                }
             }
         }
 
