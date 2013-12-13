@@ -52,21 +52,27 @@ public class Use2GOnlyCheckBoxPreference extends CheckBoxPreference {
                 mHandler.obtainMessage(MyHandler.MESSAGE_GET_PREFERRED_NETWORK_TYPE));
     }
 
-    private int getDefaultNetworkMode() {
-        int mode = SystemProperties.getInt("ro.telephony.default_network",
-                Phone.PREFERRED_NT_MODE);
-        Log.i(LOG_TAG, "getDefaultNetworkMode: mode=" + mode);
-        return mode;
+    private int getDefaultNetworkMode(int sub) {
+        int defaultNWMode;
+        String nwArray[];
+        String networkMode = SystemProperties.get("ro.telephony.default_network");
+        if (networkMode != null) {
+            nwArray = networkMode.split(",");
+            defaultNWMode = Integer.parseInt(nwArray[sub]);
+        } else {
+            defaultNWMode = RILConstants.PREFERRED_NETWORK_MODE;
+            if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {
+                defaultNWMode = Phone.NT_MODE_GLOBAL;
+            }
+        }
+        return defaultNWMode;
     }
 
     @Override
     protected void  onClick() {
         super.onClick();
 
-        int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
-        if (mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE) {
-            preferredNetworkMode = Phone.NT_MODE_GLOBAL;
-        }
+        int preferredNetworkMode = getDefaultNetworkMode(mPhone.getSubscription());
 
         int networkType = isChecked() ? Phone.NT_MODE_GSM_ONLY : preferredNetworkMode;
         Log.i(LOG_TAG, "set preferred network type="+networkType);
