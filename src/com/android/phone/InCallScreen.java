@@ -245,6 +245,7 @@ public class InCallScreen extends Activity
     protected BluetoothAdapter mBluetoothAdapter;
     private boolean mBluetoothConnectionPending;
     private long mBluetoothConnectionRequestTime;
+    private boolean mGotBluetoothProfileProxy;
 
     /** Main in-call UI elements. */
     protected CallCard mCallCard;
@@ -509,7 +510,7 @@ public class InCallScreen extends Activity
             @Override
             public void onReceive(Context context, Intent intent) {
                 String action = intent.getAction();
-                if (action.equals(Intent.ACTION_HEADSET_PLUG)) {
+                if (Intent.ACTION_HEADSET_PLUG.equals(action)) {
                     // Listen for ACTION_HEADSET_PLUG broadcasts so that we
                     // can update the onscreen UI when the headset state changes.
                     // if (DBG) log("mReceiver: ACTION_HEADSET_PLUG");
@@ -520,6 +521,15 @@ public class InCallScreen extends Activity
                     Message message = Message.obtain(mHandler, EVENT_HEADSET_PLUG_STATE_CHANGED,
                             intent.getIntExtra("state", 0), 0);
                     mHandler.sendMessage(message);
+                } else if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
+                    // Listen for BluetoothAdapter.ACTION_STATE_CHANGED broadcasts
+                    // so that we can get the bluetooth profile object when bluetooth
+                    // is turned ON.
+                    int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
+                            BluetoothAdapter.ERROR);
+                    if (state ==  BluetoothAdapter.STATE_ON) {
+                        getBluetoothProfileProxy();
+                    }
                 }
             }
         };
@@ -580,10 +590,6 @@ public class InCallScreen extends Activity
         log("- onCreate: phone state = " + mCM.getState());
 
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (mBluetoothAdapter != null) {
-            mBluetoothAdapter.getProfileProxy(getApplicationContext(), mBluetoothProfileServiceListener,
-                                    BluetoothProfile.HEADSET);
-        }
 
         if (!PhoneUtils.isDsdaEnabled()) {
             requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -668,6 +674,19 @@ public class InCallScreen extends Activity
         mPhone = phone;
     }
 
+    private void getBluetoothProfileProxy() {
+        if (mGotBluetoothProfileProxy == false) {
+            // We only need to get the bluetooth profile proxy object once
+            if (mBluetoothAdapter != null &&
+                    mBluetoothAdapter.getState() == BluetoothAdapter.STATE_ON) {
+                mBluetoothAdapter.getProfileProxy(getApplicationContext(),
+                        mBluetoothProfileServiceListener, BluetoothProfile.HEADSET);
+                mGotBluetoothProfileProxy = true;
+                if (DBG) log(" - Got the bluetooth profile proxy object");
+            }
+        }
+    }
+
     @Override
     protected void onResume() {
         if (DBG) log("onResume()...");
@@ -693,8 +712,15 @@ public class InCallScreen extends Activity
         // icon needs to be hidden while we're the foreground activity:
         mApp.notificationMgr.updateInCallNotification();
 
+        // Get the Bluetooth profile proxy object
+        getBluetoothProfileProxy();
+
         // Listen for broadcast intents that might affect the onscreen UI.
-        registerReceiver(mReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+        IntentFilter filter;
+        filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_HEADSET_PLUG);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        registerReceiver(mReceiver, filter);
 
         // Keep a "dialer session" active when we're in the foreground.
         // (This is needed to play DTMF tones.)
