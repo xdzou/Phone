@@ -298,6 +298,7 @@ public class MSimPhoneGlobals extends PhoneGlobals {
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
             }
             intentFilter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
+            intentFilter.addAction(ACTION_NO_UIM);
             registerReceiver(mReceiver, intentFilter);
 
             // Use a separate receiver for ACTION_MEDIA_BUTTON broadcasts,
