@@ -116,7 +116,7 @@ public class GsmUmtsOptions {
                 (PreferenceScreen) mPrefScreen.findPreference(BUTTON_OPERATOR_SELECTION_EXPAND_KEY);
         mButtonOperatorSelectionExpand.getIntent().putExtra(SUBSCRIPTION_KEY, mSubscription);
         mButtonPrefer2g = (CheckBoxPreference) mPrefScreen.findPreference(BUTTON_PREFER_2G_KEY);
-        Use2GOnlyCheckBoxPreference.updatePhone(mPhone);
+        mPrefScreen.removePreference(mButtonPrefer2g);
         enableScreen();
     }
 

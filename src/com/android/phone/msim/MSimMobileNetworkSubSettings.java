@@ -240,7 +240,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if ("intent.action.CSVT_PRECISE_CALL_STATE_CHANGED".equals(action)) {
-                enableOrDisableUseOnly2GNetworks();
             }
         }
     };
@@ -397,7 +396,7 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
     private void setScreenState() {
         int simState = MSimTelephonyManager.getDefault().getSimState(mSubscription);
         getPreferenceScreen().setEnabled(simState != TelephonyManager.SIM_STATE_ABSENT);
-        enableOrDisableUseOnly2GNetworks();
+        if (mGsmUmtsOptions != null) mGsmUmtsOptions.enableScreen();
     }
 
     private void enableOrDisableUseOnly2GNetworks() {
@@ -549,10 +548,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     if (DBG) log("handleGetPreferredNetworkTypeResponse: else: reset to default");
                     resetNetworkModeToDefault();
                 }
-                // Update '2GOnly checkbox' based on recent preferred network type selection.
-                if (mGsmUmtsOptions != null) {
-                    Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
-                }
             }
         }
 
@@ -563,10 +558,6 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                 int networkMode = Integer.valueOf(
                         mButtonPreferredNetworkMode.getValue()).intValue();
                 setPreferredNetworkMode(networkMode);
-                // Update '2GOnly checkbox' based on recent preferred network type selection.
-                if (mGsmUmtsOptions != null) {
-                    Use2GOnlyCheckBoxPreference.updateCheckBox(mPhone);
-                }
             } else {
                 mPhone.getPreferredNetworkType(obtainMessage(MESSAGE_GET_PREFERRED_NETWORK_TYPE));
             }
