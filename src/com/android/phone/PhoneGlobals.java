@@ -57,9 +57,11 @@ import android.os.SystemProperties;
 import android.os.UpdateLock;
 import android.os.UserHandle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.provider.Settings.System;
 import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Slog;
@@ -73,6 +75,7 @@ import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneFactory;
+import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.TelephonyCapabilities;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.cdma.TtyIntent;
@@ -81,6 +84,8 @@ import com.android.phone.OtaUtils.CdmaOtaScreenState;
 import com.android.server.sip.SipService;
 
 import org.codeaurora.ims.IImsService;
+import com.android.acqorder.IAcqOrderService;
+import com.android.acqorder.IAcqOrderServiceCallback;
 import com.android.recorder.ICallRecorder;
 import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 import org.codeaurora.ims.csvt.CallForwardInfoP;
@@ -141,6 +146,13 @@ public class PhoneGlobals extends ContextWrapper
     public static final int MMI_CANCEL = 53;
     // Don't use message codes larger than 99 here; those are reserved for
     // the individual Activities of the Phone UI.
+
+    public static final String NETWORK_MODE_SEPARATOR = "-";
+    protected static final String NETWORK_MODE_4G_AUTO = "0";
+    protected static final String NETWORK_MODE_4G_PREFERRED = "1";
+    protected static final String NETWORK_MODE_3G_PREFERRED = "2";
+    protected static final String ACQ_ORDER_PREFERENCE = "acq_order_key";
+    private String mPriority = NETWORK_MODE_4G_PREFERRED;
 
     /**
      * Allowable values for the wake lock code.
@@ -477,6 +489,9 @@ public class PhoneGlobals extends ContextWrapper
         //   getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELEPHONY_VOICE_CALLS);
 
         if (phone == null) {
+            if (!MSimTelephonyManager.getDefault().isMultiSimEnabled())
+                bindAcq(this);
+
             // Initialize the telephony framework
             PhoneFactory.makeDefaultPhones(this);
 
@@ -853,6 +868,96 @@ public class PhoneGlobals extends ContextWrapper
         public void onRingbackTone(boolean playTone) {
         }
     };
+
+    private class AcqOrderCallback extends IAcqOrderServiceCallback.Stub
+    {
+
+        public void onSetComplete(byte result) throws RemoteException
+        {
+            Log.d(LOG_TAG, "set acq order result is "+result);
+            if (result == 0){
+                setAcqOrder(mPriority);
+            } else {
+                Log.e(LOG_TAG, "Failed to set preferred network acq order!!!");
+            }
+        }
+    }
+
+    private IAcqOrderService acqOrderService;
+
+    private ServiceConnection acqOrderCconnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            acqOrderService = IAcqOrderService.Stub.asInterface(service);
+            Log.d(LOG_TAG, "bind call acq order service:" + acqOrderService);
+            if(acqOrderService != null){
+                int preferredNetworkMode = RILConstants.PREFERRED_NETWORK_MODE;
+                if (TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE) {
+                    preferredNetworkMode = Phone.NT_MODE_GLOBAL;
+                }
+                int networkMode = Settings.Global.getInt(
+                        getApplicationContext().getContentResolver(),
+                        Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
+                Log.d(LOG_TAG, "networkMode: " + networkMode);
+                if (networkMode == Phone.NT_MODE_TD_SCDMA_GSM_LTE){
+                    SharedPreferences sp = PreferenceManager.
+                    getDefaultSharedPreferences(getApplicationContext());
+                    mPriority = sp.getString(ACQ_ORDER_PREFERENCE, NETWORK_MODE_4G_PREFERRED);
+                    startAcqOrder(mPriority,new AcqOrderCallback());
+                    if (phone != null){
+                        phone.setPreferredNetworkType(Phone.NT_MODE_TD_SCDMA_GSM_LTE, null);
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(LOG_TAG, "acq order service is unbind");
+            acqOrderService = null;
+        }
+    };
+
+    private void bindAcq(Context context) {
+        if (acqOrderService == null) {
+            final Intent intent = new Intent("com.android.action.ACQ_ORDER");
+            try {
+                context.bindService(intent, acqOrderCconnection, BIND_AUTO_CREATE);
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    protected void startAcqOrder(String mode, IAcqOrderServiceCallback cb) {
+        if (acqOrderService != null) {
+            try {
+                acqOrderService.setAcqOrder(mode, cb);
+            } catch (RemoteException e) {
+                acqOrderService = null;
+                Log.w(LOG_TAG, "set acq order error:" + e);
+            }
+        }
+    }
+
+    protected boolean getAcqOrder(IAcqOrderServiceCallback cb) {
+        if (acqOrderService == null) {
+            return false;
+        }
+        try {
+            acqOrderService.getAcqOrder(cb);
+        } catch (RemoteException e) {
+            acqOrderService = null;
+            Log.w(LOG_TAG, "set acq order error:" + e);
+        }
+        return true;
+    }
+
+    protected void setAcqOrder(String priority){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(ACQ_ORDER_PREFERENCE, priority);
+        editor.commit();
+    }
 
     public void onConfigurationChanged(Configuration newConfig) {
         if (newConfig.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO) {
