@@ -754,6 +754,7 @@ public class MSimInCallScreen extends InCallScreen {
         mCM.unregisterForSuppServiceFailed(mHandler);
         mCM.unregisterForIncomingRing(mHandler);
         mCM.unregisterForNewRingingConnection(mHandler);
+        mCM.unregisterForSubscriptionChange(mHandler);
         // remove locally posted message
         mHandler.removeMessages(DELAYED_CLEANUP_AFTER_DISCONNECT);
         mRegisteredForPhoneStates = false;
