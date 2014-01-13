@@ -20,7 +20,6 @@
 package com.android.phone;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
@@ -64,10 +63,7 @@ import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Slog;
-import android.view.Gravity;
 import android.view.KeyEvent;
-import android.view.WindowManager;
-import android.widget.TextView;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
@@ -139,10 +135,6 @@ public class PhoneGlobals extends ContextWrapper
     protected static final int EVENT_START_SIP_SERVICE = 17;
     private static final int EVENT_CALL_STATE_CHANGED = 18;
 
-    private static final int TEXTVIEW_PADDING = 30;
-    private static final int DRAWABLE_PADDING = 10;
-    private static final int TEXT_SIZE = 18;
-
     // The MMI codes are also used by the InCallScreen.
     public static final int MMI_INITIATE = 51;
     public static final int MMI_COMPLETE = 52;
@@ -183,8 +175,6 @@ public class PhoneGlobals extends ContextWrapper
      */
     public static final String ACTION_SEND_SMS_FROM_NOTIFICATION =
             "com.android.phone.ACTION_SEND_SMS_FROM_NOTIFICATION";
-
-    public static final String ACTION_NO_UIM = "android.intent.action.NO_UIM";
 
     protected static PhoneGlobals sMe;
 
@@ -625,7 +615,6 @@ public class PhoneGlobals extends ContextWrapper
                 intentFilter.addAction(TtyIntent.TTY_PREFERRED_MODE_CHANGE_ACTION);
             }
             intentFilter.addAction(AudioManager.RINGER_MODE_CHANGED_ACTION);
-            intentFilter.addAction(ACTION_NO_UIM);
             registerReceiver(mReceiver, intentFilter);
 
             // Use a separate receiver for ACTION_MEDIA_BUTTON broadcasts,
@@ -1812,24 +1801,6 @@ public class PhoneGlobals extends ContextWrapper
                     mAccelerometerListener.enable(mLastPhoneState == PhoneConstants.State.OFFHOOK
                             && action.equals(Intent.ACTION_SCREEN_ON));
                 }
-            } else if (action.equals(ACTION_NO_UIM)) {
-                // It means there isn't any card in the phone, so need show the alert dialog.
-                TextView tv = new TextView(context);
-                tv.setPadding(TEXTVIEW_PADDING, TEXTVIEW_PADDING - DRAWABLE_PADDING,
-                        TEXTVIEW_PADDING, TEXTVIEW_PADDING);
-                tv.setText(R.string.no_sim_message);
-                tv.setTextSize(TEXT_SIZE);
-                tv.setGravity(Gravity.CENTER);
-                tv.setCompoundDrawablesWithIntrinsicBounds(0, android.R.drawable.ic_dialog_alert,
-                        0, 0);
-                tv.setCompoundDrawablePadding(DRAWABLE_PADDING);
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                AlertDialog dialog = builder.setView(tv)
-                        .setCancelable(true)
-                        .create();
-                dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
-                dialog.show();
             }
         }
     }
