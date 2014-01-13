@@ -723,6 +723,4 @@
     <string name="CFDeactivate">禁用</string>
     <string name="null_phone_number">输入的电话号码不能为空!</string>
     <string name="labelCFDeactAll">全部禁用</string>
-
-    <string name="no_sim_message">手机中没有 UIM 卡\n请插入 UIM 卡</string>
 </resources>

@@ -2065,6 +2065,4 @@
     <string name="CFDeactivate">Deactivate</string>
     <string name="null_phone_number">Phone number cannot be null !</string>
     <string name="labelCFDeactAll">Deactivate All</string>
-
-    <string name="no_sim_message">No UIM card in the phone\nPlease insert a UIM card</string>
 </resources>
