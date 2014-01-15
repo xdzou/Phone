@@ -288,6 +288,9 @@ public class MSimMobileNetworkSubSettings extends PreferenceActivity
                     .setEntryValues(R.array.preferred_network_mode_values_cmcc);
         } else if (SystemProperties.getInt("persist.env.c.phone.networkmode", 0) == 1) {
             prefSet.removePreference(mButtonPreferredNetworkMode);
+        } else if (SystemProperties.getBoolean("persist.env.network.mode", false)) {
+            mButtonPreferredNetworkMode.setEntries(R.array.preferred_network_mode_choices_global_mode_gms);
+            mButtonPreferredNetworkMode.setEntryValues(R.array.preferred_network_mode_values_global_mode_gms);
         }
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
         if (getResources().getBoolean(R.bool.world_phone) == true) {
