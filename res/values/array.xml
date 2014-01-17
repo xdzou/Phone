@@ -142,21 +142,4 @@
         <item>@string/description_direction_down_right</item>
     </array>
 
-    <string-array translatable="false" name="phone_number_prefix">
-        <item>1023</item>
-        <item>0011</item>
-        <item>990</item>
-        <item>910</item>
-        <item>119</item>
-        <item>012</item>
-        <item>011</item>
-        <item>009</item>
-        <item>003</item>
-        <item>002</item>
-        <item>001</item>
-        <item>000</item>
-        <item>99</item>
-        <item>00</item>
-    </string-array>
-
 </resources>
