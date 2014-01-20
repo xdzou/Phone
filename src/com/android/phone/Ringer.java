@@ -17,6 +17,7 @@
 package com.android.phone;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -168,6 +169,9 @@ public class Ringer {
                     (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
 
             if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0) {
+                Intent i = new Intent("com.android.music.musicservicecommand");
+                i.putExtra("command", "pause");
+                mContext.sendBroadcast(i);
                 if (DBG) log("skipping ring because volume is zero");
                 return;
             }
