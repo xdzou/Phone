@@ -2228,7 +2228,9 @@ public class CallCard extends LinearLayout
     protected void dispatchPopulateAccessibilityEvent(AccessibilityEvent event, View view) {
         List<CharSequence> eventText = event.getText();
         int size = eventText.size();
-        view.dispatchPopulateAccessibilityEvent(event);
+        if (view != null) {
+            view.dispatchPopulateAccessibilityEvent(event);
+        }
         // if no text added write null to keep relative position
         if (size == eventText.size()) {
             eventText.add(null);
