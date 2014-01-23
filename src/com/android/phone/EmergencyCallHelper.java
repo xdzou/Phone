@@ -16,6 +16,7 @@
 
 package com.android.phone;
 
+import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
@@ -289,6 +290,7 @@ public class EmergencyCallHelper extends Handler {
         }
         PhoneConstants.State phoneState = mCM.getState();
         int serviceState = mPhone.getServiceState().getState();
+        Call.State callState = mCM.getActiveFgCallState();
         if (DBG) log("onRetryTimeout():  phone state " + phoneState
                      + ", service state " + serviceState
                      + ", mNumRetriesSoFar = " + mNumRetriesSoFar);
@@ -302,8 +304,10 @@ public class EmergencyCallHelper extends Handler {
         // - If the radio is still powered off, try powering it on again.
 
         if (phoneState == PhoneConstants.State.OFFHOOK) {
-            if (DBG) log("- onRetryTimeout: Call is active!  Cleaning up...");
-            cleanup();
+            if (callState != Call.State.DIALING) {
+                if (DBG) log("- onRetryTimeout: Call is active!  Cleaning up...");
+                cleanup();
+            }
             return;
         }
 
