@@ -42,6 +42,7 @@ import android.bluetooth.BluetoothHeadset;
 import android.bluetooth.BluetoothProfile;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
@@ -1299,6 +1300,16 @@ public class CallNotifier extends Handler
 
         // Show the call duration dialog
         showCallDuration(c);
+
+        //Resume playback, ringtone stream volume is 0, when a call ended
+        final AudioManager audioManager =
+                   (AudioManager)mApplication.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0) {
+            Intent i = new Intent("com.android.music.musicservicecommand");
+            i.setPackage("com.android.music");
+            i.putExtra("command", "play");
+            mApplication.sendBroadcast(i);
+        }
 
         // Stop any signalInfo tone being played when a call gets ended
         stopSignalInfoTone();
