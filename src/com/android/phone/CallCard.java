@@ -61,6 +61,7 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
 
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -171,6 +172,8 @@ public class CallCard extends LinearLayout
     private int mIncomingCallWidgetHintColorResId;
 
     private CallTime mCallTime;
+
+    private HashMap<String, String> mGeoDescriptionMap = new HashMap<String, String>();
 
     // Track the state for the photo.
     private ContactsAsyncHelper.ImageTracker mPhotoTracker;
@@ -1686,10 +1689,15 @@ public class CallCard extends LinearLayout
                     if (DBG) log("  ==> valid name, but presentation not allowed!"
                                  + " displayName = " + displayName);
                 } else {
-                    info.updateGeoDescription(mContext, number);
+                    if (!mGeoDescriptionMap.containsKey(number)) {
+                        info.updateGeoDescription(mContext, number);
+                        cityName = info.geoDescription;
+                        mGeoDescriptionMap.put(number, cityName);
+                    } else {
+                        cityName = mGeoDescriptionMap.get(number);
+                    }
                     displayName = info.name;
                     displayNumber = number;
-                    cityName = info.geoDescription;
                     label = info.getPhoneLabel(getContext());
                     if (DBG) log("  ==>  name is present in CallerInfo: displayName '"
                                  + displayName + "', displayNumber '" + displayNumber + "'");
