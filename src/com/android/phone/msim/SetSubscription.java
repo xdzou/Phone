@@ -632,11 +632,7 @@ public class SetSubscription extends PreferenceActivity implements View.OnClickL
     // This is a method implemented for DialogInterface.OnClickListener.
     // Used to dismiss the dialogs when they come up.
     public void onClick(DialogInterface dialog, int which) {
-        // If the setSubscription failed for any of the sub, then don'd dismiss the
-        // set subscription screen.
-        if(!subErr) {
-            finish();
-        }
+        dialog.dismiss();
         updateCheckBoxes();
     }
 
