@@ -60,6 +60,7 @@ import android.widget.Toast;
 
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.Connection;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.PhoneConstants;
 import com.google.android.collect.Lists;
 
@@ -81,6 +82,7 @@ public class RespondViaSmsManager {
 
     private static final String PERMISSION_SEND_RESPOND_VIA_MESSAGE =
             "android.permission.SEND_RESPOND_VIA_MESSAGE";
+    private static int mSubscription = 0;
 
     private int mIconSize = -1;
 
@@ -205,6 +207,7 @@ public class RespondViaSmsManager {
         // first place.)
 
         String phoneNumber = c.getAddress();
+        mSubscription = ringingCall.getPhone().getSubscription();
         if (VDBG) log("- phoneNumber: " + phoneNumber);
         lv.setOnItemClickListener(new RespondViaSmsItemClickListener(phoneNumber));
 
@@ -628,6 +631,7 @@ public class RespondViaSmsManager {
         final Uri uri = Uri.fromParts(Constants.SCHEME_SMSTO, phoneNumber, null);
         Intent intent = new Intent(TelephonyManager.ACTION_RESPOND_VIA_MESSAGE, uri);
         if (message != null) {
+            intent.putExtra(MSimConstants.SUBSCRIPTION_KEY, mSubscription);
             intent.putExtra(Intent.EXTRA_TEXT, message);
         } else {
             intent.putExtra("exit_on_sent", true);
