@@ -900,13 +900,13 @@ public class PhoneGlobals extends ContextWrapper
                         getApplicationContext().getContentResolver(),
                         Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
                 Log.d(LOG_TAG, "networkMode: " + networkMode);
-                if (networkMode == Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE){
+                if (networkMode == Phone.NT_MODE_TD_SCDMA_GSM_LTE){
                     SharedPreferences sp = PreferenceManager.
                     getDefaultSharedPreferences(getApplicationContext());
                     mPriority = sp.getString(ACQ_ORDER_PREFERENCE, NETWORK_MODE_4G_PREFERRED);
                     startAcqOrder(mPriority,new AcqOrderCallback());
                     if (phone != null){
-                        phone.setPreferredNetworkType(Phone.NT_MODE_TD_SCDMA_GSM_WCDMA_LTE, null);
+                        phone.setPreferredNetworkType(Phone.NT_MODE_TD_SCDMA_GSM_LTE, null);
                     }
                 }
             }
