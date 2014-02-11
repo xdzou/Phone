@@ -4,6 +4,9 @@ LOCAL_PATH:= $(call my-dir)
 # for the 'other' dialer.
 include $(CLEAR_VARS)
 
+LOCAL_JNI_SHARED_LIBRARIES := libvt_jni libimscamera_jni
+LOCAL_REQUIRED_MODULES := libvt_jni libimscamera_jni
+
 LOCAL_JAVA_LIBRARIES := telephony-common voip-common telephony-msim
 LOCAL_STATIC_JAVA_LIBRARIES := com.android.phone.shared
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
