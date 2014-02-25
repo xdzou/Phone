@@ -247,7 +247,6 @@ public class CallController extends Handler {
         // (i.e. placing an outgoing call, and NOT handling an aborted
         // "Add Call" request), so we should let the mute state be handled
         // by the PhoneUtils phone state change handler.)
-        mApp.setRestoreMuteOnInCallResume(false);
 
         // If a provider is used, extract the info to build the
         // overlay and route the call.  The overlay will be
@@ -265,6 +264,7 @@ public class CallController extends Handler {
             case SUCCESS:
             case EXITED_ECM:
                 if (DBG) log("==> placeCall(): success from placeCallInternal(): " + status);
+                mApp.setRestoreMuteOnInCallResume(false);
 
                 if (status == CallStatusCode.EXITED_ECM) {
                     // Call succeeded, but we also need to tell the
