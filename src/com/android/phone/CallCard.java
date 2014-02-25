@@ -1645,7 +1645,8 @@ public class CallCard extends LinearLayout
                     displayName = PhoneUtils.getPresentationString(getContext(), presentation);
                     cityName = displayName;
                     if (DBG) log("  ==> no name *or* number! displayName = " + displayName);
-                } else if (presentation != PhoneConstants.PRESENTATION_ALLOWED) {
+                } else if (presentation != PhoneConstants.PRESENTATION_ALLOWED
+                        && TextUtils.isEmpty(info.cnapName)) {
                     // This case should never happen since the network should never send a phone #
                     // AND a restricted presentation. However we leave it here in case of weird
                     // network behavior
