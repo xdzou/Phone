@@ -265,19 +265,21 @@ public class MobileNetworkSettings extends PreferenceActivity
         }
 
         boolean isLteOnCdma = mPhone.getLteOnCdmaMode() == PhoneConstants.LTE_ON_CDMA_TRUE;
+        int phoneType = mPhone.getPhoneType();
         if (getResources().getBoolean(R.bool.world_phone) == true) {
             //Get the networkMode from Settings.System and displays it
             int settingsNetworkMode = android.provider.Settings.Global.getInt(mPhone.getContext().
                     getContentResolver(),android.provider.Settings.Global.PREFERRED_NETWORK_MODE,
                     preferredNetworkMode);
             mButtonPreferredNetworkMode.setValue(Integer.toString(settingsNetworkMode));
-            mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
+            if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
+                mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
+            }
             mGsmUmtsOptions = new GsmUmtsOptions(this, prefSet);
         } else {
             if (!isLteOnCdma) {
                 prefSet.removePreference(mButtonPreferredNetworkMode);
             }
-            int phoneType = mPhone.getPhoneType();
             if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
                 mCdmaOptions = new CdmaOptions(this, prefSet, mPhone);
                 if (isLteOnCdma) {
@@ -693,7 +695,9 @@ public class MobileNetworkSettings extends PreferenceActivity
                 data.getBooleanExtra(EmergencyCallbackModeExitDialog.EXTRA_EXIT_ECM_RESULT, false);
             if (isChoiceYes) {
                 // If the phone exits from ECM mode, show the CDMA Options
-                mCdmaOptions.showDialog(mClickedPreference);
+                    if (mCdmaOptions != null) {
+                        mCdmaOptions.showDialog(mClickedPreference);
+                    }
             } else {
                 // do nothing
             }
