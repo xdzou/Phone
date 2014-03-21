@@ -800,6 +800,14 @@ public class InCallScreen extends Activity
         // UI; it's totally useless when *entering* the InCallScreen.)
         mCM.clearDisconnected();
 
+        // Restore the mute state if the last mute state change was NOT
+        // done by the user.
+        if (mApp.getRestoreMuteOnInCallResume()) {
+            // Mute state is based on the foreground call
+            PhoneUtils.restoreMuteState();
+            mApp.setRestoreMuteOnInCallResume(false);
+        }
+
         // Update the onscreen UI to reflect the current telephony state.
         SyncWithPhoneStateStatus status = syncWithPhoneState();
 
@@ -862,14 +870,6 @@ public class InCallScreen extends Activity
         // Update the poke lock and wake lock when we move to the foreground.
         // This will be no-op when prox sensor is effective.
         mApp.updateWakeState();
-
-        // Restore the mute state if the last mute state change was NOT
-        // done by the user.
-        if (mApp.getRestoreMuteOnInCallResume()) {
-            // Mute state is based on the foreground call
-            PhoneUtils.restoreMuteState();
-            mApp.setRestoreMuteOnInCallResume(false);
-        }
 
         Profiler.profileViewCreate(getWindow(), InCallScreen.class.getName());
 
