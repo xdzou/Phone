@@ -190,7 +190,7 @@ public class GsmUmtsOptions {
             if (!res.getBoolean(R.bool.config_operator_selection_expand)) {
                 if (mButtonOperatorSelectionExpand != null) {
                     mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
-                    mButtonOperatorSelectionExpand = null;
+                    //mButtonOperatorSelectionExpand = null;
                }
             }
             if (!res.getBoolean(R.bool.config_prefer_2g)) {
@@ -220,7 +220,7 @@ public class GsmUmtsOptions {
                 log("[CSP] Disabling Operator Selection menu.");
                 if (mButtonOperatorSelectionExpand != null) {
                     mPrefScreen.removePreference(mButtonOperatorSelectionExpand);
-                    mButtonOperatorSelectionExpand = null;
+                    //mButtonOperatorSelectionExpand = null;
                 }
             }
         }
