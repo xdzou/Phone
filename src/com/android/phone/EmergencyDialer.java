@@ -29,6 +29,8 @@ import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
@@ -99,6 +101,9 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
 
     private static final int USER_ACTIVITY_TIMEOUT_WHEN_NO_PROX_SENSOR = 15000; // millis
 
+    private static final int MSG_PLACE_CALL = 0;
+    private static final int DISABLE_KEYGUARD_DELAY_MILLIS = 50; // millis
+
     EditText mDigits;
     private View mDialButton;
     private View mDelete;
@@ -118,6 +123,21 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
         public void onReceive(Context context, Intent intent) {
             if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
                 finish();
+            }
+        }
+    };
+
+    Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_PLACE_CALL:
+                    Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY);
+                    intent.setData(Uri.fromParts(Constants.SCHEME_TEL, mLastNumber, null));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    finish();
+                    break;
             }
         }
     };
@@ -541,11 +561,8 @@ public class EmergencyDialer extends Activity implements View.OnClickListener,
                 playTone(ToneGenerator.TONE_PROP_NACK);
                 return;
             }
-            Intent intent = new Intent(Intent.ACTION_CALL_EMERGENCY);
-            intent.setData(Uri.fromParts(Constants.SCHEME_TEL, mLastNumber, null));
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
+            PhoneUtils.disableKeyGuard(getApplicationContext());
+            mHandler.sendEmptyMessageDelayed(MSG_PLACE_CALL, DISABLE_KEYGUARD_DELAY_MILLIS);
         } else {
             if (DBG) Log.d(LOG_TAG, "rejecting bad requested number " + mLastNumber);
 
