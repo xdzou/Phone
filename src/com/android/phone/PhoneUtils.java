@@ -21,6 +21,7 @@ package com.android.phone;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.KeyguardManager;
 import android.app.ProgressDialog;
 import android.bluetooth.IBluetoothHeadsetPhone;
 import android.content.ActivityNotFoundException;
@@ -113,6 +114,11 @@ public class PhoneUtils {
 
     /** Speaker state, persisting between wired headset connection events */
     private static boolean sIsSpeakerEnabled = false;
+
+    /** Used to enable/disable keyguard service*/
+    private static KeyguardManager.KeyguardLock sKeyguardLock;
+
+    private static boolean sNeedReenableKeyguard = false;
 
     /** Hash table to store mute (Boolean) values based upon the connection.*/
     private static Hashtable<Connection, Boolean> sConnectionMuteTable =
@@ -3323,5 +3329,24 @@ public class PhoneUtils {
             nextSub = MSimConstants.SUB1;
         }
         return nextSub;
+    }
+
+    public static void disableKeyGuard(Context context) {
+         KeyguardManager keyguardManager = (KeyguardManager)
+                 context.getSystemService(Context.KEYGUARD_SERVICE);
+         sKeyguardLock = keyguardManager.newKeyguardLock("KeyguardLock");
+         sKeyguardLock.disableKeyguard();
+         sNeedReenableKeyguard = true;
+    }
+
+    public static void reenableKeyGuard() {
+        if (sKeyguardLock != null) {
+            sKeyguardLock.reenableKeyguard();
+            sNeedReenableKeyguard = false;
+        }
+    }
+
+    public static boolean needRestoreKeyguard() {
+        return sNeedReenableKeyguard;
     }
 }
