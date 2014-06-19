@@ -692,6 +692,10 @@ public class InCallScreen extends Activity
         if (DBG) log("onResume()...");
         super.onResume();
 
+        if (PhoneUtils.needRestoreKeyguard()) {
+            PhoneUtils.reenableKeyGuard();
+        }
+
         mIsForegroundActivity = true;
         mIsForegroundActivityForProximity = true;
 
